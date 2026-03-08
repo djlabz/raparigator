@@ -75,32 +75,45 @@ export function FeedScreen() {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {visibleAds.map((ad) => (
-                  <article key={ad.id} className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                    <div className={cn("absolute inset-y-0 left-0 w-1.5", ad.status === "livre" ? "bg-emerald-500" : ad.status === "em_atendimento" ? "bg-amber-500" : "bg-zinc-400")} />
-                    <div className="absolute right-3 top-3 z-10 rounded-full bg-white/90 px-2 py-1 text-xs font-semibold text-zinc-800 shadow-sm">★ {ad.rating.toFixed(1)}</div>
+                  <Link
+                    key={ad.id}
+                    href={`/anuncio/${ad.slug}`}
+                    className="group block"
+                  >
+                    <article className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-wine-200">
+                      <div className={cn("absolute inset-y-0 left-0 w-1.5", ad.status === "livre" ? "bg-emerald-500" : ad.status === "em_atendimento" ? "bg-amber-500" : "bg-zinc-400")} />
+                      <div className="absolute right-3 top-3 z-10 rounded-full bg-white/90 px-2 py-1 text-xs font-semibold text-zinc-800 shadow-sm">★ {ad.rating.toFixed(1)}</div>
 
-                    <div className="relative h-52 bg-zinc-100">
-                      <Image src={ad.images[0]} alt={`${ad.artisticName} em ${ad.city}`} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
-                    </div>
+                      <div className="relative h-52 bg-zinc-100 overflow-hidden">
+                        <Image
+                          src={ad.images[0]}
+                          alt={`${ad.artisticName} em ${ad.city}`}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                        />
+                      </div>
 
-                    <div className="space-y-3 p-4 pl-5">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className={cn("mb-1 inline-flex rounded-full px-2.5 py-1 text-xs font-medium", ad.status === "livre" ? "bg-emerald-50 text-emerald-700" : ad.status === "em_atendimento" ? "bg-amber-50 text-amber-700" : "bg-zinc-100 text-zinc-600")}>
-                            {ad.status === "livre" ? "Livre" : ad.status === "em_atendimento" ? "Em atendimento" : "Indisponivel"}
-                          </p>
-                          <h3 className="text-base font-semibold text-zinc-900">{ad.artisticName}</h3>
-                          <p className="text-xs text-zinc-500">{ad.neighborhood}, {ad.city}</p>
+                      <div className="space-y-3 p-4 pl-5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className={cn("mb-1 inline-flex rounded-full px-2.5 py-1 text-xs font-medium", ad.status === "livre" ? "bg-emerald-50 text-emerald-700" : ad.status === "em_atendimento" ? "bg-amber-50 text-amber-700" : "bg-zinc-100 text-zinc-600")}>
+                              {ad.status === "livre" ? "Livre" : ad.status === "em_atendimento" ? "Em atendimento" : "Indisponivel"}
+                            </p>
+                            <h3 className="text-base font-semibold text-zinc-900 group-hover:text-wine-700 transition-colors">{ad.artisticName}</h3>
+                            <p className="text-xs text-zinc-500">{ad.neighborhood}, {ad.city}</p>
+                          </div>
+                          <span className={cn("rounded-full px-2 py-1 text-xs font-semibold", ad.adTier === "premium" ? "bg-wine-50 text-wine-700" : "bg-zinc-100 text-zinc-600")}>{ad.adTier}</span>
                         </div>
-                        <span className={cn("rounded-full px-2 py-1 text-xs font-semibold", ad.adTier === "premium" ? "bg-wine-50 text-wine-700" : "bg-zinc-100 text-zinc-600")}>{ad.adTier}</span>
+                        <p className="text-sm text-zinc-600 line-clamp-2">{ad.shortDescription}</p>
+                        <div className="flex items-center justify-between pt-1">
+                          <p className="text-sm text-zinc-700">A partir de <strong>{currency(ad.startingPrice)}</strong></p>
+                          {/* Botão removido, a seta abaixo aparece sutilmente no hover se desejar, ou pode ser removida */}
+                          <span className="text-xs font-medium text-wine-600 opacity-0 transition-opacity group-hover:opacity-100">Ver detalhes →</span>
+                        </div>
                       </div>
-                      <p className="text-sm text-zinc-600">{ad.shortDescription}</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-zinc-700">A partir de <strong>{currency(ad.startingPrice)}</strong></p>
-                        <Link href={`/anuncio/${ad.slug}`} className="text-sm font-semibold text-wine-700 hover:text-wine-800">Ver perfil</Link>
-                      </div>
-                    </div>
-                  </article>
+                    </article>
+                  </Link>
                 ))}
               </div>
             )}
