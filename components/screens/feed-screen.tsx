@@ -62,7 +62,20 @@ export function FeedScreen() {
             <Select id="city-desktop" label="Localidade" value={selectedCity} onChange={(event) => setSelectedCity(event.target.value)} options={[{ value: "all", label: "Todas" }, ...cities.map((value) => ({ value, label: value }))]} />
             <div>
               <label htmlFor="price" className="text-sm font-medium text-zinc-700">Faixa de preco ate {currency(maxPrice)}</label>
-              <input id="price" type="range" min={200} max={1500} step={50} value={maxPrice} onChange={(event) => setMaxPrice(Number(event.target.value))} className="mt-2 w-full accent-wine-700" />
+              <input
+                id="price"
+                type="range"
+                min={200}
+                max={1500}
+                step={50}
+                value={maxPrice}
+                onChange={(event) => setMaxPrice(Number(event.target.value))}
+                className="mt-2 w-full accent-wine-700"
+                aria-valuemin={200}
+                aria-valuemax={1500}
+                aria-valuenow={maxPrice}
+                aria-label={`Faixa de preco ate ${currency(maxPrice)}`}
+              />
             </div>
             <Button variant="secondary" onClick={() => { setSelectedCategory("all"); setSelectedCity("all"); setMaxPrice(1200); }}>Limpar filtros</Button>
           </aside>
@@ -133,7 +146,20 @@ export function FeedScreen() {
           <Select id="city-mobile" label="Localidade" value={selectedCity} onChange={(event) => setSelectedCity(event.target.value)} options={[{ value: "all", label: "Todas" }, ...cities.map((value) => ({ value, label: value }))]} />
           <div>
             <label htmlFor="price-mobile" className="text-sm font-medium text-zinc-700">Faixa de preco ate {currency(maxPrice)}</label>
-            <input id="price-mobile" type="range" min={200} max={1500} step={50} value={maxPrice} onChange={(event) => setMaxPrice(Number(event.target.value))} className="mt-2 w-full accent-wine-700" />
+            <input
+              id="price-mobile"
+              type="range"
+              min={200}
+              max={1500}
+              step={50}
+              value={maxPrice}
+              onChange={(event) => setMaxPrice(Number(event.target.value))}
+              className="mt-2 w-full accent-wine-700"
+              aria-valuemin={200}
+              aria-valuemax={1500}
+              aria-valuenow={maxPrice}
+              aria-label="Faixa de preco maxima"
+            />
           </div>
         </div>
       </Modal>
