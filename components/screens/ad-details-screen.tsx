@@ -38,7 +38,7 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
           </div>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-1">
             {ad.images.slice(1, 3).map((image, index) => (
-              <div key={image} className="relative h-36 sm:h-44 md:h-full md:min-h-[188px]">
+              <div key={image} className="relative h-36 sm:h-44 md:h-full md:min-h-47">
                 <Image src={image} alt={`${ad.artisticName} galeria ${index + 2}`} fill className="rounded-2xl object-cover" sizes="(max-width: 768px) 50vw, 33vw" />
               </div>
             ))}
