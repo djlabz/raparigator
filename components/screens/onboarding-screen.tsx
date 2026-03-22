@@ -17,7 +17,7 @@ export function OnboardingScreen() {
     <div className="relative w-full overflow-x-hidden bg-white">
 
       {/* Hero Section */}
-      <section className="relative h-[70vh] min-h-[600px] w-full flex flex-col">
+      <section className="relative h-[70vh] min-h-150 w-full flex flex-col">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -28,11 +28,11 @@ export function OnboardingScreen() {
             priority
             quality={100}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-black/60"></div>
+          <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/40 to-black/60"></div>
         </div>
 
         {/* TopNavBar */}
-        <header className="relative z-20 w-full max-w-[1536px] mx-auto flex justify-between items-center px-6 md:px-12 py-6">
+        <header className="relative z-20 w-full max-w-384 mx-auto flex justify-between items-center px-6 md:px-12 py-6">
           <div className="text-2xl font-black tracking-tighter text-white">Sigillus</div>
           {/* Menu de navegação removido */}
           <div className="flex items-center gap-6">
@@ -45,7 +45,7 @@ export function OnboardingScreen() {
         </header>
 
         {/* Conteúdo Principal do Hero */}
-        <div className="relative z-10 max-w-[1536px] mx-auto px-6 md:px-12 w-full flex-1 flex flex-col lg:flex-row items-center justify-between gap-12 py-6">
+        <div className="relative z-10 max-w-384 mx-auto px-6 md:px-12 w-full flex-1 flex flex-col lg:flex-row items-center justify-between gap-12 py-6">
 
           {/* Texto (Esquerda) */}
           <div className="flex-1 text-white max-w-xl xl:max-w-2xl">
@@ -59,7 +59,7 @@ export function OnboardingScreen() {
           </div>
 
           {/* Card de Formulário (Direita) */}
-          <div className="w-full max-w-[440px] lg:ml-auto">
+          <div className="w-full max-w-110 lg:ml-auto">
             <Card className="p-8 md:p-10 shadow-2xl rounded-2xl bg-white space-y-6">
               <h2 className="text-2xl font-extrabold text-zinc-900 mb-2 tracking-tight">Comece sua experiência</h2>
 
@@ -99,7 +99,7 @@ export function OnboardingScreen() {
 
       {/* Seção Inferior */}
       <div className="bg-white relative z-20">
-        <div className="max-w-[1536px] mx-auto px-6 md:px-12 py-16">
+        <div className="max-w-384 mx-auto px-6 md:px-12 py-16">
           <PopularLinksSection />
         </div>
       </div>

@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ads, categories, cities } from "@/lib/mock-data";
+import { ads, cities } from "@/lib/mock-data";
 import { currency, cn } from "@/lib/utils";
 
 const quickFilters = ["Premium", "Livre agora", "Ate R$ 500", "Verificadas"];
@@ -269,7 +269,7 @@ export function FeedScreen() {
 
                       <div className="relative h-56 bg-zinc-100 overflow-hidden">
                         <Image src={ad.images[0]} alt={`${ad.artisticName} em ${ad.city}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 768px) 100vw, 33vw" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div className="absolute inset-0 bg-linear-to-t from-zinc-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                       </div>
 
                       <div className="space-y-3 p-4 pl-5">
