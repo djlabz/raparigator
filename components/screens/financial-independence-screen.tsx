@@ -21,12 +21,12 @@ const DREAMS = [
   { id: "milhao", label: "Liberdade (1 Milhão)", price: 1_000_000, icon: IconTrophy, highlight: true },
 ];
 
-// --- Ícones SVG Inline (para evitar erros de lib externa) ---
+// --- Ícones SVG Inline ---
 function IconRocket(props: any) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.1 4-1 4-1" /><path d="M12 15v5s3.03-.55 4-2c1.1-1.62 1-4 1-4" /></svg>;
 }
 function IconTurtle(props: any) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m19 7-7 5-7-5" /><path d="M12 22a10 10 0 0 1-10-10" /><path d="M22 12a10 10 0 0 1-10 10" /><circle cx="12" cy="12" r="3" /></svg>; // Abstract representation
+  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m19 7-7 5-7-5" /><path d="M12 22a10 10 0 0 1-10-10" /><path d="M22 12a10 10 0 0 1-10 10" /><circle cx="12" cy="12" r="3" /></svg>;
 }
 function IconCalendar(props: any) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>;
@@ -43,6 +43,9 @@ function IconHome(props: any) {
 function IconTrophy(props: any) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" /></svg>;
 }
+function IconRefresh(props: any) {
+  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>;
+}
 
 // --- Funções Auxiliares ---
 function formatDurationDetailed(totalMonths: number) {
@@ -57,11 +60,11 @@ function formatDurationDetailed(totalMonths: number) {
 }
 
 export function FinancialIndependenceScreen() {
-  const [serviceValue, setServiceValue] = useState("450");
+  // Alterado o valor inicial para 300 conforme solicitado
+  const [serviceValue, setServiceValue] = useState("300");
   const [serviceHours, setServiceHours] = useState("2");
   const [workDaysPerWeek, setWorkDaysPerWeek] = useState("5");
 
-  // Inputs de projeção (mantidos no estado, mas opcionais na lógica principal agora)
   const [projectionTime, setProjectionTime] = useState("");
   const [projectionUnit, setProjectionUnit] = useState("months");
 
@@ -103,26 +106,39 @@ export function FinancialIndependenceScreen() {
       monthsToAchieve: Math.ceil(dream.price / monthlyRevenue)
     }));
 
+    // CÁLCULO DA PROJEÇÃO (MONTANTE ACUMULADO)
+    // Se não preencheu nada, o padrão é 1 mês
+    const effectiveTimeNum = projectionTime ? Number(projectionTime) : 1;
+    const effectiveUnit = projectionTime ? projectionUnit : "months";
+
+    const projectionMonths = effectiveUnit === "years" ? effectiveTimeNum * 12 : effectiveTimeNum;
+    const projectedAmount = monthlyRevenue * projectionMonths;
+
     return {
       monthlyRevenue,
       monthsToMillionUser,
       monthsToMillionCLT,
       yearsSaved,
       equivalenceRatio,
-      dreamsCalculated
+      dreamsCalculated,
+      projectedAmount,
+      effectiveTimeNum,
+      effectiveUnit
     };
-  }, [serviceHours, serviceValue, workDaysPerWeek]);
+  }, [serviceHours, serviceValue, workDaysPerWeek, projectionTime, projectionUnit]);
 
-  // Se quiser recalcular
   const handleReset = () => {
     setSubmitted(false);
   };
+
+  // Lógica para clarear/escurecer os inputs de meta de tempo
+  const hasProjection = Number(projectionTime) > 0;
 
   return (
     <AppShell>
       <div className="mx-auto max-w-4xl space-y-6">
 
-        {/* --- TELA DE INPUTS (Visível apenas se NÃO submetido) --- */}
+        {/* --- TELA DE INPUTS --- */}
         {!submitted && (
           <>
             <header>
@@ -153,8 +169,9 @@ export function FinancialIndependenceScreen() {
                   onChange={(e) => setWorkDaysPerWeek(e.target.value)}
                   inputMode="numeric"
                 />
-                {/* Mantive o campo opcional visualmente, mas sem foco na nova UI */}
-                <div className="flex gap-2 opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
+
+                {/* Campos opcionais com opacidade dinâmica */}
+                <div className={`flex gap-2 transition-all duration-300 ${hasProjection ? 'opacity-100 grayscale-0' : 'opacity-50 grayscale hover:opacity-100 hover:grayscale-0'}`}>
                   <div className="flex-1">
                     <Input
                       id="tempo-projecao"
@@ -162,7 +179,7 @@ export function FinancialIndependenceScreen() {
                       value={projectionTime}
                       onChange={(e) => setProjectionTime(e.target.value.replace(/\D/g, ""))}
                       inputMode="numeric"
-                      placeholder="0"
+                      placeholder="Ex: 12"
                     />
                   </div>
                   <div className="w-32">
@@ -180,7 +197,7 @@ export function FinancialIndependenceScreen() {
                 </div>
               </div>
               <Button size="lg" className="w-full text-lg font-semibold" onClick={() => setSubmitted(true)}>
-                Ver meu "Painel da Liberdade" 🚀
+                Ver meu Painel da Liberdade 🚀
               </Button>
             </Card>
           </>
@@ -190,20 +207,41 @@ export function FinancialIndependenceScreen() {
         {submitted && parsed ? (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
+            {/* BOTÃO REFAZER NO TOPO (Design fluído e limpo) */}
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={handleReset}
+                className="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-none shadow-none h-9 px-4 text-sm font-medium flex items-center gap-2"
+              >
+                <IconRefresh className="w-4 h-4" />
+                Nova Simulação
+              </Button>
+            </div>
+
             {/* MANCHETE DE IMPACTO */}
-            <div className="text-center space-y-2 py-4">
+            <div className="text-center space-y-2 pb-2">
               <h2 className="text-3xl md:text-4xl font-bold text-zinc-900">
                 Você está comprando <span className="text-emerald-600">{parsed.yearsSaved} anos</span> da sua vida de volta.
               </h2>
               <p className="text-zinc-600">Esse é o poder de valorizar a sua hora de trabalho.</p>
             </div>
 
+            {/* MONTANTE ACUMULADO (Sempre aparece, com 1 Mês se não for preenchido) */}
+            <Card className="bg-emerald-50 border-emerald-200 p-6 flex flex-col justify-center items-center text-center space-y-2 relative overflow-hidden">
+              <p className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+                Montante Acumulado em {parsed.effectiveTimeNum} {parsed.effectiveUnit === "years" ? (parsed.effectiveTimeNum === 1 ? "Ano" : "Anos") : (parsed.effectiveTimeNum === 1 ? "Mês" : "Meses")}
+              </p>
+              <div className="text-4xl md:text-5xl font-bold text-emerald-600">
+                {currency(parsed.projectedAmount)}
+              </div>
+              <p className="text-sm text-emerald-700/80 font-medium">Mantendo o seu ritmo de trabalho atual.</p>
+            </Card>
+
             {/* CONCEITO A: A CORRIDA DA VIDA */}
             <Card className="p-6 border-zinc-200 shadow-lg relative overflow-hidden">
               <h3 className="text-lg font-semibold text-zinc-900 mb-6">🏁 A Corrida do Milhão</h3>
 
               <div className="space-y-8">
-                {/* Barra do Usuário */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-end text-sm">
                     <div className="flex items-center gap-2 font-bold text-emerald-700">
@@ -212,18 +250,11 @@ export function FinancialIndependenceScreen() {
                     <span className="font-bold text-emerald-600 text-lg">{formatDurationDetailed(parsed.monthsToMillionUser)}</span>
                   </div>
                   <div className="h-4 w-full bg-zinc-100 rounded-full overflow-hidden">
-                    {/* A barra não é baseada em % matemática estrita, mas visual. Se fosse matemática, a barra CLT seria 100% e a user 2%.
-                          Aqui usamos uma escala visual onde "Rápido" é uma barra curta (já que é tempo) ou invertemos?
-                          O pedido foi: "Barra curta, quase cheia ou rápida". Vamos fazer estilo "Loading" até o objetivo.
-                          Se é TEMPO, barra cheia = muito tempo. Barra vazia = pouco tempo.
-                          Mas o usuário pediu: "Barra curta, quase cheia ou rápida" com ícone foguete.
-                          Vamos fazer BARRA DE PROGRESSO DE VELOCIDADE. Barra cheia = Mais rápido. */}
                     <div className="h-full bg-emerald-500 rounded-full animate-pulse w-[95%]"></div>
                   </div>
                   <p className="text-xs text-zinc-500 text-right">Rumo à liberdade total</p>
                 </div>
 
-                {/* Barra CLT */}
                 <div className="space-y-2 opacity-60">
                   <div className="flex justify-between items-end text-sm">
                     <div className="flex items-center gap-2 font-semibold text-zinc-600">
@@ -232,7 +263,6 @@ export function FinancialIndependenceScreen() {
                     <span className="font-semibold text-zinc-500">{formatDurationDetailed(parsed.monthsToMillionCLT)}</span>
                   </div>
                   <div className="h-4 w-full bg-zinc-100 rounded-full overflow-hidden">
-                    {/* Barra muito pequena comparada a do usuário para dar sensação de lentidão */}
                     <div className="h-full bg-zinc-400 rounded-full w-[15%]"></div>
                   </div>
                   <p className="text-xs text-zinc-400 text-right">Trabalhando até a aposentadoria oficial</p>
@@ -284,7 +314,6 @@ export function FinancialIndependenceScreen() {
                         <dream.icon className="h-6 w-6" />
                       </div>
                       <div>
-                        {/* APLICAÇÃO DA REGRA: NOME VERDE SE FOR 1 MILHÃO */}
                         <p className={`font-semibold leading-tight ${dream.highlight ? 'text-emerald-700' : 'text-zinc-900'}`}>
                           {dream.label}
                         </p>
@@ -300,13 +329,6 @@ export function FinancialIndependenceScreen() {
                   </Card>
                 ))}
               </div>
-            </div>
-
-            {/* BOTÃO VOLTAR */}
-            <div className="flex justify-center pt-4">
-              <Button onClick={handleReset} className="w-full md:w-auto">
-                Refazer Simulação
-              </Button>
             </div>
 
           </div>
