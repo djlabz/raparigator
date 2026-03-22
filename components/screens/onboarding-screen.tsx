@@ -17,7 +17,7 @@ export function OnboardingScreen() {
     <div className="relative w-full overflow-x-hidden bg-white">
 
       {/* Hero Section */}
-      <section className="relative h-[70vh] min-h-150 w-full flex flex-col">
+      <section className="relative w-full flex flex-col min-h-screen md:h-[70vh] md:min-h-150">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
