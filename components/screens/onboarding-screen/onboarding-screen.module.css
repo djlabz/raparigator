@@ -24,21 +24,23 @@
 
 @media (min-width: 768px) {
   .hero {
-    --onboarding-hero-min-height: 660px;
-    --onboarding-hero-content-pt: 1.5rem;
-    --onboarding-hero-content-pb: 2.25rem;
-    --onboarding-hero-content-gap: 2.25rem;
-    --onboarding-hero-image-position: 50% 12%;
+    --onboarding-hero-min-height: 560px;
+    --onboarding-hero-content-pt: 1.25rem;
+    --onboarding-hero-content-pb: 1.5rem;
+    --onboarding-hero-content-gap: 1.75rem;
+    --onboarding-hero-image-position: 50% 8%;
+    --onboarding-card-max-width: 25rem;
   }
 }
 
 @media (min-width: 1024px) {
   .hero {
-    --onboarding-hero-min-height: 620px;
-    --onboarding-hero-content-pt: 1.25rem;
-    --onboarding-hero-content-pb: 2.5rem;
-    --onboarding-hero-content-gap: 2.5rem;
-    --onboarding-hero-image-position: 50% 20%;
+    --onboarding-hero-min-height: 540px;
+    --onboarding-hero-content-pt: 1rem;
+    --onboarding-hero-content-pb: 1.75rem;
+    --onboarding-hero-content-gap: 2rem;
+    --onboarding-hero-image-position: 50% 16%;
+    --onboarding-card-max-width: 24.5rem;
   }
 }
 
@@ -47,15 +49,16 @@
     --onboarding-hero-min-height: 660px;
     --onboarding-hero-content-pb: 3rem;
     --onboarding-hero-content-gap: 3rem;
-    --onboarding-hero-image-position: 50% 18%;
+    --onboarding-hero-image-position: 50% 30%;
+    --onboarding-card-max-width: 27.5rem;
   }
 }
 
 @media (min-width: 1536px) {
   .hero {
-    --onboarding-hero-min-height: 620px;
+    --onboarding-hero-min-height: 800px;
     --onboarding-hero-content-pb: 2.5rem;
     --onboarding-hero-content-gap: 2.75rem;
-    --onboarding-hero-image-position: 50% 75%;
+    --onboarding-hero-image-position: 50% 80%;
   }
 }

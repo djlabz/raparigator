@@ -101,7 +101,7 @@ export function OnboardingScreen() {
         <div className={`relative z-10 box-border max-w-384 mx-auto px-6 md:px-12 w-full flex-1 flex flex-col lg:flex-row lg:items-center lg:justify-between ${styles.heroContent}`}>
           {/* Texto (Esquerda) */}
           <div className="w-full lg:flex-1 lg:min-w-0 text-white max-w-xl xl:max-w-2xl">
-            <h1 className="text-4xl md:text-5xl xl:text-6xl font-extrabold leading-tight tracking-tight mb-6 drop-shadow-md">
+            <h1 className="text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight tracking-tight mb-6 drop-shadow-md">
               Sigillus: conexões com discrição, segurança e experiência premium.
             </h1>
             <p className="text-lg md:text-xl text-white/90 font-medium leading-relaxed max-w-lg xl:max-w-xl">
@@ -111,7 +111,7 @@ export function OnboardingScreen() {
 
           {/* Card de Formulário (Direita) */}
           <div className={`w-full lg:ml-auto lg:min-w-0 ${styles.cardWrapper}`}>
-            <Card className="p-8 md:p-10 shadow-2xl rounded-2xl bg-white space-y-6">
+            <Card className="p-6 md:p-7 lg:p-8 xl:p-10 shadow-2xl rounded-2xl bg-white space-y-6">
               <h2 className="text-2xl font-extrabold text-zinc-900 mb-2 tracking-tight">Comece sua experiência:</h2>
 
               <div className="space-y-4">
