@@ -14,11 +14,13 @@ import styles from "./onboarding-screen.module.css";
 
 export function OnboardingScreen() {
   const [showLocationToast, setShowLocationToast] = useState(false);
+  const [isPopularVisible, setIsPopularVisible] = useState(false);
 
   // Estados para controlar o novo campo de busca de localização
   const [locationQuery, setLocationQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const lowerSectionRef = useRef<HTMLDivElement>(null);
 
   // Fecha o menu de sugestões ao clicar fora do componente
   useEffect(() => {
@@ -29,6 +31,21 @@ export function OnboardingScreen() {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Observa quando a seção inferior entra em tela para ocultar o botão automaticamente
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsPopularVisible(entry.intersectionRatio >= 0.2);
+      },
+      { threshold: 0.2 }
+    );
+
+    const target = lowerSectionRef.current;
+    if (target) observer.observe(target);
+
+    return () => observer.disconnect();
   }, []);
 
   // Função auxiliar para remover acentos
@@ -43,8 +60,17 @@ export function OnboardingScreen() {
     return searchStr.includes(queryStr);
   });
 
+  const scrollToPopularSection = () => {
+    document.getElementById("popular-links-section")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
+  const shouldShowScrollButton = !isPopularVisible;
+
   return (
-    <div className="relative w-full overflow-x-hidden bg-white">
+    <div className="relative w-full overflow-x-clip bg-white">
       {/* Hero Section */}
       <section className={`relative w-full flex flex-col ${styles.hero}`}>
         {/* Background Image */}
@@ -61,7 +87,7 @@ export function OnboardingScreen() {
         </div>
 
         {/* TopNavBar */}
-        <header className="relative z-20 w-full max-w-384 mx-auto flex justify-between items-center px-6 md:px-12 py-6">
+        <header className="relative z-20 w-full box-border max-w-384 mx-auto flex justify-between items-center px-6 md:px-12 py-6">
           <div className="text-2xl font-black tracking-tighter text-white">Sigillus</div>
           <div className="flex items-center gap-6">
             <button className="text-sm font-bold text-white hover:opacity-80 transition-opacity">Entrar</button>
@@ -72,9 +98,9 @@ export function OnboardingScreen() {
         </header>
 
         {/* Conteúdo Principal do Hero */}
-        <div className={`relative z-10 max-w-384 mx-auto px-6 md:px-12 w-full flex-1 flex flex-col lg:flex-row lg:items-end lg:justify-between ${styles.heroContent}`}>
+        <div className={`relative z-10 box-border max-w-384 mx-auto px-6 md:px-12 w-full flex-1 flex flex-col lg:flex-row lg:items-center lg:justify-between ${styles.heroContent}`}>
           {/* Texto (Esquerda) */}
-          <div className="w-full lg:flex-1 text-white max-w-xl xl:max-w-2xl">
+          <div className="w-full lg:flex-1 lg:min-w-0 text-white max-w-xl xl:max-w-2xl">
             <h1 className="text-4xl md:text-5xl xl:text-6xl font-extrabold leading-tight tracking-tight mb-6 drop-shadow-md">
               Sigillus: conexões com discrição, segurança e experiência premium.
             </h1>
@@ -84,7 +110,7 @@ export function OnboardingScreen() {
           </div>
 
           {/* Card de Formulário (Direita) */}
-          <div className={`w-full lg:ml-auto lg:shrink-0 ${styles.cardWrapper}`}>
+          <div className={`w-full lg:ml-auto lg:min-w-0 ${styles.cardWrapper}`}>
             <Card className="p-8 md:p-10 shadow-2xl rounded-2xl bg-white space-y-6">
               <h2 className="text-2xl font-extrabold text-zinc-900 mb-2 tracking-tight">Comece sua experiência:</h2>
 
@@ -173,11 +199,25 @@ export function OnboardingScreen() {
             </Card>
           </div>
         </div>
+
       </section>
 
+      {shouldShowScrollButton && (
+        <button
+          type="button"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 inline-flex items-center gap-2 rounded-full border border-white/60 bg-black/55 px-3.5 py-1.5 text-sm font-semibold tracking-wide text-white shadow-md backdrop-blur-sm cursor-pointer hover:bg-black/70 transition-colors"
+          onClick={scrollToPopularSection}
+        >
+          <span>Role para ver mais</span>
+          <svg className="h-4 w-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      )}
+
       {/* Seção Inferior */}
-      <div className="bg-white relative z-20">
-        <div className="max-w-384 mx-auto px-6 md:px-12 py-16">
+      <div id="popular-links-section" ref={lowerSectionRef} className="bg-white relative z-20">
+        <div className="box-border max-w-384 mx-auto px-6 md:px-12 py-10 md:py-12">
           <PopularLinksSection />
         </div>
       </div>
