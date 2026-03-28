@@ -5,17 +5,19 @@
   --foreground: #121217;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-wine-50: #ffe8ee;
-  --color-wine-100: #ffd2de;
-  --color-wine-200: #ffacc2;
-  --color-wine-300: #ff7ba1;
-  --color-wine-700: #b60031;
-  --color-wine-800: #920027;
-  --font-sans: var(--font-manrope);
-  --font-display: var(--font-cormorant);
+@layer base {
+  :root {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-wine-50: #ffe8ee;
+    --color-wine-100: #ffd2de;
+    --color-wine-200: #ffacc2;
+    --color-wine-300: #ff7ba1;
+    --color-wine-700: #b60031;
+    --color-wine-800: #920027;
+    --font-sans: var(--font-manrope);
+    --font-display: var(--font-cormorant);
+  }
 }
 
 * {
@@ -33,4 +35,3 @@ a {
   color: inherit;
   text-decoration: none;
 }
-
