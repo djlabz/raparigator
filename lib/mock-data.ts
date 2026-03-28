@@ -2,7 +2,20 @@
 
 export const states = ["SP", "RJ", "MG", "PR", "SC", "RS"];
 export const cities = ["Sao Paulo", "Campinas", "Santos", "Rio de Janeiro", "Belo Horizonte", "Curitiba"];
-export const categories = ["Feminino", "Masculino", "Trans", "Casais"];
+export const categories = ["Feminina", "Masculino", "Trans", "Casais"];
+
+export const locationsData = [
+  { city: "São Paulo", state: "SP" },
+  { city: "Rio de Janeiro", state: "RJ" },
+  { city: "Belo Horizonte", state: "MG" },
+  { city: "Aracaju", state: "SE" },
+  { city: "Curitiba", state: "PR" },
+  { city: "Salvador", state: "BA" },
+  { city: "Florianópolis", state: "SC" },
+  { city: "Porto Alegre", state: "RS" },
+  { city: "Brasília", state: "DF" },
+  // Adicione outras cidades conforme necessário
+];
 
 export const ads: ProfessionalAd[] = [
   {

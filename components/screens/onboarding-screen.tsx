@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
-import { categories, cities, states } from "@/lib/mock-data";
+import { useState, useRef, useEffect } from "react";
+// Importamos o novo locationsData em vez de cities e states separados
+import { categories, locationsData } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
@@ -13,9 +14,36 @@ import { PopularLinksSection } from "./popular-links-section";
 export function OnboardingScreen() {
   const [showLocationToast, setShowLocationToast] = useState(false);
 
+  // Estados para controlar o novo campo de busca de localização
+  const [locationQuery, setLocationQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Fecha o menu de sugestões ao clicar fora do componente
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Função auxiliar para remover acentos
+  const removeAccents = (str: string) => {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  };
+
+  // Filtra as localidades ignorando maiúsculas/minúsculas e acentos
+  const filteredLocations = locationsData.filter((loc) => {
+    const searchStr = removeAccents(`${loc.city}, ${loc.state}`.toLowerCase());
+    const queryStr = removeAccents(locationQuery.toLowerCase());
+    return searchStr.includes(queryStr);
+  });
+
   return (
     <div className="relative w-full overflow-x-hidden bg-white">
-
       {/* Hero Section */}
       <section className="relative w-full flex flex-col min-h-screen md:h-[70vh] md:min-h-150">
         {/* Background Image */}
@@ -34,9 +62,7 @@ export function OnboardingScreen() {
         {/* TopNavBar */}
         <header className="relative z-20 w-full max-w-384 mx-auto flex justify-between items-center px-6 md:px-12 py-6">
           <div className="text-2xl font-black tracking-tighter text-white">Sigillus</div>
-          {/* Menu de navegação removido */}
           <div className="flex items-center gap-6">
-            {/* Botões traduzidos */}
             <button className="text-sm font-bold text-white hover:opacity-80 transition-opacity">Entrar</button>
             <button className="bg-white text-[#800020] px-8 py-2.5 rounded-full text-sm font-extrabold tracking-tight hover:bg-gray-100 active:scale-95 transition-all">
               Cadastrar
@@ -46,10 +72,8 @@ export function OnboardingScreen() {
 
         {/* Conteúdo Principal do Hero */}
         <div className="relative z-10 max-w-384 mx-auto px-6 md:px-12 w-full flex-1 flex flex-col lg:flex-row items-center justify-between gap-12 py-6">
-
           {/* Texto (Esquerda) */}
           <div className="flex-1 text-white max-w-xl xl:max-w-2xl">
-            {/* Tag de "Plataforma Verificada" removida */}
             <h1 className="text-4xl md:text-5xl xl:text-6xl font-extrabold leading-tight tracking-tight mb-6 drop-shadow-md">
               Sigillus: conexões com discrição, segurança e experiência premium.
             </h1>
@@ -61,12 +85,63 @@ export function OnboardingScreen() {
           {/* Card de Formulário (Direita) */}
           <div className="w-full max-w-110 lg:ml-auto">
             <Card className="p-8 md:p-10 shadow-2xl rounded-2xl bg-white space-y-6">
-              <h2 className="text-2xl font-extrabold text-zinc-900 mb-2 tracking-tight">Comece sua experiência</h2>
+              <h2 className="text-2xl font-extrabold text-zinc-900 mb-2 tracking-tight">Comece sua experiência:</h2>
 
               <div className="space-y-4">
-                <Select id="state" label="Estado" options={states.map((value) => ({ value, label: value }))} defaultValue="SP" />
-                <Select id="city" label="Cidade" options={cities.map((value) => ({ value, label: value }))} defaultValue="São Paulo" />
-                <Select id="category" label="Categoria" options={categories.map((value) => ({ value, label: value }))} defaultValue="Feminino" />
+                {/* Novo Campo de Localização Unificado */}
+                <div className="relative space-y-1.5" ref={wrapperRef}>
+                  <label htmlFor="location" className="text-sm font-semibold text-zinc-900">
+                    Localização
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-3 flex items-center text-zinc-500 pointer-events-none">
+                      📍
+                    </span>
+                    <input
+                      id="location"
+                      type="text"
+                      placeholder="Digite sua cidade..."
+                      value={locationQuery}
+                      onChange={(e) => {
+                        setLocationQuery(e.target.value);
+                        setShowSuggestions(true);
+                      }}
+                      onFocus={() => setShowSuggestions(true)}
+                      className="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 pl-9 py-2 text-sm outline-none transition-all placeholder:text-zinc-400 focus:border-[#800020] focus:ring-1 focus:ring-[#800020]"
+                      autoComplete="off"
+                    />
+                  </div>
+
+                  {/* Dropdown de Sugestões */}
+                  {showSuggestions && locationQuery.length > 0 && (
+                    <ul className="absolute z-50 w-full mt-1 bg-white border border-zinc-200 rounded-md shadow-lg max-h-60 overflow-auto py-1 text-sm">
+                      {filteredLocations.length > 0 ? (
+                        filteredLocations.map((loc, idx) => (
+                          <li
+                            key={idx}
+                            className="px-3 py-2 hover:bg-zinc-100 cursor-pointer text-zinc-700 flex items-center gap-2"
+                            onClick={() => {
+                              setLocationQuery(`${loc.city}, ${loc.state}`);
+                              setShowSuggestions(false);
+                            }}
+                          >
+                            <span>📍</span> {loc.city}, {loc.state}
+                          </li>
+                        ))
+                      ) : (
+                        <li className="px-3 py-2 text-zinc-500">Nenhuma cidade encontrada</li>
+                      )}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Categoria com defaultValue corrigido para "Feminina" */}
+                <Select
+                  id="category"
+                  label="Categoria"
+                  options={categories.map((value) => ({ value, label: value }))}
+                  defaultValue="Feminina"
+                />
               </div>
 
               <div className="pt-2">
@@ -74,6 +149,8 @@ export function OnboardingScreen() {
                   className="flex items-center gap-2 text-[#800020] font-bold text-sm hover:underline group"
                   onClick={() => {
                     setShowLocationToast(true);
+                    // Atualiza o input visualmente caso use a localização atual
+                    setLocationQuery("São Paulo, SP");
                     setTimeout(() => setShowLocationToast(false), 3000);
                   }}
                 >
@@ -103,7 +180,6 @@ export function OnboardingScreen() {
           <PopularLinksSection />
         </div>
       </div>
-
     </div>
   );
 }
