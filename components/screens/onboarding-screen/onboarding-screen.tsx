@@ -88,12 +88,16 @@ export function OnboardingScreen() {
 
         {/* TopNavBar */}
         <header className="relative z-20 w-full box-border max-w-384 mx-auto flex justify-between items-center px-6 md:px-12 py-6">
-          <div className="text-2xl font-black tracking-tighter text-white">Sigillus</div>
+          <Link href="/" className="text-2xl font-black tracking-tighter text-white! visited:text-white! hover:opacity-90 transition-opacity">
+            Sigillus
+          </Link>
           <div className="flex items-center gap-6">
-            <button className="text-sm font-bold text-white hover:opacity-80 transition-opacity">Entrar</button>
-            <button className="bg-white text-[#800020] px-8 py-2.5 rounded-full text-sm font-extrabold tracking-tight hover:bg-gray-100 active:scale-95 transition-all">
+            <Link href="/auth/login" className="text-sm font-bold text-white! visited:text-white! hover:opacity-80 transition-opacity">
+              Entrar
+            </Link>
+            <Link href="/auth/cadastro/cliente" className="bg-white text-[#800020] px-8 py-2.5 rounded-full text-sm font-extrabold tracking-tight hover:bg-gray-100 active:scale-95 transition-all">
               Cadastrar
-            </button>
+            </Link>
           </div>
         </header>
 
