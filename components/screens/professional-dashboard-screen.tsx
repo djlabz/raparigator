@@ -58,8 +58,23 @@ export function ProfessionalDashboardScreen() {
             <div>
               <p className="text-sm text-zinc-500 font-medium">Status do anúncio público</p>
               <div className="flex items-center gap-2 mt-1">
-                <span className={cn("w-2 h-2 rounded-full", activeAd ? "bg-emerald-500" : "bg-zinc-300")} />
-                <p className="text-lg font-bold text-zinc-900">{activeAd ? "Ativo e visível" : "Pausado"}</p>
+                {/* Container relativo para empilhar as bolinhas */}
+                <div className="relative flex h-3 w-3 items-center justify-center">
+                  {/* Bolinha que faz o efeito de pulso (cresce e some) - Só aparece se activeAd for true */}
+                  {activeAd && (
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                  )}
+                  {/* Bolinha principal estática */}
+                  <span
+                    className={cn(
+                      "relative inline-flex h-2.5 w-2.5 rounded-full transition-colors duration-300",
+                      activeAd ? "bg-emerald-500" : "bg-zinc-300"
+                    )}
+                  />
+                </div>
+                <p className="text-lg font-bold text-zinc-900">
+                  {activeAd ? "Ativo e visível" : "Pausado"}
+                </p>
               </div>
             </div>
             <Button
