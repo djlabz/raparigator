@@ -268,9 +268,9 @@ function ProfileManagementTab() {
       <Card className="p-0 overflow-hidden">
         <div className="p-4 sm:p-6 border-b border-zinc-100 flex justify-between items-center bg-white">
           <h3 className="font-bold text-lg text-zinc-900">Galeria de Fotos</h3>
-          <button className="text-wine-700 text-sm font-bold hover:underline">
+          <Button className="h-9 rounded-lg border border-wine-700 bg-wine-700 px-4 text-sm font-bold text-white hover:bg-wine-800">
             + Adicionar
-          </button>
+          </Button>
         </div>
         <div className="p-4 sm:p-6 bg-zinc-50/50">
           <div className="grid grid-cols-2 sm:grid-cols-4 grid-rows-2 gap-3 h-75 sm:h-100">
