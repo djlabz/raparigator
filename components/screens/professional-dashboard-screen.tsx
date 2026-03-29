@@ -26,7 +26,7 @@ export function ProfessionalDashboardScreen() {
       <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
         {/* Menu Lateral Desktop */}
         <aside className="hidden rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm lg:block h-fit sticky top-24">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Painel profissional</p>
+          <p className="mb-4 text-lg font-bold text-zinc-900">Painel profissional</p>
           <nav className="space-y-1">
             {tabs.map((tab) => (
               <button
