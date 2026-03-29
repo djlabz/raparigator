@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,9 +10,16 @@ import { currency, cn } from "@/lib/utils";
 
 const tabs = ["Resumo", "Servicos", "Valores", "Perfil", "Historico"];
 
+// Dados simulados da galeria (idealmente virão da tua API/banco de dados)
+const galleryImages = [
+  { url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&auto=format&fit=crop", isCover: true, alt: "Capa" },
+  { url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop", isCover: false, alt: "Galeria 1" },
+  { url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop", isCover: false, alt: "Galeria 2" }
+];
+
 export function ProfessionalDashboardScreen() {
   const [activeAd, setActiveAd] = useState(dashboardSummary.activeAd);
-  const [activeTab, setActiveTab] = useState("Perfil"); // Inicia na aba Perfil para ver o resultado do mockup
+  const [activeTab, setActiveTab] = useState("Perfil"); // Inicia na aba Perfil para ver o resultado
 
   return (
     <AppShell>
@@ -60,7 +67,7 @@ export function ProfessionalDashboardScreen() {
               <div className="flex items-center gap-2 mt-1">
                 {/* Container relativo para empilhar as bolinhas */}
                 <div className="relative flex h-3 w-3 items-center justify-center">
-                  {/* Bolinha que faz o efeito de pulso (cresce e some) - Só aparece se activeAd for true */}
+                  {/* Bolinha que faz o efeito de pulso */}
                   {activeAd && (
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                   )}
@@ -145,8 +152,118 @@ function HistoryItem({ title, subtitle }: { title: string; subtitle: string }) {
 }
 
 function ProfileManagementTab() {
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Funções de navegação do Lightbox
+  const nextImage = () => setCurrentIndex((prev) => (prev + 1) % galleryImages.length);
+  const prevImage = () => setCurrentIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+  const closeLightbox = () => setLightboxOpen(false);
+
+  // Navegação por teclado para UX Premium
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowRight") nextImage();
+      if (e.key === "ArrowLeft") prevImage();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxOpen]);
+
+  // Previne o scroll da página quando o lightbox estiver aberto
+  useEffect(() => {
+    if (lightboxOpen) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = 'unset';
+    return () => { document.body.style.overflow = 'unset'; }
+  }, [lightboxOpen]);
+
   return (
     <div className="space-y-6">
+      {/* --- INÍCIO DO LIGHTBOX --- */}
+      {lightboxOpen && (
+        <div className="fixed inset-0 z-100 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm transition-all duration-300">
+
+          {/* Botão Fechar */}
+          <button
+            onClick={closeLightbox}
+            className="absolute top-6 right-6 p-2 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 rounded-full transition-all duration-200 z-50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Seta Esquerda */}
+          <button
+            onClick={(e) => { e.stopPropagation(); prevImage(); }}
+            className="absolute left-4 sm:left-10 p-3 text-white/70 hover:text-white bg-black/20 hover:bg-black/60 rounded-full transition-all duration-200 z-50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Seta Direita */}
+          <button
+            onClick={(e) => { e.stopPropagation(); nextImage(); }}
+            className="absolute right-4 sm:right-10 p-3 text-white/70 hover:text-white bg-black/20 hover:bg-black/60 rounded-full transition-all duration-200 z-50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          {/* Imagem em Destaque com animação sutil de entrada */}
+          <div
+            className="relative w-full h-full flex items-center justify-center p-4 sm:p-12"
+            onClick={closeLightbox} // Clicar fora da imagem também fecha
+          >
+            <img
+              src={galleryImages[currentIndex].url}
+              alt={galleryImages[currentIndex].alt}
+              className="max-h-full max-w-full object-contain rounded-lg shadow-2xl animate-in fade-in zoom-in-95 duration-300"
+              onClick={(e) => e.stopPropagation()} // Evita que clicar na imagem feche o lightbox
+            />
+          </div>
+
+          {/* --- NOVO: BARRA DE PREVISÃO DE FOTOS (THUMBNAILS) --- */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-4xl p-4 flex flex-col items-center gap-4 z-50">
+
+            {/* Indicador de Paginação (re-posicionado aqui) */}
+            <div className="px-4 py-2 bg-black/50 backdrop-blur-md rounded-full text-white/90 text-sm font-medium tracking-wide">
+              Foto {currentIndex + 1} de {galleryImages.length}
+            </div>
+
+            {/* Container das Miniaturas */}
+            <div className="flex max-w-full flex-wrap justify-center gap-2 pb-2">
+              {galleryImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentIndex(idx)}
+                  className={cn(
+                    "relative h-20 w-20 rounded-lg overflow-hidden border-2 transition-all",
+                    currentIndex === idx
+                      ? "border-white scale-105 shadow-lg"
+                      : "border-transparent opacity-60 hover:opacity-100 hover:border-white/50"
+                  )}
+                >
+                  <img
+                    src={img.url}
+                    alt={`Previsão ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* --- FIM DO NOVO --- */}
+
+        </div>
+      )}
+      {/* --- FIM DO LIGHTBOX --- */}
+
       {/* Galeria de Fotos (Bento Grid) */}
       <Card className="p-0 overflow-hidden">
         <div className="p-4 sm:p-6 border-b border-zinc-100 flex justify-between items-center bg-white">
@@ -157,20 +274,52 @@ function ProfileManagementTab() {
         </div>
         <div className="p-4 sm:p-6 bg-zinc-50/50">
           <div className="grid grid-cols-2 sm:grid-cols-4 grid-rows-2 gap-3 h-75 sm:h-100">
-            <div className="col-span-2 row-span-2 relative rounded-xl border-2 border-wine-700 overflow-hidden group cursor-pointer">
-              <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&auto=format&fit=crop" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Principal" />
-              <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent"></div>
-              <div className="absolute top-3 left-3 bg-wine-700 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Capa</div>
-            </div>
-            <div className="relative rounded-xl overflow-hidden group cursor-pointer bg-zinc-200 border border-zinc-200">
-              <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Galeria 1" />
-            </div>
-            <div className="relative rounded-xl overflow-hidden group cursor-pointer bg-zinc-200 border border-zinc-200">
-              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Galeria 2" />
-            </div>
-            <div className="relative rounded-xl border-2 border-dashed border-zinc-300 bg-zinc-50 flex flex-col items-center justify-center text-zinc-400 hover:bg-zinc-100 hover:text-wine-700 hover:border-wine-300 transition-colors cursor-pointer">
+
+            {/* Renderização Dinâmica do Grid */}
+            {galleryImages.map((img, idx) => (
+              <div
+                key={idx}
+                onClick={() => {
+                  setCurrentIndex(idx);
+                  setLightboxOpen(true);
+                }}
+                className={cn(
+                  "relative rounded-xl overflow-hidden group cursor-pointer bg-zinc-200 transition-all",
+                  img.isCover ? "col-span-2 row-span-2 border-2 border-wine-700 shadow-sm" : "border border-zinc-200"
+                )}
+              >
+                <img
+                  src={img.url}
+                  className="w-full h-full object-cover group-hover:scale-105 group-hover:brightness-90 transition-all duration-500"
+                  alt={img.alt}
+                />
+
+                {/* Ícone de "Expandir" no hover */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/10">
+                  <div className="bg-white/90 p-2 rounded-full shadow-lg backdrop-blur-sm text-zinc-900 transform scale-90 group-hover:scale-100 transition-transform">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                  </div>
+                </div>
+
+                {img.isCover && (
+                  <>
+                    <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+                    <div className="absolute top-3 left-3 bg-wine-700 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">Capa</div>
+                  </>
+                )}
+              </div>
+            ))}
+
+            {/* Box de Upload */}
+            <div className="relative rounded-xl border-2 border-dashed border-zinc-300 bg-zinc-50 flex flex-col items-center justify-center text-zinc-400 hover:bg-zinc-100 hover:text-wine-700 hover:border-wine-300 transition-colors cursor-pointer group">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="mb-1 group-hover:scale-110 transition-transform">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
               <span className="text-xs font-bold uppercase tracking-wider mt-1">Upload</span>
             </div>
+
           </div>
         </div>
       </Card>
@@ -195,7 +344,7 @@ function ProfileManagementTab() {
               </div>
             </div>
 
-            {/* Mapa e Raio de Atendimento adicionados aqui */}
+            {/* Mapa e Raio de Atendimento */}
             <div className="pt-2 space-y-3">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider">Raio de Atendimento</label>
@@ -217,13 +366,12 @@ function ProfileManagementTab() {
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <button className="bg-white text-zinc-900 px-4 py-2 rounded-full shadow-md border border-zinc-200 flex items-center gap-2 text-sm font-bold hover:bg-zinc-50 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-wine-700"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-wine-700"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
                     Ajustar localização
                   </button>
                 </div>
               </div>
             </div>
-
           </div>
         </Card>
 
