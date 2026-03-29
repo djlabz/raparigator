@@ -15,6 +15,15 @@ export function BackButton({ className }: BackButtonProps) {
   // Não exibe o botão se estiver na página inicial
   if (pathname === "/") return null;
 
+  const handleClick = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.push("/");
+  };
+
   return (
     <Button
       variant="ghost"
@@ -23,7 +32,8 @@ export function BackButton({ className }: BackButtonProps) {
         "group gap-1 px-2 text-zinc-500 hover:text-wine-700 hover:bg-wine-50 transition-all",
         className
       )}
-      onClick={() => router.back()}
+      onClick={handleClick}
+      aria-label="Voltar"
       title="Voltar para a página anterior"
     >
       {/* Ícone ChevronLeft Inline (SVG) */}
