@@ -91,7 +91,7 @@ export function FeedScreen() {
               className={cn(
                 "py-2 px-3 rounded-lg text-xs font-semibold transition-colors border",
                 selectedGender === gender
-                  ? "border-wine-700 bg-wine-700 text-white"
+                  ? "border-wine-700 bg-wine-700 text-white!"
                   : "border-zinc-200 bg-white text-zinc-700 hover:border-wine-300 hover:bg-wine-50"
               )}
             >

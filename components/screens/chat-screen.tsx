@@ -18,17 +18,28 @@ export function ChatScreen() {
     <AppShell>
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
         <div className="grid min-h-[78vh] md:grid-cols-[300px_1fr]">
-          <aside className="border-r border-zinc-200">
-            <div className="border-b border-zinc-200 p-4"><h1 className="text-lg font-semibold text-zinc-900">Conversas</h1></div>
-            <ul className="max-h-[70vh] overflow-auto">
+          <aside className="border-r border-zinc-200 bg-zinc-50/50">
+            <div className="border-b border-zinc-200 bg-white p-4">
+              <h1 className="text-lg font-semibold text-zinc-900">Conversas</h1>
+            </div>
+            <ul className="max-h-[70vh] space-y-3 overflow-auto p-3">
               {conversations.map((conversation) => (
                 <li key={conversation.id}>
-                  <button className={cn("w-full border-b border-zinc-100 px-4 py-3 text-left hover:bg-zinc-50", activeConversation?.id === conversation.id && "bg-zinc-50")} onClick={() => setActiveConversationId(conversation.id)}>
-                    <div className="flex items-center justify-between">
+                  <button
+                    className={cn(
+                      // Adicionado 'cursor-pointer' aqui
+                      "w-full cursor-pointer rounded-xl border p-3 text-left transition-all duration-200 hover:border-wine-600 hover:shadow-md",
+                      activeConversation?.id === conversation.id
+                        ? "border-wine-600 bg-zinc-50 shadow-sm ring-1 ring-wine-600"
+                        : "border-zinc-200 bg-white"
+                    )}
+                    onClick={() => setActiveConversationId(conversation.id)}
+                  >
+                    <div className="mb-1 flex items-center justify-between">
                       <p className="text-sm font-semibold text-zinc-900">{conversation.contactName}</p>
                       <span className="text-xs text-zinc-500">{conversation.lastMessageAt}</span>
                     </div>
-                    <p className="text-xs text-zinc-500">{conversation.contactStatus}</p>
+                    <p className="mb-2 text-xs text-zinc-500">{conversation.contactStatus}</p>
                     <p className="truncate text-sm text-zinc-600">{conversation.lastMessage}</p>
                   </button>
                 </li>

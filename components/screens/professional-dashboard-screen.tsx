@@ -27,7 +27,7 @@ export function ProfessionalDashboardScreen() {
                 onClick={() => setActiveTab(tab)}
                 className={cn(
                   "w-full rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
-                  activeTab === tab ? "bg-wine-700 text-white" : "text-zinc-600 hover:bg-zinc-100"
+                  activeTab === tab ? "bg-wine-700 text-white!" : "text-zinc-600 hover:bg-zinc-100"
                 )}
               >
                 {tab}
@@ -45,7 +45,7 @@ export function ProfessionalDashboardScreen() {
                 onClick={() => setActiveTab(tab)}
                 className={cn(
                   "whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors",
-                  activeTab === tab ? "bg-wine-700 text-white" : "bg-zinc-100 text-zinc-600"
+                  activeTab === tab ? "bg-wine-700 text-white!" : "bg-zinc-100 text-zinc-600"
                 )}
               >
                 {tab}
