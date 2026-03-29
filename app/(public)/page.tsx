@@ -1,5 +1,5 @@
 ﻿import type { Metadata } from "next";
-import { OnboardingScreen } from "@/components/screens/onboarding-screen";
+import { OnboardingScreen } from "@/components/screens/onboarding-screen/onboarding-screen";
 
 export const metadata: Metadata = {
   title: "Sigillus | Plataforma discreta e segura",

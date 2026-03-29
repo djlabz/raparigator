@@ -29,7 +29,7 @@ export function TopHeader({ location }: TopHeaderProps) {
           <Link href="/chat" className="rounded-lg px-3 py-2 text-zinc-700 hover:bg-zinc-100">
             Chat
           </Link>
-          <Link href="/auth/login" className="rounded-lg bg-wine-700 px-3 py-2 font-medium text-white hover:bg-wine-800">
+          <Link href="/auth/login" className="rounded-lg bg-wine-700 px-3 py-2 font-medium text-white! hover:bg-wine-800" style={{ color: "#fff" }}>
             Entrar
           </Link>
         </div>

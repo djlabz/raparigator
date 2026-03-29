@@ -12,6 +12,8 @@
   --color-wine-100: #ffd2de;
   --color-wine-200: #ffacc2;
   --color-wine-300: #ff7ba1;
+  --color-wine-500: #d93a6a;
+  --color-wine-600: #c2184f;
   --color-wine-700: #b60031;
   --color-wine-800: #920027;
   --font-sans: var(--font-manrope);
@@ -33,4 +35,3 @@ a {
   color: inherit;
   text-decoration: none;
 }
-

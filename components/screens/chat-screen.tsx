@@ -16,19 +16,38 @@ export function ChatScreen() {
 
   return (
     <AppShell>
-      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+      {/* Container principal com sombra mais forte para destacar do resto do app */}
+      <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-xl">
         <div className="grid min-h-[78vh] md:grid-cols-[300px_1fr]">
-          <aside className="border-r border-zinc-200">
-            <div className="border-b border-zinc-200 p-4"><h1 className="text-lg font-semibold text-zinc-900">Conversas</h1></div>
-            <ul className="max-h-[70vh] overflow-auto">
+
+          {/* SIDEBAR: Fundo levemente cinza para separar da área de chat branca/cinza */}
+          <aside className="border-r border-zinc-200 bg-zinc-50/80 flex flex-col">
+            <div className="border-b border-zinc-200 bg-zinc-50/80 p-5">
+              <h1 className="text-lg font-bold text-zinc-900 tracking-tight">Conversas</h1>
+            </div>
+            <ul className="flex-1 space-y-1 overflow-auto p-3">
               {conversations.map((conversation) => (
                 <li key={conversation.id}>
-                  <button className={cn("w-full border-b border-zinc-100 px-4 py-3 text-left hover:bg-zinc-50", activeConversation?.id === conversation.id && "bg-zinc-50")} onClick={() => setActiveConversationId(conversation.id)}>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-zinc-900">{conversation.contactName}</p>
-                      <span className="text-xs text-zinc-500">{conversation.lastMessageAt}</span>
+                  <button
+                    className={cn(
+                      "w-full cursor-pointer rounded-xl p-3 text-left transition-all duration-200 border",
+                      // Estilo muito mais limpo para inativos e destaque suave para o ativo
+                      activeConversation?.id === conversation.id
+                        ? "bg-white border-zinc-200 shadow-sm ring-1 ring-wine-600/10"
+                        : "bg-transparent border-transparent hover:bg-zinc-200/50"
+                    )}
+                    onClick={() => setActiveConversationId(conversation.id)}
+                  >
+                    <div className="mb-1 flex items-center justify-between">
+                      <p className={cn(
+                        "text-sm font-semibold",
+                        activeConversation?.id === conversation.id ? "text-wine-700" : "text-zinc-900"
+                      )}>
+                        {conversation.contactName}
+                      </p>
+                      <span className="text-[11px] font-medium text-zinc-400">{conversation.lastMessageAt}</span>
                     </div>
-                    <p className="text-xs text-zinc-500">{conversation.contactStatus}</p>
+                    <p className="mb-1.5 text-[11px] font-medium text-zinc-500 uppercase tracking-wider">{conversation.contactStatus}</p>
                     <p className="truncate text-sm text-zinc-600">{conversation.lastMessage}</p>
                   </button>
                 </li>
@@ -36,21 +55,51 @@ export function ChatScreen() {
             </ul>
           </aside>
 
-          <section className="relative flex min-h-[70vh] flex-col">
-            <header className="border-b border-zinc-200 p-4">
-              <p className="text-sm font-semibold text-zinc-900">{activeConversation?.contactName}</p>
-              <p className="text-xs text-zinc-500">{activeConversation?.contactStatus}</p>
+          {/* MAIN CHAT AREA */}
+          <section className="relative flex min-h-[70vh] flex-col bg-zinc-100/80">
+            {/* Header flutuante com sombra sutil para separar do scroll */}
+            <header className="bg-white border-b border-zinc-200 p-5 z-10 shadow-[0_4px_15px_-10px_rgba(0,0,0,0.05)]">
+              <p className="text-base font-bold text-zinc-900">{activeConversation?.contactName}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <p className="text-xs font-medium text-zinc-500">{activeConversation?.contactStatus}</p>
+              </div>
             </header>
-            <div className="flex-1 space-y-3 overflow-auto bg-zinc-50 p-4">
+
+            {/* Área de mensagens com padding maior e fundo de contraste */}
+            <div className="flex-1 space-y-4 overflow-auto p-6">
               {currentMessages.map((message) => (
-                <div key={message.id} className={cn("max-w-[80%] rounded-2xl px-3 py-2 text-sm", message.from === "me" ? "ml-auto bg-wine-700 text-white" : "bg-white text-zinc-800")}>
-                  <p>{message.content}</p>
-                  <p className={cn("mt-1 text-[10px]", message.from === "me" ? "text-wine-100" : "text-zinc-400")}>{message.sentAt}</p>
+                <div
+                  key={message.id}
+                  className={cn(
+                    "flex flex-col max-w-[75%]",
+                    message.from === "me" ? "ml-auto items-end" : "mr-auto items-start"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "px-4 py-2.5 text-sm shadow-sm",
+                      // Formato clássico de balão de chat (cantos arredondados, exceto a ponta de quem fala)
+                      message.from === "me"
+                        ? "bg-wine-700 text-white rounded-2xl rounded-tr-sm"
+                        : "bg-white text-zinc-800 border border-zinc-200/60 rounded-2xl rounded-tl-sm"
+                    )}
+                  >
+                    <p className="leading-relaxed">{message.content}</p>
+                  </div>
+                  <span className="mt-1.5 text-[11px] font-medium text-zinc-400 px-1">
+                    {message.sentAt}
+                  </span>
                 </div>
               ))}
             </div>
+
+            {/* Input form */}
             <form
-              className="flex items-center gap-2 border-t border-zinc-200 bg-white p-3"
+              className="flex items-center gap-3 bg-white p-4 border-t border-zinc-200"
               onSubmit={(event) => {
                 event.preventDefault();
                 if (!draft.trim() || !activeConversation) return;
@@ -58,11 +107,21 @@ export function ChatScreen() {
                 setDraft("");
               }}
             >
-              <Button variant="secondary" type="button" aria-label="Anexar arquivo">+</Button>
-              <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Digite sua mensagem" className="h-11 flex-1 rounded-xl border border-zinc-200 px-3 text-sm focus:border-wine-600 focus:outline-none focus:ring-2 focus:ring-wine-200" />
-              <Button type="submit">Enviar</Button>
+              <Button variant="secondary" className="shrink-0 h-11 w-11 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600" type="button" aria-label="Anexar arquivo">
+                +
+              </Button>
+              <input
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                placeholder="Escreva sua mensagem..."
+                className="h-11 flex-1 rounded-full border border-zinc-200 bg-zinc-50 px-5 text-sm focus:bg-white focus:border-wine-500 focus:outline-none focus:ring-4 focus:ring-wine-500/10 transition-all"
+              />
+              <Button type="submit" className="shrink-0 h-11 px-6 rounded-full shadow-sm">
+                Enviar
+              </Button>
             </form>
           </section>
+
         </div>
       </div>
     </AppShell>

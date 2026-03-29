@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 
 export function PopularLinksSection() {
   return (
-    <section className="mt-8 space-y-3">
+    <section className="mt-2 md:mt-4 space-y-3">
       <div>
         <h2 className="text-xl font-semibold text-zinc-900">Informacoes mais vistas</h2>
         <p className="text-sm text-zinc-600">Acesse os blocos populares com um toque.</p>
