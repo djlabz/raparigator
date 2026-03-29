@@ -278,7 +278,7 @@ export function FeedScreen() {
                             <p className={cn("mb-1 inline-flex rounded-full px-2.5 py-1 text-xs font-medium", ad.status === "livre" ? "bg-emerald-50 text-emerald-700" : ad.status === "em_atendimento" ? "bg-amber-50 text-amber-700" : "bg-zinc-100 text-zinc-600")}>
                               {ad.status === "livre" ? "Livre" : ad.status === "em_atendimento" ? "Em atendimento" : "Indisponivel"}
                             </p>
-                            <h3 className="text-base font-semibold text-zinc-900 group-hover:text-wine-700 transition-colors">{ad.artisticName}</h3>
+                            <h3 className="text-base font-semibold text-zinc-900">{ad.artisticName}</h3>
                             <p className="text-xs text-zinc-500">{ad.neighborhood}, {ad.city}</p>
                           </div>
                           {ad.adTier === "premium" && (
@@ -286,7 +286,7 @@ export function FeedScreen() {
                           )}
                         </div>
                         <div className="flex items-center justify-between pt-2 border-t border-zinc-100">
-                          <p className="text-[10px] uppercase font-bold text-zinc-400">A partir de <span className="text-sm font-black text-wine-700 block">{currency(ad.startingPrice)}</span></p>
+                          <p className="text-[10px] uppercase font-bold text-zinc-400">A partir de <span className="text-sm font-black text-zinc-900 block">{currency(ad.startingPrice)}</span></p>
                           <span className="text-xs font-bold text-wine-700 opacity-0 transition-opacity group-hover:opacity-100 bg-wine-50 px-3 py-1.5 rounded-lg">Ver perfil</span>
                         </div>
                       </div>
