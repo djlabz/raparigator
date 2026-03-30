@@ -17,8 +17,9 @@ export function ProfessionalSignupScreen() {
           alt="Modelo para criacao de conta profissional"
           fill
           priority
-          className="object-contain object-center"
-          sizes="50vw"
+          quality={100}
+          className="object-cover object-[44%_center]"
+          sizes="(max-width: 768px) 100vw, 50vw"
         />
         <div className="absolute inset-0 bg-linear-to-br from-black/55 via-black/25 to-transparent" />
         <div className="relative z-10 flex h-full flex-col justify-end px-10 pb-14 text-white lg:px-14">
