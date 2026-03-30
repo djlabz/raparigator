@@ -1,4 +1,7 @@
-﻿import Image from "next/image";
+﻿"use client";
+
+import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
@@ -7,7 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 
 export function ProfessionalSignupScreen() {
+  // Controle de estado para os passos do formulário
+  const [step, setStep] = useState(1);
   const iconClassName = "h-4 w-4";
+
+  // Funções de navegação
+  const nextStep = () => setStep(2);
+  const prevStep = () => setStep(1);
 
   return (
     <div className="min-h-screen bg-zinc-50 md:grid md:grid-cols-2 md:items-start">
@@ -42,73 +51,87 @@ export function ProfessionalSignupScreen() {
               </Link>
             </div>
             <h1 className="mt-4 text-2xl font-semibold text-zinc-900">Criar conta profissional</h1>
-            <p className="text-sm text-zinc-600">Passo 1 de 3: Informacoes basicas</p>
+            <p className="text-sm text-zinc-600">
+              Passo {step} de 3: {step === 1 ? "Informacoes basicas" : "Dados complementares"}
+            </p>
+
+            {/* Barra de Progresso */}
+            <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200">
+              <div
+                className={`h-full bg-wine-800 transition-all duration-300 ease-in-out ${step === 1 ? 'w-1/3' : 'w-2/3'}`}
+              />
+            </div>
           </header>
 
           <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-300/40 md:p-6">
-            <form className="space-y-6">
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Passo 1: Informacoes basicas</p>
-                  <p className="text-xs text-zinc-500">Seu perfil inicia com os dados essenciais de validacao civil.</p>
+            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+
+              {/* PASSO 1 */}
+              {step === 1 && (
+                <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="space-y-1 mb-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Passo 1: Informacoes basicas</p>
+                    <p className="text-xs text-zinc-500">Seu perfil inicia com os dados essenciais de validacao civil.</p>
+                  </div>
+
+                  <Input
+                    id="cpf"
+                    label="CPF"
+                    placeholder="000.000.000-00"
+                    premium
+                    leadingIcon={
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                        <rect x="3" y="4" width="18" height="16" rx="2" />
+                        <path d="M8 8h8" />
+                        <path d="M8 12h5" />
+                      </svg>
+                    }
+                  />
+                  <Input
+                    id="civil-name"
+                    label="Nome civil"
+                    placeholder="Nome completo conforme documento"
+                    premium
+                    leadingIcon={
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M5 20a7 7 0 0 1 14 0" />
+                      </svg>
+                    }
+                  />
+                  <Input
+                    id="artistic-name"
+                    label="Nome artistico"
+                    placeholder="Como deseja ser vista(o)"
+                    premium
+                    leadingIcon={
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                        <path d="m12 3 2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5Z" />
+                      </svg>
+                    }
+                  />
+                  <Input
+                    id="phone"
+                    label="Telefone"
+                    placeholder="+55 (00) 00000-0000"
+                    premium
+                    leadingIcon={
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                        <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.7 19.7 0 0 1-8.6-3.1 19.3 19.3 0 0 1-6-6A19.7 19.7 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.8 2.6a2 2 0 0 1-.4 2.1L8.2 9.8a16 16 0 0 0 6 6l1.4-1.3a2 2 0 0 1 2.1-.4c.8.4 1.7.7 2.6.8A2 2 0 0 1 22 16.9Z" />
+                      </svg>
+                    }
+                  />
                 </div>
+              )}
 
-                <Input
-                  id="cpf"
-                  label="CPF"
-                  placeholder="000.000.000-00"
-                  premium
-                  leadingIcon={
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
-                      <rect x="3" y="4" width="18" height="16" rx="2" />
-                      <path d="M8 8h8" />
-                      <path d="M8 12h5" />
-                    </svg>
-                  }
-                />
-                <Input
-                  id="civil-name"
-                  label="Nome civil"
-                  placeholder="Nome completo conforme documento"
-                  premium
-                  leadingIcon={
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
-                      <circle cx="12" cy="8" r="4" />
-                      <path d="M5 20a7 7 0 0 1 14 0" />
-                    </svg>
-                  }
-                />
-                <Input
-                  id="artistic-name"
-                  label="Nome artistico"
-                  placeholder="Como deseja ser vista(o)"
-                  premium
-                  leadingIcon={
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
-                      <path d="m12 3 2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5Z" />
-                    </svg>
-                  }
-                />
-                <Input
-                  id="phone"
-                  label="Telefone"
-                  placeholder="+55 (00) 00000-0000"
-                  premium
-                  leadingIcon={
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
-                      <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.7 19.7 0 0 1-8.6-3.1 19.3 19.3 0 0 1-6-6A19.7 19.7 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.8 2.6a2 2 0 0 1-.4 2.1L8.2 9.8a16 16 0 0 0 6 6l1.4-1.3a2 2 0 0 1 2.1-.4c.8.4 1.7.7 2.6.8A2 2 0 0 1 22 16.9Z" />
-                    </svg>
-                  }
-                />
-              </div>
+              {/* PASSO 2 */}
+              {step === 2 && (
+                <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="space-y-1 mb-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Passo 2: Dados complementares</p>
+                    <p className="text-xs text-zinc-500">Complete os detalhes para liberar verificacao de perfil e atendimento.</p>
+                  </div>
 
-              <div className="border-t border-zinc-200 pt-6">
-                <div className="space-y-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Passo 2: Dados complementares</p>
-                  <p className="text-xs text-zinc-500">Complete os detalhes para liberar verificacao de perfil e atendimento.</p>
-                </div>
-
-                <div className="mt-3 space-y-3">
                   <Input
                     id="bank"
                     label="Dados bancarios"
@@ -180,31 +203,63 @@ export function ProfessionalSignupScreen() {
                       </svg>
                     }
                   />
-                </div>
-              </div>
 
-              <div className="pt-2">
-                <InfoBanner
-                  title="Verificacao de identidade"
-                  description="Para manter o padrao de seguranca da plataforma, seu perfil passa por confirmacao multipla de identidade."
-                  tone="secure"
-                  icon={
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
-                      <path d="M12 2a10 10 0 0 0-7 3v6c0 6 7 11 7 11s7-5 7-11V5a10 10 0 0 0-7-3Z" />
-                      <path d="M8.5 11a3.5 3.5 0 0 1 7 0" />
-                      <path d="M9 14h6" />
+                  <div className="pt-4 pb-2">
+                    <InfoBanner
+                      title="Verificacao de identidade"
+                      description="Para manter o padrao de seguranca da plataforma, seu perfil passa por confirmacao multipla de identidade."
+                      tone="secure"
+                      icon={
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                          <path d="M12 2a10 10 0 0 0-7 3v6c0 6 7 11 7 11s7-5 7-11V5a10 10 0 0 0-7-3Z" />
+                          <path d="M8.5 11a3.5 3.5 0 0 1 7 0" />
+                          <path d="M9 14h6" />
+                        </svg>
+                      }
+                    />
+                    <div className="mt-2 flex gap-2 pl-11 text-[10px] font-semibold uppercase tracking-[0.12em] text-wine-700">
+                      <span className="rounded-full border border-wine-200 bg-wine-50 px-2 py-1">Biometria</span>
+                      <span className="rounded-full border border-wine-200 bg-wine-50 px-2 py-1">Documento</span>
+                      <span className="rounded-full border border-wine-200 bg-wine-50 px-2 py-1">Blindagem</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* CONTROLES DE NAVEGAÇÃO */}
+              <div className="pt-2 flex gap-3">
+                {step === 2 && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={prevStep}
+                    className="flex items-center justify-center w-1/3 border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 h-4 w-4">
+                      <path d="m12 19-7-7 7-7" />
+                      <path d="M19 12H5" />
                     </svg>
-                  }
-                />
-                <div className="mt-2 flex gap-2 pl-11 text-[10px] font-semibold uppercase tracking-[0.12em] text-wine-700">
-                  <span className="rounded-full border border-wine-200 bg-wine-50 px-2 py-1">Biometria</span>
-                  <span className="rounded-full border border-wine-200 bg-wine-50 px-2 py-1">Documento</span>
-                  <span className="rounded-full border border-wine-200 bg-wine-50 px-2 py-1">Blindagem</span>
-                </div>
-              </div>
+                    Voltar
+                  </Button>
+                )}
 
-              <div className="pt-2">
-                <Button fullWidth>Continuar para verificacao</Button>
+                {step === 1 ? (
+                  <Button type="button" fullWidth onClick={nextStep} className="flex items-center justify-center">
+                    Continuar
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5 h-4 w-4">
+                      <path d="M5 12h14" />
+                      <path d="m12 5 7 7-7 7" />
+                    </svg>
+                  </Button>
+                ) : (
+                  <Button type="button" className="flex items-center justify-center w-2/3">
+                    Continuar para verificacao
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5 h-4 w-4">
+                      <path d="M5 12h14" />
+                      <path d="m12 5 7 7-7 7" />
+                    </svg>
+                  </Button>
+                )}
               </div>
             </form>
 
