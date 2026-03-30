@@ -10,18 +10,18 @@ export function ProfessionalSignupScreen() {
   const iconClassName = "h-4 w-4";
 
   return (
-    <div className="min-h-screen bg-zinc-50 md:grid md:grid-cols-2">
-      <section className="relative hidden min-h-screen overflow-hidden md:block">
+    <div className="min-h-screen bg-zinc-50 md:grid md:grid-cols-2 md:items-start">
+      <section className="relative hidden h-screen overflow-hidden bg-black md:sticky md:top-0 md:block">
         <Image
           src="/modelo_criar_conta_profissional.png"
           alt="Modelo para criacao de conta profissional"
           fill
           priority
-          className="object-cover object-[44%_center]"
+          className="object-contain object-center"
           sizes="50vw"
         />
         <div className="absolute inset-0 bg-linear-to-br from-black/55 via-black/25 to-transparent" />
-        <div className="relative z-10 flex min-h-screen flex-col justify-end px-10 pb-14 text-white lg:px-14">
+        <div className="relative z-10 flex h-full flex-col justify-end px-10 pb-14 text-white lg:px-14">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">Cadastro profissional</p>
           <h2 className="mt-4 max-w-lg font-display text-5xl leading-[0.95] text-white lg:text-6xl">Elegancia refinada no gerenciamento.</h2>
           <div className="mt-7 h-px w-24 bg-white/45" />
