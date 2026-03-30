@@ -50,8 +50,9 @@ export function ProfessionalSignupScreen() {
                 Sigillus
               </Link>
             </div>
-            <h1 className="mt-4 text-2xl font-semibold text-zinc-900">Criar conta profissional</h1>
-            <p className="text-sm text-zinc-600">
+            <h1 className="mt-4 text-3xl font-semibold text-zinc-900">Criar conta profissional</h1>
+            {/* AUMENTO DA FONTE E ESCURECIMENTO: de text-sm text-zinc-600 para text-base text-zinc-700 */}
+            <p className="mt-1 text-base text-zinc-700">
               Passo {step} de 3: {step === 1 ? "Informacoes basicas" : "Dados complementares"}
             </p>
 
@@ -68,10 +69,12 @@ export function ProfessionalSignupScreen() {
 
               {/* PASSO 1 */}
               {step === 1 && (
-                <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-1 mb-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Passo 1: Informacoes basicas</p>
-                    <p className="text-xs text-zinc-500">Seu perfil inicia com os dados essenciais de validacao civil.</p>
+                    {/* AUMENTO DA FONTE E ESCURECIMENTO: text-[11px] para text-xs, text-zinc-500 para text-zinc-600 */}
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">Passo 1: Informacoes basicas</p>
+                    {/* AUMENTO DA FONTE E ESCURECIMENTO: text-xs para text-sm, text-zinc-500 para text-zinc-700 */}
+                    <p className="text-sm text-zinc-700">Seu perfil inicia com os dados essenciais de validacao civil.</p>
                   </div>
 
                   <Input
@@ -126,10 +129,11 @@ export function ProfessionalSignupScreen() {
 
               {/* PASSO 2 */}
               {step === 2 && (
-                <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-1 mb-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Passo 2: Dados complementares</p>
-                    <p className="text-xs text-zinc-500">Complete os detalhes para liberar verificacao de perfil e atendimento.</p>
+                    {/* AUMENTO DA FONTE E ESCURECIMENTO */}
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">Passo 2: Dados complementares</p>
+                    <p className="text-sm text-zinc-700">Complete os detalhes para liberar verificacao de perfil e atendimento.</p>
                   </div>
 
                   <Input
@@ -217,10 +221,10 @@ export function ProfessionalSignupScreen() {
                         </svg>
                       }
                     />
-                    <div className="mt-2 flex gap-2 pl-11 text-[10px] font-semibold uppercase tracking-[0.12em] text-wine-700">
-                      <span className="rounded-full border border-wine-200 bg-wine-50 px-2 py-1">Biometria</span>
-                      <span className="rounded-full border border-wine-200 bg-wine-50 px-2 py-1">Documento</span>
-                      <span className="rounded-full border border-wine-200 bg-wine-50 px-2 py-1">Blindagem</span>
+                    <div className="mt-2 flex gap-2 pl-11 text-[11px] font-semibold uppercase tracking-[0.12em] text-wine-800">
+                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">Biometria</span>
+                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">Documento</span>
+                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">Blindagem</span>
                     </div>
                   </div>
                 </div>
@@ -233,7 +237,7 @@ export function ProfessionalSignupScreen() {
                     type="button"
                     variant="secondary"
                     onClick={prevStep}
-                    className="flex items-center justify-center w-1/3 border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                    className="flex items-center justify-center w-1/3 border-zinc-200 text-zinc-700 hover:bg-zinc-100 font-medium"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 h-4 w-4">
                       <path d="m12 19-7-7 7-7" />
@@ -244,7 +248,7 @@ export function ProfessionalSignupScreen() {
                 )}
 
                 {step === 1 ? (
-                  <Button type="button" fullWidth onClick={nextStep} className="flex items-center justify-center">
+                  <Button type="button" fullWidth onClick={nextStep} className="flex items-center justify-center font-medium">
                     Continuar
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5 h-4 w-4">
                       <path d="M5 12h14" />
@@ -252,7 +256,7 @@ export function ProfessionalSignupScreen() {
                     </svg>
                   </Button>
                 ) : (
-                  <Button type="button" className="flex items-center justify-center w-2/3">
+                  <Button type="button" className="flex items-center justify-center w-2/3 font-medium">
                     Continuar para verificacao
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5 h-4 w-4">
                       <path d="M5 12h14" />
@@ -263,7 +267,8 @@ export function ProfessionalSignupScreen() {
               </div>
             </form>
 
-            <p className="mt-6 text-center text-[11px] font-semibold uppercase tracking-[0.17em] text-zinc-500">
+            {/* AUMENTO DA FONTE E ESCURECIMENTO */}
+            <p className="mt-6 text-center text-xs font-semibold uppercase tracking-[0.17em] text-zinc-600">
               Seguro. Criptografado. Exclusivo.
             </p>
           </div>
