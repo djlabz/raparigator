@@ -6,6 +6,17 @@ import { Button } from "@/components/ui/button";
 import { conversations, messages } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
+// Função auxiliar para mapear o status para uma cor do Tailwind
+const getStatusColor = (status: string) => {
+  const normalizedStatus = status.toLowerCase();
+  if (normalizedStatus.includes("online")) return "text-emerald-600";
+  if (normalizedStatus.includes("ocupado")) return "text-red-500";
+  if (normalizedStatus.includes("ausente")) return "text-amber-500";
+  if (normalizedStatus.includes("digitando")) return "text-blue-500";
+  if (normalizedStatus.includes("offline")) return "text-zinc-400";
+  return "text-zinc-500"; // Cor padrão para status desconhecidos
+};
+
 export function ChatScreen() {
   const [activeConversationId, setActiveConversationId] = useState(conversations[0]?.id ?? "");
   const [draft, setDraft] = useState("");
@@ -16,11 +27,10 @@ export function ChatScreen() {
 
   return (
     <AppShell>
-      {/* Container principal com sombra mais forte para destacar do resto do app */}
       <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-xl">
         <div className="grid min-h-[78vh] md:grid-cols-[300px_1fr]">
 
-          {/* SIDEBAR: Fundo levemente cinza para separar da área de chat branca/cinza */}
+          {/* SIDEBAR */}
           <aside className="border-r border-zinc-200 bg-zinc-50/80 flex flex-col">
             <div className="border-b border-zinc-200 bg-zinc-50/80 p-5">
               <h1 className="text-lg font-bold text-zinc-900 tracking-tight">Conversas</h1>
@@ -31,7 +41,6 @@ export function ChatScreen() {
                   <button
                     className={cn(
                       "w-full cursor-pointer rounded-xl p-3 text-left transition-all duration-200 border",
-                      // Estilo muito mais limpo para inativos e destaque suave para o ativo
                       activeConversation?.id === conversation.id
                         ? "bg-white border-zinc-200 shadow-sm ring-1 ring-wine-600/10"
                         : "bg-transparent border-transparent hover:bg-zinc-200/50"
@@ -47,7 +56,15 @@ export function ChatScreen() {
                       </p>
                       <span className="text-[11px] font-medium text-zinc-400">{conversation.lastMessageAt}</span>
                     </div>
-                    <p className="mb-1.5 text-[11px] font-medium text-zinc-500 uppercase tracking-wider">{conversation.contactStatus}</p>
+
+                    {/* AQUI ESTÁ A MUDANÇA: Aplicando a cor dinamicamente baseada no status */}
+                    <p className={cn(
+                      "mb-1.5 text-[10px] font-bold uppercase tracking-wider",
+                      getStatusColor(conversation.contactStatus)
+                    )}>
+                      {conversation.contactStatus}
+                    </p>
+
                     <p className="truncate text-sm text-zinc-600">{conversation.lastMessage}</p>
                   </button>
                 </li>
@@ -57,19 +74,18 @@ export function ChatScreen() {
 
           {/* MAIN CHAT AREA */}
           <section className="relative flex min-h-[70vh] flex-col bg-zinc-100/80">
-            {/* Header flutuante com sombra sutil para separar do scroll */}
             <header className="bg-white border-b border-zinc-200 p-5 z-10 shadow-[0_4px_15px_-10px_rgba(0,0,0,0.05)]">
               <p className="text-base font-bold text-zinc-900">{activeConversation?.contactName}</p>
               <div className="flex items-center gap-2 mt-0.5">
+                {/* Opcional: Você pode aplicar a mesma lógica da bolinha verde aqui no header depois, se quiser */}
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", activeConversation?.contactStatus.toLowerCase().includes("online") ? "bg-emerald-400" : "bg-zinc-400")}></span>
+                  <span className={cn("relative inline-flex rounded-full h-2 w-2", activeConversation?.contactStatus.toLowerCase().includes("online") ? "bg-emerald-500" : "bg-zinc-400")}></span>
                 </span>
                 <p className="text-xs font-medium text-zinc-500">{activeConversation?.contactStatus}</p>
               </div>
             </header>
 
-            {/* Área de mensagens com padding maior e fundo de contraste */}
             <div className="flex-1 space-y-4 overflow-auto p-6">
               {currentMessages.map((message) => (
                 <div
@@ -82,7 +98,6 @@ export function ChatScreen() {
                   <div
                     className={cn(
                       "px-4 py-2.5 text-sm shadow-sm",
-                      // Formato clássico de balão de chat (cantos arredondados, exceto a ponta de quem fala)
                       message.from === "me"
                         ? "bg-wine-700 text-white rounded-2xl rounded-tr-sm"
                         : "bg-white text-zinc-800 border border-zinc-200/60 rounded-2xl rounded-tl-sm"
@@ -97,7 +112,6 @@ export function ChatScreen() {
               ))}
             </div>
 
-            {/* Input form */}
             <form
               className="flex items-center gap-3 bg-white p-4 border-t border-zinc-200"
               onSubmit={(event) => {
