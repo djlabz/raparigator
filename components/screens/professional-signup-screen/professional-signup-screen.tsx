@@ -63,7 +63,7 @@ export function ProfessionalSignupScreen() {
 
     const intervalId = window.setInterval(() => {
       setActiveCardIndex((currentIndex) => (currentIndex + 1) % stackedCards.length);
-    }, 4200);
+    }, 2500);
 
     return () => {
       window.clearInterval(intervalId);
