@@ -92,8 +92,15 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
             <Card className="space-y-3">
               <p className="text-sm text-zinc-600">A partir de</p>
               <p className="text-2xl font-semibold text-zinc-900">{currency(ad.startingPrice)}</p>
-              <Button fullWidth>Iniciar chat</Button>
-              <Link href="/checkout" className="block"><Button fullWidth variant="secondary">Contratar com custodia</Button></Link>
+
+              {/* Envolvendo o botão com o Link apontando para a página de chat */}
+              <Link href="/chat" className="block">
+                <Button fullWidth>Iniciar chat</Button>
+              </Link>
+
+              <Link href="/checkout" className="block">
+                <Button fullWidth variant="secondary">Contratar com custodia</Button>
+              </Link>
               <Button fullWidth variant="ghost" onClick={() => setRiskTarget("WhatsApp")}>Abrir WhatsApp</Button>
               <Button fullWidth variant="ghost" onClick={() => setRiskTarget("Telegram")}>Abrir Telegram</Button>
             </Card>

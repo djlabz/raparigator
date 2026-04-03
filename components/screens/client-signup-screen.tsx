@@ -402,9 +402,11 @@ export function ClientSignupScreen() {
                   Acesse sua conta
                 </Link>
               </p>
-              <p className="mt-3 border-t border-dashed border-zinc-200 pt-3 text-xs text-zinc-500">
+              {/* Aumentamos a margem, a fonte para text-sm e o contraste */}
+              <p className="mt-4 border-t border-dashed border-zinc-200 pt-4 text-sm text-zinc-600">
                 Voce e profissional e quer se cadastrar?{" "}
-                <Link href="/auth/cadastro/profissional" className="font-semibold text-zinc-900 hover:underline">
+                {/* Link agora usa a cor da marca (wine-700) e font-bold */}
+                <Link href="/auth/cadastro/profissional" className="font-bold text-wine-700 hover:underline">
                   Anuncie seu perfil aqui
                 </Link>
               </p>

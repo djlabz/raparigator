@@ -64,16 +64,18 @@ export function LoginScreen() {
       </form>
 
       {/* Rodapé de Cadastro redesenhado */}
-      <div className="mt-8 pt-6 border-t border-zinc-100 flex flex-col gap-3 text-center text-sm text-zinc-600">
+      <div className="mt-8 pt-6 border-t border-zinc-100 flex flex-col gap-4 text-center text-sm text-zinc-600">
         <p>
           Ainda não é cliente?{' '}
           <Link href="/auth/cadastro/cliente" className="font-bold text-wine-700 hover:underline">
             Criar conta grátis
           </Link>
         </p>
-        <p className="text-xs text-zinc-500">
+        {/* Retirado o text-xs text-zinc-500, agora herda o text-sm do container pai */}
+        <p className="text-zinc-600">
           Você é profissional?{' '}
-          <Link href="/auth/cadastro/profissional" className="font-bold text-zinc-900 hover:underline">
+          {/* Padronizado com font-bold e a cor wine-700 */}
+          <Link href="/auth/cadastro/profissional" className="font-bold text-wine-700 hover:underline">
             Anuncie seu perfil aqui
           </Link>
         </p>
