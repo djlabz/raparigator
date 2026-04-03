@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { BackButton } from "@/components/ui/back-button";
@@ -8,36 +8,114 @@ import { Button } from "@/components/ui/button";
 import { InfoBanner } from "@/components/ui/info-banner";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import styles from "./professional-signup-screen.module.css";
+
+const stackedCards = [
+  {
+    src: "/stacked_cards_1.png",
+    alt: "Modelo em destaque com fundo escuro e luz suave",
+  },
+  {
+    src: "/stacked_cards_2.png",
+    alt: "Modelo em destaque com composição premium e contraste dramático",
+  },
+  {
+    src: "/stacked_cards_3.png",
+    alt: "Modelo em destaque com pose elegante e acabamento refinado",
+  },
+];
+
+const cardPlacements = [
+  { x: 0, y: 0, scale: 1, rotate: -1.5, zIndex: 3 },
+  { x: 72, y: 28, scale: 0.93, rotate: 8, zIndex: 2 },
+  { x: -64, y: 46, scale: 0.86, rotate: -11, zIndex: 1 },
+];
 
 export function ProfessionalSignupScreen() {
   // Controle de estado para os passos do formulário
   const [step, setStep] = useState(1);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const iconClassName = "h-4 w-4";
 
   // Funções de navegação
   const nextStep = () => setStep(2);
   const prevStep = () => setStep(1);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const updatePreference = () => {
+      setPrefersReducedMotion(mediaQuery.matches);
+    };
+
+    updatePreference();
+
+    mediaQuery.addEventListener("change", updatePreference);
+
+    return () => {
+      mediaQuery.removeEventListener("change", updatePreference);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setActiveCardIndex((currentIndex) => (currentIndex + 1) % stackedCards.length);
+    }, 4200);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [prefersReducedMotion]);
+
   return (
     <div className="min-h-screen bg-zinc-50 md:grid md:grid-cols-2 md:items-start">
-      <section className="relative hidden h-screen overflow-hidden bg-black md:sticky md:top-0 md:block">
-        <Image
-          src="/modelo_criar_conta_profissional.png"
-          alt="Modelo para criacao de conta profissional"
-          fill
-          priority
-          quality={100}
-          className="object-cover object-[44%_center]"
-          sizes="(max-width: 768px) 100vw, 50vw"
-        />
-        <div className="absolute inset-0 bg-linear-to-br from-black/55 via-black/25 to-transparent" />
-        <div className="relative z-10 flex h-full flex-col justify-end px-10 pb-14 text-white lg:px-14">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">Cadastro profissional</p>
-          <h2 className="mt-4 max-w-lg font-display text-5xl leading-[0.95] text-white lg:text-6xl">Elegancia refinada no gerenciamento.</h2>
-          <div className="mt-7 h-px w-24 bg-white/45" />
-          <p className="mt-6 max-w-md text-base leading-relaxed text-white/80">
-            Entre para um grupo seleto de profissionais. Nossa plataforma combina discricao, seguranca e controle premium da sua presenca.
-          </p>
+      <section className={`relative hidden h-screen overflow-hidden md:sticky md:top-0 md:block ${styles.heroPane}`}>
+        <div className={styles.heroGlow} />
+        <div className={styles.heroGrid}>
+          <div className={styles.heroStack} aria-label="Mosaico de fotos das modelos">
+            <div className={styles.stageFrame}>
+              {stackedCards.map((card, index) => {
+                const slotIndex = (index - activeCardIndex + stackedCards.length) % stackedCards.length;
+                const placement = cardPlacements[slotIndex];
+
+                return (
+                  <div
+                    key={card.src}
+                    className={styles.stackCard}
+                    data-layer={slotIndex === 0 ? "front" : slotIndex === 1 ? "middle" : "back"}
+                    style={{
+                      transform: `translate3d(${placement.x}px, ${placement.y}px, 0) scale(${placement.scale}) rotate(${placement.rotate}deg)`,
+                      zIndex: placement.zIndex,
+                    }}
+                  >
+                    <Image
+                      src={card.src}
+                      alt={card.alt}
+                      fill
+                      priority={slotIndex === 0}
+                      quality={100}
+                      className={styles.stackImage}
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
+                    <div className={styles.stackOverlay} />
+                  </div>
+                );
+              })}
+
+              <div className={styles.heroCopy}>
+                <p className={styles.heroEyebrow}>Executive profile</p>
+                <h2 className={styles.heroTitle}>Curadoria de Elite</h2>
+                <p className={styles.heroDescription}>
+                  Um mosaico de presença premium que destaca cada modelo com profundidade, contraste e troca automática de cartas.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
