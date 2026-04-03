@@ -32,13 +32,11 @@ const cardPlacements = [
 ];
 
 export function ProfessionalSignupScreen() {
-  // Controle de estado para os passos do formulário
   const [step, setStep] = useState(1);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const iconClassName = "h-4 w-4";
 
-  // Funções de navegação
   const nextStep = () => setStep(2);
   const prevStep = () => setStep(1);
 
@@ -73,8 +71,9 @@ export function ProfessionalSignupScreen() {
   }, [prefersReducedMotion]);
 
   return (
-    <div className="min-h-screen bg-zinc-50 md:grid md:grid-cols-2 md:items-start">
-      <section className={`relative hidden h-screen overflow-hidden md:sticky md:top-0 md:block ${styles.heroPane}`}>
+    <div className="min-h-screen bg-zinc-50 flex flex-col md:grid md:grid-cols-2 md:items-start">
+      {/* Ajuste: Removido 'hidden' e 'md:block', e o h-screen passou a ser exclusivo do Desktop (md:h-screen) */}
+      <section className={`relative w-full overflow-hidden md:sticky md:top-0 md:h-screen ${styles.heroPane}`}>
         <div className={styles.heroGlow} />
         <div className={styles.heroGrid}>
           <div className={styles.heroStack} aria-label="Mosaico de fotos das modelos">
@@ -129,12 +128,10 @@ export function ProfessionalSignupScreen() {
               </Link>
             </div>
             <h1 className="mt-4 text-3xl font-semibold text-zinc-900">Criar conta profissional</h1>
-            {/* AUMENTO DA FONTE E ESCURECIMENTO: de text-sm text-zinc-600 para text-base text-zinc-700 */}
             <p className="mt-1 text-base text-zinc-700">
               Passo {step} de 3: {step === 1 ? "Informacoes basicas" : "Dados complementares"}
             </p>
 
-            {/* Barra de Progresso */}
             <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200">
               <div
                 className={`h-full bg-wine-800 transition-all duration-300 ease-in-out ${step === 1 ? 'w-1/3' : 'w-2/3'}`}
@@ -149,9 +146,7 @@ export function ProfessionalSignupScreen() {
               {step === 1 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-1 mb-4">
-                    {/* AUMENTO DA FONTE E ESCURECIMENTO: text-[11px] para text-xs, text-zinc-500 para text-zinc-600 */}
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">Passo 1: Informacoes basicas</p>
-                    {/* AUMENTO DA FONTE E ESCURECIMENTO: text-xs para text-sm, text-zinc-500 para text-zinc-700 */}
                     <p className="text-sm text-zinc-700">Seu perfil inicia com os dados essenciais de validacao civil.</p>
                   </div>
 
@@ -209,7 +204,6 @@ export function ProfessionalSignupScreen() {
               {step === 2 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-1 mb-4">
-                    {/* AUMENTO DA FONTE E ESCURECIMENTO */}
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">Passo 2: Dados complementares</p>
                     <p className="text-sm text-zinc-700">Complete os detalhes para liberar verificacao de perfil e atendimento.</p>
                   </div>
@@ -345,7 +339,6 @@ export function ProfessionalSignupScreen() {
               </div>
             </form>
 
-            {/* AUMENTO DA FONTE E ESCURECIMENTO */}
             <p className="mt-6 text-center text-xs font-semibold uppercase tracking-[0.17em] text-zinc-600">
               Seguro. Criptografado. Exclusivo.
             </p>

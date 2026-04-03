@@ -1,10 +1,16 @@
+/* =========================================
+   MOBILE FIRST (Padrão para telas pequenas)
+   ========================================= */
 .heroPane {
-  --hero-pad-x: 2.25rem;
-  --hero-pad-y: 2.25rem;
-  --hero-stack-width: min(36rem, calc(100% - 4.5rem));
-  --hero-stack-height: min(46rem, calc(100vh - 4.5rem));
+  --hero-pad-x: 1.5rem;
+  --hero-pad-y: 2rem;
+  --hero-stack-width: min(22rem, 100%);
+  --hero-stack-height: 280px;
+
   position: relative;
-  min-height: 100vh;
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
   user-select: none;
   -webkit-user-select: none;
   background:
@@ -26,8 +32,10 @@
   position: relative;
   z-index: 1;
   display: flex;
-  min-height: 100vh;
+  min-height: auto;
+  flex-direction: column;
   align-items: center;
+  width: 100%;
   padding: var(--hero-pad-y) var(--hero-pad-x);
 }
 
@@ -96,11 +104,11 @@
 }
 
 .heroCopy {
-  position: absolute;
-  left: 2rem;
-  right: 2rem;
-  bottom: 2rem;
+  position: relative;
+  text-align: center;
+  margin-top: 1.5rem;
   z-index: 4;
+  width: 100%;
   max-width: 25rem;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -108,7 +116,7 @@
 
 .heroEyebrow {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.28em;
   text-transform: uppercase;
@@ -116,33 +124,55 @@
 }
 
 .heroTitle {
-  margin: 0.75rem 0 0;
+  margin: 0.5rem 0 0;
   font-family: var(--font-display, inherit);
-  font-size: clamp(2.4rem, 4vw, 4.2rem);
-  line-height: 0.95;
+  font-size: clamp(1.8rem, 8vw, 2.4rem);
+  line-height: 1.1;
   letter-spacing: -0.04em;
 }
 
 .heroDescription {
-  margin: 0.85rem 0 0;
-  max-width: 24rem;
-  font-size: 0.96rem;
-  line-height: 1.7;
+  margin: 0.5rem auto 0;
+  max-width: 20rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
   color: rgba(255, 255, 255, 0.82);
 }
 
+/* =========================================
+   TABLET E DESKTOP (Restaura o visual original)
+   ========================================= */
 @media (min-width: 768px) {
   .heroPane {
     --hero-pad-x: 2rem;
     --hero-pad-y: 1.75rem;
     --hero-stack-width: min(32rem, calc(100% - 4rem));
     --hero-stack-height: min(42rem, calc(100vh - 3.5rem));
+    min-height: 100vh;
+    display: block;
+  }
+
+  .heroGrid {
+    min-height: 100vh;
+    flex-direction: row;
+    width: auto;
   }
 
   .heroCopy {
+    position: absolute;
     left: 1.75rem;
     right: 1.75rem;
     bottom: 1.75rem;
+    text-align: left;
+    margin-top: 0;
+  }
+
+  .heroTitle {
+    font-size: clamp(2.4rem, 4vw, 4.2rem);
+  }
+
+  .heroDescription {
+    margin: 0.85rem 0 0;
   }
 }
 
