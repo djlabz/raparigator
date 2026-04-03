@@ -1,5 +1,5 @@
 ﻿import type { Metadata } from "next";
-import { ProfessionalDashboardScreen } from "@/components/screens/professional-signup-screnn/professional-dashboard-screen";
+import { ProfessionalDashboardScreen } from "@/components/screens/professional-signup-screen/professional-dashboard-screen";
 
 export const metadata: Metadata = { title: "Dashboard profissional | Sigillus", description: "Gerencie anuncio, servicos, valores e historico na area profissional da Sigillus." };
 

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { InfoBanner } from "@/components/ui/info-banner";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import styles from "./professional-signup-screen.module.css";
+import styles from "./professional-signup-screen/professional-signup-screen.module.css";
 
 const stackedCards = [
   {
