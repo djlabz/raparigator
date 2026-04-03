@@ -1,0 +1,201 @@
+/* =========================================
+   MOBILE FIRST (Padrão para telas pequenas)
+   ========================================= */
+.heroPane {
+  --hero-pad-x: 1.5rem;
+  --hero-pad-y: 2rem;
+  --hero-stack-width: min(22rem, 100%);
+  --hero-stack-height: 280px;
+
+  position: relative;
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  -webkit-user-select: none;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(175, 11, 46, 0.3), transparent 26%),
+    radial-gradient(circle at 82% 28%, rgba(255, 255, 255, 0.12), transparent 22%),
+    linear-gradient(135deg, #050505 0%, #101010 58%, #0a0a0a 100%);
+}
+
+.heroGlow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 65%, rgba(176, 15, 47, 0.28), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 40%);
+  pointer-events: none;
+}
+
+.heroGrid {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: auto;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: var(--hero-pad-y) var(--hero-pad-x);
+}
+
+.heroStack {
+  position: relative;
+  width: 100%;
+  height: var(--hero-stack-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stageFrame {
+  position: relative;
+  width: var(--hero-stack-width);
+  height: 100%;
+  isolation: isolate;
+}
+
+.stackCard {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 2rem;
+  background: #0f0f11;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.42),
+    0 12px 26px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition:
+    transform 780ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 780ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.stackCard[data-layer="front"] {
+  box-shadow:
+    0 44px 90px rgba(0, 0, 0, 0.5),
+    0 16px 30px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.stackCard[data-layer="middle"] {
+  filter: saturate(0.94) brightness(0.96);
+}
+
+.stackCard[data-layer="back"] {
+  filter: saturate(0.85) brightness(0.88);
+}
+
+.stackImage {
+  object-fit: cover;
+  object-position: center;
+}
+
+.stackOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.1) 48%, rgba(0, 0, 0, 0.58) 100%),
+    radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.08), transparent 42%);
+  pointer-events: none;
+}
+
+.heroCopy {
+  position: relative;
+  text-align: center;
+  margin-top: 1.5rem;
+  z-index: 4;
+  width: 100%;
+  max-width: 25rem;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.heroEyebrow {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.heroTitle {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.8rem, 8vw, 2.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.heroDescription {
+  margin: 0.5rem auto 0;
+  max-width: 20rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* =========================================
+   TABLET E DESKTOP (Restaura o visual original)
+   ========================================= */
+@media (min-width: 768px) {
+  .heroPane {
+    --hero-pad-x: 2rem;
+    --hero-pad-y: 1.75rem;
+    --hero-stack-width: min(32rem, calc(100% - 4rem));
+    --hero-stack-height: min(42rem, calc(100vh - 3.5rem));
+    min-height: 100vh;
+    display: block;
+  }
+
+  .heroGrid {
+    min-height: 100vh;
+    flex-direction: row;
+    width: auto;
+  }
+
+  .heroCopy {
+    position: absolute;
+    left: 1.75rem;
+    right: 1.75rem;
+    bottom: 1.75rem;
+    text-align: left;
+    margin-top: 0;
+  }
+
+  .heroTitle {
+    font-size: clamp(2.4rem, 4vw, 4.2rem);
+  }
+
+  .heroDescription {
+    margin: 0.85rem 0 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heroPane {
+    --hero-pad-x: 2.25rem;
+    --hero-pad-y: 2rem;
+    --hero-stack-width: min(36rem, calc(100% - 4.5rem));
+    --hero-stack-height: min(46rem, calc(100vh - 4rem));
+  }
+}
+
+@media (min-width: 1280px) {
+  .heroPane {
+    --hero-stack-width: min(38rem, calc(100% - 5rem));
+    --hero-stack-height: min(48rem, calc(100vh - 4.5rem));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .stackCard,
+  .heroPane {
+    transition-duration: 0ms;
+  }
+}
