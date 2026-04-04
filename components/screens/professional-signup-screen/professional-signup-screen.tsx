@@ -35,10 +35,33 @@ export function ProfessionalSignupScreen() {
   const [step, setStep] = useState(1);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [cpf, setCpf] = useState("");
   const iconClassName = "h-4 w-4";
 
   const nextStep = () => setStep(2);
   const prevStep = () => setStep(1);
+
+  const formatCpf = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    const firstPart = digits.slice(0, 3);
+    const secondPart = digits.slice(3, 6);
+    const thirdPart = digits.slice(6, 9);
+    const lastPart = digits.slice(9, 11);
+
+    if (digits.length <= 3) {
+      return firstPart;
+    }
+
+    if (digits.length <= 6) {
+      return `${firstPart}.${secondPart}`;
+    }
+
+    if (digits.length <= 9) {
+      return `${firstPart}.${secondPart}.${thirdPart}`;
+    }
+
+    return `${firstPart}.${secondPart}.${thirdPart}-${lastPart}`;
+  };
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -154,7 +177,12 @@ export function ProfessionalSignupScreen() {
                     id="cpf"
                     label="CPF"
                     placeholder="000.000.000-00"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    maxLength={14}
                     premium
+                    value={cpf}
+                    onChange={(event) => setCpf(formatCpf(event.target.value))}
                     leadingIcon={
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
                         <rect x="3" y="4" width="18" height="16" rx="2" />
@@ -337,6 +365,13 @@ export function ProfessionalSignupScreen() {
                   </Button>
                 )}
               </div>
+
+              <p className="text-center text-sm text-zinc-600">
+                Ainda não é cliente?{" "}
+                <Link href="/auth/cadastro/cliente" className="font-semibold text-wine-800 hover:text-wine-900 hover:underline">
+                  Criar conta grátis
+                </Link>
+              </p>
             </form>
 
             <p className="mt-6 text-center text-xs font-semibold uppercase tracking-[0.17em] text-zinc-600">
