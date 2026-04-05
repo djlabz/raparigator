@@ -30,6 +30,19 @@ export function AccountMenu({ role, user, onLogout }: AccountMenuProps) {
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, []);
 
+  useEffect(() => {
+    if (!openNotifications) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [openNotifications]);
+
   return (
     <div ref={menuRef} className="relative">
       <div className="flex items-center gap-2">
@@ -89,9 +102,9 @@ export function AccountMenu({ role, user, onLogout }: AccountMenuProps) {
               setOpen(false);
               onLogout();
             }}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium text-zinc-900 transition hover:bg-zinc-100"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
           >
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-zinc-900 ring-1 ring-zinc-300">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-red-600 ring-1 ring-red-200">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10 17H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h5" />
                 <path d="M15 12H3" />
@@ -112,7 +125,7 @@ export function AccountMenu({ role, user, onLogout }: AccountMenuProps) {
             onClick={() => setOpenNotifications(false)}
             aria-label="Fechar painel de notificações"
           />
-          <aside className="fixed right-0 top-0 z-50 h-screen w-full max-w-sm border-l border-zinc-200 bg-white shadow-2xl shadow-zinc-900/20 animate-in slide-in-from-right duration-300">
+          <aside className="fixed right-0 top-0 z-50 flex h-screen w-full max-w-sm flex-col overflow-hidden border-l border-zinc-200 bg-white shadow-2xl shadow-zinc-900/20 animate-in slide-in-from-right duration-300">
             <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Central de notificações</p>
@@ -122,7 +135,7 @@ export function AccountMenu({ role, user, onLogout }: AccountMenuProps) {
                 Fechar
               </button>
             </div>
-            <div className="space-y-3 overflow-y-auto px-4 py-4">
+            <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
               {notifications.map((notification) => (
                 <button
                   key={notification.id}

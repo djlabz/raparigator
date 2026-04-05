@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,21 @@ import { dashboardSummary } from "@/lib/mock-data";
 import { currency, cn } from "@/lib/utils";
 
 const tabs = ["Resumo", "Servicos", "Valores", "Perfil", "Historico"];
+const availabilityDays = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB", "DOM"] as const;
+
+type AvailabilityDay = {
+  day: string;
+  enabled: boolean;
+  start: string;
+  end: string;
+};
+
+const defaultAvailability: AvailabilityDay[] = availabilityDays.map((day, index) => ({
+  day,
+  enabled: index <= 4,
+  start: index <= 4 ? "10:00" : "--:--",
+  end: index <= 4 ? (index === 4 ? "00:00" : "22:00") : "--:--",
+}));
 
 // Dados simulados da galeria (idealmente virão da tua API/banco de dados)
 const galleryImages = [
@@ -23,7 +39,7 @@ export function ProfessionalDashboardScreen() {
 
   return (
     <AppShell>
-      <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
+      <div className="grid gap-4 overflow-x-hidden lg:gap-6 lg:grid-cols-[240px_1fr]">
         {/* Menu Lateral Desktop */}
         <aside className="hidden rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm lg:block h-fit sticky top-24">
           <p className="mb-4 text-lg font-bold text-zinc-900">Painel profissional</p>
@@ -43,7 +59,7 @@ export function ProfessionalDashboardScreen() {
           </nav>
         </aside>
 
-        <div className="space-y-6">
+        <div className="space-y-4 overflow-x-hidden lg:space-y-6">
           {/* Menu Superior Mobile */}
           <div className="flex gap-2 overflow-auto lg:hidden hide-scrollbar pb-2">
             {tabs.map((tab) => (
@@ -51,7 +67,7 @@ export function ProfessionalDashboardScreen() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={cn(
-                  "whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                  "whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium transition-colors sm:px-4",
                   activeTab === tab ? "bg-wine-700 text-white!" : "bg-zinc-100 text-zinc-600"
                 )}
               >
@@ -60,37 +76,55 @@ export function ProfessionalDashboardScreen() {
             ))}
           </div>
 
-          {/* Cabeçalho de Status Persistente */}
-          <Card className="flex flex-wrap items-center justify-between gap-3 bg-white">
-            <div>
-              <p className="text-sm text-zinc-500 font-medium">Status do anúncio público</p>
-              <div className="flex items-center gap-2 mt-1">
-                {/* Container relativo para empilhar as bolinhas */}
-                <div className="relative flex h-3 w-3 items-center justify-center">
-                  {/* Bolinha que faz o efeito de pulso */}
-                  {activeAd && (
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                  )}
-                  {/* Bolinha principal estática */}
-                  <span
-                    className={cn(
-                      "relative inline-flex h-2.5 w-2.5 rounded-full transition-colors duration-300",
-                      activeAd ? "bg-emerald-500" : "bg-zinc-300"
-                    )}
-                  />
+          <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+            <Card className="space-y-4 bg-white p-4 sm:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Painel profissional</p>
+                  <h2 className="mt-1 text-2xl font-semibold text-zinc-900">Anúncios ativos</h2>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="relative flex h-3 w-3 items-center justify-center">
+                      {activeAd && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>}
+                      <span className={cn("relative inline-flex h-2.5 w-2.5 rounded-full transition-colors duration-300", activeAd ? "bg-emerald-500" : "bg-zinc-300")} />
+                    </span>
+                    <p className="text-lg font-bold text-zinc-900">{activeAd ? "Ativo e visível" : "Pausado"}</p>
+                  </div>
                 </div>
-                <p className="text-lg font-bold text-zinc-900">
-                  {activeAd ? "Ativo e visível" : "Pausado"}
-                </p>
+                <Button
+                  className={cn("transition-all", activeAd ? "bg-zinc-100 text-zinc-900 hover:bg-zinc-200" : "bg-wine-700 text-white hover:bg-wine-800")}
+                  onClick={() => setActiveAd((value) => !value)}
+                >
+                  {activeAd ? "Pausar anúncio" : "Ativar anúncio"}
+                </Button>
               </div>
-            </div>
-            <Button
-              className={cn("transition-all", activeAd ? "bg-zinc-100 text-zinc-900 hover:bg-zinc-200" : "bg-wine-700 text-white hover:bg-wine-800")}
-              onClick={() => setActiveAd((value) => !value)}
-            >
-              {activeAd ? "Pausar anúncio" : "Ativar anúncio"}
-            </Button>
-          </Card>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Link href="/profissional/anuncios" className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-100">
+                  Gerenciar anúncios
+                </Link>
+                <Link href="/profissional/financeiro" className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-100">
+                  Abrir financeiro
+                </Link>
+              </div>
+            </Card>
+
+            <Card className="space-y-4 bg-white p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-3 border-b border-zinc-100 pb-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Atalho do painel</p>
+                  <h3 className="mt-1 text-lg font-semibold text-zinc-900">Resumo financeiro</h3>
+                </div>
+                <span className="rounded-full bg-wine-50 px-3 py-1 text-xs font-semibold text-wine-700">Web</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <MetricCard title="Receita do mês" value={currency(dashboardSummary.monthRevenue)} />
+                <MetricCard title="Atendimentos" value={String(dashboardSummary.completedServices)} />
+                <MetricCard title="Visualizações" value={String(dashboardSummary.profileViews)} />
+                <MetricCard title="Conversão" value={`${dashboardSummary.conversionRate}%`} />
+              </div>
+            </Card>
+          </section>
 
           {/* CONTEÚDO DAS ABAS */}
 
@@ -154,6 +188,25 @@ function HistoryItem({ title, subtitle }: { title: string; subtitle: string }) {
 function ProfileManagementTab() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [availability, setAvailability] = useState<AvailabilityDay[]>(defaultAvailability);
+
+  useEffect(() => {
+    const storedAvailability = window.localStorage.getItem("sigillus-professional-availability");
+    if (!storedAvailability) return;
+
+    try {
+      const parsedAvailability = JSON.parse(storedAvailability) as AvailabilityDay[];
+      if (Array.isArray(parsedAvailability) && parsedAvailability.length === defaultAvailability.length) {
+        setAvailability(parsedAvailability);
+      }
+    } catch {
+      window.localStorage.removeItem("sigillus-professional-availability");
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("sigillus-professional-availability", JSON.stringify(availability));
+  }, [availability]);
 
   // Funções de navegação do Lightbox
   const nextImage = () => setCurrentIndex((prev) => (prev + 1) % galleryImages.length);
@@ -265,15 +318,15 @@ function ProfileManagementTab() {
       {/* --- FIM DO LIGHTBOX --- */}
 
       {/* Galeria de Fotos (Bento Grid) */}
-      <Card className="p-0 overflow-hidden">
+      <Card className="overflow-hidden p-0">
         <div className="p-4 sm:p-6 border-b border-zinc-100 flex justify-between items-center bg-white">
           <h3 className="font-bold text-lg text-zinc-900">Galeria de Fotos</h3>
           <Button className="h-9 rounded-lg border border-wine-700 bg-wine-700 px-4 text-sm font-bold text-white hover:bg-wine-800">
             + Adicionar
           </Button>
         </div>
-        <div className="p-4 sm:p-6 bg-zinc-50/50">
-          <div className="grid grid-cols-2 sm:grid-cols-4 grid-rows-2 gap-3 h-75 sm:h-100">
+        <div className="bg-zinc-50/50 p-4 sm:p-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:grid-rows-2">
 
             {/* Renderização Dinâmica do Grid */}
             {galleryImages.map((img, idx) => (
@@ -324,16 +377,16 @@ function ProfileManagementTab() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
         {/* Detalhes & Localização */}
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <h3 className="font-bold text-lg mb-6 text-zinc-900 border-b border-zinc-100 pb-4">Detalhes & Localização</h3>
           <div className="space-y-5">
             <div>
               <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Nome Artístico</label>
               <input type="text" defaultValue="Isabella Valente" className="w-full rounded-lg border border-zinc-200 px-4 py-2.5 text-sm focus:border-wine-700 focus:ring-1 focus:ring-wine-700 outline-none transition-all font-medium" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Cidade</label>
                 <input type="text" defaultValue="São Paulo" className="w-full rounded-lg border border-zinc-200 px-4 py-2.5 text-sm focus:border-wine-700 focus:ring-1 focus:ring-wine-700 outline-none transition-all font-medium" />
@@ -376,28 +429,42 @@ function ProfileManagementTab() {
         </Card>
 
         {/* Disponibilidade */}
-        <Card className="p-6 flex flex-col">
+        <Card className="flex flex-col p-4 sm:p-6">
           <h3 className="font-bold text-lg mb-6 text-zinc-900 border-b border-zinc-100 pb-4">Disponibilidade</h3>
           <div className="space-y-4 flex-1">
-            {["SEG", "TER", "QUA", "QUI", "SEX", "SAB", "DOM"].map((day, i) => (
-              <div key={day} className={`flex items-center justify-between ${i > 4 ? 'opacity-50' : ''}`}>
+            {availability.map((entry, index) => (
+              <div key={entry.day} className={`flex flex-wrap items-center justify-between gap-2 ${!entry.enabled ? 'opacity-50' : ''}`}>
                 <div className="flex items-center gap-3">
-                  <span className="w-8 text-xs font-black text-zinc-500">{day}</span>
+                  <span className="w-8 text-xs font-black text-zinc-500">{entry.day}</span>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked={i <= 4} />
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={entry.enabled}
+                      onChange={() => setAvailability((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, enabled: !item.enabled, start: !item.enabled ? "10:00" : "--:--", end: !item.enabled ? (index === 4 ? "00:00" : "22:00") : "--:--" } : item))}
+                    />
                     <div className="w-9 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-wine-700"></div>
                   </label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input type="text" defaultValue={i <= 4 ? "10:00" : "--:--"} disabled={i > 4} className="w-18 text-center border border-zinc-200 rounded-md text-xs font-bold px-2 py-2 focus:border-wine-700 outline-none disabled:bg-zinc-50" />
+                  <input
+                    type="text"
+                    value={entry.start}
+                    disabled={!entry.enabled}
+                    onChange={(event) => setAvailability((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, start: event.target.value } : item))}
+                    className="w-16 text-center border border-zinc-200 rounded-md text-xs font-bold px-2 py-2 focus:border-wine-700 outline-none disabled:bg-zinc-50 sm:w-20"
+                  />
                   <span className="text-zinc-400 text-xs">—</span>
-                  <input type="text" defaultValue={i <= 4 ? (i === 4 ? "00:00" : "22:00") : "--:--"} disabled={i > 4} className="w-18 text-center border border-zinc-200 rounded-md text-xs font-bold px-2 py-2 focus:border-wine-700 outline-none disabled:bg-zinc-50" />
+                  <input
+                    type="text"
+                    value={entry.end}
+                    disabled={!entry.enabled}
+                    onChange={(event) => setAvailability((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, end: event.target.value } : item))}
+                    className="w-16 text-center border border-zinc-200 rounded-md text-xs font-bold px-2 py-2 focus:border-wine-700 outline-none disabled:bg-zinc-50 sm:w-20"
+                  />
                 </div>
               </div>
             ))}
-          </div>
-          <div className="mt-6 pt-4 border-t border-zinc-100">
-            <Button className="w-full bg-zinc-900 hover:bg-black text-white">Salvar Perfil</Button>
           </div>
         </Card>
       </div>
@@ -407,7 +474,7 @@ function ProfileManagementTab() {
 
 function ServicesManagementTab() {
   return (
-    <Card className="p-6 space-y-6">
+    <Card className="space-y-6 p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-100 pb-4">
         <h3 className="font-bold text-lg text-zinc-900">Serviços & Valores</h3>
         <button className="text-wine-700 text-sm font-bold hover:underline border-2 border-dashed border-wine-200 px-4 py-2 rounded-lg bg-wine-50/50">
