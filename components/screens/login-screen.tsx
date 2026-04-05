@@ -27,7 +27,7 @@ export function LoginScreen() {
     }
 
     setRole(user.role);
-    router.push(user.role === "cliente" ? "/feed" : "/profissional/dashboard");
+    router.push("/conta");
   };
 
   return (

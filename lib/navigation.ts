@@ -42,7 +42,7 @@ export function getProfileHref(role: AuthRole) {
     case "cliente":
       return "/conta";
     case "profissional":
-      return "/profissional/dashboard";
+      return "/conta";
     default:
       return "/auth/login";
   }

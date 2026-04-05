@@ -53,7 +53,12 @@ export function useAuthSession() {
     role,
     user,
     isLoggedIn: role !== "visitor",
-    logout: () => setStoredRole("visitor"),
+    logout: () => {
+      setStoredRole("visitor");
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
+    },
     setRole: (nextRole: AuthRole) => setStoredRole(nextRole),
   };
 }

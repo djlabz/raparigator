@@ -21,7 +21,7 @@ const maskCPF = (value: string) => {
 };
 
 export function ClientSignupScreen() {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [cpfValue, setCpfValue] = useState("");
   const [fullName, setFullName] = useState("");
   const [nicknameEnabled, setNicknameEnabled] = useState(false);
@@ -36,6 +36,9 @@ export function ClientSignupScreen() {
   const [confirmEmailError, setConfirmEmailError] = useState<string | undefined>();
   const [passwordError, setPasswordError] = useState<string | undefined>();
   const [confirmPasswordError, setConfirmPasswordError] = useState<string | undefined>();
+  const [cpfError, setCpfError] = useState<string | undefined>();
+  const [fullNameError, setFullNameError] = useState<string | undefined>();
+  const [shakeStep, setShakeStep] = useState<1 | 2 | null>(null);
 
   const [toast, setToast] = useState<{ title: string; message: string; type: "success" | "error" | "info" } | null>(null);
 
@@ -51,6 +54,16 @@ export function ClientSignupScreen() {
     setConfirmEmailError(undefined);
     setPasswordError(undefined);
     setConfirmPasswordError(undefined);
+  };
+
+  const clearStepOneErrors = () => {
+    setCpfError(undefined);
+    setFullNameError(undefined);
+  };
+
+  const triggerShake = (targetStep: 1 | 2) => {
+    setShakeStep(targetStep);
+    window.setTimeout(() => setShakeStep((current) => (current === targetStep ? null : current)), 320);
   };
 
   const handleCpfChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,13 +86,44 @@ export function ClientSignupScreen() {
     }
   };
 
+  const validateStepOne = () => {
+    let hasError = false;
+    clearStepOneErrors();
+
+    if (cpfValue.replace(/\D/g, "").length !== 11) {
+      setCpfError("Informe um CPF válido.");
+      hasError = true;
+    }
+
+    if (!fullName.trim()) {
+      setFullNameError("Informe seu nome completo.");
+      hasError = true;
+    }
+
+    if (hasError) {
+      triggerShake(1);
+      return false;
+    }
+
+    return true;
+  };
+
   const nextStep = () => {
+    if (!validateStepOne()) {
+      showToast({
+        title: "Nao foi possivel continuar",
+        message: "Preencha os dados obrigatorios do passo 1.",
+        type: "error",
+      });
+      return;
+    }
+
     setStep(2);
   };
 
   const prevStep = () => {
     clearCredentialErrors();
-    setStep(1);
+    setStep((current) => (current === 3 ? 2 : 1));
   };
 
   const validateStepTwo = () => {
@@ -119,6 +163,7 @@ export function ClientSignupScreen() {
     }
 
     if (hasError) {
+      triggerShake(2);
       showToast({
         title: "Nao foi possivel continuar",
         message: "E-mail ou senha invalidos.",
@@ -135,6 +180,10 @@ export function ClientSignupScreen() {
       return;
     }
 
+    setStep(3);
+  };
+
+  const handleCreateAccount = () => {
     showToast({
       title: "Dados validados",
       message: "Cadastro pronto para criacao da conta.",
@@ -176,9 +225,9 @@ export function ClientSignupScreen() {
               </Link>
             </div>
             <h1 className="mt-4 text-3xl font-semibold text-zinc-900">Crie sua conta Sigillus</h1>
-            <p className="mt-1 text-base text-zinc-700">Passo {step} de 2: {step === 1 ? "Dados iniciais" : "Credenciais de acesso"}</p>
+            <p className="mt-1 text-base text-zinc-700">Passo {step} de 3: {step === 1 ? "Dados iniciais" : step === 2 ? "Credenciais de acesso" : "Revisao final"}</p>
             <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200">
-              <div className={`h-full bg-wine-800 transition-all duration-300 ease-in-out ${step === 1 ? "w-1/2" : "w-full"}`} />
+              <div className={`h-full bg-wine-800 transition-all duration-300 ease-in-out ${step === 1 ? "w-1/3" : step === 2 ? "w-2/3" : "w-full"}`} />
             </div>
           </header>
 
@@ -198,6 +247,8 @@ export function ClientSignupScreen() {
                     value={cpfValue}
                     onChange={handleCpfChange}
                     maxLength={14}
+                    error={cpfError}
+                    className={shakeStep === 1 && cpfError ? "field-shake" : undefined}
                     premium
                     leadingIcon={
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
@@ -214,6 +265,8 @@ export function ClientSignupScreen() {
                     placeholder="Como consta no seu documento"
                     value={fullName}
                     onChange={(event) => setFullName(event.target.value)}
+                    error={fullNameError}
+                    className={shakeStep === 1 && fullNameError ? "field-shake" : undefined}
                     premium
                     leadingIcon={
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
@@ -270,6 +323,7 @@ export function ClientSignupScreen() {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     error={emailError}
+                    className={shakeStep === 2 && emailError ? "field-shake" : undefined}
                     premium
                     leadingIcon={
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
@@ -287,6 +341,7 @@ export function ClientSignupScreen() {
                     value={confirmEmail}
                     onChange={(event) => setConfirmEmail(event.target.value)}
                     error={confirmEmailError}
+                    className={shakeStep === 2 && confirmEmailError ? "field-shake" : undefined}
                     premium
                     leadingIcon={
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
@@ -304,6 +359,7 @@ export function ClientSignupScreen() {
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     error={passwordError}
+                    className={shakeStep === 2 && passwordError ? "field-shake" : undefined}
                     premium
                     leadingIcon={
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
@@ -321,6 +377,7 @@ export function ClientSignupScreen() {
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}
                     error={confirmPasswordError}
+                    className={shakeStep === 2 && confirmPasswordError ? "field-shake" : undefined}
                     premium
                     leadingIcon={
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
@@ -353,8 +410,26 @@ export function ClientSignupScreen() {
                 </div>
               )}
 
+              {step === 3 && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="mb-2 space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">Passo 3: Revisão final</p>
+                    <p className="text-sm text-zinc-700">Tudo pronto. Confira os dados obrigatórios e finalize sua conta.</p>
+                  </div>
+
+                  <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-700">
+                    <p className="font-semibold text-zinc-900">Dados validados</p>
+                    <ul className="mt-2 space-y-1">
+                      <li>CPF e nome civil preenchidos</li>
+                      <li>E-mail confirmado</li>
+                      <li>Senha confirmada</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3 pt-2">
-                {step === 2 ? (
+                {step > 1 ? (
                   <>
                     <Button
                       type="button"
@@ -368,13 +443,23 @@ export function ClientSignupScreen() {
                       </svg>
                       Voltar
                     </Button>
-                    <Button
-                      type="button"
-                      onClick={handleFinishSignup}
-                      className="mt-0 w-2/3 bg-wine-700 py-6 text-base text-white shadow-md shadow-wine-700/20 hover:bg-wine-800"
-                    >
-                      Validar e Criar Conta
-                    </Button>
+                    {step === 2 ? (
+                      <Button
+                        type="button"
+                        onClick={handleFinishSignup}
+                        className="mt-0 w-2/3 bg-wine-700 py-6 text-base text-white shadow-md shadow-wine-700/20 hover:bg-wine-800"
+                      >
+                        Continuar
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        onClick={handleCreateAccount}
+                        className="mt-0 w-2/3 bg-wine-700 py-6 text-base text-white shadow-md shadow-wine-700/20 hover:bg-wine-800"
+                      >
+                        Criar conta
+                      </Button>
+                    )}
                   </>
                 ) : (
                   <Button
