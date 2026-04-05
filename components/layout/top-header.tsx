@@ -26,11 +26,6 @@ export function TopHeader({ location, role, user, isLoggedIn, onLogout }: TopHea
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700 md:flex">
-            <span>Local:</span>
-            <strong>{location}</strong>
-          </div>
-
           {isLoggedIn ? (
             <AccountMenu role={role} user={user} onLogout={onLogout} />
           ) : (
