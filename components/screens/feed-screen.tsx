@@ -31,6 +31,7 @@ export function FeedScreen() {
   const [visibleCount, setVisibleCount] = useState(6);
   const [showFilters, setShowFilters] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [showQuickFilters, setShowQuickFilters] = useState(true);
   const [activeQuickFilters, setActiveQuickFilters] = useState<string[]>([]);
   const [selectedLocation, setSelectedLocation] = useState(defaultLocationLabel);
   const [locationInput, setLocationInput] = useState(defaultLocationLabel);
@@ -62,10 +63,45 @@ export function FeedScreen() {
     setSelectedHairs([]);
     setSelectedServices([]);
     setActiveQuickFilters([]);
+    setShowQuickFilters(false);
   };
 
   const toggleQuickFilter = (filter: string) => {
-    setActiveQuickFilters((current) => current.includes(filter) ? current.filter((item) => item !== filter) : [...current, filter]);
+    setActiveQuickFilters((current) => {
+      const isActive = current.includes(filter);
+      const next = isActive ? current.filter((item) => item !== filter) : [...current, filter];
+
+      if (filter === "Premium") {
+        setSelectedAdTypes((types) => {
+          if (isActive) {
+            return types.filter((item) => item !== "Premium");
+          }
+
+          return types.includes("Premium") ? types : [...types, "Premium"];
+        });
+      }
+
+      return next;
+    });
+  };
+
+  const toggleAdTypeFilter = (type: string) => {
+    setSelectedAdTypes((current) => {
+      const isActive = current.includes(type);
+      const next = isActive ? current.filter((item) => item !== type) : [...current, type];
+
+      if (type === "Premium") {
+        setActiveQuickFilters((quickCurrent) => {
+          if (isActive) {
+            return quickCurrent.filter((item) => item !== "Premium");
+          }
+
+          return quickCurrent.includes("Premium") ? quickCurrent : [...quickCurrent, "Premium"];
+        });
+      }
+
+      return next;
+    });
   };
 
   const filteredAds = useMemo(() => {
@@ -131,7 +167,7 @@ export function FeedScreen() {
     selectedCity !== "all" ? { id: `city-${selectedCity}`, label: selectedCity, onRemove: () => setSelectedCity("all") } : null,
     selectedGender !== defaultGender ? { id: `gender-${selectedGender}`, label: selectedGender, onRemove: () => setSelectedGender(defaultGender) } : null,
     maxPrice !== defaultMaxPrice ? { id: `price-${maxPrice}`, label: `Até ${currency(maxPrice)}`, onRemove: () => setMaxPrice(defaultMaxPrice) } : null,
-    ...selectedAdTypes.map((type) => ({ id: `type-${type}`, label: type, onRemove: () => setSelectedAdTypes((current) => current.filter((item) => item !== type)) })),
+    ...selectedAdTypes.filter((type) => type !== "Premium").map((type) => ({ id: `type-${type}`, label: type, onRemove: () => setSelectedAdTypes((current) => current.filter((item) => item !== type)) })),
     ...selectedEthnicities.map((ethnicity) => ({ id: `eth-${ethnicity}`, label: ethnicity, onRemove: () => setSelectedEthnicities((current) => current.filter((item) => item !== ethnicity)) })),
     ...selectedHairs.map((hair) => ({ id: `hair-${hair}`, label: hair, onRemove: () => setSelectedHairs((current) => current.filter((item) => item !== hair)) })),
     ...selectedServices.map((service) => ({ id: `service-${service}`, label: service, onRemove: () => setSelectedServices((current) => current.filter((item) => item !== service)) })),
@@ -214,8 +250,8 @@ export function FeedScreen() {
             <label key={type} className="flex items-center gap-3 p-2 rounded-lg hover:bg-wine-50/50 cursor-pointer transition-colors group">
               <input
                 type="checkbox"
-                checked={selectedAdTypes.includes(type)}
-                onChange={() => toggleSelection(setSelectedAdTypes, type)}
+                checked={type === "Premium" ? selectedAdTypes.includes(type) || activeQuickFilters.includes("Premium") : selectedAdTypes.includes(type)}
+                onChange={() => toggleAdTypeFilter(type)}
                 className="rounded border-zinc-300 text-wine-700 focus:ring-wine-700 w-4 h-4 accent-wine-700 cursor-pointer"
               />
               <span className="text-sm font-medium text-zinc-700 flex items-center gap-2">
@@ -379,53 +415,55 @@ export function FeedScreen() {
                 </span>
               </Button>
             </div>
-            <div className="no-scrollbar -mx-1 mt-3 overflow-x-auto px-1">
-              <div className="flex min-w-max items-center gap-2 pb-1">
-                {quickFilters.map((filter) => {
-                  const active = activeQuickFilters.includes(filter);
-                  return (
-                    <button
-                      key={filter}
-                      type="button"
-                      onClick={() => toggleQuickFilter(filter)}
-                      className={cn(
-                        "relative whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition",
-                        active ? "border-wine-700 bg-wine-700 pr-6 text-white" : "border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-wine-300 hover:bg-wine-50"
-                      )}
-                    >
-                      {filter}
-                      {active ? (
-                        <span
-                          role="button"
-                          aria-label={`Remover filtro ${filter}`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            toggleQuickFilter(filter);
-                          }}
-                          className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-wine-700 ring-1 ring-wine-200"
-                        >
-                          x
-                        </span>
-                      ) : null}
-                    </button>
-                  );
-                })}
+            {showQuickFilters || activeAdvancedChips.length > 0 ? (
+              <div className="no-scrollbar -mx-1 mt-3 overflow-x-auto px-1">
+                <div className="flex min-w-max items-center gap-2 pb-1">
+                  {showQuickFilters ? quickFilters.map((filter) => {
+                    const active = activeQuickFilters.includes(filter);
+                    return (
+                      <button
+                        key={filter}
+                        type="button"
+                        onClick={() => toggleQuickFilter(filter)}
+                        className={cn(
+                          "relative whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                          active ? "border-wine-700 bg-wine-700 pr-6 text-white" : "border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-wine-300 hover:bg-wine-50"
+                        )}
+                      >
+                        {filter}
+                        {active ? (
+                          <span
+                            role="button"
+                            aria-label={`Remover filtro ${filter}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              toggleQuickFilter(filter);
+                            }}
+                            className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-wine-700 ring-1 ring-wine-200"
+                          >
+                            x
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  }) : null}
 
-                {activeAdvancedChips.map((chip) => (
-                  <button
-                    key={chip.id}
-                    type="button"
-                    onClick={chip.onRemove}
-                    className="relative whitespace-nowrap rounded-full border border-wine-300 bg-wine-100 px-3 py-1.5 pr-6 text-xs font-medium text-wine-800 transition hover:bg-wine-200"
-                  >
-                    {chip.label}
-                    <span className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-wine-700 ring-1 ring-wine-200">
-                      x
-                    </span>
-                  </button>
-                ))}
+                  {activeAdvancedChips.map((chip) => (
+                    <button
+                      key={chip.id}
+                      type="button"
+                      onClick={chip.onRemove}
+                      className="relative whitespace-nowrap rounded-full border border-wine-300 bg-wine-100 px-3 py-1.5 pr-6 text-xs font-medium text-wine-800 transition hover:bg-wine-200"
+                    >
+                      {chip.label}
+                      <span className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-wine-700 ring-1 ring-wine-200">
+                        x
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : null}
           </div>
         </section>
 

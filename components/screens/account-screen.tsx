@@ -267,6 +267,7 @@ function AccountWorkspace({ role, user, onLogout }: { role: Exclude<AuthRole, "v
                   <Input
                     id="phone"
                     label="Telefone"
+                    type="tel"
                     placeholder="+55 (00) 00000-0000"
                     value={form.phone}
                     onChange={updateField("phone")}
@@ -302,6 +303,7 @@ function AccountWorkspace({ role, user, onLogout }: { role: Exclude<AuthRole, "v
                   <Input
                     id="phone"
                     label="Telefone profissional"
+                    type="tel"
                     placeholder="+55 (00) 00000-0000"
                     value={form.phone}
                     onChange={updateField("phone")}

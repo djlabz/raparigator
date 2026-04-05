@@ -371,6 +371,7 @@ export function ProfessionalSignupScreen() {
                   <Input
                     id="phone"
                     label="Telefone"
+                    type="tel"
                     placeholder="+55 (00) 00000-0000"
                     value={phone}
                     onChange={(event) => setPhone(event.target.value)}
