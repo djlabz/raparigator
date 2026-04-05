@@ -9,10 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Toast } from "@/components/ui/toast";
+import { useAuthSession } from "@/lib/auth-session";
+import { AccountMenu } from "@/components/layout/account-menu";
 import { PopularLinksSection } from "../popular-links-section";
 import styles from "./onboarding-screen.module.css";
 
 export function OnboardingScreen() {
+  const { role, user, isLoggedIn, logout } = useAuthSession();
   const [showLocationToast, setShowLocationToast] = useState(false);
   const [isPopularVisible, setIsPopularVisible] = useState(false);
 
@@ -91,14 +94,18 @@ export function OnboardingScreen() {
           <Link href="/" className="text-2xl font-black tracking-tighter text-white! visited:text-white! hover:opacity-90 transition-opacity">
             Sigillus
           </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/auth/login" className="text-sm font-bold text-white! visited:text-white! hover:opacity-80 transition-opacity">
-              Entrar
-            </Link>
-            <Link href="/auth/cadastro/cliente" className="bg-white text-[#800020] px-8 py-2.5 rounded-full text-sm font-extrabold tracking-tight hover:bg-gray-100 active:scale-95 transition-all">
-              Cadastrar
-            </Link>
-          </div>
+          {isLoggedIn ? (
+            <AccountMenu role={role} user={user} onLogout={logout} />
+          ) : (
+            <div className="flex items-center gap-6">
+              <Link href="/auth/login" className="text-sm font-bold text-white! visited:text-white! hover:opacity-80 transition-opacity">
+                Entrar
+              </Link>
+              <Link href="/auth/cadastro/cliente" className="bg-white text-[#800020] px-8 py-2.5 rounded-full text-sm font-extrabold tracking-tight hover:bg-gray-100 active:scale-95 transition-all">
+                Cadastrar
+              </Link>
+            </div>
+          )}
         </header>
 
         {/* Conteúdo Principal do Hero */}

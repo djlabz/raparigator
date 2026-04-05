@@ -2,6 +2,17 @@
 
 export type AdCategory = "premium" | "normal";
 
+export type AuthRole = "visitor" | "cliente" | "profissional";
+
+export interface MockUser {
+  id: string;
+  role: Exclude<AuthRole, "visitor">;
+  fullName: string;
+  email: string;
+  password: string;
+  label: string;
+}
+
 export interface ProfessionalAd {
   id: string;
   slug: string;
