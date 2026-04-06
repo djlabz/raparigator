@@ -31,7 +31,7 @@ export function FeedScreen() {
   const [visibleCount, setVisibleCount] = useState(6);
   const [showFilters, setShowFilters] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [showQuickFilters, setShowQuickFilters] = useState(true);
+  const [visibleQuickFilters, setVisibleQuickFilters] = useState<string[]>(quickFilters);
   const [activeQuickFilters, setActiveQuickFilters] = useState<string[]>([]);
   const [selectedLocation, setSelectedLocation] = useState(defaultLocationLabel);
   const [locationInput, setLocationInput] = useState(defaultLocationLabel);
@@ -63,13 +63,18 @@ export function FeedScreen() {
     setSelectedHairs([]);
     setSelectedServices([]);
     setActiveQuickFilters([]);
-    setShowQuickFilters(false);
+    setVisibleQuickFilters(quickFilters);
   };
 
   const toggleQuickFilter = (filter: string) => {
     setActiveQuickFilters((current) => {
       const isActive = current.includes(filter);
       const next = isActive ? current.filter((item) => item !== filter) : [...current, filter];
+
+      // Remover da lista de filtros visíveis quando desmarcar
+      if (isActive) {
+        setVisibleQuickFilters((visible) => visible.filter((item) => item !== filter));
+      }
 
       if (filter === "Premium") {
         setSelectedAdTypes((types) => {
@@ -97,6 +102,14 @@ export function FeedScreen() {
           }
 
           return quickCurrent.includes("Premium") ? quickCurrent : [...quickCurrent, "Premium"];
+        });
+
+        setVisibleQuickFilters((visibleCurrent) => {
+          if (isActive) {
+            return visibleCurrent.filter((item) => item !== "Premium");
+          }
+
+          return visibleCurrent.includes("Premium") ? visibleCurrent : [...visibleCurrent, "Premium"];
         });
       }
 
@@ -187,7 +200,7 @@ export function FeedScreen() {
   };
 
   const renderFiltersContent = () => (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Localidade */}
       <section>
         <label className="text-sm font-bold text-zinc-900 mb-3 block">Localidade</label>
@@ -416,10 +429,10 @@ export function FeedScreen() {
                 </span>
               </Button>
             </div>
-            {showQuickFilters || activeAdvancedChips.length > 0 ? (
+            {visibleQuickFilters.length > 0 || activeAdvancedChips.length > 0 ? (
               <div className="no-scrollbar -mx-1 mt-3 overflow-x-auto px-1">
                 <div className="flex min-w-max items-center gap-2 pb-1">
-                  {showQuickFilters ? quickFilters.map((filter) => {
+                  {visibleQuickFilters.map((filter) => {
                     const active = activeQuickFilters.includes(filter);
                     return (
                       <button
@@ -447,7 +460,7 @@ export function FeedScreen() {
                         ) : null}
                       </button>
                     );
-                  }) : null}
+                  })}
 
                   {activeAdvancedChips.map((chip) => (
                     <button
@@ -552,9 +565,7 @@ export function FeedScreen() {
         }
         actions={null}
       >
-        <div className="px-1">
-          {renderFiltersContent()}
-        </div>
+        {renderFiltersContent()}
       </Modal>
     </AppShell>
   );
