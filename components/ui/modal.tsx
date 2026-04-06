@@ -36,7 +36,7 @@ export function Modal({ open, title, description, onClose, children, actions, he
   ) : actions;
 
   return (
-    <div className="fixed inset-0 z-70 flex items-end bg-zinc-900/50 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center sm:justify-center" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-220 flex items-end bg-zinc-900/50 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center sm:justify-center" role="dialog" aria-modal="true">
       <div
         className={cn("flex w-full flex-col overflow-hidden rounded-2xl bg-white p-5 shadow-xl", size === "md" ? "sm:max-w-2xl" : "sm:max-w-md")}
         style={{
