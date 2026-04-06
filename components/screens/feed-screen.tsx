@@ -66,6 +66,11 @@ export function FeedScreen() {
     setVisibleQuickFilters(quickFilters);
   };
 
+  const clearFiltersFromModal = () => {
+    clearFilters();
+    setVisibleQuickFilters([]);
+  };
+
   const toggleQuickFilter = (filter: string) => {
     setActiveQuickFilters((current) => {
       const isActive = current.includes(filter);
@@ -553,7 +558,7 @@ export function FeedScreen() {
         headerActions={
           <button
             type="button"
-            onClick={clearFilters}
+            onClick={clearFiltersFromModal}
             className="inline-flex h-9 items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

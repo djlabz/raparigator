@@ -36,8 +36,13 @@ export function Modal({ open, title, description, onClose, children, actions, he
   ) : actions;
 
   return (
-    <div className="fixed inset-0 z-70 flex items-end bg-zinc-900/50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center sm:justify-center" role="dialog" aria-modal="true">
-      <div className={cn("flex max-h-[calc(100vh-1.5rem)] w-full flex-col overflow-hidden rounded-2xl bg-white p-5 shadow-xl", size === "md" ? "sm:max-w-2xl" : "sm:max-w-md")}>
+    <div className="fixed inset-0 z-70 flex items-end bg-zinc-900/50 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center sm:justify-center" role="dialog" aria-modal="true">
+      <div
+        className={cn("flex w-full flex-col overflow-hidden rounded-2xl bg-white p-5 shadow-xl", size === "md" ? "sm:max-w-2xl" : "sm:max-w-md")}
+        style={{
+          maxHeight: "calc(100dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))",
+        }}
+      >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div className="space-y-1">
             <h3 className="text-lg font-semibold text-zinc-900">{title}</h3>
