@@ -40,6 +40,108 @@ const initialAnnouncements: Announcement[] = [
   { id: 3, name: "Carla Santos", city: "Rio de Janeiro", status: "Inativo", views: 542, activeCount: 18 },
 ];
 
+const serviceOptionList = [
+  "Acompanhamento em festas/eventos/restaurantes",
+  "Sexo virtual com video chamada",
+  "Sexo presencial",
+  "Pernoite",
+] as const;
+
+const fetishPresetList = [
+  "Podolatria",
+  "Submissao",
+  "Dominacao leve",
+  "Chuva dourada",
+  "Inversao de papéis",
+  "Fantasias",
+  "Latex",
+  "Masoquismo leve",
+] as const;
+
+const serviceProfileStorageKey = "sigillus-professional-service-profile";
+
+type StoredServiceProfile = {
+  serviceDescription: string;
+  selectedServiceOptions: string[];
+  selectedFetishOptions: string[];
+  fetishCustom: string;
+  estimatedServiceTime: string;
+  serviceRules: string;
+  pricingTable: Array<{ label: string; price: string }>;
+};
+
+const defaultStoredServiceProfile: StoredServiceProfile = {
+  serviceDescription: "Atendimento com discricao, respeito e foco no combinado com o cliente.",
+  selectedServiceOptions: [
+    "Acompanhamento em festas/eventos/restaurantes",
+    "Sexo presencial",
+  ],
+  selectedFetishOptions: ["Podolatria"],
+  fetishCustom: "",
+  estimatedServiceTime: "60",
+  serviceRules: "Agendamento com antecedencia minima de 2 horas.",
+  pricingTable: [
+    { label: "30 min", price: "250" },
+    { label: "1 hora", price: "450" },
+    { label: "2 horas", price: "800" },
+  ],
+};
+
+function readStoredAvailability(): AvailabilityDay[] {
+  if (typeof window === "undefined") return defaultAvailability;
+
+  const storedAvailability = window.localStorage.getItem("sigillus-professional-availability");
+  if (!storedAvailability) return defaultAvailability;
+
+  try {
+    const parsedAvailability = JSON.parse(storedAvailability) as AvailabilityDay[];
+    if (Array.isArray(parsedAvailability) && parsedAvailability.length === defaultAvailability.length) {
+      return parsedAvailability;
+    }
+  } catch {
+    window.localStorage.removeItem("sigillus-professional-availability");
+  }
+
+  return defaultAvailability;
+}
+
+function readStoredServiceProfile(): StoredServiceProfile {
+  if (typeof window === "undefined") return defaultStoredServiceProfile;
+
+  const storedServiceProfile = window.localStorage.getItem(serviceProfileStorageKey);
+  if (!storedServiceProfile) return defaultStoredServiceProfile;
+
+  try {
+    const parsedServiceProfile = JSON.parse(storedServiceProfile) as Partial<StoredServiceProfile>;
+    return {
+      serviceDescription: typeof parsedServiceProfile.serviceDescription === "string"
+        ? parsedServiceProfile.serviceDescription
+        : defaultStoredServiceProfile.serviceDescription,
+      selectedServiceOptions: Array.isArray(parsedServiceProfile.selectedServiceOptions)
+        ? parsedServiceProfile.selectedServiceOptions
+        : defaultStoredServiceProfile.selectedServiceOptions,
+      selectedFetishOptions: Array.isArray(parsedServiceProfile.selectedFetishOptions)
+        ? parsedServiceProfile.selectedFetishOptions
+        : defaultStoredServiceProfile.selectedFetishOptions,
+      fetishCustom: typeof parsedServiceProfile.fetishCustom === "string"
+        ? parsedServiceProfile.fetishCustom
+        : defaultStoredServiceProfile.fetishCustom,
+      estimatedServiceTime: typeof parsedServiceProfile.estimatedServiceTime === "string"
+        ? parsedServiceProfile.estimatedServiceTime
+        : defaultStoredServiceProfile.estimatedServiceTime,
+      serviceRules: typeof parsedServiceProfile.serviceRules === "string"
+        ? parsedServiceProfile.serviceRules
+        : defaultStoredServiceProfile.serviceRules,
+      pricingTable: Array.isArray(parsedServiceProfile.pricingTable)
+        ? parsedServiceProfile.pricingTable.slice(0, 3)
+        : defaultStoredServiceProfile.pricingTable,
+    };
+  } catch {
+    window.localStorage.removeItem(serviceProfileStorageKey);
+    return defaultStoredServiceProfile;
+  }
+}
+
 export function ProfessionalDashboardScreen() {
   const [activeTab, setActiveTab] = useState("Resumo");
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<number | null>(null);
@@ -312,6 +414,53 @@ function AnnouncementManagementTab({ publicAdHref }: { publicAdHref: string }) {
   return <ProfileManagementTab publicAdHref={publicAdHref} />;
 }
 
+// Collapsible section component for services form
+function CollapsibleSection({
+  title,
+  isExpanded,
+  onToggle,
+  children,
+}: {
+  title: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-4 sm:px-6 py-4 hover:bg-wine-50/30 transition-colors duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-500 focus-visible:ring-inset"
+      >
+        <h4 className="font-semibold text-zinc-900 text-sm group-hover:text-wine-700 transition-colors">{title}</h4>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={cn(
+            "text-zinc-500 transition-all duration-300 ease-out group-hover:text-wine-700",
+            isExpanded && "rotate-180"
+          )}
+        >
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      {isExpanded && (
+        <div className="space-y-4 animate-in fade-in slide-in-from-top-1 duration-300 ease-out px-4 sm:px-6 pb-4 border-t border-zinc-100 bg-gradient-to-b from-wine-50/20 via-transparent to-transparent">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function HistoryManagementTab() {
   const [activeFilter, setActiveFilter] = useState<"Todos" | "Concluído" | "Finalizado" | "Em Andamento">("Todos");
 
@@ -379,29 +528,77 @@ function HistoryManagementTab() {
 function ProfileManagementTab({ publicAdHref }: { publicAdHref: string }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [availability, setAvailability] = useState<AvailabilityDay[]>(defaultAvailability);
-
-  useEffect(() => {
-    const storedAvailability = window.localStorage.getItem("sigillus-professional-availability");
-    if (!storedAvailability) return;
-
-    try {
-      const parsedAvailability = JSON.parse(storedAvailability) as AvailabilityDay[];
-      if (Array.isArray(parsedAvailability) && parsedAvailability.length === defaultAvailability.length) {
-        setAvailability(parsedAvailability);
-      }
-    } catch {
-      window.localStorage.removeItem("sigillus-professional-availability");
-    }
-  }, []);
+  const [availability, setAvailability] = useState<AvailabilityDay[]>(() => readStoredAvailability());
+  const [serviceDescription, setServiceDescription] = useState(() => readStoredServiceProfile().serviceDescription);
+  const [selectedServiceOptions, setSelectedServiceOptions] = useState<string[]>(() => readStoredServiceProfile().selectedServiceOptions);
+  const [selectedFetishOptions, setSelectedFetishOptions] = useState<string[]>(() => readStoredServiceProfile().selectedFetishOptions);
+  const [fetishCustom, setFetishCustom] = useState(() => readStoredServiceProfile().fetishCustom);
+  const [fetishToAdd, setFetishToAdd] = useState("");
+  const [estimatedServiceTime, setEstimatedServiceTime] = useState(() => readStoredServiceProfile().estimatedServiceTime);
+  const [serviceRules, setServiceRules] = useState(() => readStoredServiceProfile().serviceRules);
+  const [pricingTable, setPricingTable] = useState(() => readStoredServiceProfile().pricingTable);
+  const [expandedSections, setExpandedSections] = useState({
+    description: true,
+    services: true,
+    pricing: true,
+    fetiches: true,
+  });
 
   useEffect(() => {
     window.localStorage.setItem("sigillus-professional-availability", JSON.stringify(availability));
   }, [availability]);
 
+  useEffect(() => {
+    window.localStorage.setItem(serviceProfileStorageKey, JSON.stringify({
+      serviceDescription,
+      selectedServiceOptions,
+      selectedFetishOptions,
+      fetishCustom,
+      estimatedServiceTime,
+      serviceRules,
+      pricingTable,
+    }));
+  }, [
+    serviceDescription,
+    selectedServiceOptions,
+    selectedFetishOptions,
+    fetishCustom,
+    estimatedServiceTime,
+    serviceRules,
+    pricingTable,
+  ]);
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
   const nextImage = () => setCurrentIndex((prev) => (prev + 1) % galleryImages.length);
   const prevImage = () => setCurrentIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
   const closeLightbox = () => setLightboxOpen(false);
+
+  const toggleServiceOption = (service: string) => {
+    setSelectedServiceOptions((current) => (
+      current.includes(service) ? current.filter((item) => item !== service) : [...current, service]
+    ));
+  };
+
+  const toggleFetishOption = (fetish: string) => {
+    setSelectedFetishOptions((current) => (
+      current.includes(fetish) ? current.filter((item) => item !== fetish) : [...current, fetish]
+    ));
+  };
+
+  const addFetishFromMenu = () => {
+    if (!fetishToAdd || selectedFetishOptions.includes(fetishToAdd)) return;
+    setSelectedFetishOptions((current) => [...current, fetishToAdd]);
+    setFetishToAdd("");
+  };
+
+  const updatePricingRow = (index: number, field: "label" | "price", value: string) => {
+    setPricingTable((current) => current.map((row, rowIndex) => (
+      rowIndex === index ? { ...row, [field]: value } : row
+    )));
+  };
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -641,6 +838,196 @@ function ProfileManagementTab({ publicAdHref }: { publicAdHref: string }) {
           </div>
         </Card>
       </div>
+
+      <Card className="overflow-hidden p-0">
+        <div className="border-b border-zinc-100 bg-white p-4 sm:p-6">
+          <h3 className="font-bold text-lg text-zinc-900">Serviços e atendimento</h3>
+          <p className="mt-1 text-sm text-zinc-500">
+            Defina rapidamente os principais formatos de atendimento para facilitar a contratação.
+          </p>
+        </div>
+
+        <div className="divide-y divide-zinc-100 bg-white">
+          {/* descrição breve section */}
+          <CollapsibleSection
+            title="Descrição Breve"
+            isExpanded={expandedSections.description}
+            onToggle={() => toggleSection("description")}
+          >
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-zinc-500">
+                  Como você gosta de descrever seu atendimento?
+                </label>
+                <textarea
+                  value={serviceDescription}
+                  onChange={(event) => setServiceDescription(event.target.value.slice(0, 240))}
+                  rows={3}
+                  className="w-full resize-none rounded-lg border border-zinc-200 px-4 py-3 text-sm text-zinc-800 outline-none transition-all focus:border-wine-700 focus:ring-1 focus:ring-wine-700"
+                  placeholder="Ex: atendimento discreto, por agendamento e com foco em conforto."
+                />
+                <p className="mt-1.5 text-right text-xs text-zinc-400">{serviceDescription.length}/240</p>
+              </div>
+            </div>
+          </CollapsibleSection>
+
+          {/* Serviços principais section */}
+          <CollapsibleSection
+            title="Serviços Principais"
+            isExpanded={expandedSections.services}
+            onToggle={() => toggleSection("services")}
+          >
+            <div className="space-y-3">
+              <p className="text-xs font-medium text-zinc-600">Selecione os serviços que você oferece:</p>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                {serviceOptionList.map((service) => {
+                  const selected = selectedServiceOptions.includes(service);
+                  return (
+                    <button
+                      key={service}
+                      type="button"
+                      onClick={() => toggleServiceOption(service)}
+                      className={cn(
+                        "flex items-center justify-between rounded-lg border px-4 py-3 text-left text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                        selected
+                          ? "border-wine-300 bg-wine-50 text-wine-900 shadow-md shadow-wine-100/60 focus-visible:ring-wine-500"
+                          : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 hover:shadow-sm focus-visible:ring-wine-500"
+                      )}
+                    >
+                      <span className="font-medium">{service}</span>
+                      <span className={cn("text-base flex items-center justify-center w-5 h-5", selected ? "text-wine-700" : "text-zinc-350")}>
+                        {selected ? "✓" : "○"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </CollapsibleSection>
+
+          {/* Valores e tempo section */}
+          <CollapsibleSection
+            title="Valores & Horários"
+            isExpanded={expandedSections.pricing}
+            onToggle={() => toggleSection("pricing")}
+          >
+            <div className="space-y-4">
+              <div>
+                <label className="mb-4 block text-xs font-bold uppercase tracking-wider text-zinc-600">Tabela de valores</label>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {pricingTable.map((row, index) => (
+                    <div key={`${row.label}-${index}`} className="rounded-lg border border-zinc-200 bg-white p-4 transition-all duration-200 hover:border-wine-200 hover:bg-wine-50/50 hover:shadow-md focus-within:ring-2 focus-within:ring-wine-500 focus-within:ring-inset">
+                      <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-zinc-600">Duração</label>
+                      <input
+                        value={row.label}
+                        onChange={(event) => updatePricingRow(index, "label", event.target.value)}
+                        className="mb-4 h-9 w-full rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium outline-none transition-colors focus:border-wine-700 focus:ring-1 focus:ring-wine-200"
+                        placeholder="Ex: 30 min"
+                      />
+                      <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-zinc-600">Valor (R$)</label>
+                      <input
+                        value={row.price}
+                        onChange={(event) => updatePricingRow(index, "price", event.target.value.replace(/[^\d]/g, ""))}
+                        className="h-9 w-full rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium outline-none transition-colors focus:border-wine-700 focus:ring-1 focus:ring-wine-200"
+                        placeholder="0"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 border-t border-zinc-100 pt-4">
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-zinc-600">Tempo estimado</label>
+                  <select
+                    value={estimatedServiceTime}
+                    onChange={(event) => setEstimatedServiceTime(event.target.value)}
+                    className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-700 outline-none transition-colors focus:border-wine-700 focus:ring-1 focus:ring-wine-200"
+                  >
+                    <option value="30">30 min</option>
+                    <option value="45">45 min</option>
+                    <option value="60">1 hora</option>
+                    <option value="90">1h30</option>
+                    <option value="120">2 horas</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-zinc-600">Regras & condições</label>
+                  <input
+                    value={serviceRules}
+                    onChange={(event) => setServiceRules(event.target.value.slice(0, 180))}
+                    className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none transition-colors focus:border-wine-700 focus:ring-1 focus:ring-wine-200"
+                    placeholder="Ex: sem álcool e local seguro"
+                  />
+                </div>
+              </div>
+            </div>
+          </CollapsibleSection>
+
+          {/* Preferências e fetiches section */}
+          <CollapsibleSection
+            title="Preferências & Fetiches"
+            isExpanded={expandedSections.fetiches}
+            onToggle={() => toggleSection("fetiches")}
+          >
+            <div className="space-y-4">
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <select
+                  value={fetishToAdd}
+                  onChange={(event) => setFetishToAdd(event.target.value)}
+                  className="h-10 flex-1 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-700 outline-none transition-colors focus:border-wine-700 focus:ring-1 focus:ring-wine-200"
+                >
+                  <option value="">Selecionar fetiche...</option>
+                  {fetishPresetList.map((fetish) => (
+                    <option key={fetish} value={fetish} disabled={selectedFetishOptions.includes(fetish)}>
+                      {fetish}
+                    </option>
+                  ))}
+                </select>
+                <Button type="button" variant="primary" className="h-10 rounded-lg px-6" onClick={addFetishFromMenu}>
+                  Adicionar
+                </Button>
+              </div>
+
+              {selectedFetishOptions.length > 0 ? (
+                <div className="rounded-lg bg-wine-50 p-4 border border-wine-200">
+                  <p className="mb-3 text-xs font-semibold text-wine-900 uppercase tracking-wider">Fetiches selecionados ({selectedFetishOptions.length})</p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedFetishOptions.map((fetish) => (
+                      <button
+                        key={fetish}
+                        type="button"
+                        onClick={() => toggleFetishOption(fetish)}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-wine-300 bg-white px-3 py-1.5 text-xs font-semibold text-wine-700 transition-all duration-200 hover:bg-wine-100 hover:border-wine-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-500"
+                      >
+                        {fetish}
+                        <span className="flex items-center justify-center w-4 h-4 text-xs font-bold opacity-60 hover:opacity-100">×</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-lg bg-zinc-50 p-4 border border-dashed border-zinc-300 text-center">
+                  <p className="text-xs text-zinc-500 font-medium">Nenhum fetiche adicionado ainda</p>
+                </div>
+              )}
+
+              <div className="border-t border-zinc-100 pt-4">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-zinc-600">
+                  Preferências Personalizadas (opcional)
+                </label>
+                <input
+                  value={fetishCustom}
+                  onChange={(event) => setFetishCustom(event.target.value.slice(0, 160))}
+                  placeholder="Descreva seus limites e preferências..."
+                  className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none transition-colors focus:border-wine-700 focus:ring-1 focus:ring-wine-200"
+                />
+                <p className="mt-1.5 text-right text-xs text-zinc-400">{fetishCustom.length}/160</p>
+              </div>
+            </div>
+          </CollapsibleSection>
+        </div>
+      </Card>
     </div>
   );
 }
