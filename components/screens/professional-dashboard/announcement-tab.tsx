@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { currency, cn } from "@/lib/utils";
@@ -272,12 +273,14 @@ function PreviewCard({
     <Card className="overflow-hidden border-zinc-200 bg-white">
       {/* Imagem de Capa */}
       <div className="relative h-48 sm:h-56 lg:h-64 w-full overflow-hidden bg-zinc-900">
-        <img
+        <Image
           src={ad.images[0]}
           alt={ad.artisticName}
-          className="h-full w-full object-cover opacity-90"
+          fill
+          className="object-cover opacity-90"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
 
         {/* Status Badge */}
         <div className="absolute top-3 left-3">
@@ -519,7 +522,7 @@ function SectionAccordion({
     <Card className="overflow-hidden border-zinc-200 bg-white">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-4 py-3.5 sm:px-5 sm:py-4 text-left min-h-[44px] hover:bg-zinc-50/50 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3.5 sm:px-5 sm:py-4 text-left min-h-11 hover:bg-zinc-50/50 transition-colors"
       >
         <div className="flex items-center gap-2.5">
           <span className="text-wine-700">{icon}</span>
@@ -562,7 +565,7 @@ function FormSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm focus:border-wine-700 focus:ring-1 focus:ring-wine-700 outline-none transition-all min-h-[44px]"
+        className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm focus:border-wine-700 focus:ring-1 focus:ring-wine-700 outline-none transition-all min-h-11"
       >
         {options.map((opt) => (
           <option key={opt} value={opt}>{opt || "Selecionar..."}</option>
@@ -596,7 +599,7 @@ function FormInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm focus:border-wine-700 focus:ring-1 focus:ring-wine-700 outline-none transition-all disabled:bg-zinc-50 disabled:text-zinc-400 min-h-[44px]"
+        className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm focus:border-wine-700 focus:ring-1 focus:ring-wine-700 outline-none transition-all disabled:bg-zinc-50 disabled:text-zinc-400 min-h-11"
       />
     </div>
   );
@@ -638,7 +641,13 @@ function PhotosSection({
               setDragIdx(null);
             }}
           >
-            <img src={img} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+            <Image
+              src={img}
+              alt={`Foto ${idx + 1}`}
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 20vw"
+            />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
               <button
                 onClick={() => onSetCover(idx)}
@@ -664,7 +673,7 @@ function PhotosSection({
         {/* Botão Adicionar */}
         <button
           onClick={onAdd}
-          className="aspect-square rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 flex flex-col items-center justify-center text-zinc-400 hover:bg-zinc-100 hover:text-wine-700 hover:border-wine-300 transition-colors cursor-pointer min-h-[44px]"
+          className="aspect-square rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 flex flex-col items-center justify-center text-zinc-400 hover:bg-zinc-100 hover:text-wine-700 hover:border-wine-300 transition-colors cursor-pointer min-h-11"
         >
           <svg className="w-5 h-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
           <span className="text-[10px] font-bold uppercase">Add</span>
@@ -797,7 +806,7 @@ function ServicesSection({
           key={svc.label}
           onClick={() => onToggle(idx)}
           className={cn(
-            "w-full flex items-center justify-between px-4 py-3 rounded-lg border text-left min-h-[44px] transition-all",
+            "w-full flex items-center justify-between px-4 py-3 rounded-lg border text-left min-h-11 transition-all",
             svc.selected
               ? "border-wine-200 bg-wine-50"
               : "border-zinc-200 bg-white hover:bg-zinc-50",
@@ -810,7 +819,7 @@ function ServicesSection({
           )}>
             <div className={cn(
               "absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform",
-              svc.selected ? "left-[18px]" : "left-0.5",
+              svc.selected ? "left-4.5" : "left-0.5",
             )} />
           </div>
         </button>
@@ -851,10 +860,10 @@ function PricingSection({
               disabled={item.disabled}
               onChange={(e) => onUpdate(idx, "price", e.target.value)}
               placeholder="R$ 0"
-              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-wine-700 focus:ring-1 focus:ring-wine-700 outline-none transition-all disabled:bg-transparent disabled:text-zinc-400 min-h-[44px]"
+              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-wine-700 focus:ring-1 focus:ring-wine-700 outline-none transition-all disabled:bg-transparent disabled:text-zinc-400 min-h-11"
             />
           </div>
-          <label className="flex items-center gap-2 shrink-0 cursor-pointer min-h-[44px]">
+          <label className="flex items-center gap-2 shrink-0 cursor-pointer min-h-11">
             <input
               type="checkbox"
               checked={item.disabled}
@@ -867,7 +876,7 @@ function PricingSection({
             )}>
               <div className={cn(
                 "absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform",
-                item.disabled ? "left-0.5" : "left-[18px]",
+                item.disabled ? "left-0.5" : "left-4.5",
               )} />
             </div>
             <span className="text-[10px] font-semibold text-zinc-500 uppercase">Não realiza</span>
@@ -905,7 +914,7 @@ function LocationSection({
               key={v.key}
               onClick={() => onVenueToggle(idx)}
               className={cn(
-                "flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all min-h-[44px]",
+                "flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all min-h-11",
                 v.checked
                   ? "border-wine-200 bg-wine-50 text-wine-800"
                   : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50",
@@ -951,7 +960,7 @@ function AvailabilitySection({
   return (
     <div className="space-y-4">
       {/* Toggle exibição */}
-      <label className="flex items-center justify-between cursor-pointer min-h-[44px] p-3 rounded-lg border border-zinc-200 bg-white">
+      <label className="flex items-center justify-between cursor-pointer min-h-11 p-3 rounded-lg border border-zinc-200 bg-white">
         <span className="text-sm font-medium text-zinc-900">Exibir horários no perfil</span>
         <div className="relative">
           <input type="checkbox" checked={showAvailability} onChange={(e) => onToggleShow(e.target.checked)} className="sr-only" />
@@ -994,7 +1003,7 @@ function AvailabilitySection({
                 value={entry.start}
                 disabled={!entry.enabled}
                 onChange={(e) => onTimeChange(idx, "start", e.target.value)}
-                className="w-14 text-center border border-zinc-200 rounded-md text-xs font-bold px-2 py-2 focus:border-wine-700 outline-none disabled:bg-zinc-50 disabled:text-zinc-400 min-h-[44px]"
+                className="w-14 text-center border border-zinc-200 rounded-md text-xs font-bold px-2 py-2 focus:border-wine-700 outline-none disabled:bg-zinc-50 disabled:text-zinc-400 min-h-11"
               />
               <span className="text-zinc-300 text-xs">—</span>
               <input
@@ -1002,7 +1011,7 @@ function AvailabilitySection({
                 value={entry.end}
                 disabled={!entry.enabled}
                 onChange={(e) => onTimeChange(idx, "end", e.target.value)}
-                className="w-14 text-center border border-zinc-200 rounded-md text-xs font-bold px-2 py-2 focus:border-wine-700 outline-none disabled:bg-zinc-50 disabled:text-zinc-400 min-h-[44px]"
+                className="w-14 text-center border border-zinc-200 rounded-md text-xs font-bold px-2 py-2 focus:border-wine-700 outline-none disabled:bg-zinc-50 disabled:text-zinc-400 min-h-11"
               />
             </div>
           ))}
