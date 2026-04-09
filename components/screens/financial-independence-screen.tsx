@@ -46,6 +46,70 @@ function IconTrophy(props: any) {
 function IconRefresh(props: any) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>;
 }
+function IconMinus(props: any) {
+  return <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="0.5" y="0.5" width="23" height="23" rx="11.5" stroke="currentColor" strokeWidth="1"/><path d="M17.3334 12H6.66669" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>;
+}
+function IconPlus(props: any) {
+  return <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="0.5" y="0.5" width="23" height="23" rx="11.5" stroke="currentColor" strokeWidth="1"/><path fillRule="evenodd" clipRule="evenodd" d="M11.3334 11.3333V7.33332C11.3334 6.96666 11.6334 6.66666 12 6.66666C12.3667 6.66666 12.6667 6.96666 12.6667 7.33332V11.3333H16.6667C17.0334 11.3333 17.3334 11.6333 17.3334 12C17.3334 12.3667 17.0334 12.6667 16.6667 12.6667H12.6667V16.6667C12.6667 17.0333 12.3667 17.3333 12 17.3333C11.6334 17.3333 11.3334 17.0333 11.3334 16.6667V12.6667H7.33335C6.96669 12.6667 6.66669 12.3667 6.66669 12C6.66669 11.6333 6.96669 11.3333 7.33335 11.3333H11.3334Z" fill="currentColor"/></svg>;
+}
+
+// --- Componente Counter (input com botões +/-) ---
+interface CounterProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  step?: number;
+  min?: number;
+  max?: number;
+  prefix?: string;
+  suffix?: string;
+}
+
+function Counter({ label, value, onChange, step = 1, min = 0, max = 9999, prefix, suffix }: CounterProps) {
+  const adjust = (delta: number) => {
+    const current = Number(value) || min;
+    const next = Math.max(min, Math.min(max, current + delta));
+    onChange(String(next));
+  };
+
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs font-medium text-zinc-500">{label}</label>
+      <div className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-2 py-2">
+        <button
+          type="button"
+          onClick={() => adjust(-step)}
+          className="flex shrink-0 items-center justify-center border-0 bg-transparent p-0"
+          aria-label={`diminui ${step}`}
+        >
+          <IconMinus className="w-6 h-6 text-zinc-700" />
+        </button>
+        <div className="flex items-center text-xl font-semibold text-zinc-900">
+          {prefix && <span className="text-sm text-zinc-400 mr-0.5">{prefix}</span>}
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => {
+              const num = e.target.value.replace(/\D/g, "");
+              if (num) onChange(num);
+            }}
+            className="w-14 text-center rounded-none border-none bg-transparent font-semibold text-zinc-900 focus:outline-none"
+            inputMode="numeric"
+          />
+          {suffix && <span className="text-sm text-zinc-400 ml-0.5">/{suffix}</span>}
+        </div>
+        <button
+          type="button"
+          onClick={() => adjust(step)}
+          className="flex shrink-0 items-center justify-center border-0 bg-transparent p-0"
+          aria-label={`adiciona ${step}`}
+        >
+          <IconPlus className="w-6 h-6 text-zinc-700" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // --- Funções Auxiliares ---
 function formatDurationDetailed(totalMonths: number) {
@@ -60,9 +124,8 @@ function formatDurationDetailed(totalMonths: number) {
 }
 
 export function FinancialIndependenceScreen() {
-  // Alterado o valor inicial para 300 conforme solicitado
-  const [serviceValue, setServiceValue] = useState("300");
-  const [serviceHours, setServiceHours] = useState("2");
+  const [valuePerService, setValuePerService] = useState("300");
+  const [servicesPerDay, setServicesPerDay] = useState("4");
   const [workDaysPerWeek, setWorkDaysPerWeek] = useState("5");
 
   const [projectionTime, setProjectionTime] = useState("");
@@ -71,20 +134,20 @@ export function FinancialIndependenceScreen() {
   const [submitted, setSubmitted] = useState(false);
 
   const parsed = useMemo(() => {
-    const value = Number(serviceValue);
-    const hours = Number(serviceHours);
+    const value = Number(valuePerService);
+    const services = Number(servicesPerDay);
     const days = Number(workDaysPerWeek);
 
     // Validação básica
-    const valid = value > 0 && hours > 0 && days > 0 && days <= 7;
+    const valid = value > 0 && services > 0 && days > 0 && days <= 7;
     if (!valid) return null;
 
     // Receita do Usuário
-    const appointmentsPerDay = Math.max(Math.floor(8 / hours), 1);
-    const weeklyRevenue = value * appointmentsPerDay * days;
+    const dailyRevenue = value * services;
+    const weeklyRevenue = dailyRevenue * days;
     const monthlyRevenue = weeklyRevenue * 4.33;
 
-    // Dados CLT (Referência)
+    // Dados CLT (Referência) — jornada fixa de 8h/dia
     const cltInss = MIN_WAGE * 0.075;
     const cltTransport = MIN_WAGE * 0.06;
     const cltNet = MIN_WAGE - cltInss - cltTransport;
@@ -125,7 +188,7 @@ export function FinancialIndependenceScreen() {
       effectiveTimeNum,
       effectiveUnit
     };
-  }, [serviceHours, serviceValue, workDaysPerWeek, projectionTime, projectionUnit]);
+  }, [valuePerService, servicesPerDay, workDaysPerWeek, projectionTime, projectionUnit]);
 
   const handleReset = () => {
     setSubmitted(false);
@@ -146,21 +209,23 @@ export function FinancialIndependenceScreen() {
               <p className="text-sm text-zinc-600">Descubra o quão rápido você pode atingir sua independência financeira.</p>
             </header>
 
-            <Card className="space-y-4 p-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <Input
-                  id="valor-servico"
-                  label="Valor do serviço (R$)"
-                  value={serviceValue}
-                  onChange={(e) => setServiceValue(e.target.value)}
-                  inputMode="decimal"
+            <Card className="space-y-6 p-6">
+              <div className="grid gap-5 md:grid-cols-2">
+                <Counter
+                  label="Valor por atendimento"
+                  value={valuePerService}
+                  onChange={setValuePerService}
+                  step={50}
+                  min={50}
+                  max={9999}
+                  prefix="R$"
                 />
                 <Input
-                  id="tempo-atendimento"
-                  label="Tempo por atendimento (horas)"
-                  value={serviceHours}
-                  onChange={(e) => setServiceHours(e.target.value)}
-                  inputMode="decimal"
+                  id="atendimentos-dia"
+                  label="Atendimentos por dia"
+                  value={servicesPerDay}
+                  onChange={(e) => setServicesPerDay(e.target.value)}
+                  inputMode="numeric"
                 />
                 <Input
                   id="dias-semana"
