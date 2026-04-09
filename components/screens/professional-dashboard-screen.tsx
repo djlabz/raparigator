@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/app-shell";
-import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { dashboardSummary } from "@/lib/mock-data";
@@ -51,21 +50,9 @@ export function ProfessionalDashboardScreen() {
   // MODO TELA CHEIA: Ao gerenciar um anúncio específico
   if (selectedAnnouncement !== null) {
     return (
-      <AppShell>
+      <AppShell onBack={() => setSelectedAnnouncement(null)}>
         <div className="mx-auto max-w-5xl space-y-6 pb-10">
-          <div className="flex items-center gap-4 border-b border-zinc-200 pb-4">
-            {/* O BackButton agora fecha a visualização de gerenciamento */}
-            <div onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedAnnouncement(null); }} className="cursor-pointer">
-              <BackButton />
-            </div>
-
-            {/* O título foi removido (REQ 1). O botão foi movido para cá (REQ 1 - Otimização de Espaço) */}
-            <Link href={`/anuncio/${selectedAnnouncement}`} className="inline-flex h-9 items-center justify-center rounded-lg bg-zinc-100 px-4 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-200">
-              Ver anúncio público
-            </Link>
-          </div>
-
-          <AnnouncementManagementTab />
+          <AnnouncementManagementTab publicAdHref={`/anuncio/${selectedAnnouncement}`} />
         </div>
       </AppShell>
     );
@@ -321,8 +308,8 @@ function AnnouncementListSection({
   );
 }
 
-function AnnouncementManagementTab() {
-  return <ProfileManagementTab />;
+function AnnouncementManagementTab({ publicAdHref }: { publicAdHref: string }) {
+  return <ProfileManagementTab publicAdHref={publicAdHref} />;
 }
 
 function HistoryManagementTab() {
@@ -389,7 +376,7 @@ function HistoryManagementTab() {
   );
 }
 
-function ProfileManagementTab() {
+function ProfileManagementTab({ publicAdHref }: { publicAdHref: string }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [availability, setAvailability] = useState<AvailabilityDay[]>(defaultAvailability);
@@ -506,11 +493,19 @@ function ProfileManagementTab() {
       )}
 
       <Card className="overflow-hidden p-0">
-        <div className="p-4 sm:p-6 border-b border-zinc-100 flex justify-between items-center bg-white">
+        <div className="p-4 sm:p-6 border-b border-zinc-100 flex flex-wrap justify-between items-center gap-2 bg-white">
           <h3 className="font-bold text-lg text-zinc-900">Galeria de Fotos</h3>
-          <Button className="h-9 rounded-lg border border-wine-700 bg-wine-700 px-4 text-sm font-bold text-white hover:bg-wine-800">
-            + Adicionar
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link
+              href={publicAdHref}
+              className="inline-flex h-9 items-center justify-center rounded-lg bg-zinc-100 px-4 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-200"
+            >
+              Ver anúncio público
+            </Link>
+            <Button className="h-9 rounded-lg border border-wine-700 bg-wine-700 px-4 text-sm font-bold text-white hover:bg-wine-800">
+              + Adicionar
+            </Button>
+          </div>
         </div>
         <div className="bg-zinc-50/50 p-4 sm:p-6">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:grid-rows-2">

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -118,19 +118,24 @@ export function ChatScreen() {
   }, [lastSentMessageId]);
 
   useEffect(() => {
-    if (!(isMobileViewport && mobileConversationOpen)) return;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyOverscrollBehavior = document.body.style.overscrollBehavior;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousHtmlOverscrollBehavior = document.documentElement.style.overscrollBehavior;
 
-    const previousOverflow = document.body.style.overflow;
-    const previousOverscrollBehavior = document.body.style.overscrollBehavior;
-
+    // Keep chat shell fixed and allow scrolling only in inner panes.
     document.body.style.overflow = "hidden";
     document.body.style.overscrollBehavior = "none";
+    document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
 
     return () => {
-      document.body.style.overflow = previousOverflow;
-      document.body.style.overscrollBehavior = previousOverscrollBehavior;
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.overscrollBehavior = previousBodyOverscrollBehavior;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.documentElement.style.overscrollBehavior = previousHtmlOverscrollBehavior;
     };
-  }, [isMobileViewport, mobileConversationOpen]);
+  }, []);
 
   const openConversation = (conversationId: string) => {
     setActiveConversationId(conversationId);
@@ -188,13 +193,13 @@ export function ChatScreen() {
   return (
     <AppShell hideMobileBottomNav={isMobileViewport && mobileConversationOpen}>
       <div className={cn(
-        "relative flex w-full flex-col overflow-hidden bg-white md:grid md:grid-cols-[340px_minmax(0,1fr)] md:rounded-[28px] md:border md:border-zinc-200/80 md:shadow-[0_20px_60px_rgba(15,23,42,0.08)]",
-        "h-[calc(100dvh-130px)] md:h-[calc(100dvh-9.5rem)]"
+        "relative flex w-full min-h-0 flex-col overflow-hidden bg-white md:grid md:grid-cols-[340px_minmax(0,1fr)] md:rounded-[28px] md:border md:border-zinc-200/80 md:shadow-[0_20px_60px_rgba(15,23,42,0.08)]",
+        "h-[calc(100dvh-168px)] md:h-[calc(100dvh-11rem)]"
       )}>
 
         {/* LISTA DE CONVERSAS (Sidebar) */}
         <aside className={cn(
-          "flex h-full w-full flex-col border-b border-zinc-200 bg-zinc-50/80 md:border-b-0 md:border-r md:shrink-0",
+          "flex h-full min-h-0 w-full flex-col border-b border-zinc-200 bg-zinc-50/80 md:border-b-0 md:border-r md:shrink-0",
           isMobileViewport && mobileConversationOpen ? "hidden md:flex" : "flex"
         )}>
           <div className="border-b border-zinc-200 bg-white/80 p-5 backdrop-blur-sm">
@@ -238,7 +243,7 @@ export function ChatScreen() {
 
         {/* ÁREA DO CHAT (Mobile Fullscreen ou Desktop Main) */}
         <section className={cn(
-          "flex flex-col flex-1 bg-zinc-100/50 overflow-hidden overscroll-none md:min-h-0",
+          "flex min-h-0 flex-1 flex-col overflow-hidden bg-zinc-100/50 overscroll-none",
           isMobileViewport && mobileConversationOpen ? "fixed inset-0 md:relative md:z-auto md:h-auto md:min-h-0 md:flex" : "hidden md:flex"
         )}
           style={isMobileViewport && mobileConversationOpen ? { zIndex: 120, height: "100dvh", minHeight: "100dvh" } : undefined}

@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils";
 
 interface BackButtonProps {
   className?: string;
+  onBack?: () => void;
 }
 
-export function BackButton({ className }: BackButtonProps) {
+export function BackButton({ className, onBack }: BackButtonProps) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -16,6 +17,11 @@ export function BackButton({ className }: BackButtonProps) {
   if (pathname === "/") return null;
 
   const handleClick = () => {
+    if (onBack) {
+      onBack();
+      return;
+    }
+
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
       return;
