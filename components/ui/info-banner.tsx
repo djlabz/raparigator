@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 interface InfoBannerProps {
   title: string;
   description: string;
-  tone?: "neutral" | "highlight" | "secure";
+  tone?: "neutral" | "highlight" | "secure" | "info";
   icon?: ReactNode;
 }
 
@@ -14,7 +14,9 @@ export function InfoBanner({ title, description, tone = "neutral", icon }: InfoB
       ? "border-wine-200 bg-wine-50"
       : tone === "secure"
         ? "border-wine-300/80 bg-linear-to-br from-wine-50 to-zinc-100"
-        : "border-zinc-200 bg-zinc-50";
+        : tone === "info"
+          ? "border-wine-200 bg-wine-50"
+          : "border-zinc-200 bg-zinc-50";
 
   const iconClassName = tone === "secure" ? "bg-wine-700 text-white" : "bg-white text-zinc-700";
 

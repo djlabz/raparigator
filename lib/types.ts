@@ -24,11 +24,15 @@ export interface ProfessionalAd {
   category: string;
   shortDescription: string;
   description: string;
+  serviceDescription: string;
   startingPrice: number;
   heightCm: number;
   ethnicity: string;
   hairColor: string;
   services: string[];
+  serviceOptions: string[];
+  fetishOptions: string[];
+  fetishCustom: string;
   pricingTable: Array<{ label: string; price: number }>;
   status: AvailabilityStatus;
   adTier: AdCategory;

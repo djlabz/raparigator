@@ -83,6 +83,28 @@ export function ChatScreen() {
     return () => mediaQuery.removeEventListener("change", updateViewport);
   }, []);
 
+  useEffect(() => {
+    if (!isMobileViewport) return;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyOverscrollBehavior = document.body.style.overscrollBehavior;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousHtmlOverscrollBehavior = document.documentElement.style.overscrollBehavior;
+
+    // On mobile chat, keep page fixed and allow scroll only in conversation/message panes.
+    document.body.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
+    document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.overscrollBehavior = previousBodyOverscrollBehavior;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.documentElement.style.overscrollBehavior = previousHtmlOverscrollBehavior;
+    };
+  }, [isMobileViewport]);
+
   const handleSend = () => {
     const content = draft.trim();
     if (!content || !activeConversation) return;
@@ -116,26 +138,6 @@ export function ChatScreen() {
     const timeout = window.setTimeout(() => setLastSentMessageId(null), 420);
     return () => window.clearTimeout(timeout);
   }, [lastSentMessageId]);
-
-  useEffect(() => {
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousBodyOverscrollBehavior = document.body.style.overscrollBehavior;
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-    const previousHtmlOverscrollBehavior = document.documentElement.style.overscrollBehavior;
-
-    // Keep chat shell fixed and allow scrolling only in inner panes.
-    document.body.style.overflow = "hidden";
-    document.body.style.overscrollBehavior = "none";
-    document.documentElement.style.overflow = "hidden";
-    document.documentElement.style.overscrollBehavior = "none";
-
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      document.body.style.overscrollBehavior = previousBodyOverscrollBehavior;
-      document.documentElement.style.overflow = previousHtmlOverflow;
-      document.documentElement.style.overscrollBehavior = previousHtmlOverscrollBehavior;
-    };
-  }, []);
 
   const openConversation = (conversationId: string) => {
     setActiveConversationId(conversationId);
@@ -194,7 +196,7 @@ export function ChatScreen() {
     <AppShell hideMobileBottomNav={isMobileViewport && mobileConversationOpen}>
       <div className={cn(
         "relative flex w-full min-h-0 flex-col overflow-hidden bg-white md:grid md:grid-cols-[340px_minmax(0,1fr)] md:rounded-[28px] md:border md:border-zinc-200/80 md:shadow-[0_20px_60px_rgba(15,23,42,0.08)]",
-        "h-[calc(100dvh-168px)] md:h-[calc(100dvh-11rem)]"
+        "min-h-88 h-[calc(100svh-10.5rem)] md:min-h-128 md:h-[calc(100dvh-12.5rem)]"
       )}>
 
         {/* LISTA DE CONVERSAS (Sidebar) */}
