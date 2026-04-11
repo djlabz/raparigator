@@ -27,7 +27,7 @@ const REVIEW_MOCK = [
   { id: "r3", author: "Cliente verificado", timeAgo: "2 semanas", text: "Excelente conversa e atendimento cordial.", score: 4 },
 ];
 
-type EditSectionKey = "photos" | "description" | "characteristics" | "services" | "pricing" | "location" | "availability" | "reviews";
+type EditSectionKey = "photos" | "description" | "characteristics" | "services" | "pricing" | "location" | "availability";
 
 // ─── Componente Principal ─────────────────────────────────────────
 export function AnnouncementTab({
@@ -235,17 +235,6 @@ export function AnnouncementTab({
           />
         </SectionAccordion>
 
-        {/* Avaliações (somente leitura) */}
-        <SectionAccordion
-          title="Avaliações"
-          icon={
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
-          }
-          isOpen={openSections.has("reviews")}
-          onToggle={() => toggleSection("reviews")}
-        >
-          <ReviewsSection reviews={REVIEW_MOCK} />
-        </SectionAccordion>
       </div>
     </div>
   );
@@ -270,9 +259,9 @@ function PreviewCard({
   lastSavedAt: Date | null;
 }) {
   return (
-    <Card className="overflow-hidden border-zinc-200 bg-white">
+    <Card className="overflow-hidden border-zinc-200 bg-white shadow-[0_10px_28px_-22px_rgba(24,24,27,0.55)]">
       {/* Imagem de Capa */}
-      <div className="relative h-48 sm:h-56 lg:h-64 w-full overflow-hidden bg-zinc-900">
+      <div className="relative h-44 sm:h-56 lg:h-64 w-full overflow-hidden bg-zinc-900">
         <Image
           src={ad.images[0]}
           alt={ad.artisticName}
@@ -313,11 +302,11 @@ function PreviewCard({
         </div>
 
         {/* Overlay Info */}
-        <div className="absolute bottom-4 left-4 right-4">
+        <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4">
           <h3 className="text-xl sm:text-2xl font-black text-white mb-1 drop-shadow-lg">
             {ad.artisticName}
           </h3>
-          <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-white/90">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-white/90">
             <span className="flex items-center gap-1">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -325,8 +314,8 @@ function PreviewCard({
               </svg>
               {ad.city}, {ad.state}
             </span>
-            <span className="hidden sm:inline">•</span>
-            <span className="hidden sm:inline">A partir de {currency(ad.startingPrice)}</span>
+            <span className="inline">•</span>
+            <span className="font-semibold text-white">A partir de {currency(ad.startingPrice)}</span>
           </div>
         </div>
       </div>
@@ -351,19 +340,19 @@ function PreviewCard({
       </div>
 
       {/* Ações Principais */}
-      <div className="p-4 sm:p-5">
+      <div className="p-3.5 sm:p-5">
         <Link
           href={`/anuncio/${adSlug}`}
-          className="flex items-center justify-center gap-2 w-full h-11 rounded-lg bg-wine-700 px-5 text-sm font-bold text-white hover:bg-wine-800 transition-colors shadow-sm hover:shadow mb-3"
+          className="flex items-center justify-center gap-2 w-full h-11 rounded-lg bg-wine-700 px-5 text-sm font-bold text-white! hover:bg-wine-800 transition-colors shadow-sm hover:shadow mb-2.5 sm:mb-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-500 focus-visible:ring-offset-2"
         >
           <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
           </svg>
-          Ver meu anúncio
+          <span className="text-white">Ver meu anúncio</span>
         </Link>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <button
             onClick={onEditClick}
             className="flex items-center justify-center gap-1.5 h-10 rounded-lg border border-zinc-200 bg-white px-3 text-xs sm:text-sm font-semibold text-zinc-900 hover:bg-zinc-50 hover:border-zinc-300 transition-colors"
@@ -1020,30 +1009,6 @@ function AvailabilitySection({
       {!showAvailability && (
         <p className="text-xs text-zinc-400">Horários desativados — não aparecerão no perfil público.</p>
       )}
-    </div>
-  );
-}
-
-// ─── 5.8 Reviews Section (read-only) ──────────────────────────────
-function ReviewsSection({ reviews }: { reviews: Array<{ id: string; author: string; timeAgo: string; text: string; score: number }> }) {
-  return (
-    <div className="space-y-3">
-      {reviews.map((r) => (
-        <div key={r.id} className="p-3 rounded-lg border border-zinc-100 bg-zinc-50/50">
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-zinc-900">{r.author}</span>
-              <span className="text-[10px] text-zinc-400">{r.timeAgo}</span>
-            </div>
-            <div className="flex items-center gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <span key={i} className={cn("text-xs", i < r.score ? "text-amber-400" : "text-zinc-200")}>★</span>
-              ))}
-            </div>
-          </div>
-          <p className="text-xs text-zinc-600 leading-relaxed">{r.text}</p>
-        </div>
-      ))}
     </div>
   );
 }
