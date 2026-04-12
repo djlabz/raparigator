@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,8 @@ const GENDER_OPTIONS = ["", "Feminino", "Masculino", "Trans", "Não-binário"];
 const ETHNICITY_OPTIONS = ["", "Branca", "Preta", "Parda", "Amarela", "Indígena"];
 const HAIR_COLOR_OPTIONS = ["", "Preto", "Castanho", "Loiro", "Ruivo", "Colorido", "Rosa", "Platinado"];
 const SMOKER_OPTIONS = ["", "Sim", "Não"];
+const VISIBILITY_STATUSES = ["Ativo", "Pausado", "Invisível"] as const;
+type VisibilityStatus = (typeof VISIBILITY_STATUSES)[number];
 
 export function AnnouncementTab({
   ad,
@@ -25,10 +27,42 @@ export function AnnouncementTab({
   onToggleStatus: () => void;
 }) {
   const formHook = useProfileForm(ad);
-  const { form, saveStatus, lastSavedAt, score, tips, updateField, updateNestedField } = formHook;
+  const { form, saveStatus, lastSavedAt, score, tips, updateField, updateNestedField, manualSave } = formHook;
 
   // Estado para Modal de Fotos
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
+  const [visibilityStatus, setVisibilityStatus] = useState<VisibilityStatus>(status === "Pausado" ? "Pausado" : "Ativo");
+  const [isVisibilityMenuOpen, setIsVisibilityMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (status === "Ativo" || status === "Pausado") {
+      setVisibilityStatus(status);
+    }
+  }, [status]);
+
+  const statusStyles = {
+    Ativo: {
+      button: "bg-emerald-100 text-emerald-800 border-emerald-300",
+      wave: "bg-emerald-400",
+      dot: "bg-emerald-600",
+    },
+    Pausado: {
+      button: "bg-orange-100 text-orange-800 border-orange-300",
+      wave: "bg-orange-400",
+      dot: "bg-orange-600",
+    },
+    Invisível: {
+      button: "bg-zinc-200 text-zinc-700 border-zinc-300",
+      wave: "bg-zinc-400",
+      dot: "bg-zinc-600",
+    },
+  } as const;
+
+  const statusOptions = VISIBILITY_STATUSES.filter((item) => item !== visibilityStatus);
+
+  const handleViewPublicAd = () => {
+    window.location.href = `/anuncio/${ad.slug}`;
+  };
 
   return (
     <div className="space-y-8 pb-12">
@@ -36,14 +70,18 @@ export function AnnouncementTab({
       <section>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900">Portfólio Criativo</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900">Seu Anúncio</h1>
             <p className="text-zinc-500 mt-1">Gerencie sua identidade visual e informações do anúncio.</p>
           </div>
-          <div className="flex gap-3 w-full sm:w-auto">
-            <button className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg border border-zinc-200 bg-white font-bold text-zinc-700 hover:bg-zinc-50 transition-colors">
-              Voltar
+          <div className="flex gap-2 w-full sm:w-auto sm:gap-3">
+            <button onClick={handleViewPublicAd} className="px-3 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base rounded-lg border border-zinc-200 bg-white font-bold text-zinc-700 hover:bg-zinc-50 transition-colors">
+              Ver Anúncio Público
             </button>
-            <button className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg bg-wine-700 text-white font-bold shadow-md hover:bg-wine-800 transition-all flex items-center justify-center gap-2">
+            <button
+              onClick={manualSave}
+              disabled={saveStatus === "saving"}
+              className="px-3 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base rounded-lg bg-wine-700 text-white font-bold shadow-md hover:bg-wine-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            >
               <SaveIndicator status={saveStatus} lastSavedAt={lastSavedAt} />
             </button>
           </div>
@@ -75,13 +113,50 @@ export function AnnouncementTab({
 
         {/* Coluna Esquerda: Status & Dicas */}
         <div className="lg:col-span-4 space-y-6">
-          <Card className="p-6 bg-white shadow-sm border-zinc-200">
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Status do Anúncio</span>
-              <button onClick={onToggleStatus} className={cn("flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold transition-colors", status === "Ativo" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800")}>
-                <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", status === "Ativo" ? "bg-emerald-500" : "bg-amber-500")}></span>
-                {status}
-              </button>
+          <Card className="p-5 sm:p-6 bg-white shadow-sm border-zinc-200">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-xs font-black uppercase tracking-widest text-zinc-900">Status do Anúncio</span>
+              <div className="relative flex flex-col items-end gap-1">
+                <button onClick={onToggleStatus} className={cn("flex items-center gap-2.5 px-4 py-1.5 rounded-full text-sm font-bold border shadow-sm transition-all cursor-pointer hover:shadow-md hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-wine-500/30", statusStyles[visibilityStatus].button)}>
+                  <span className="relative inline-flex h-4 w-4 items-center justify-center">
+                    <span className={cn("absolute inline-flex h-4 w-4 rounded-full opacity-65 animate-ping", statusStyles[visibilityStatus].wave)}></span>
+                    <span className={cn("relative inline-flex h-2.5 w-2.5 rounded-full", statusStyles[visibilityStatus].dot)}></span>
+                  </span>
+                  {visibilityStatus}
+                </button>
+
+                <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 leading-none">
+                  <span>Visibilidade</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsVisibilityMenuOpen((v) => !v)}
+                    className="h-5 w-5 rounded-md border border-zinc-200 bg-zinc-50 text-zinc-500 hover:bg-zinc-100 transition-colors flex items-center justify-center"
+                    aria-label="Abrir opções de visibilidade"
+                    aria-expanded={isVisibilityMenuOpen}
+                  >
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+                  </button>
+                </div>
+
+                {isVisibilityMenuOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-44 rounded-lg border border-zinc-200 bg-white shadow-lg z-20 p-1.5">
+                    {statusOptions.map((item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => {
+                          setVisibilityStatus(item);
+                          setIsVisibilityMenuOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-2.5 py-2 text-left text-sm rounded-md hover:bg-zinc-50 text-zinc-700"
+                      >
+                        <span className={cn("inline-flex h-2.5 w-2.5 rounded-full", statusStyles[item].dot)}></span>
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             <ProfileScoreBar score={score} />
           </Card>
@@ -111,11 +186,11 @@ export function AnnouncementTab({
             <h2 className="text-xl font-bold text-zinc-900">Informações Obrigatórias</h2>
           </div>
 
-          <SectionCard title="Características físicas *" icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}>
+          <SectionCard title="Características físicas" requiredAsterisk icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}>
             <CharacteristicsSection characteristics={form.characteristics} onUpdate={(key: string, value: string) => updateNestedField("characteristics", key, value)} />
           </SectionCard>
 
-          <SectionCard title="Tabela de preços *" icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
+          <SectionCard title="Tabela de preços" requiredAsterisk icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
             <PricingSection
               pricing={form.pricing}
               onUpdate={(idx: number, field: string, value: string | number) => {
@@ -127,13 +202,13 @@ export function AnnouncementTab({
                 updateField("pricing", next);
               }}
               onAddCustom={(name: string, price: string | number) => {
-                const next = [...form.pricing, { label: name, price: String(price), disabled: false }];
+                const next = [...form.pricing, { label: name, price: String(price), disabled: false, isCustom: true }];
                 updateField("pricing", next);
               }}
             />
           </SectionCard>
 
-          <SectionCard title="Localização *" icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}>
+          <SectionCard title="Localização" requiredAsterisk icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}>
             <LocationSection
               state={form.locationState} city={form.locationCity}
               onStateChange={(v: string) => updateField("locationState", v)}
@@ -143,7 +218,6 @@ export function AnnouncementTab({
 
           {/* ================= SEÇÃO OPCIONAIS ================= */}
           <div className="flex items-center gap-3 border-b border-zinc-200 pb-2 mt-12">
-            <div className="w-8 h-8 rounded-full bg-zinc-100 text-zinc-500 flex items-center justify-center font-bold">O</div>
             <h2 className="text-xl font-bold text-zinc-900">Informações Opcionais</h2>
           </div>
 
@@ -181,16 +255,29 @@ export function AnnouncementTab({
 
 // ─── Componentes Visuais do Redesign ──────────────────────────────
 
-function SectionCard({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) {
+function SectionCard({ title, icon, children, requiredAsterisk }: { title: string, icon: React.ReactNode, children: React.ReactNode, requiredAsterisk?: boolean }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-zinc-100 overflow-hidden">
-      <div className="p-6 sm:p-8 border-b border-zinc-50 bg-zinc-50/50">
-        <div className="flex items-center gap-3">
-          <div className="text-wine-700 p-2 bg-wine-50 rounded-lg">{icon}</div>
-          <h3 className="text-xl font-bold text-zinc-900">{title}</h3>
+      <button
+        type="button"
+        onClick={() => setIsOpen((v) => !v)}
+        aria-expanded={isOpen}
+        className="w-full p-5 sm:p-6 bg-zinc-50/50 border-b border-zinc-100 flex items-center justify-between gap-4 text-left cursor-pointer hover:bg-zinc-100/60 transition-colors"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="text-wine-700 p-2 bg-wine-50 rounded-lg shrink-0">{icon}</div>
+          <h3 className="text-lg sm:text-xl font-bold text-zinc-900 truncate">
+            {title}
+            {requiredAsterisk && <span className="text-red-600 ml-1">*</span>}
+          </h3>
         </div>
-      </div>
-      <div className="p-6 sm:p-8">{children}</div>
+        <span className="h-8 w-8 rounded-full border border-zinc-200 bg-white text-zinc-600 flex items-center justify-center shrink-0" aria-hidden="true">
+          <svg className={cn("w-4 h-4 transition-transform duration-200", isOpen ? "rotate-180" : "rotate-0")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" /></svg>
+        </span>
+      </button>
+      {isOpen && <div className="p-6 sm:p-8">{children}</div>}
     </div>
   )
 }
@@ -199,7 +286,7 @@ function BentoPhotoGallery({ images, onPhotoClick, onAddPhoto }: { images: strin
   const displayPhotos = images.slice(0, 4);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 h-100 sm:h-125">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 auto-rows-[200px] sm:auto-rows-[250px]">
       {/* Imagem Principal */}
       <div
         className="col-span-2 row-span-2 relative group rounded-2xl overflow-hidden shadow-sm cursor-pointer"
@@ -283,7 +370,7 @@ function FormInput({ label, value, onChange, placeholder, disabled }: { label: s
   return (
     <div>
       <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">{label}</label>
-      <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} className="w-full bg-zinc-50/50 border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-wine-500 focus:border-wine-500 focus:bg-white outline-none transition-all disabled:opacity-50" />
+      <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} className="w-full bg-zinc-50/50 border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-wine-500 focus:border-wine-500 focus:bg-white outline-none transition-all disabled:opacity-50" />
     </div>
   )
 }
@@ -292,7 +379,7 @@ function FormSelect({ label, value, options, onChange }: { label: string, value:
   return (
     <div>
       <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">{label}</label>
-      <select value={value} onChange={e => onChange(e.target.value)} className="w-full bg-zinc-50/50 border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-wine-500 focus:border-wine-500 focus:bg-white outline-none transition-all">
+      <select value={value} onChange={e => onChange(e.target.value)} className="w-full bg-zinc-50/50 border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-wine-500 focus:border-wine-500 focus:bg-white outline-none transition-all">
         {options.map(o => <option key={o} value={o}>{o || "Selecione..."}</option>)}
       </select>
     </div>
@@ -338,7 +425,7 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: an
             </div>
             <div>
               <p className="font-bold text-zinc-900">{item.label}</p>
-              <p className="text-xs text-zinc-500">Serviço padrão</p>
+              <p className="text-xs text-zinc-500">{item.isCustom ? "Serviço personalizado" : "Serviço padrão"}</p>
             </div>
           </div>
           <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
@@ -355,7 +442,7 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: an
         </div>
       ))}
 
-      <button onClick={() => setIsModalOpen(true)} className="w-full py-5 mt-2 border-2 border-dashed border-zinc-300 rounded-xl text-zinc-500 font-bold hover:text-wine-700 hover:border-wine-700 hover:bg-wine-50 transition-all flex items-center justify-center gap-2">
+      <button onClick={() => setIsModalOpen(true)} className="w-full py-4 mt-2 border-2 border-dashed border-zinc-300 rounded-xl text-zinc-600 font-bold hover:text-wine-700 hover:border-wine-700 hover:bg-wine-50 transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-wine-500/30">
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
         CRIAR SERVIÇO CUSTOMIZADO
       </button>
@@ -363,7 +450,18 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: an
       <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} title="Adicionar Serviço">
         <div className="space-y-4 pt-2">
           <FormInput label="Nome do serviço" value={customName} onChange={setCustomName} placeholder="Ex: Acompanhamento em Evento" />
-          <FormInput label="Valor sugerido (R$)" value={customPrice} onChange={setCustomPrice} placeholder="Ex: 500" />
+          <div>
+            <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Valor sugerido (R$)</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={customPrice}
+              onChange={(e) => setCustomPrice(e.target.value.replace(/\D/g, ""))}
+              placeholder="Ex: 500"
+              className="w-full bg-zinc-50/50 border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-wine-500 focus:border-wine-500 focus:bg-white outline-none transition-all"
+            />
+          </div>
           <button onClick={handleSaveCustom} className="w-full mt-4 bg-wine-700 hover:bg-wine-800 text-white font-bold py-3 rounded-xl transition-colors">
             Adicionar e Ativar
           </button>
@@ -378,7 +476,7 @@ function LocationSection({ state, city, onStateChange, onCityChange }: any) {
     <div>
       <div className="flex items-center justify-between mb-4">
         <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500">Sede Principal</label>
-        <button className="text-[11px] font-bold text-wine-700 hover:underline flex items-center gap-1">
+        <button className="text-[11px] font-bold text-wine-700 border border-wine-200 bg-wine-50 px-2.5 py-1.5 rounded-lg hover:bg-wine-100 transition-colors flex items-center gap-1 cursor-pointer">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
           Detectar localização atual
         </button>
@@ -472,15 +570,15 @@ function ProfileScoreBar({ score }: { score: { percentage: number } }) {
   const textColor = score.percentage >= 80 ? "text-emerald-700" : score.percentage >= 50 ? "text-amber-700" : "text-red-600";
 
   return (
-    <div>
+    <div className="space-y-2.5">
       <span className="text-[10px] font-black uppercase tracking-widest text-wine-700">Índice de Qualidade</span>
-      <h3 className="text-xl font-bold mt-1 mb-4 text-zinc-900">Força do Perfil</h3>
-      <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden mb-2">
+      <h3 className="text-xl font-bold text-zinc-900 leading-tight">Força do Perfil</h3>
+      <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
         <div className={cn("h-full rounded-full transition-all duration-500 ease-out", barColor)} style={{ width: `${score.percentage}%` }} />
       </div>
       <div className="flex justify-between items-center text-[10px] font-bold">
         <span className={cn("uppercase tracking-wider", textColor)}>{score.percentage}% Completo</span>
-        <span className="text-wine-700 cursor-pointer hover:underline uppercase">Otimizar Agora</span>
+        <button type="button" className="text-wine-700 cursor-pointer hover:underline uppercase">Otimizar Agora</button>
       </div>
     </div>
   );

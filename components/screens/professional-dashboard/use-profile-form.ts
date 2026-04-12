@@ -16,6 +16,10 @@ import type {
 
 const DEBOUNCE_MS = 1000;
 
+function serializeProfileForm(state: ProfileFormState) {
+  return JSON.stringify(state);
+}
+
 const defaultCharacteristics: ProfileCharacteristics = {
   gender: "",
   genitalia: "",
@@ -177,6 +181,14 @@ export function useProfileForm(ad: AdPreview) {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const idleStatusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSavingRef = useRef(false);
+  const formRef = useRef(form);
+  const lastSavedSnapshotRef = useRef(serializeProfileForm(form));
+
+  useEffect(() => {
+    formRef.current = form;
+  }, [form]);
 
   // Profile score
   const score = calculateProfileScore(form);
@@ -185,7 +197,22 @@ export function useProfileForm(ad: AdPreview) {
   const tips = generateSmartTips(form);
 
   // Debounced auto-save
-  const triggerSave = useCallback(() => {
+  const triggerSave = useCallback((source: "auto" | "manual" = "auto") => {
+    const hasChanges = serializeProfileForm(formRef.current) !== lastSavedSnapshotRef.current;
+
+    if (!hasChanges) {
+      // Feedback visual de clique sem regravar no backend
+      if (source === "manual") {
+        setSaveStatus("saved");
+        if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
+        idleStatusTimeoutRef.current = setTimeout(() => setSaveStatus("idle"), 1200);
+      }
+      return;
+    }
+
+    if (isSavingRef.current) return;
+
+    isSavingRef.current = true;
     setSaveStatus("saving");
 
     // Simula chamada API (PATCH incremental)
@@ -193,11 +220,16 @@ export function useProfileForm(ad: AdPreview) {
       try {
         // TODO: substituir por chamada real à API
         // await patchProfile(slug, changedFields)
+        const savedAt = new Date();
+        lastSavedSnapshotRef.current = serializeProfileForm(formRef.current);
         setSaveStatus("saved");
-        setLastSavedAt(new Date());
-        setTimeout(() => setSaveStatus("idle"), 2000);
+        setLastSavedAt(savedAt);
+        if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
+        idleStatusTimeoutRef.current = setTimeout(() => setSaveStatus("idle"), 2000);
       } catch {
         setSaveStatus("error");
+      } finally {
+        isSavingRef.current = false;
       }
     }, 600);
   }, []);
@@ -205,7 +237,7 @@ export function useProfileForm(ad: AdPreview) {
   const scheduleSave = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      triggerSave();
+      triggerSave("auto");
     }, DEBOUNCE_MS);
   }, [triggerSave]);
 
@@ -213,8 +245,14 @@ export function useProfileForm(ad: AdPreview) {
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
     };
   }, []);
+
+  const manualSave = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    triggerSave("manual");
+  }, [triggerSave]);
 
   // Update setter helper
   const updateField = useCallback(
@@ -246,6 +284,7 @@ export function useProfileForm(ad: AdPreview) {
     updateField,
     updateNestedField,
     triggerSave,
+    manualSave,
   };
 }
 

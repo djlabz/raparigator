@@ -36,7 +36,7 @@ export function Modal({ open, title, description, onClose, children, actions, he
   ) : actions;
 
   return (
-    <div className="fixed inset-0 z-220 flex items-end bg-zinc-900/50 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center sm:justify-center" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-220 flex items-end bg-zinc-900/50 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] touch-none sm:items-center sm:justify-center" role="dialog" aria-modal="true">
       <div
         className={cn("flex w-full flex-col overflow-hidden rounded-2xl bg-white p-5 shadow-xl", size === "md" ? "sm:max-w-2xl" : "sm:max-w-md")}
         style={{
@@ -63,7 +63,7 @@ export function Modal({ open, title, description, onClose, children, actions, he
             </button>
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto pr-1 overscroll-contain">
+        <div className="min-h-0 flex-1 overflow-y-auto px-1 overscroll-contain touch-pan-y">
           {children}
         </div>
         {resolvedActions ? <div className="mt-5 flex shrink-0 gap-2 border-t border-zinc-100 pt-4">{resolvedActions}</div> : null}

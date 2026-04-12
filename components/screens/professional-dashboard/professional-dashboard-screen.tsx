@@ -28,16 +28,16 @@ export function ProfessionalDashboardScreen() {
   return (
     <AppShell>
       <div className={cn(
-        "grid gap-4 overflow-x-hidden lg:gap-8 transition-all duration-300",
+        "grid gap-4 overflow-x-hidden lg:gap-8 lg:items-start transition-all duration-300",
         isSidebarCollapsed ? "lg:grid-cols-[80px_1fr]" : "lg:grid-cols-[256px_1fr]"
       )}>
 
         {/* Menu Lateral Desktop */}
-        <aside className="hidden lg:flex flex-col rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm h-fit sticky top-24 transition-all duration-300">
+        <aside className="hidden lg:flex flex-col rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm h-fit self-start transition-all duration-300">
           <div className="flex items-center justify-between mb-6 px-2">
             {!isSidebarCollapsed && (
               <span className="text-sm font-black tracking-widest text-wine-700 uppercase">
-                Painel
+                Painel Profissional
               </span>
             )}
             <button
