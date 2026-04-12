@@ -94,3 +94,32 @@ a {
   animation: message-send-rise 320ms cubic-bezier(0.22, 0.92, 0.3, 1);
   will-change: transform, opacity;
 }
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+.premium-flip-transition {
+  transition: transform 700ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-gold-glow {
+  box-shadow: 0 8px 30px rgba(184, 134, 11, 0.12), 0 0 0 1px rgba(218, 165, 32, 0.22);
+}
+
+.premium-gold-glow:hover {
+  box-shadow: 0 16px 44px rgba(184, 134, 11, 0.2), 0 0 0 1px rgba(255, 223, 0, 0.38);
+}
