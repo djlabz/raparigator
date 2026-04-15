@@ -578,19 +578,20 @@ export function FeedScreen() {
 
 function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
   const [imageIndex, setImageIndex] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
   const isPremium = ad.adTier === "premium";
+
+  // Ref para injecao de variaveis CSS (Alta Performance / Zero-Lag)
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handlePremiumMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
-
     const rect = cardRef.current.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
+
     const centerX = (x / rect.width - 0.5) * 2;
     const centerY = (y / rect.height - 0.5) * 2;
-    const maxTilt = 10;
+    const maxTilt = 8;
 
     cardRef.current.style.setProperty("--rot-x", `${-centerY * maxTilt}deg`);
     cardRef.current.style.setProperty("--rot-y", `${centerX * maxTilt}deg`);
@@ -600,7 +601,6 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
 
   const handlePremiumMouseLeave = () => {
     if (!cardRef.current) return;
-
     cardRef.current.style.setProperty("--rot-x", "0deg");
     cardRef.current.style.setProperty("--rot-y", "0deg");
     cardRef.current.style.setProperty("--glare-x", "50%");
@@ -621,92 +621,75 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
 
   if (isPremium) {
     const premiumImage = ad.images[0] ?? currentImage;
-    const premiumDetails = `${ad.neighborhood}, ${ad.city}`;
 
     return (
-      <article className="group perspective-1000 h-104 w-full cursor-pointer">
-        <div
-          className={cn(
-            "premium-flip-transition preserve-3d relative h-full w-full",
-            isFlipped && "rotate-y-180"
-          )}
-          onClick={() => setIsFlipped((current) => !current)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              setIsFlipped((current) => !current);
-            }
+      <Link href={`/anuncio/${ad.slug}`} className="group block h-full perspective-1000">
+        <article
+          ref={cardRef}
+          className="preserve-3d relative h-full min-h-[340px] w-full cursor-pointer transition-transform duration-200 ease-out active:scale-[0.97]"
+          style={{
+            transform: "rotateX(var(--rot-x, 0deg)) rotateY(var(--rot-y, 0deg))",
           }}
-          role="button"
-          tabIndex={0}
-          aria-label={isFlipped ? `Mostrar frente do card premium de ${ad.artisticName}` : `Mostrar detalhes premium de ${ad.artisticName}`}
-          aria-pressed={isFlipped}
+          onMouseMove={handlePremiumMouseMove}
+          onMouseLeave={handlePremiumMouseLeave}
         >
-          <div
-            ref={cardRef}
-            className="premium-card-wrapper preserve-3d relative h-full w-full"
-            onMouseMove={handlePremiumMouseMove}
-            onMouseLeave={handlePremiumMouseLeave}
-          >
-            <div className="premium-gold-glow backface-hidden absolute inset-0 overflow-hidden rounded-2xl border border-[#DAA520]">
-              <Image
-                src={premiumImage}
-                alt={`${ad.artisticName} premium em ${ad.city}`}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 33vw"
-                priority={false}
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/10 to-transparent" />
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,223,0,0.15)_0%,transparent_38%,rgba(218,165,32,0.18)_100%)] opacity-70" />
+          <div className="absolute inset-0 overflow-hidden rounded-2xl border border-[#DAA520] bg-zinc-950 shadow-sm transition-shadow duration-300 group-hover:shadow-[0_8px_30px_rgba(218,165,32,0.22)]">
+            <Image
+              src={premiumImage}
+              alt={`${ad.artisticName} premium`}
+              fill
+              className="object-cover opacity-90 transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, 33vw"
+            />
 
-              <div className="absolute left-4 top-4 rounded-full border border-[#FFDF00]/35 bg-black/35 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FFDF00]">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent" />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,223,0,0.06)_0%,transparent_40%,rgba(218,165,32,0.1)_100%)]" />
+
+            <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-gradient-to-br from-[#2a2a2a] to-[#0a0a0a] px-3 py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md">
+              <span className="text-[10px] text-[#FFDF00] drop-shadow-[0_0_4px_rgba(255,223,0,0.9)]">★</span>
+              <span className="bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-[10px] font-extrabold uppercase tracking-[0.2em] text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
                 Premium
-              </div>
-
-              <div className="absolute bottom-0 left-0 w-full px-5 pb-5 pt-16">
-                <h3 className="font-display text-3xl font-semibold leading-tight text-[#FFDF00] drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
-                  {ad.artisticName}
-                </h3>
-                <p className="mt-1 text-xs uppercase tracking-[0.2em] text-white/75">Experiência exclusiva</p>
-              </div>
-
-              <div className="premium-glare-effect pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              </span>
             </div>
 
-            <div className="backface-hidden rotate-y-180 absolute inset-0 flex flex-col justify-between rounded-2xl border border-[#B8860B] bg-zinc-950 p-5 text-white premium-gold-glow">
-              <div>
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#DAA520]">Detalhes Premium</p>
-                <h3 className="font-display text-2xl text-[#FFDF00]">{ad.artisticName}</h3>
-                <p className="mt-4 border-t border-[#DAA520]/35 pt-4 text-sm text-zinc-200"><strong className="text-[#FFDF00]">Valor:</strong> A partir de {currency(ad.startingPrice)}</p>
-                <p className="mt-2 text-sm text-zinc-200"><strong className="text-[#FFDF00]">Local:</strong> {premiumDetails}</p>
-                <p className="mt-4 text-sm leading-relaxed text-zinc-300">{ad.shortDescription}</p>
-              </div>
-
-              <div className="mt-5 flex items-center justify-between gap-3">
-                <span className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-medium", ad.status === "livre" ? "bg-emerald-50 text-emerald-700" : ad.status === "em_atendimento" ? "bg-amber-50 text-amber-700" : "bg-zinc-100 text-zinc-600")}>{ad.status === "livre" ? "Livre" : ad.status === "em_atendimento" ? "Em atendimento" : "Indisponivel"}</span>
-                <Link
-                  href={`/anuncio/${ad.slug}`}
-                  className="inline-flex items-center rounded-lg border border-[#DAA520] bg-[#1a1404] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#FFDF00] transition-colors hover:bg-[#251b06]"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  Ver perfil
-                </Link>
-              </div>
+            <div className="absolute right-4 top-4 z-20 rounded-full bg-black/70 px-2.5 py-1 text-xs font-semibold text-[#FFDF00] shadow-sm ring-1 ring-[#DAA520]/60 backdrop-blur-sm">
+              ★ {ad.rating.toFixed(1)}
             </div>
+
+            <div className="absolute bottom-0 left-0 w-full px-5 pb-5">
+              <div className="mb-1 flex items-center gap-2">
+                <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider", ad.status === "livre" ? "border border-emerald-800/50 bg-emerald-950/80 text-emerald-400" : ad.status === "em_atendimento" ? "border border-amber-800/50 bg-amber-950/80 text-amber-400" : "border border-zinc-700/50 bg-zinc-900/80 text-zinc-400")}>
+                  {ad.status === "livre" ? "Livre" : ad.status === "em_atendimento" ? "Em atendimento" : "Indisponivel"}
+                </span>
+              </div>
+              <h3 className="font-display text-2xl font-semibold leading-tight text-[#FFDF00] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                {ad.artisticName}
+              </h3>
+              <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.1em] text-zinc-300 drop-shadow-md">
+                A partir de <span className="text-sm font-bold tracking-normal text-[#FFDF00]">{currency(ad.startingPrice)}</span>
+              </p>
+            </div>
+
+            <div
+              className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              style={{
+                background: "radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255,223,0,0.18) 0%, transparent 55%)",
+                mixBlendMode: "overlay",
+              }}
+            />
           </div>
-        </div>
-      </article>
+        </article>
+      </Link>
     );
   }
 
+  // Card Standard Original (Adicionado h-full e active:scale para padronizacao)
   return (
-    <Link href={`/anuncio/${ad.slug}`} className="group block">
-      <article className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-wine-200">
-        <div className={cn("absolute inset-y-0 left-0 w-1.5", ad.status === "livre" ? "bg-emerald-500" : ad.status === "em_atendimento" ? "bg-amber-500" : "bg-zinc-400")} />
-        <div className="absolute right-3 top-3 z-10 rounded-full bg-white/90 px-2 py-1 text-xs font-semibold text-zinc-800 shadow-sm">★ {ad.rating.toFixed(1)}</div>
+    <Link href={`/anuncio/${ad.slug}`} className="group block h-full">
+      <article className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-wine-200 active:scale-[0.97]">
+        <div className="absolute right-3 top-3 z-20 rounded-full bg-white/90 px-2 py-1 text-xs font-semibold text-zinc-800 shadow-sm">★ {ad.rating.toFixed(1)}</div>
 
-        <div className="relative h-56 overflow-hidden bg-zinc-100">
+        <div className="relative h-64 shrink-0 overflow-hidden bg-zinc-100">
           <Image
             src={currentImage}
             alt={`${ad.artisticName} em ${ad.city}`}
@@ -714,31 +697,19 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, 33vw"
           />
-          <div className="absolute inset-0 bg-linear-to-t from-zinc-900/60 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-          {ad.adTier === "premium" && ad.images.length > 1 ? (
-            <div className="absolute bottom-3 left-3 flex gap-1.5">
-              {ad.images.map((_, index) => (
-                <span
-                  key={`${ad.id}-dot-${index}`}
-                  className={cn("h-1.5 rounded-full transition-all", index === imageIndex ? "w-6 bg-white" : "w-1.5 bg-white/60")}
-                />
-              ))}
-            </div>
-          ) : null}
+          <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/60 to-transparent opacity-0 transition-opacity group-hover:opacity-100 z-10" />
         </div>
 
-        <div className="space-y-3 p-4 pl-5">
-          <div className="flex items-start justify-between gap-2">
+        <div className="relative flex flex-1 flex-col justify-between p-2.5 pl-3.5">
+          <div className={cn("absolute inset-y-0 left-0 w-1.5", ad.status === "livre" ? "bg-emerald-500" : ad.status === "em_atendimento" ? "bg-amber-500" : "bg-zinc-400")} />
+          <div className="mb-1.5 flex items-start justify-between gap-2">
             <div>
-              <p className={cn("mb-1 inline-flex rounded-full px-2.5 py-1 text-xs font-medium", ad.status === "livre" ? "bg-emerald-50 text-emerald-700" : ad.status === "em_atendimento" ? "bg-amber-50 text-amber-700" : "bg-zinc-100 text-zinc-600")}>{ad.status === "livre" ? "Livre" : ad.status === "em_atendimento" ? "Em atendimento" : "Indisponivel"}</p>
+              <p className={cn("mb-0.5 inline-flex rounded-full px-2.5 py-1 text-xs font-medium", ad.status === "livre" ? "bg-emerald-50 text-emerald-700" : ad.status === "em_atendimento" ? "bg-amber-50 text-amber-700" : "bg-zinc-100 text-zinc-600")}>{ad.status === "livre" ? "Livre" : ad.status === "em_atendimento" ? "Em atendimento" : "Indisponivel"}</p>
               <h3 className="text-base font-semibold text-zinc-900">{ad.artisticName}</h3>
-              <p className="text-xs text-zinc-500">{ad.neighborhood}, {ad.city}</p>
+              <p className="text-[11px] text-zinc-500">{ad.neighborhood}, {ad.city}</p>
             </div>
-            {ad.adTier === "premium" && (
-              <span className="rounded-full bg-wine-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-wine-700">Premium</span>
-            )}
           </div>
-          <div className="flex items-center justify-between border-t border-zinc-100 pt-2">
+          <div className="mt-auto flex items-center justify-between border-t border-zinc-100 pt-1.5">
             <p className="text-[10px] font-bold uppercase text-zinc-400">A partir de <span className="block text-sm font-black text-zinc-900">{currency(ad.startingPrice)}</span></p>
             <span className="rounded-lg bg-wine-50 px-3 py-1.5 text-xs font-bold text-wine-700 opacity-0 transition-opacity group-hover:opacity-100">Ver perfil</span>
           </div>
