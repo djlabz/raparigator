@@ -71,7 +71,10 @@ function ProfessionalAdListCard({ ad }: { ad: ProfessionalAd }) {
           onMouseLeave={handleMouseLeave}
         >
           <div className="absolute inset-0 rounded-2xl overflow-hidden p-[1.5px] bg-linear-to-b from-[#3a3018] to-[#1a150a] shadow-2xl">
-            <div className="absolute inset-[-150%] animate-[spin_5s_linear_infinite] bg-[conic-gradient(from_90deg,transparent_0%,transparent_70%,rgba(242,208,107,0.3)_85%,rgba(255,255,255,0.8)_90%,rgba(242,208,107,0.3)_95%,transparent_100%)] blur-[2px] pointer-events-none" />
+            <div
+              className="absolute inset-[-150%] animate-spin bg-[conic-gradient(from_90deg,transparent_0%,transparent_75%,rgba(255,215,0,0.1)_80%,#FFD700_95%,#ffffff_98%,transparent_100%)] pointer-events-none"
+              style={{ animationDuration: "4.5s", animationTimingFunction: "linear" }}
+            />
 
             <div className="absolute inset-[1.5px] rounded-2xl overflow-hidden bg-[#121212] z-10 border border-[#DAA520]/20 shadow-sm transition-shadow duration-300 group-hover:shadow-[0_8px_30px_rgba(218,165,32,0.22)]">
               <Image

@@ -626,17 +626,21 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
       <Link href={`/anuncio/${ad.slug}`} className="group block h-full perspective-1000">
         <article
           ref={cardRef}
-          className="preserve-3d relative h-full min-h-85 w-full cursor-pointer transition-transform duration-200 ease-out active:scale-[0.97]"
+          className="preserve-3d relative h-full min-h-95 w-full cursor-pointer transition-transform duration-200 ease-out active:scale-[0.97]"
           style={{
             transform: "rotateX(var(--rot-x, 0deg)) rotateY(var(--rot-y, 0deg))",
           }}
           onMouseMove={handlePremiumMouseMove}
           onMouseLeave={handlePremiumMouseLeave}
         >
-          <div className="absolute inset-0 rounded-2xl overflow-hidden p-[1.5px] bg-linear-to-b from-[#3a3018] to-[#1a150a] shadow-2xl">
-            <div className="absolute inset-[-150%] animate-[spin_5s_linear_infinite] bg-[conic-gradient(from_90deg,transparent_0%,transparent_70%,rgba(242,208,107,0.3)_85%,rgba(255,255,255,0.8)_90%,rgba(242,208,107,0.3)_95%,transparent_100%)] blur-[2px] pointer-events-none" />
+          <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)]">
+            <div className="absolute inset-0 bg-[#120d03]" />
+            <div
+              className="absolute inset-[-150%] animate-spin bg-[conic-gradient(from_90deg,transparent_0%,transparent_75%,rgba(255,215,0,0.1)_80%,#FFD700_95%,#ffffff_98%,transparent_100%)] pointer-events-none"
+              style={{ animationDuration: "6.5s", animationTimingFunction: "linear" }}
+            />
 
-            <div className="absolute inset-[1.5px] rounded-2xl overflow-hidden bg-[#121212] z-10 border border-[#DAA520]/20 shadow-sm transition-shadow duration-300 group-hover:shadow-[0_8px_30px_rgba(218,165,32,0.22)]">
+            <div className="absolute inset-[2.5px] rounded-2xl overflow-hidden bg-[#121212] z-10 border border-[#a88222]/30 shadow-sm transition-shadow duration-300 group-hover:shadow-[0_8px_30px_rgba(218,165,32,0.22)]">
               <Image
                 src={premiumImage}
                 alt={`${ad.artisticName} premium`}
@@ -706,14 +710,14 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
 
         <div className="relative flex flex-1 flex-col justify-between p-2.5 pl-3.5">
           <div className={cn("absolute inset-y-0 left-0 w-1.5", ad.status === "livre" ? "bg-emerald-500" : ad.status === "em_atendimento" ? "bg-amber-500" : "bg-zinc-400")} />
-          <div className="mb-1.5 flex items-start justify-between gap-2">
+          <div className="mb-1.5 flex flex-1 items-start justify-between gap-2">
             <div>
               <p className={cn("mb-0.5 inline-flex rounded-full px-2.5 py-1 text-xs font-medium", ad.status === "livre" ? "bg-emerald-50 text-emerald-700" : ad.status === "em_atendimento" ? "bg-amber-50 text-amber-700" : "bg-zinc-100 text-zinc-600")}>{ad.status === "livre" ? "Livre" : ad.status === "em_atendimento" ? "Em atendimento" : "Indisponivel"}</p>
               <h3 className="text-base font-semibold text-zinc-900">{ad.artisticName}</h3>
               <p className="text-[11px] text-zinc-500">{ad.neighborhood}, {ad.city}</p>
             </div>
           </div>
-          <div className="mt-auto flex items-center justify-between border-t border-zinc-100 pt-1.5">
+          <div className="flex items-center justify-between border-t border-zinc-100 pt-1.5">
             <p className="text-[10px] font-bold uppercase text-zinc-400">A partir de <span className="block text-sm font-black text-zinc-900">{currency(ad.startingPrice)}</span></p>
             <span className="rounded-lg bg-wine-50 px-3 py-1.5 text-xs font-bold text-wine-700 opacity-0 transition-opacity group-hover:opacity-100">Ver perfil</span>
           </div>
