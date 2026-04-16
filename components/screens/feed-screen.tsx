@@ -633,50 +633,54 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
           onMouseMove={handlePremiumMouseMove}
           onMouseLeave={handlePremiumMouseLeave}
         >
-          <div className="absolute inset-0 overflow-hidden rounded-2xl border border-[#DAA520] bg-zinc-950 shadow-sm transition-shadow duration-300 group-hover:shadow-[0_8px_30px_rgba(218,165,32,0.22)]">
-            <Image
-              src={premiumImage}
-              alt={`${ad.artisticName} premium`}
-              fill
-              className="object-cover opacity-90 transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 33vw"
-            />
+          <div className="absolute inset-0 rounded-2xl overflow-hidden p-[1.5px] bg-linear-to-b from-[#3a3018] to-[#1a150a] shadow-2xl">
+            <div className="absolute inset-[-150%] animate-[spin_5s_linear_infinite] bg-[conic-gradient(from_90deg,transparent_0%,transparent_70%,rgba(242,208,107,0.3)_85%,rgba(255,255,255,0.8)_90%,rgba(242,208,107,0.3)_95%,transparent_100%)] blur-[2px] pointer-events-none" />
 
-            <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/20 to-transparent" />
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,223,0,0.06)_0%,transparent_40%,rgba(218,165,32,0.1)_100%)]" />
+            <div className="absolute inset-[1.5px] rounded-2xl overflow-hidden bg-[#121212] z-10 border border-[#DAA520]/20 shadow-sm transition-shadow duration-300 group-hover:shadow-[0_8px_30px_rgba(218,165,32,0.22)]">
+              <Image
+                src={premiumImage}
+                alt={`${ad.artisticName} premium`}
+                fill
+                className="object-cover opacity-90 transition-transform duration-700 group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
 
-            <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] px-3 py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md">
-              <span className="text-[10px] text-[#FFDF00] drop-shadow-[0_0_4px_rgba(255,223,0,0.9)]">★</span>
-              <span className="bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-[10px] font-extrabold uppercase tracking-[0.2em] text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
-                Premium
-              </span>
-            </div>
+              <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/20 to-transparent" />
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,223,0,0.06)_0%,transparent_40%,rgba(218,165,32,0.1)_100%)]" />
 
-            <div className="absolute right-4 top-4 z-20 rounded-full bg-black/70 px-2.5 py-1 text-xs font-semibold text-[#FFDF00] shadow-sm ring-1 ring-[#DAA520]/60 backdrop-blur-sm">
-              ★ {ad.rating.toFixed(1)}
-            </div>
-
-            <div className="absolute bottom-0 left-0 w-full px-5 pb-5">
-              <div className="mb-1 flex items-center gap-2">
-                <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider", ad.status === "livre" ? "border border-emerald-800/50 bg-emerald-950/80 text-emerald-400" : ad.status === "em_atendimento" ? "border border-amber-800/50 bg-amber-950/80 text-amber-400" : "border border-zinc-700/50 bg-zinc-900/80 text-zinc-400")}>
-                  {ad.status === "livre" ? "Livre" : ad.status === "em_atendimento" ? "Em atendimento" : "Indisponivel"}
+              <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] px-3 py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md">
+                <span className="text-[10px] text-[#FFDF00] drop-shadow-[0_0_4px_rgba(255,223,0,0.9)]">★</span>
+                <span className="bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-[10px] font-extrabold uppercase tracking-[0.2em] text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
+                  Premium
                 </span>
               </div>
-              <h3 className="font-display text-2xl font-semibold leading-tight text-[#FFDF00] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                {ad.artisticName}
-              </h3>
-              <p className="mt-1 text-[11px] font-medium uppercase tracking-widest text-zinc-300 drop-shadow-md">
-                A partir de <span className="text-sm font-bold tracking-normal text-[#FFDF00]">{currency(ad.startingPrice)}</span>
-              </p>
-            </div>
 
-            <div
-              className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-              style={{
-                background: "radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255,223,0,0.18) 0%, transparent 55%)",
-                mixBlendMode: "overlay",
-              }}
-            />
+              <div className="absolute right-4 top-4 z-20 rounded-full bg-black/70 px-2.5 py-1 text-xs font-semibold text-[#FFDF00] shadow-sm ring-1 ring-[#DAA520]/60 backdrop-blur-sm">
+                ★ {ad.rating.toFixed(1)}
+              </div>
+
+              <div className="absolute bottom-0 left-0 w-full px-5 pb-5">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider", ad.status === "livre" ? "border border-emerald-800/50 bg-emerald-950/80 text-emerald-400" : ad.status === "em_atendimento" ? "border border-amber-800/50 bg-amber-950/80 text-amber-400" : "border border-zinc-700/50 bg-zinc-900/80 text-zinc-400")}>
+                    {ad.status === "livre" ? "Livre" : ad.status === "em_atendimento" ? "Em atendimento" : "Indisponivel"}
+                  </span>
+                </div>
+                <h3 className="font-display text-2xl font-semibold leading-tight text-[#FFDF00] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                  {ad.artisticName}
+                </h3>
+                <p className="mt-1 text-[11px] font-medium uppercase tracking-widest text-zinc-300 drop-shadow-md">
+                  A partir de <span className="text-sm font-bold tracking-normal text-[#FFDF00]">{currency(ad.startingPrice)}</span>
+                </p>
+              </div>
+
+              <div
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                style={{
+                  background: "radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255,223,0,0.18) 0%, transparent 55%)",
+                  mixBlendMode: "overlay",
+                }}
+              />
+            </div>
           </div>
         </article>
       </Link>

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -31,7 +31,6 @@ export function ProfessionalAdsScreen() {
 }
 
 function ProfessionalAdListCard({ ad }: { ad: ProfessionalAd }) {
-  const [isFlipped, setIsFlipped] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -61,39 +60,31 @@ function ProfessionalAdListCard({ ad }: { ad: ProfessionalAd }) {
 
   if (ad.adTier === "premium") {
     return (
-      <article className="group perspective-1000 h-100 w-full cursor-pointer">
-        <div
-          className={cn("premium-flip-transition preserve-3d relative h-full w-full", isFlipped && "rotate-y-180")}
-          onClick={() => setIsFlipped((current) => !current)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              setIsFlipped((current) => !current);
-            }
+      <Link href={`/anuncio/${ad.slug}`} className="group block perspective-1000 h-100 w-full cursor-pointer">
+        <article
+          ref={cardRef}
+          className="preserve-3d relative h-full w-full transition-transform duration-200 ease-out active:scale-[0.97]"
+          style={{
+            transform: "rotateX(var(--rot-x, 0deg)) rotateY(var(--rot-y, 0deg))",
           }}
-          role="button"
-          tabIndex={0}
-          aria-label={isFlipped ? `Mostrar frente do card premium de ${ad.artisticName}` : `Mostrar detalhes premium de ${ad.artisticName}`}
-          aria-pressed={isFlipped}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
         >
-          <div
-            ref={cardRef}
-            className="premium-card-wrapper preserve-3d relative h-full w-full"
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-          >
-            <div className="premium-gold-glow backface-hidden absolute inset-0 overflow-hidden rounded-2xl border border-[#DAA520]">
+          <div className="absolute inset-0 rounded-2xl overflow-hidden p-[1.5px] bg-linear-to-b from-[#3a3018] to-[#1a150a] shadow-2xl">
+            <div className="absolute inset-[-150%] animate-[spin_5s_linear_infinite] bg-[conic-gradient(from_90deg,transparent_0%,transparent_70%,rgba(242,208,107,0.3)_85%,rgba(255,255,255,0.8)_90%,rgba(242,208,107,0.3)_95%,transparent_100%)] blur-[2px] pointer-events-none" />
+
+            <div className="absolute inset-[1.5px] rounded-2xl overflow-hidden bg-[#121212] z-10 border border-[#DAA520]/20 shadow-sm transition-shadow duration-300 group-hover:shadow-[0_8px_30px_rgba(218,165,32,0.22)]">
               <Image
                 src={ad.images[0] ?? ""}
                 alt={`${ad.artisticName} premium`}
                 fill
-                className="object-cover"
+                className="object-cover opacity-90 transition-transform duration-700 group-hover:scale-105"
                 sizes="(max-width: 1024px) 100vw, 50vw"
               />
               <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/10 to-transparent" />
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,223,0,0.15)_0%,transparent_38%,rgba(218,165,32,0.18)_100%)] opacity-70" />
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,223,0,0.06)_0%,transparent_40%,rgba(218,165,32,0.1)_100%)]" />
 
-              <div className="absolute left-4 top-4 rounded-full border border-[#FFDF00]/35 bg-black/35 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FFDF00]">
+              <div className="absolute left-4 top-4 rounded-full border border-[#FFDF00]/35 bg-black/35 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FFDF00] backdrop-blur-md">
                 Premium
               </div>
 
@@ -104,32 +95,17 @@ function ProfessionalAdListCard({ ad }: { ad: ProfessionalAd }) {
                 <p className="mt-1 text-xs uppercase tracking-[0.2em] text-white/75">Experiência exclusiva</p>
               </div>
 
-              <div className="premium-glare-effect pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-            </div>
-
-            <div className="backface-hidden rotate-y-180 absolute inset-0 flex flex-col justify-between rounded-2xl border border-[#B8860B] bg-zinc-950 p-5 text-white premium-gold-glow">
-              <div>
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#DAA520]">Detalhes Premium</p>
-                <h3 className="font-display text-2xl text-[#FFDF00]">{ad.artisticName}</h3>
-                <p className="mt-4 border-t border-[#DAA520]/35 pt-4 text-sm text-zinc-200"><strong className="text-[#FFDF00]">Valor:</strong> A partir de {currency(ad.startingPrice)}</p>
-                <p className="mt-2 text-sm text-zinc-200"><strong className="text-[#FFDF00]">Local:</strong> {ad.city}, {ad.state}</p>
-                <p className="mt-4 text-sm leading-relaxed text-zinc-300">{ad.shortDescription}</p>
-              </div>
-
-              <div className="mt-5 flex items-center justify-between gap-3">
-                <span className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-medium", ad.status === "livre" ? "bg-emerald-50 text-emerald-700" : ad.status === "em_atendimento" ? "bg-amber-50 text-amber-700" : "bg-zinc-100 text-zinc-600")}>{ad.status === "livre" ? "Livre" : ad.status === "em_atendimento" ? "Em atendimento" : "Indisponivel"}</span>
-                <Link
-                  href={`/anuncio/${ad.slug}`}
-                  className="inline-flex items-center rounded-lg border border-[#DAA520] bg-[#1a1404] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#FFDF00] transition-colors hover:bg-[#251b06]"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  Ver anúncio público
-                </Link>
-              </div>
+              <div
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                style={{
+                  background: "radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255,223,0,0.18) 0%, transparent 55%)",
+                  mixBlendMode: "overlay",
+                }}
+              />
             </div>
           </div>
-        </div>
-      </article>
+        </article>
+      </Link>
     );
   }
 
