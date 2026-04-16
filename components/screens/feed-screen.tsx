@@ -626,7 +626,7 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
       <Link href={`/anuncio/${ad.slug}`} className="group block h-full perspective-1000">
         <article
           ref={cardRef}
-          className="preserve-3d relative h-full min-h-[340px] w-full cursor-pointer transition-transform duration-200 ease-out active:scale-[0.97]"
+          className="preserve-3d relative h-full min-h-85 w-full cursor-pointer transition-transform duration-200 ease-out active:scale-[0.97]"
           style={{
             transform: "rotateX(var(--rot-x, 0deg)) rotateY(var(--rot-y, 0deg))",
           }}
@@ -642,12 +642,12 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
               sizes="(max-width: 768px) 100vw, 33vw"
             />
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/20 to-transparent" />
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,223,0,0.06)_0%,transparent_40%,rgba(218,165,32,0.1)_100%)]" />
 
-            <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-gradient-to-br from-[#2a2a2a] to-[#0a0a0a] px-3 py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md">
+            <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] px-3 py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md">
               <span className="text-[10px] text-[#FFDF00] drop-shadow-[0_0_4px_rgba(255,223,0,0.9)]">★</span>
-              <span className="bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-[10px] font-extrabold uppercase tracking-[0.2em] text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
+              <span className="bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-[10px] font-extrabold uppercase tracking-[0.2em] text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
                 Premium
               </span>
             </div>
@@ -665,7 +665,7 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
               <h3 className="font-display text-2xl font-semibold leading-tight text-[#FFDF00] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
                 {ad.artisticName}
               </h3>
-              <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.1em] text-zinc-300 drop-shadow-md">
+              <p className="mt-1 text-[11px] font-medium uppercase tracking-widest text-zinc-300 drop-shadow-md">
                 A partir de <span className="text-sm font-bold tracking-normal text-[#FFDF00]">{currency(ad.startingPrice)}</span>
               </p>
             </div>
@@ -697,7 +697,7 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, 33vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/60 to-transparent opacity-0 transition-opacity group-hover:opacity-100 z-10" />
+          <div className="absolute inset-0 bg-linear-to-t from-zinc-900/60 to-transparent opacity-0 transition-opacity group-hover:opacity-100 z-10" />
         </div>
 
         <div className="relative flex flex-1 flex-col justify-between p-2.5 pl-3.5">

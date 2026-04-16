@@ -32,7 +32,6 @@ export function AnnouncementTab({
   // Estado para Modal de Fotos
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
   const [visibilityStatus, setVisibilityStatus] = useState<VisibilityStatus>(status === "Pausado" ? "Pausado" : "Ativo");
-  const [isVisibilityMenuOpen, setIsVisibilityMenuOpen] = useState(false);
 
   useEffect(() => {
     if (status === "Ativo" || status === "Pausado") {
@@ -57,8 +56,6 @@ export function AnnouncementTab({
       dot: "bg-zinc-600",
     },
   } as const;
-
-  const statusOptions = VISIBILITY_STATUSES.filter((item) => item !== visibilityStatus);
 
   const handleViewPublicAd = () => {
     window.location.href = `/anuncio/${ad.slug}`;
@@ -117,7 +114,7 @@ export function AnnouncementTab({
             <div className="flex justify-between items-center mb-4">
               <span className="text-xs font-black uppercase tracking-widest text-zinc-900">Status do Anúncio</span>
               <div className="relative flex flex-col items-end gap-1">
-                <button onClick={onToggleStatus} className={cn("flex items-center gap-2.5 px-4 py-1.5 rounded-full text-sm font-bold border shadow-sm transition-all cursor-pointer hover:shadow-md hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-wine-500/30", statusStyles[visibilityStatus].button)}>
+                <button onClick={onToggleStatus} className={cn("flex items-center gap-2.5 px-4 py-1.5 rounded-full text-sm font-bold border shadow-sm transition-all cursor-pointer hover:shadow-md hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300", statusStyles[visibilityStatus].button)}>
                   <span className="relative inline-flex h-4 w-4 items-center justify-center">
                     <span className={cn("absolute inline-flex h-4 w-4 rounded-full opacity-65 animate-ping", statusStyles[visibilityStatus].wave)}></span>
                     <span className={cn("relative inline-flex h-2.5 w-2.5 rounded-full", statusStyles[visibilityStatus].dot)}></span>
@@ -125,37 +122,13 @@ export function AnnouncementTab({
                   {visibilityStatus}
                 </button>
 
-                <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 leading-none">
-                  <span>Visibilidade</span>
-                  <button
-                    type="button"
-                    onClick={() => setIsVisibilityMenuOpen((v) => !v)}
-                    className="h-5 w-5 rounded-md border border-zinc-200 bg-zinc-50 text-zinc-500 hover:bg-zinc-100 transition-colors flex items-center justify-center"
-                    aria-label="Abrir opções de visibilidade"
-                    aria-expanded={isVisibilityMenuOpen}
-                  >
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
-                  </button>
-                </div>
-
-                {isVisibilityMenuOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-44 rounded-lg border border-zinc-200 bg-white shadow-lg z-20 p-1.5">
-                    {statusOptions.map((item) => (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => {
-                          setVisibilityStatus(item);
-                          setIsVisibilityMenuOpen(false);
-                        }}
-                        className="w-full flex items-center gap-2 px-2.5 py-2 text-left text-sm rounded-md hover:bg-zinc-50 text-zinc-700"
-                      >
-                        <span className={cn("inline-flex h-2.5 w-2.5 rounded-full", statusStyles[item].dot)}></span>
-                        {item}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-[11px] font-medium text-zinc-500 leading-none">
+                  Alterar o status
+                  <svg className="h-4 w-4 shrink-0 text-zinc-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M9 4l-3 3h2.25v10.5h1.5V7H12L9 4z" />
+                    <path d="M15 20l3-3h-2.25V6.5h-1.5V17H12l3 3z" />
+                  </svg>
+                </span>
               </div>
             </div>
             <ProfileScoreBar score={score} />
