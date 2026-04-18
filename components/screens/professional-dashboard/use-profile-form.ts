@@ -16,46 +16,50 @@ import type {
 
 const DEBOUNCE_MS = 1000;
 
+type UpdateOptions = {
+  autoSave?: boolean;
+};
+
+type SaveResult = "saved" | "no_changes" | "error" | "busy";
+
 function serializeProfileForm(state: ProfileFormState) {
   return JSON.stringify(state);
 }
 
 const defaultCharacteristics: ProfileCharacteristics = {
-  gender: "",
+  gender: "Selecionar",
   genitalia: "",
   sexualPreference: "",
   weight: "",
   height: "",
-  ethnicity: "",
+  ethnicity: "Selecionar",
   eyeColor: "",
-  hairColor: "",
+  hairColor: "Selecionar",
   hairLength: "",
   silicone: "",
   tattoos: "",
   piercings: "",
-  smoker: "",
+  smoker: "Selecionar",
   languages: "",
 };
 
 const defaultServices: ServiceOption[] = [
-  { label: "Jantar", selected: false },
+  { label: "Acompanhamento corporativo", selected: false },
+  { label: "Atendimento em hotel", selected: false },
   { label: "Companhia", selected: false },
   { label: "Evento social", selected: false },
-  { label: "Atendimento em hotel", selected: false },
-  { label: "Viagens curtas", selected: false },
-  { label: "Acompanhamento corporativo", selected: false },
   { label: "Festas", selected: false },
-  { label: "Pernoite", selected: false },
+  { label: "Jantar", selected: false },
+  { label: "Viagens ao exterior", selected: false },
+  { label: "Viagens curtas", selected: false },
 ];
 
 const defaultPricing: PricingItem[] = [
-  { label: "15 min", price: "", disabled: false },
-  { label: "30 min", price: "", disabled: false },
-  { label: "1 hora", price: "", disabled: false },
-  { label: "2 horas", price: "", disabled: false },
-  { label: "4 horas", price: "", disabled: false },
-  { label: "Pernoite", price: "", disabled: false },
-  { label: "Diária", price: "", disabled: false },
+  { label: "15 min", price: "", disabled: true },
+  { label: "30 min", price: "", disabled: true },
+  { label: "1 hora", price: "300", disabled: false },
+  { label: "Pernoite", price: "", disabled: true },
+  { label: "Diária", price: "", disabled: true },
 ];
 
 const defaultVenues: LocationVenue[] = [
@@ -78,7 +82,22 @@ const defaultAvailability: AvailabilityDay[] = [
 function buildInitialState(ad: AdPreview): ProfileFormState {
   const pricing = defaultPricing.map((defaultItem) => {
     const match = ad.pricingTable?.find((p) => p.label === defaultItem.label);
-    return match ? { ...defaultItem, price: String(match.price) } : defaultItem;
+
+    // Regra de carregamento inicial solicitada:
+    // 1 hora deve sempre iniciar com 300 ativo, independentemente do valor salvo anterior.
+    if (defaultItem.label === "1 hora") {
+      return { ...defaultItem, price: "300", disabled: false };
+    }
+
+    if (!match) {
+      return defaultItem;
+    }
+
+    if (defaultItem.label === "Pernoite") {
+      return { ...defaultItem, price: String(match.price), disabled: true };
+    }
+
+    return { ...defaultItem, price: String(match.price), disabled: false };
   });
 
   const services = defaultServices.map((defaultService) => ({
@@ -93,9 +112,11 @@ function buildInitialState(ad: AdPreview): ProfileFormState {
     description: ad.description ?? "",
     characteristics: {
       ...defaultCharacteristics,
-      ethnicity: ad.ethnicity ?? "",
-      hairColor: ad.hairColor ?? "",
-      height: ad.heightCm ? String(ad.heightCm) : "",
+      // Menus dropdown iniciam em "Selecionar" e campos de digitação iniciam vazios.
+      ethnicity: defaultCharacteristics.ethnicity,
+      hairColor: defaultCharacteristics.hairColor,
+      height: "",
+      weight: "",
     },
     services,
     pricing,
@@ -190,6 +211,8 @@ export function useProfileForm(ad: AdPreview) {
     formRef.current = form;
   }, [form]);
 
+  const hasUnsavedChanges = serializeProfileForm(form) !== lastSavedSnapshotRef.current;
+
   // Profile score
   const score = calculateProfileScore(form);
 
@@ -197,7 +220,7 @@ export function useProfileForm(ad: AdPreview) {
   const tips = generateSmartTips(form);
 
   // Debounced auto-save
-  const triggerSave = useCallback((source: "auto" | "manual" = "auto") => {
+  const triggerSave = useCallback((source: "auto" | "manual" = "auto"): Promise<SaveResult> => {
     const hasChanges = serializeProfileForm(formRef.current) !== lastSavedSnapshotRef.current;
 
     if (!hasChanges) {
@@ -207,37 +230,41 @@ export function useProfileForm(ad: AdPreview) {
         if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
         idleStatusTimeoutRef.current = setTimeout(() => setSaveStatus("idle"), 1200);
       }
-      return;
+      return Promise.resolve("no_changes");
     }
 
-    if (isSavingRef.current) return;
+    if (isSavingRef.current) return Promise.resolve("busy");
 
     isSavingRef.current = true;
     setSaveStatus("saving");
 
     // Simula chamada API (PATCH incremental)
-    setTimeout(() => {
-      try {
-        // TODO: substituir por chamada real à API
-        // await patchProfile(slug, changedFields)
-        const savedAt = new Date();
-        lastSavedSnapshotRef.current = serializeProfileForm(formRef.current);
-        setSaveStatus("saved");
-        setLastSavedAt(savedAt);
-        if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
-        idleStatusTimeoutRef.current = setTimeout(() => setSaveStatus("idle"), 2000);
-      } catch {
-        setSaveStatus("error");
-      } finally {
-        isSavingRef.current = false;
-      }
-    }, 600);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        try {
+          // TODO: substituir por chamada real à API
+          // await patchProfile(slug, changedFields)
+          const savedAt = new Date();
+          lastSavedSnapshotRef.current = serializeProfileForm(formRef.current);
+          setSaveStatus("saved");
+          setLastSavedAt(savedAt);
+          if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
+          idleStatusTimeoutRef.current = setTimeout(() => setSaveStatus("idle"), 2000);
+          resolve("saved");
+        } catch {
+          setSaveStatus("error");
+          resolve("error");
+        } finally {
+          isSavingRef.current = false;
+        }
+      }, 600);
+    });
   }, []);
 
   const scheduleSave = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      triggerSave("auto");
+      void triggerSave("auto");
     }, DEBOUNCE_MS);
   }, [triggerSave]);
 
@@ -251,25 +278,31 @@ export function useProfileForm(ad: AdPreview) {
 
   const manualSave = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    triggerSave("manual");
+    return triggerSave("manual");
   }, [triggerSave]);
 
   // Update setter helper
   const updateField = useCallback(
-    <K extends keyof ProfileFormState>(key: K, value: ProfileFormState[K]) => {
+    <K extends keyof ProfileFormState>(key: K, value: ProfileFormState[K], options?: UpdateOptions) => {
+      const shouldAutoSave = options?.autoSave ?? true;
       setForm((prev) => ({ ...prev, [key]: value }));
-      scheduleSave();
+      if (shouldAutoSave) {
+        scheduleSave();
+      }
     },
     [scheduleSave],
   );
 
   const updateNestedField = useCallback(
-    <K extends keyof ProfileFormState>(key: K, nestedKey: string, value: unknown) => {
+    <K extends keyof ProfileFormState>(key: K, nestedKey: string, value: unknown, options?: UpdateOptions) => {
+      const shouldAutoSave = options?.autoSave ?? true;
       setForm((prev) => ({
         ...prev,
         [key]: { ...(prev[key] as Record<string, unknown>), [nestedKey]: value },
       }));
-      scheduleSave();
+      if (shouldAutoSave) {
+        scheduleSave();
+      }
     },
     [scheduleSave],
   );
@@ -277,6 +310,7 @@ export function useProfileForm(ad: AdPreview) {
   return {
     form,
     saveStatus,
+    hasUnsavedChanges,
     lastSavedAt,
     score,
     tips,

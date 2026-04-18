@@ -1,20 +1,86 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
-import type { AdPreview, AdStatus } from "./types";
+import type { AdPreview, AdStatus, AvailabilityDay, PricingItem, ProfileCharacteristics, ProfileFormState, ServiceOption } from "./types";
 import { useProfileForm } from "./use-profile-form";
 
 // ─── Options para selects ─────────────────────────────────────────
-const GENDER_OPTIONS = ["", "Feminino", "Masculino", "Trans", "Não-binário"];
-const ETHNICITY_OPTIONS = ["", "Branca", "Preta", "Parda", "Amarela", "Indígena"];
-const HAIR_COLOR_OPTIONS = ["", "Preto", "Castanho", "Loiro", "Ruivo", "Colorido", "Rosa", "Platinado"];
-const SMOKER_OPTIONS = ["", "Sim", "Não"];
-const VISIBILITY_STATUSES = ["Ativo", "Pausado", "Invisível"] as const;
-type VisibilityStatus = (typeof VISIBILITY_STATUSES)[number];
+const SELECT_PLACEHOLDER = "Selecionar";
+const GENDER_OPTIONS = [SELECT_PLACEHOLDER, "Feminino", "Masculino", "Trans", "Não-binário"];
+const ETHNICITY_OPTIONS = [SELECT_PLACEHOLDER, "Branca", "Preta", "Parda", "Amarela", "Indígena"];
+const HAIR_COLOR_OPTIONS = [SELECT_PLACEHOLDER, "Preto", "Castanho", "Loiro", "Ruivo", "Colorido", "Rosa", "Platinado"];
+const SMOKER_OPTIONS = [SELECT_PLACEHOLDER, "Sim", "Não"];
+type VisibilityStatus = "Ativo" | "Pausado" | "Invisível";
+type SectionKey = "characteristics" | "location" | "description";
+
+const CHARACTERISTICS_FIELD_LABELS: Record<keyof Pick<ProfileCharacteristics, "gender" | "ethnicity" | "height" | "weight" | "hairColor" | "smoker">, string> = {
+  gender: "Gênero",
+  ethnicity: "Etnia",
+  height: "Altura (cm)",
+  weight: "Peso (kg)",
+  hairColor: "Cor do Cabelo",
+  smoker: "Fumante",
+};
+
+function isSelectUnselected(value: string) {
+  return value.trim().length === 0 || value === SELECT_PLACEHOLDER;
+}
+
+function sanitizeNumericInput(value: string, maxLength = 4) {
+  return value.replace(/\D/g, "").slice(0, maxLength);
+}
+
+function sanitizeCityInput(value: string) {
+  return value
+    .replace(/[^A-Za-zÀ-ÿ' -]/g, "")
+    .replace(/\s{2,}/g, " ")
+    .slice(0, 60);
+}
+
+function sanitizeServiceNameInput(value: string) {
+  return value
+    .replace(/[^A-Za-zÀ-ÿ0-9'.,()\- ]/g, "")
+    .replace(/\s{2,}/g, " ")
+    .slice(0, 60);
+}
+
+function sanitizeTimeInput(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
+}
+
+function buildSectionSnapshots(form: ProfileFormState) {
+  return {
+    characteristics: JSON.stringify(form.characteristics),
+    location: JSON.stringify({ locationState: form.locationState, locationCity: form.locationCity }),
+    description: JSON.stringify({ shortDescription: form.shortDescription, description: form.description }),
+  };
+}
+
+function getPublishValidationErrors(form: ProfileFormState) {
+  const errors: string[] = [];
+  const hasCharacteristics = ![
+    isSelectUnselected(form.characteristics.gender),
+    isSelectUnselected(form.characteristics.ethnicity),
+    sanitizeNumericInput(form.characteristics.height).length === 0,
+    sanitizeNumericInput(form.characteristics.weight).length === 0,
+    isSelectUnselected(form.characteristics.hairColor),
+    isSelectUnselected(form.characteristics.smoker),
+  ].some(Boolean);
+  const hasPricing = form.pricing.some((item) => !item.disabled && item.price.trim().length > 0);
+  const hasLocation = form.locationState.trim().length > 0 && form.locationCity.trim().length > 0;
+
+  if (!hasCharacteristics) errors.push("Preencha os campos obrigatórios em Características físicas.");
+  if (!hasPricing) errors.push("Defina ao menos um preço ativo na Tabela de preços.");
+  if (!hasLocation) errors.push("Preencha Estado e Cidade na seção Localização.");
+
+  return errors;
+}
 
 export function AnnouncementTab({
   ad,
@@ -27,17 +93,27 @@ export function AnnouncementTab({
   onToggleStatus: () => void;
 }) {
   const formHook = useProfileForm(ad);
-  const { form, saveStatus, lastSavedAt, score, tips, updateField, updateNestedField, manualSave } = formHook;
+  const { form, saveStatus, hasUnsavedChanges, lastSavedAt, score, tips, updateField, updateNestedField, manualSave } = formHook;
 
   // Estado para Modal de Fotos
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
-  const [visibilityStatus, setVisibilityStatus] = useState<VisibilityStatus>(status === "Pausado" ? "Pausado" : "Ativo");
-
-  useEffect(() => {
-    if (status === "Ativo" || status === "Pausado") {
-      setVisibilityStatus(status);
-    }
-  }, [status]);
+  const visibilityStatus: VisibilityStatus = status === "Pausado" ? "Pausado" : "Ativo";
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [availabilityCloseSignal, setAvailabilityCloseSignal] = useState(0);
+  const [characteristicsError, setCharacteristicsError] = useState<string | null>(null);
+  const [characteristicsInvalidFields, setCharacteristicsInvalidFields] = useState<Array<keyof ProfileCharacteristics>>([]);
+  const [isCharacteristicsShaking, setIsCharacteristicsShaking] = useState(false);
+  const [savedSectionSnapshots, setSavedSectionSnapshots] = useState(() => buildSectionSnapshots(form));
+  const sectionSnapshots = useMemo(() => buildSectionSnapshots(form), [form]);
+  const sectionDirtyState = useMemo(
+    () => ({
+      characteristics: sectionSnapshots.characteristics !== savedSectionSnapshots.characteristics,
+      location: sectionSnapshots.location !== savedSectionSnapshots.location,
+      description: sectionSnapshots.description !== savedSectionSnapshots.description,
+    }),
+    [savedSectionSnapshots, sectionSnapshots],
+  );
 
   const statusStyles = {
     Ativo: {
@@ -61,25 +137,89 @@ export function AnnouncementTab({
     window.location.href = `/anuncio/${ad.slug}`;
   };
 
+  const handlePublish = async () => {
+    if (saveStatus === "saving" || isPublishing) return;
+
+    const validationErrors = getPublishValidationErrors(form);
+    if (validationErrors.length > 0) {
+      setPublishError(validationErrors[0]);
+      return;
+    }
+
+    setPublishError(null);
+    setIsPublishing(true);
+
+    const saveResult = await manualSave();
+    if (saveResult === "error") {
+      setPublishError("Não foi possível publicar agora. Tente novamente.");
+      setIsPublishing(false);
+      return;
+    }
+
+    setSavedSectionSnapshots(buildSectionSnapshots(form));
+    if (status !== "Ativo") {
+      onToggleStatus();
+    }
+    setIsPublishing(false);
+  };
+
+  const saveSection = async (section: SectionKey) => {
+    if (!sectionDirtyState[section] || saveStatus === "saving") {
+      return;
+    }
+
+    if (section === "characteristics") {
+      const requiredKeys: Array<keyof Pick<ProfileCharacteristics, "gender" | "ethnicity" | "height" | "weight" | "hairColor" | "smoker">> = ["gender", "ethnicity", "height", "weight", "hairColor", "smoker"];
+      const missing = requiredKeys.filter((key) => {
+        const value = form.characteristics[key];
+        if (key === "height" || key === "weight") {
+          return sanitizeNumericInput(value).length === 0;
+        }
+        return isSelectUnselected(value);
+      });
+
+      if (missing.length > 0) {
+        setCharacteristicsInvalidFields(missing);
+        setCharacteristicsError(`Campo ${missing.map((field) => CHARACTERISTICS_FIELD_LABELS[field]).join(", ")} não preenchido`);
+        setIsCharacteristicsShaking(true);
+        setTimeout(() => setIsCharacteristicsShaking(false), 420);
+        return;
+      }
+
+      setCharacteristicsInvalidFields([]);
+      setCharacteristicsError(null);
+    }
+
+    const saveResult = await manualSave();
+    if (saveResult !== "error" && saveResult !== "busy") {
+      setSavedSectionSnapshots(buildSectionSnapshots(form));
+      setPublishError(null);
+    }
+  };
+
   return (
     <div className="space-y-8 pb-12">
       {/* ── 1. Header & Bento Grid Fotos ──────────────────────────── */}
       <section>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900">Seu Anúncio</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900">
+              Seu Anúncio
+              {hasUnsavedChanges && <span className="ml-2 text-base font-semibold text-amber-700">(Alterações não salvas)</span>}
+            </h1>
             <p className="text-zinc-500 mt-1">Gerencie sua identidade visual e informações do anúncio.</p>
+            {publishError && <p className="mt-2 text-sm font-medium text-red-600">{publishError}</p>}
           </div>
           <div className="flex gap-2 w-full sm:w-auto sm:gap-3">
             <button onClick={handleViewPublicAd} className="px-3 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base rounded-lg border border-zinc-200 bg-white font-bold text-zinc-700 hover:bg-zinc-50 transition-colors">
               Ver Anúncio Público
             </button>
             <button
-              onClick={manualSave}
-              disabled={saveStatus === "saving"}
+              onClick={handlePublish}
+              disabled={saveStatus === "saving" || isPublishing}
               className="px-3 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base rounded-lg bg-wine-700 text-white font-bold shadow-md hover:bg-wine-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
-              <SaveIndicator status={saveStatus} lastSavedAt={lastSavedAt} />
+              <PublishIndicator status={saveStatus} lastSavedAt={lastSavedAt} isPublishing={isPublishing} />
             </button>
           </div>
         </div>
@@ -90,7 +230,7 @@ export function AnnouncementTab({
           onPhotoClick={(idx) => setActivePhotoIndex(idx)}
           onAddPhoto={() => {
             const placeholder = `https://images.unsplash.com/photo-${Date.now()}?w=800&auto=format&fit=crop`;
-            updateField("images", [...form.images, placeholder]);
+            updateField("images", [...form.images, placeholder], { autoSave: false });
           }}
         />
       </section>
@@ -159,15 +299,42 @@ export function AnnouncementTab({
             <h2 className="text-xl font-bold text-zinc-900">Informações Obrigatórias</h2>
           </div>
 
-          <SectionCard title="Características físicas" requiredAsterisk icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}>
-            <CharacteristicsSection characteristics={form.characteristics} onUpdate={(key: string, value: string) => updateNestedField("characteristics", key, value)} />
+          <SectionCard title="Características físicas" requiredAsterisk dirty={sectionDirtyState.characteristics} showSaveAction onSaveAction={() => saveSection("characteristics")} saveDisabled={saveStatus === "saving"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}>
+            <CharacteristicsSection
+              characteristics={form.characteristics}
+              invalidFields={characteristicsInvalidFields}
+              errorMessage={characteristicsError}
+              isShaking={isCharacteristicsShaking}
+              onUpdate={(field, value) => {
+                const sanitizedValue = field === "height" || field === "weight" ? sanitizeNumericInput(value, 3) : value;
+
+                setCharacteristicsInvalidFields((prev) => prev.filter((item) => item !== field));
+                setCharacteristicsError(null);
+
+                if ((field === "gender" || field === "ethnicity" || field === "hairColor" || field === "smoker") && sanitizedValue === SELECT_PLACEHOLDER) {
+                  updateField(
+                    "characteristics",
+                    {
+                      ...form.characteristics,
+                      [field]: sanitizedValue,
+                      height: "",
+                      weight: "",
+                    },
+                    { autoSave: false },
+                  );
+                  return;
+                }
+
+                updateNestedField("characteristics", field, sanitizedValue, { autoSave: false });
+              }}
+            />
           </SectionCard>
 
           <SectionCard title="Tabela de preços" requiredAsterisk icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
             <PricingSection
               pricing={form.pricing}
               onUpdate={(idx: number, field: string, value: string | number) => {
-                const next = form.pricing.map((p, i) => i === idx ? { ...p, [field]: field === "price" ? String(value) : value } : p);
+                const next = form.pricing.map((p, i) => i === idx ? { ...p, [field]: field === "price" ? sanitizeNumericInput(String(value), 5) : value } : p);
                 updateField("pricing", next);
               }}
               onToggleDisabled={(idx: number) => {
@@ -181,11 +348,11 @@ export function AnnouncementTab({
             />
           </SectionCard>
 
-          <SectionCard title="Localização" requiredAsterisk icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}>
+          <SectionCard title="Localização" requiredAsterisk dirty={sectionDirtyState.location} showSaveAction onSaveAction={() => saveSection("location")} saveDisabled={saveStatus === "saving"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}>
             <LocationSection
               state={form.locationState} city={form.locationCity}
-              onStateChange={(v: string) => updateField("locationState", v)}
-              onCityChange={(v: string) => updateField("locationCity", v)}
+              onStateChange={(v: string) => updateField("locationState", v.replace(/[^A-Za-z]/g, "").toUpperCase().slice(0, 2), { autoSave: false })}
+              onCityChange={(v: string) => updateField("locationCity", sanitizeCityInput(v), { autoSave: false })}
             />
           </SectionCard>
 
@@ -194,8 +361,8 @@ export function AnnouncementTab({
             <h2 className="text-xl font-bold text-zinc-900">Informações Opcionais</h2>
           </div>
 
-          <SectionCard title="Descrição do Perfil" icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h10" /></svg>}>
-            <DescriptionSection shortDescription={form.shortDescription} description={form.description} onShortDescChange={(v: string) => updateField("shortDescription", v)} onDescChange={(v: string) => updateField("description", v)} />
+          <SectionCard title="Descrição do Perfil" dirty={sectionDirtyState.description} showSaveAction onSaveAction={() => saveSection("description")} saveDisabled={saveStatus === "saving"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h10" /></svg>}>
+            <DescriptionSection shortDescription={form.shortDescription} description={form.description} onShortDescChange={(v: string) => updateField("shortDescription", v.replace(/\s{2,}/g, " "), { autoSave: false })} onDescChange={(v: string) => updateField("description", v.replace(/\s{3,}/g, "  "), { autoSave: false })} />
           </SectionCard>
 
           <SectionCard title="Serviços Oferecidos" icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}>
@@ -205,16 +372,33 @@ export function AnnouncementTab({
             }} />
           </SectionCard>
 
-          <SectionCard title="Horários de Disponibilidade" icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
+          <SectionCard key={`availability-${availabilityCloseSignal}`} title="Horários de Disponibilidade" icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
             <AvailabilitySection
               showAvailability={form.showAvailability} availability={form.availability}
-              onToggleShow={(v: boolean) => updateField("showAvailability", v)}
+              onToggleShow={(v: boolean) => {
+                if (!v) {
+                  updateField("showAvailability", false);
+                  return;
+                }
+
+                const hasEnabledDay = form.availability.some((day) => day.enabled);
+                if (!hasEnabledDay) {
+                  const fallbackAvailability = form.availability.map((day, idx) => idx === 0 ? { ...day, enabled: true, start: "10:00", end: "22:00" } : day);
+                  updateField("availability", fallbackAvailability);
+                }
+                updateField("showAvailability", true);
+              }}
               onDayToggle={(idx: number, enabled: boolean) => {
                 const next = form.availability.map((d, i) => i === idx ? { ...d, enabled, start: enabled ? "10:00" : "--:--", end: enabled ? "22:00" : "--:--" } : d);
                 updateField("availability", next);
+
+                if (!next.some((d) => d.enabled)) {
+                  updateField("showAvailability", false);
+                  setAvailabilityCloseSignal((prev) => prev + 1);
+                }
               }}
               onTimeChange={(idx: number, field: string, value: string) => {
-                const next = form.availability.map((d, i) => i === idx ? { ...d, [field]: value } : d);
+                const next = form.availability.map((d, i) => i === idx ? { ...d, [field]: sanitizeTimeInput(value) } : d);
                 updateField("availability", next);
               }}
             />
@@ -228,11 +412,11 @@ export function AnnouncementTab({
 
 // ─── Componentes Visuais do Redesign ──────────────────────────────
 
-function SectionCard({ title, icon, children, requiredAsterisk }: { title: string, icon: React.ReactNode, children: React.ReactNode, requiredAsterisk?: boolean }) {
+function SectionCard({ title, icon, children, requiredAsterisk, dirty, showSaveAction, onSaveAction, saveDisabled }: { title: string, icon: React.ReactNode, children: React.ReactNode, requiredAsterisk?: boolean, dirty?: boolean, showSaveAction?: boolean, onSaveAction?: () => void, saveDisabled?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-zinc-100 overflow-hidden">
+    <div className={cn("bg-white rounded-2xl shadow-sm border overflow-hidden", dirty ? "border-amber-300 ring-1 ring-amber-200" : "border-zinc-100")}>
       <button
         type="button"
         onClick={() => setIsOpen((v) => !v)}
@@ -240,7 +424,7 @@ function SectionCard({ title, icon, children, requiredAsterisk }: { title: strin
         className="w-full p-5 sm:p-6 bg-zinc-50/50 border-b border-zinc-100 flex items-center justify-between gap-4 text-left cursor-pointer hover:bg-zinc-100/60 transition-colors"
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="text-wine-700 p-2 bg-wine-50 rounded-lg shrink-0">{icon}</div>
+          <div className={cn("p-2 rounded-lg shrink-0", dirty ? "text-amber-700 bg-amber-100" : "text-wine-700 bg-wine-50")}>{icon}</div>
           <h3 className="text-lg sm:text-xl font-bold text-zinc-900 truncate">
             {title}
             {requiredAsterisk && <span className="text-red-600 ml-1">*</span>}
@@ -250,7 +434,23 @@ function SectionCard({ title, icon, children, requiredAsterisk }: { title: strin
           <svg className={cn("w-4 h-4 transition-transform duration-200", isOpen ? "rotate-180" : "rotate-0")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" /></svg>
         </span>
       </button>
-      {isOpen && <div className="p-6 sm:p-8">{children}</div>}
+      {isOpen && (
+        <div className="p-6 sm:p-8">
+          {children}
+          {showSaveAction && (
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={onSaveAction}
+                disabled={!dirty || saveDisabled}
+                className="inline-flex items-center justify-center rounded-lg bg-wine-700 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-wine-800 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                Salvar seção
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -339,21 +539,21 @@ function PhotoGalleryModal({ images, activeIndex, onClose, onChange }: { images:
 
 // ─── Inputs de Formulário e Seções Base ───────────────────────────
 
-function FormInput({ label, value, onChange, placeholder, disabled }: { label: string, value: string, onChange: (v: string) => void, placeholder?: string, disabled?: boolean }) {
+function FormInput({ label, value, onChange, placeholder, disabled, invalid }: { label: string, value: string, onChange: (v: string) => void, placeholder?: string, disabled?: boolean, invalid?: boolean }) {
   return (
     <div>
       <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">{label}</label>
-      <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} className="w-full bg-zinc-50/50 border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-wine-500 focus:border-wine-500 focus:bg-white outline-none transition-all disabled:opacity-50" />
+      <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} className={cn("w-full bg-zinc-50/50 border rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-wine-500 focus:border-wine-500 focus:bg-white outline-none transition-all disabled:opacity-50", invalid ? "border-red-400 ring-1 ring-red-200" : "border-zinc-200")} />
     </div>
   )
 }
 
-function FormSelect({ label, value, options, onChange }: { label: string, value: string, options: string[], onChange: (v: string) => void }) {
+function FormSelect({ label, value, options, onChange, invalid }: { label: string, value: string, options: string[], onChange: (v: string) => void, invalid?: boolean }) {
   return (
     <div>
       <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">{label}</label>
-      <select value={value} onChange={e => onChange(e.target.value)} className="w-full bg-zinc-50/50 border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-wine-500 focus:border-wine-500 focus:bg-white outline-none transition-all">
-        {options.map(o => <option key={o} value={o}>{o || "Selecione..."}</option>)}
+      <select value={value} onChange={e => onChange(e.target.value)} className={cn("w-full bg-zinc-50/50 border rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-wine-500 focus:border-wine-500 focus:bg-white outline-none transition-all", invalid ? "border-red-400 ring-1 ring-red-200" : "border-zinc-200")}>
+        {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
     </div>
   )
@@ -361,23 +561,42 @@ function FormSelect({ label, value, options, onChange }: { label: string, value:
 
 // ─── Seções Específicas ──────────────────────────────────────────
 
-function CharacteristicsSection({ characteristics: c, onUpdate }: any) {
+function CharacteristicsSection({ characteristics: c, onUpdate, invalidFields, errorMessage, isShaking }: { characteristics: ProfileCharacteristics; onUpdate: (key: keyof ProfileCharacteristics, value: string) => void; invalidFields: Array<keyof ProfileCharacteristics>; errorMessage: string | null; isShaking: boolean }) {
+  const isInvalid = (key: keyof ProfileCharacteristics) => invalidFields.includes(key);
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      <FormSelect label="Gênero" value={c.gender} options={GENDER_OPTIONS} onChange={(v) => onUpdate("gender", v)} />
-      <FormSelect label="Etnia" value={c.ethnicity} options={ETHNICITY_OPTIONS} onChange={(v) => onUpdate("ethnicity", v)} />
-      <FormInput label="Altura (cm)" value={c.height} onChange={(v) => onUpdate("height", v)} placeholder="Ex: 170" />
-      <FormInput label="Peso (kg)" value={c.weight} onChange={(v) => onUpdate("weight", v)} placeholder="Ex: 60" />
-      <FormSelect label="Cor do Cabelo" value={c.hairColor} options={HAIR_COLOR_OPTIONS} onChange={(v) => onUpdate("hairColor", v)} />
-      <FormSelect label="Fumante" value={c.smoker} options={SMOKER_OPTIONS} onChange={(v) => onUpdate("smoker", v)} />
+    <div className={cn("space-y-4 rounded-xl border p-4", errorMessage ? "border-red-300 bg-red-50/30" : "border-zinc-200")} style={isShaking ? { animation: "characteristics-shake 420ms ease-in-out" } : undefined}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <FormSelect label="Gênero" value={c.gender} options={GENDER_OPTIONS} onChange={(v) => onUpdate("gender", v)} invalid={isInvalid("gender")} />
+        <FormSelect label="Etnia" value={c.ethnicity} options={ETHNICITY_OPTIONS} onChange={(v) => onUpdate("ethnicity", v)} invalid={isInvalid("ethnicity")} />
+        <FormInput label="Altura (cm)" value={c.height} onChange={(v) => onUpdate("height", v)} placeholder="Ex: 170" invalid={isInvalid("height")} />
+        <FormInput label="Peso (kg)" value={c.weight} onChange={(v) => onUpdate("weight", v)} placeholder="Ex: 60" invalid={isInvalid("weight")} />
+        <FormSelect label="Cor do Cabelo" value={c.hairColor} options={HAIR_COLOR_OPTIONS} onChange={(v) => onUpdate("hairColor", v)} invalid={isInvalid("hairColor")} />
+        <FormSelect label="Fumante" value={c.smoker} options={SMOKER_OPTIONS} onChange={(v) => onUpdate("smoker", v)} invalid={isInvalid("smoker")} />
+      </div>
+
+      {errorMessage && <p className="text-sm font-semibold text-red-700">{errorMessage}</p>}
+
+      <style jsx>{`
+        @keyframes characteristics-shake {
+          0% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-6px); }
+          80% { transform: translateX(6px); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
     </div>
   )
 }
 
-function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: any) {
+function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: { pricing: Array<PricingItem & { isCustom?: boolean }>; onUpdate: (idx: number, field: string, value: string | number) => void; onToggleDisabled: (idx: number) => void; onAddCustom: (name: string, price: string | number) => void }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customName, setCustomName] = useState("");
   const [customPrice, setCustomPrice] = useState("");
+  const [showSelectionWarning, setShowSelectionWarning] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
 
   const handleSaveCustom = () => {
     if (customName && customPrice) {
@@ -385,12 +604,29 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: an
       setCustomName("");
       setCustomPrice("");
       setIsModalOpen(false);
+      setShowSelectionWarning(false);
     }
   }
 
+  const handleToggleService = (idx: number) => {
+    const enabledCount = pricing.filter((item) => !item.disabled).length;
+    const isCurrentEnabled = !pricing[idx].disabled;
+
+    if (isCurrentEnabled && enabledCount === 1) {
+      setShowSelectionWarning(true);
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 420);
+      return;
+    }
+
+    setShowSelectionWarning(false);
+    onToggleDisabled(idx);
+  };
+
   return (
     <div className="space-y-4">
-      {pricing.map((item: any, idx: number) => (
+      <div className="space-y-4" style={isShaking ? { animation: "pricing-shake 420ms ease-in-out" } : undefined}>
+      {pricing.map((item, idx: number) => (
         <div key={idx} className={cn("flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 rounded-xl border transition-all gap-4", item.disabled ? "bg-zinc-50 border-zinc-100 opacity-60" : "bg-white border-zinc-200 shadow-sm")}>
           <div className="flex items-center gap-4 w-full sm:w-auto">
             <div className="w-10 h-10 bg-zinc-50 rounded-lg flex items-center justify-center border border-zinc-200 shrink-0">
@@ -404,16 +640,23 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: an
           <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
             <div className="flex items-center bg-zinc-50 rounded-lg px-3 py-2 border border-zinc-200 focus-within:border-wine-500 focus-within:ring-1 focus-within:ring-wine-500 w-full sm:w-32">
               <span className="text-sm font-bold text-zinc-400 mr-2">R$</span>
-              <input type="text" inputMode="numeric" value={item.disabled ? "" : item.price} disabled={item.disabled} onChange={(e) => onUpdate(idx, "price", e.target.value)} className="w-full bg-transparent font-bold outline-none text-zinc-900 placeholder:text-zinc-300" placeholder="0,00" />
+              <input type="text" inputMode="numeric" value={item.price} disabled={item.disabled} onChange={(e) => onUpdate(idx, "price", sanitizeNumericInput(e.target.value, 5))} className={cn("w-full bg-transparent font-bold outline-none placeholder:text-zinc-300", item.disabled ? "text-zinc-400" : "text-zinc-900")} placeholder="0,00" />
             </div>
 
             <label className="relative inline-flex items-center cursor-pointer shrink-0">
-              <input type="checkbox" checked={!item.disabled} onChange={() => onToggleDisabled(idx)} className="sr-only peer" />
+              <input type="checkbox" checked={!item.disabled} onChange={() => handleToggleService(idx)} className="sr-only peer" />
               <div className="w-11 h-6 bg-zinc-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wine-700"></div>
             </label>
           </div>
         </div>
       ))}
+      </div>
+
+      {showSelectionWarning && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+          Ao menos um serviço deve ser selecionado!
+        </p>
+      )}
 
       <button onClick={() => setIsModalOpen(true)} className="w-full py-4 mt-2 border-2 border-dashed border-zinc-300 rounded-xl text-zinc-600 font-bold hover:text-wine-700 hover:border-wine-700 hover:bg-wine-50 transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-wine-500/30">
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
@@ -422,7 +665,7 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: an
 
       <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} title="Adicionar Serviço">
         <div className="space-y-4 pt-2">
-          <FormInput label="Nome do serviço" value={customName} onChange={setCustomName} placeholder="Ex: Acompanhamento em Evento" />
+          <FormInput label="Nome do serviço" value={customName} onChange={(value) => setCustomName(sanitizeServiceNameInput(value))} placeholder="Ex: Acompanhamento em Evento" />
           <div>
             <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Valor sugerido (R$)</label>
             <input
@@ -440,11 +683,22 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: an
           </button>
         </div>
       </Modal>
+
+      <style jsx>{`
+        @keyframes pricing-shake {
+          0% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-6px); }
+          80% { transform: translateX(6px); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
     </div>
   )
 }
 
-function LocationSection({ state, city, onStateChange, onCityChange }: any) {
+function LocationSection({ state, city, onStateChange, onCityChange }: { state: string; city: string; onStateChange: (value: string) => void; onCityChange: (value: string) => void }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -462,7 +716,51 @@ function LocationSection({ state, city, onStateChange, onCityChange }: any) {
   )
 }
 
-function DescriptionSection({ shortDescription, description, onShortDescChange, onDescChange }: any) {
+function DescriptionSection({ shortDescription, description, onShortDescChange, onDescChange }: { shortDescription: string; description: string; onShortDescChange: (value: string) => void; onDescChange: (value: string) => void }) {
+  const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const applyFormat = (type: "bold" | "italic" | "underline" | "bullet" | "number") => {
+    const textArea = textAreaRef.current;
+    if (!textArea) return;
+
+    const start = textArea.selectionStart;
+    const end = textArea.selectionEnd;
+    const selectedText = description.slice(start, end);
+
+    let prefix = "";
+    let suffix = "";
+
+    if (type === "bold") {
+      prefix = "**";
+      suffix = "**";
+    }
+
+    if (type === "italic") {
+      prefix = "_";
+      suffix = "_";
+    }
+
+    if (type === "underline") {
+      prefix = "<u>";
+      suffix = "</u>";
+    }
+
+    if (type === "bullet") {
+      prefix = "- ";
+      suffix = "";
+    }
+
+    if (type === "number") {
+      prefix = "1. ";
+      suffix = "";
+    }
+
+    const fallbackText = type === "bullet" || type === "number" ? "Novo item" : "texto";
+    const replacement = `${prefix}${selectedText || fallbackText}${suffix}`;
+    const nextDescription = `${description.slice(0, start)}${replacement}${description.slice(end)}`;
+    onDescChange(nextDescription);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -471,16 +769,23 @@ function DescriptionSection({ shortDescription, description, onShortDescChange, 
       </div>
       <div>
         <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Narrativa Profissional Completa</label>
-        <textarea value={description} onChange={(e) => onDescChange(e.target.value)} placeholder="Descreva seu atendimento, diferenciais, o que o cliente pode esperar..." maxLength={1000} rows={4} className="w-full rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm focus:border-wine-700 focus:ring-2 focus:ring-wine-700 outline-none transition-all resize-none" />
+        <div className="mb-2 flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-2">
+          <button type="button" onClick={() => applyFormat("bold")} className="min-w-8 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-black text-zinc-700 hover:border-wine-300 hover:text-wine-700">B</button>
+          <button type="button" onClick={() => applyFormat("italic")} className="min-w-8 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-black italic text-zinc-700 hover:border-wine-300 hover:text-wine-700">I</button>
+          <button type="button" onClick={() => applyFormat("underline")} className="min-w-8 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-black underline text-zinc-700 hover:border-wine-300 hover:text-wine-700">U</button>
+          <button type="button" onClick={() => applyFormat("bullet")} className="min-w-8 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-black text-zinc-700 hover:border-wine-300 hover:text-wine-700">• Lista</button>
+          <button type="button" onClick={() => applyFormat("number")} className="min-w-8 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-black text-zinc-700 hover:border-wine-300 hover:text-wine-700">1. Lista</button>
+        </div>
+        <textarea ref={textAreaRef} value={description} onChange={(e) => onDescChange(e.target.value)} placeholder="Descreva seu atendimento, diferenciais, o que o cliente pode esperar..." maxLength={1000} rows={5} className="w-full rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm focus:border-wine-700 focus:ring-2 focus:ring-wine-700 outline-none transition-all resize-none" />
       </div>
     </div>
   )
 }
 
-function ServicesSection({ services, onToggle }: any) {
+function ServicesSection({ services, onToggle }: { services: ServiceOption[]; onToggle: (idx: number) => void }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {services.map((svc: any, idx: number) => (
+      {services.map((svc, idx: number) => (
         <button key={svc.label} onClick={() => onToggle(idx)} className={cn("flex items-center justify-between p-4 rounded-xl border text-left transition-all", svc.selected ? "border-wine-500 bg-wine-50/50 shadow-sm" : "border-zinc-200 bg-zinc-50/50 hover:bg-zinc-100")}>
           <span className={cn("text-sm font-bold", svc.selected ? "text-wine-900" : "text-zinc-600")}>{svc.label}</span>
           <div className={cn("w-5 h-5 rounded-md border flex items-center justify-center transition-colors", svc.selected ? "bg-wine-700 border-wine-700 text-white" : "border-zinc-300 bg-white")}>
@@ -492,7 +797,7 @@ function ServicesSection({ services, onToggle }: any) {
   )
 }
 
-function AvailabilitySection({ showAvailability, availability, onToggleShow, onDayToggle, onTimeChange }: any) {
+function AvailabilitySection({ showAvailability, availability, onToggleShow, onDayToggle, onTimeChange }: { showAvailability: boolean; availability: AvailabilityDay[]; onToggleShow: (value: boolean) => void; onDayToggle: (idx: number, enabled: boolean) => void; onTimeChange: (idx: number, field: "start" | "end", value: string) => void }) {
   return (
     <div className="space-y-6">
       <label className="flex items-center justify-between cursor-pointer p-5 rounded-xl border border-zinc-200 bg-zinc-50/50">
@@ -502,13 +807,13 @@ function AvailabilitySection({ showAvailability, availability, onToggleShow, onD
         </div>
         <div className="relative">
           <input type="checkbox" checked={showAvailability} onChange={(e) => onToggleShow(e.target.checked)} className="sr-only peer" />
-          <div className="w-12 h-6 bg-zinc-200 rounded-full peer peer_checked:after:translate-x-full after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wine-700"></div>
+          <div className="relative h-6 w-11 rounded-full bg-zinc-200 peer-checked:bg-wine-700 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5"></div>
         </div>
       </label>
 
       {showAvailability && (
         <div className="grid grid-cols-1 gap-2">
-          {availability.map((entry: any, idx: number) => (
+          {availability.map((entry, idx: number) => (
             <div key={entry.day} className={cn("flex items-center gap-4 p-3 rounded-xl border transition-all", entry.enabled ? "bg-white border-zinc-200 shadow-sm" : "bg-zinc-50 border-zinc-100 opacity-60")}>
               <div className="flex items-center gap-3 w-28 shrink-0">
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -531,11 +836,12 @@ function AvailabilitySection({ showAvailability, availability, onToggleShow, onD
   )
 }
 
-function SaveIndicator({ status, lastSavedAt }: { status: "idle" | "saving" | "saved" | "error"; lastSavedAt: Date | null }) {
-  if (status === "idle" && !lastSavedAt) return <span>Salvar Anúncio</span>;
-  if (status === "saving") return <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Salvando</>;
-  if (status === "saved") return <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Salvo</>;
-  return <span>Salvo {lastSavedAt?.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>;
+function PublishIndicator({ status, lastSavedAt, isPublishing }: { status: "idle" | "saving" | "saved" | "error"; lastSavedAt: Date | null; isPublishing: boolean }) {
+  if (isPublishing || status === "saving") return <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Publicando</>;
+  if (status === "saved") return <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Publicado</>;
+  if (status === "error") return <span>Publicar</span>;
+  if (!lastSavedAt) return <span>Publicar</span>;
+  return <span>Publicar</span>;
 }
 
 function ProfileScoreBar({ score }: { score: { percentage: number } }) {

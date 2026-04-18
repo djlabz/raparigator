@@ -591,7 +591,7 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
 
     const centerX = (x / rect.width - 0.5) * 2;
     const centerY = (y / rect.height - 0.5) * 2;
-    const maxTilt = 8;
+    const maxTilt = 15;
 
     cardRef.current.style.setProperty("--rot-x", `${-centerY * maxTilt}deg`);
     cardRef.current.style.setProperty("--rot-y", `${centerX * maxTilt}deg`);
