@@ -704,17 +704,15 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
   return (
     <Link href={`/anuncio/${ad.slug}`} className="group mx-auto block w-full max-w-[320px] cursor-pointer lg:max-w-none">
       <article className={cn("relative flex flex-col overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#121212] shadow-md transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#4a4a4a] hover:shadow-xl active:scale-[0.98]", FEED_CARD_SIZE_CLASS)}>
-        <div className="relative flex-1">
-          <div className="absolute inset-0">
-            <Image
-              src={currentImage}
-              alt={`${ad.artisticName} em ${ad.city}`}
-              fill
-              className="object-cover object-center opacity-90 transition-transform duration-700 transform-[translateZ(0)] group-hover:scale-105"
-              sizes="(max-width: 640px) 100vw, 320px"
-            />
-            <div className="absolute inset-0 bg-linear-to-t from-[#121212]/90 via-[#121212]/30 to-transparent" />
-          </div>
+        <div className="relative flex-1 overflow-hidden">
+          <Image
+            src={currentImage}
+            alt={`${ad.artisticName} em ${ad.city}`}
+            fill
+            className="object-cover object-center opacity-90 transition-transform duration-700 transform-[translateZ(0)] group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, 320px"
+          />
+          <div className="absolute inset-0 bg-linear-to-t from-[#121212]/90 via-[#121212]/30 to-transparent" />
 
           <div className="absolute right-3 top-3 z-20 flex items-start justify-end">
             <div className="flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-zinc-900 shadow-sm">
@@ -722,24 +720,24 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
               <span className="text-[11px] font-bold">{ad.rating.toFixed(1)}</span>
             </div>
           </div>
-
-          <div className="absolute bottom-0 left-0 right-0 z-20 px-5 pb-4">
-            <div className="mb-2">
-              <span className={cn("inline-block rounded-full border px-2.5 py-0.5 text-[9px] font-bold tracking-widest", statusClassName)}>
-                {statusLabel}
-              </span>
-            </div>
-
-            <h3 className="text-2xl font-semibold tracking-tight text-zinc-100 [text-shadow:0_2px_6px_rgba(0,0,0,0.85)]">
-              {ad.artisticName}
-            </h3>
-            <p className="mt-1 text-xs text-zinc-300 [text-shadow:0_2px_4px_rgba(0,0,0,0.85)]">
-              {ad.neighborhood}, {ad.city}
-            </p>
-          </div>
         </div>
 
-        <div className="relative z-30 shrink-0 border-t border-white/20 bg-[#121212] px-5 py-4">
+        <div className="relative z-10 px-5 py-4 bg-[#121212]">
+          <div className="mb-2">
+            <span className={cn("inline-block rounded-full border px-2.5 py-0.5 text-[9px] font-bold tracking-widest", statusClassName)}>
+              {statusLabel}
+            </span>
+          </div>
+
+          <h3 className="text-2xl font-semibold tracking-tight text-zinc-100">
+            {ad.artisticName}
+          </h3>
+          <p className="mt-1 text-xs text-zinc-300">
+            {ad.neighborhood}, {ad.city}
+          </p>
+        </div>
+
+        <div className="shrink-0 border-t border-white/20 bg-[#121212] px-5 py-4">
           <span className="mb-0.5 block text-[10px] font-bold tracking-widest text-zinc-500 uppercase">A partir de</span>
           <span className="text-base font-bold text-zinc-100">{currency(ad.startingPrice)}</span>
         </div>
