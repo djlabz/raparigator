@@ -527,7 +527,7 @@ export function FeedScreen() {
             </div>
 
             {loadingMore ? (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="h-80" />)}</div>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="mx-auto h-120 w-full max-w-[320px]" />)}</div>
             ) : visibleAds.length === 0 ? (
               <EmptyState title="Nenhum anuncio encontrado" description="Ajuste os filtros para encontrar perfis compativeis com sua busca." actionLabel="Resetar filtros" onAction={clearFilters} />
             ) : (
@@ -576,6 +576,8 @@ export function FeedScreen() {
   );
 }
 
+const FEED_CARD_SIZE_CLASS = "h-[480px] w-full max-w-[320px]";
+
 function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
   const [imageIndex, setImageIndex] = useState(0);
   const isPremium = ad.adTier === "premium";
@@ -623,10 +625,10 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
     const premiumImage = ad.images[0] ?? currentImage;
 
     return (
-      <Link href={`/anuncio/${ad.slug}`} className="group block h-full perspective-1000">
+      <Link href={`/anuncio/${ad.slug}`} className="group mx-auto block w-full max-w-[320px] perspective-1000">
         <article
           ref={cardRef}
-          className="preserve-3d relative h-full min-h-95 w-full cursor-pointer transition-transform duration-200 ease-out active:scale-[0.97]"
+          className={cn("preserve-3d relative cursor-pointer transition-transform duration-200 ease-out active:scale-[0.97]", FEED_CARD_SIZE_CLASS)}
           style={{
             transform: "rotateX(var(--rot-x, 0deg)) rotateY(var(--rot-y, 0deg))",
           }}
@@ -691,36 +693,55 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
     );
   }
 
-  // Card Standard Original (Adicionado h-full e active:scale para padronizacao)
+  const statusLabel = ad.status === "livre" ? "LIVRE" : ad.status === "em_atendimento" ? "EM ATENDIMENTO" : "INDISPONIVEL";
+  const statusClassName =
+    ad.status === "livre"
+      ? "border-emerald-800/30 bg-emerald-900/30 text-emerald-400"
+      : ad.status === "em_atendimento"
+        ? "border-amber-800/30 bg-amber-900/30 text-amber-500"
+        : "border-zinc-700/50 bg-zinc-900/80 text-zinc-400";
+
   return (
-    <Link href={`/anuncio/${ad.slug}`} className="group block h-full">
-      <article className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-wine-200 active:scale-[0.97]">
-        <div className="absolute right-3 top-3 z-20 rounded-full bg-white/90 px-2 py-1 text-xs font-semibold text-zinc-800 shadow-sm">★ {ad.rating.toFixed(1)}</div>
+    <Link href={`/anuncio/${ad.slug}`} className="group mx-auto block w-full max-w-[320px] cursor-pointer">
+      <article className={cn("relative flex flex-col overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#121212] shadow-md transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#4a4a4a] hover:shadow-xl active:scale-[0.98]", FEED_CARD_SIZE_CLASS)}>
+        <div className="relative flex-1">
+          <div className="absolute inset-0">
+            <Image
+              src={currentImage}
+              alt={`${ad.artisticName} em ${ad.city}`}
+              fill
+              className="object-cover object-center opacity-90 transition-transform duration-700 transform-[translateZ(0)] group-hover:scale-105"
+              sizes="(max-width: 640px) 100vw, 320px"
+            />
+            <div className="absolute inset-0 bg-linear-to-t from-[#121212]/90 via-[#121212]/30 to-transparent" />
+          </div>
 
-        <div className="relative h-64 shrink-0 overflow-hidden bg-zinc-100">
-          <Image
-            src={currentImage}
-            alt={`${ad.artisticName} em ${ad.city}`}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, 33vw"
-          />
-          <div className="absolute inset-0 bg-linear-to-t from-zinc-900/60 to-transparent opacity-0 transition-opacity group-hover:opacity-100 z-10" />
-        </div>
-
-        <div className="relative flex flex-1 flex-col justify-between p-2.5 pl-3.5">
-          <div className={cn("absolute inset-y-0 left-0 w-1.5", ad.status === "livre" ? "bg-emerald-500" : ad.status === "em_atendimento" ? "bg-amber-500" : "bg-zinc-400")} />
-          <div className="mb-1.5 flex flex-1 items-start justify-between gap-2">
-            <div>
-              <p className={cn("mb-0.5 inline-flex rounded-full px-2.5 py-1 text-xs font-medium", ad.status === "livre" ? "bg-emerald-50 text-emerald-700" : ad.status === "em_atendimento" ? "bg-amber-50 text-amber-700" : "bg-zinc-100 text-zinc-600")}>{ad.status === "livre" ? "Livre" : ad.status === "em_atendimento" ? "Em atendimento" : "Indisponivel"}</p>
-              <h3 className="text-base font-semibold text-zinc-900">{ad.artisticName}</h3>
-              <p className="text-[11px] text-zinc-500">{ad.neighborhood}, {ad.city}</p>
+          <div className="absolute right-3 top-3 z-20 flex items-start justify-end">
+            <div className="flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-zinc-900 shadow-sm">
+              <span className="text-[11px]">★</span>
+              <span className="text-[11px] font-bold">{ad.rating.toFixed(1)}</span>
             </div>
           </div>
-          <div className="flex items-center justify-between border-t border-zinc-100 pt-1.5">
-            <p className="text-[10px] font-bold uppercase text-zinc-400">A partir de <span className="block text-sm font-black text-zinc-900">{currency(ad.startingPrice)}</span></p>
-            <span className="rounded-lg bg-wine-50 px-3 py-1.5 text-xs font-bold text-wine-700 opacity-0 transition-opacity group-hover:opacity-100">Ver perfil</span>
+
+          <div className="absolute bottom-0 left-0 right-0 z-20 px-5 pb-4">
+            <div className="mb-2">
+              <span className={cn("inline-block rounded-full border px-2.5 py-0.5 text-[9px] font-bold tracking-widest", statusClassName)}>
+                {statusLabel}
+              </span>
+            </div>
+
+            <h3 className="text-2xl font-semibold tracking-tight text-zinc-100 [text-shadow:0_2px_6px_rgba(0,0,0,0.85)]">
+              {ad.artisticName}
+            </h3>
+            <p className="mt-1 text-xs text-zinc-300 [text-shadow:0_2px_4px_rgba(0,0,0,0.85)]">
+              {ad.neighborhood}, {ad.city}
+            </p>
           </div>
+        </div>
+
+        <div className="relative z-30 shrink-0 border-t border-white/20 bg-[#121212] px-5 py-4">
+          <span className="mb-0.5 block text-[10px] font-bold tracking-widest text-zinc-500 uppercase">A partir de</span>
+          <span className="text-base font-bold text-zinc-100">{currency(ad.startingPrice)}</span>
         </div>
       </article>
     </Link>
