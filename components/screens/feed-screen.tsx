@@ -486,9 +486,9 @@ export function FeedScreen() {
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[300px_1fr]">
+        <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
           {/* Menu Lateral Desktop */}
-          <aside className="hidden lg:flex flex-col shrink-0">
+          <aside className="hidden lg:flex min-w-70 flex-col shrink-0">
             <div className="sticky top-24 bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden flex flex-col max-h-[calc(100vh-120px)]">
               {/* Filter Header com Ícone de Filtros */}
               <div className="p-5 border-b border-zinc-100 flex justify-between items-center bg-zinc-50">
@@ -527,11 +527,11 @@ export function FeedScreen() {
             </div>
 
             {loadingMore ? (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="mx-auto h-120 w-full max-w-[320px]" />)}</div>
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="mx-auto h-120 w-full max-w-[320px] lg:max-w-none" />)}</div>
             ) : visibleAds.length === 0 ? (
               <EmptyState title="Nenhum anuncio encontrado" description="Ajuste os filtros para encontrar perfis compativeis com sua busca." actionLabel="Resetar filtros" onAction={clearFilters} />
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {visibleAds.map((ad) => (
                   <FeedAdCard key={ad.id} ad={ad} />
                 ))}
@@ -576,7 +576,7 @@ export function FeedScreen() {
   );
 }
 
-const FEED_CARD_SIZE_CLASS = "h-[480px] w-full max-w-[320px]";
+const FEED_CARD_SIZE_CLASS = "h-[480px] w-full";
 
 function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
   const [imageIndex, setImageIndex] = useState(0);
@@ -625,7 +625,7 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
     const premiumImage = ad.images[0] ?? currentImage;
 
     return (
-      <Link href={`/anuncio/${ad.slug}`} className="group mx-auto block w-full max-w-[320px] perspective-1000">
+      <Link href={`/anuncio/${ad.slug}`} className="group mx-auto block w-full max-w-[320px] perspective-1000 lg:max-w-none">
         <article
           ref={cardRef}
           className={cn("preserve-3d relative cursor-pointer transition-transform duration-200 ease-out active:scale-[0.97]", FEED_CARD_SIZE_CLASS)}
@@ -702,7 +702,7 @@ function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
         : "border-zinc-700/50 bg-zinc-900/80 text-zinc-400";
 
   return (
-    <Link href={`/anuncio/${ad.slug}`} className="group mx-auto block w-full max-w-[320px] cursor-pointer">
+    <Link href={`/anuncio/${ad.slug}`} className="group mx-auto block w-full max-w-[320px] cursor-pointer lg:max-w-none">
       <article className={cn("relative flex flex-col overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#121212] shadow-md transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#4a4a4a] hover:shadow-xl active:scale-[0.98]", FEED_CARD_SIZE_CLASS)}>
         <div className="relative flex-1">
           <div className="absolute inset-0">
