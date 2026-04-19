@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Toast } from "@/components/ui/toast";
 import { ads, cities } from "@/lib/mock-data";
 import type { ProfessionalAd } from "@/lib/types";
 import { currency, cn } from "@/lib/utils";
@@ -28,17 +29,20 @@ const categoryByGender: Record<string, string> = {
 };
 
 export function FeedScreen() {
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const initialLocation = searchParams.get("location") || "";
+  const initialCity = initialLocation ? initialLocation.split(", ")[1] || "all" : "all";
+
   const [visibleCount, setVisibleCount] = useState(6);
   const [showFilters, setShowFilters] = useState(false);
+  const [showLocationToolsModal, setShowLocationToolsModal] = useState(false);
+  const [showLocationToast, setShowLocationToast] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [visibleQuickFilters, setVisibleQuickFilters] = useState<string[]>(quickFilters);
   const [activeQuickFilters, setActiveQuickFilters] = useState<string[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState(defaultLocationLabel);
-  const [locationInput, setLocationInput] = useState(defaultLocationLabel);
-  const [showLocationEditor, setShowLocationEditor] = useState(false);
+  const [locationInput, setLocationInput] = useState(initialLocation);
 
   // Estados dos Filtros
-  const [selectedCity, setSelectedCity] = useState("all");
+  const [selectedCity, setSelectedCity] = useState(initialCity);
   const [selectedGender, setSelectedGender] = useState(defaultGender);
   const [maxPrice, setMaxPrice] = useState(defaultMaxPrice);
   const [selectedAdTypes, setSelectedAdTypes] = useState<string[]>([]);
@@ -52,7 +56,9 @@ export function FeedScreen() {
   };
 
   const normalizedLocationQuery = locationInput.toLowerCase().trim();
-  const locationMatches = cities.filter((city) => city.toLowerCase().includes(normalizedLocationQuery));
+  const locationMatches = normalizedLocationQuery.length < 2
+    ? []
+    : cities.filter((city) => city.toLowerCase().includes(normalizedLocationQuery));
 
   const clearFilters = () => {
     setSelectedCity("all");
@@ -63,23 +69,16 @@ export function FeedScreen() {
     setSelectedHairs([]);
     setSelectedServices([]);
     setActiveQuickFilters([]);
-    setVisibleQuickFilters(quickFilters);
   };
 
   const clearFiltersFromModal = () => {
     clearFilters();
-    setVisibleQuickFilters([]);
   };
 
   const toggleQuickFilter = (filter: string) => {
     setActiveQuickFilters((current) => {
       const isActive = current.includes(filter);
       const next = isActive ? current.filter((item) => item !== filter) : [...current, filter];
-
-      // Remover da lista de filtros visíveis quando desmarcar
-      if (isActive) {
-        setVisibleQuickFilters((visible) => visible.filter((item) => item !== filter));
-      }
 
       if (filter === "Premium") {
         setSelectedAdTypes((types) => {
@@ -107,14 +106,6 @@ export function FeedScreen() {
           }
 
           return quickCurrent.includes("Premium") ? quickCurrent : [...quickCurrent, "Premium"];
-        });
-
-        setVisibleQuickFilters((visibleCurrent) => {
-          if (isActive) {
-            return visibleCurrent.filter((item) => item !== "Premium");
-          }
-
-          return visibleCurrent.includes("Premium") ? visibleCurrent : [...visibleCurrent, "Premium"];
         });
       }
 
@@ -181,45 +172,70 @@ export function FeedScreen() {
     setVisibleCount(6);
   }, [activeQuickFilters, maxPrice, selectedCity, selectedGender, selectedAdTypes, selectedEthnicities, selectedHairs, selectedServices]);
 
-  const activeAdvancedChips = [
-    selectedCity !== "all" ? { id: `city-${selectedCity}`, label: selectedCity, onRemove: () => setSelectedCity("all") } : null,
-    selectedGender !== defaultGender ? { id: `gender-${selectedGender}`, label: selectedGender, onRemove: () => setSelectedGender(defaultGender) } : null,
-    maxPrice !== defaultMaxPrice ? { id: `price-${maxPrice}`, label: `Até ${currency(maxPrice)}`, onRemove: () => setMaxPrice(defaultMaxPrice) } : null,
-    ...selectedAdTypes.filter((type) => type !== "Premium").map((type) => ({ id: `type-${type}`, label: type, onRemove: () => setSelectedAdTypes((current) => current.filter((item) => item !== type)) })),
-    ...selectedEthnicities.map((ethnicity) => ({ id: `eth-${ethnicity}`, label: ethnicity, onRemove: () => setSelectedEthnicities((current) => current.filter((item) => item !== ethnicity)) })),
-    ...selectedHairs.map((hair) => ({ id: `hair-${hair}`, label: hair, onRemove: () => setSelectedHairs((current) => current.filter((item) => item !== hair)) })),
-    ...selectedServices.map((service) => ({ id: `service-${service}`, label: service, onRemove: () => setSelectedServices((current) => current.filter((item) => item !== service)) })),
-  ].filter((chip): chip is { id: string; label: string; onRemove: () => void } => chip !== null);
-
   const visibleAds = filteredAds.slice(0, visibleCount);
+  const selectedLocation = selectedCity === "all" ? defaultLocationLabel : `SP, ${selectedCity}`;
 
   const applySelectedLocation = (city: string) => {
     setSelectedCity(city);
-    setSelectedLocation(`${city}, SP`);
-    setLocationInput(`${city}, SP`);
-    setShowLocationEditor(false);
+    setLocationInput(city);
+    setShowLocationToolsModal(false);
   };
 
   const useAutomaticLocation = () => {
-    applySelectedLocation("Sao Paulo");
+    setSelectedCity("Sao Paulo");
+    setLocationInput("Sao Paulo");
+    setShowLocationToast(true);
+    setTimeout(() => setShowLocationToast(false), 3000);
+    // Não fecha o modal - apenas preenche o campo
   };
 
   const renderFiltersContent = () => (
     <div className="space-y-6">
+      {/* Filtros rápidos */}
+      <section>
+        <label className="mb-3 block text-sm font-bold text-zinc-900">Filtros rápidos</label>
+        <div className="flex flex-wrap gap-2">
+          {quickFilters.map((filter) => {
+            const active = activeQuickFilters.includes(filter);
+
+            return (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => toggleQuickFilter(filter)}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                  active ? "border-wine-700 bg-wine-700 text-white" : "border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-wine-300 hover:bg-wine-50"
+                )}
+              >
+                {filter}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Localidade */}
       <section>
-        <label className="text-sm font-bold text-zinc-900 mb-3 block">Localidade</label>
-        <div className="relative">
-          <select
-            value={selectedCity}
-            onChange={(e) => setSelectedCity(e.target.value)}
-            className="w-full rounded-lg border-wine-200 bg-wine-50/50 py-2.5 pl-3 pr-10 text-sm font-medium focus:border-wine-700 focus:ring-1 focus:ring-wine-700 outline-none appearance-none"
-          >
-            <option value="all">Todas as regiões</option>
-            {cities.map((city) => <option key={city} value={city}>{city}</option>)}
-          </select>
-          <span className="absolute right-3 top-2.5 text-wine-700/50 pointer-events-none">▼</span>
-        </div>
+        <label className="mb-3 flex items-center gap-2 text-sm font-bold text-zinc-900">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-wine-700" aria-hidden="true">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          Localidade
+        </label>
+
+        <button
+          type="button"
+          onClick={() => {
+            setLocationInput(selectedCity === "all" ? "Sao Paulo" : selectedCity);
+            setShowLocationToolsModal(true);
+          }}
+          className="flex w-full items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-left transition hover:border-wine-300 hover:bg-wine-50/50"
+        >
+          <span className="text-base font-medium text-zinc-900">{selectedCity === "all" ? "SP, São Paulo" : `SP, ${selectedCity}`}</span>
+          <span className="text-wine-700/70">▾</span>
+        </button>
       </section>
 
       {/* Gênero & Categoria */}
@@ -334,158 +350,6 @@ export function FeedScreen() {
   return (
     <AppShell location={selectedLocation}>
       <div className="space-y-6">
-        {/* Barra Superior */}
-        <section className="space-y-4">
-          <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-            <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLocationInput(selectedLocation);
-                    setShowLocationEditor((current) => !current);
-                  }}
-                  className="flex w-full items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-left transition hover:border-wine-300 hover:bg-wine-50/40"
-                >
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-wine-700 shadow-sm ring-1 ring-zinc-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Alterar localização</span>
-                    <span className="mt-1 block text-sm font-semibold text-zinc-900 underline decoration-dotted decoration-wine-300 underline-offset-4">{selectedLocation}</span>
-                  </span>
-                  <span className="text-zinc-400">▾</span>
-                </button>
-
-                {showLocationEditor ? (
-                  <div className="absolute left-0 top-[calc(100%+0.5rem)] z-30 w-full rounded-2xl border border-zinc-200 bg-white p-3 shadow-xl shadow-zinc-900/10">
-                    <div className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500" aria-hidden="true">
-                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                        <circle cx="12" cy="10" r="3" />
-                      </svg>
-                      <input
-                        value={locationInput}
-                        onChange={(event) => setLocationInput(event.target.value)}
-                        placeholder="Digite sua cidade"
-                        className="h-9 w-full border-0 bg-transparent text-sm outline-none placeholder:text-zinc-400"
-                        autoFocus
-                      />
-                    </div>
-
-                    <div className="mt-3 max-h-48 space-y-1 overflow-y-auto pr-1">
-                      {locationMatches.length > 0 ? (
-                        locationMatches.map((city) => (
-                          <button
-                            key={city}
-                            type="button"
-                            onClick={() => applySelectedLocation(city)}
-                            className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-zinc-700 transition hover:bg-zinc-50"
-                          >
-                            <span>{city}, SP</span>
-                            <span className="text-xs text-zinc-400">Selecionar</span>
-                          </button>
-                        ))
-                      ) : (
-                        <div className="rounded-xl bg-zinc-50 px-3 py-2 text-sm text-zinc-500">Nenhuma cidade encontrada</div>
-                      )}
-                    </div>
-
-                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      <Button variant="secondary" onClick={useAutomaticLocation} className="justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2" aria-hidden="true">
-                          <path d="M12 2v4" />
-                          <path d="M12 18v4" />
-                          <path d="m4.93 4.93 2.83 2.83" />
-                          <path d="m16.24 16.24 2.83 2.83" />
-                          <path d="M2 12h4" />
-                          <path d="M18 12h4" />
-                          <path d="m4.93 19.07 2.83-2.83" />
-                          <path d="m16.24 7.76 2.83-2.83" />
-                        </svg>
-                        Usar localização automática
-                      </Button>
-                      <Button variant="ghost" onClick={() => setShowLocationEditor(false)} className="justify-center text-zinc-700">
-                        Fechar
-                      </Button>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Botão de Filtros só aparece no Mobile (escondido no lg) */}
-              <Button variant="secondary" className="md:mt-6 lg:hidden" onClick={() => setShowFilters(true)}>
-                <span className="inline-flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-red-500">
-                    <line x1="21" x2="14" y1="4" y2="4" />
-                    <line x1="10" x2="3" y1="4" y2="4" />
-                    <line x1="21" x2="12" y1="12" y2="12" />
-                    <line x1="8" x2="3" y1="12" y2="12" />
-                    <line x1="21" x2="16" y1="20" y2="20" />
-                    <line x1="12" x2="3" y1="20" y2="20" />
-                    <line x1="14" x2="14" y1="2" y2="6" />
-                    <line x1="8" x2="8" y1="10" y2="14" />
-                    <line x1="16" x2="16" y1="18" y2="22" />
-                  </svg>
-                  Filtros
-                </span>
-              </Button>
-            </div>
-            {visibleQuickFilters.length > 0 || activeAdvancedChips.length > 0 ? (
-              <div className="no-scrollbar -mx-1 mt-3 overflow-x-auto px-1">
-                <div className="flex min-w-max items-center gap-2 pb-1">
-                  {visibleQuickFilters.map((filter) => {
-                    const active = activeQuickFilters.includes(filter);
-                    return (
-                      <button
-                        key={filter}
-                        type="button"
-                        onClick={() => toggleQuickFilter(filter)}
-                        className={cn(
-                          "relative whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition",
-                          active ? "border-wine-700 bg-wine-700 pr-6 text-white" : "border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-wine-300 hover:bg-wine-50"
-                        )}
-                      >
-                        {filter}
-                        {active ? (
-                          <span
-                            role="button"
-                            aria-label={`Remover filtro ${filter}`}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              toggleQuickFilter(filter);
-                            }}
-                            className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-wine-700 ring-1 ring-wine-200"
-                          >
-                            x
-                          </span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
-
-                  {activeAdvancedChips.map((chip) => (
-                    <button
-                      key={chip.id}
-                      type="button"
-                      onClick={chip.onRemove}
-                      className="relative whitespace-nowrap rounded-full border border-wine-300 bg-wine-100 px-3 py-1.5 pr-6 text-xs font-medium text-wine-800 transition hover:bg-wine-200"
-                    >
-                      {chip.label}
-                      <span className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-wine-700 ring-1 ring-wine-200">
-                        x
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </section>
-
         <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
           {/* Menu Lateral Desktop */}
           <aside className="hidden lg:flex min-w-70 flex-col shrink-0">
@@ -519,11 +383,29 @@ export function FeedScreen() {
 
           {/* Grid de Anúncios */}
           <div className="space-y-4">
-            <div className="flex justify-between items-end mb-4">
+            <div className="mb-4 flex items-end justify-between gap-3">
               <div>
                 <h1 className="text-2xl font-extrabold text-zinc-900">Acompanhantes</h1>
                 <p className="text-zinc-500 mt-1 text-sm">{filteredAds.length} perfis encontrados</p>
               </div>
+
+              {/* Botão de Filtros só aparece no Mobile (escondido no lg) */}
+              <Button variant="secondary" className="lg:hidden" onClick={() => setShowFilters(true)}>
+                <span className="inline-flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-red-500">
+                    <line x1="21" x2="14" y1="4" y2="4" />
+                    <line x1="10" x2="3" y1="4" y2="4" />
+                    <line x1="21" x2="12" y1="12" y2="12" />
+                    <line x1="8" x2="3" y1="12" y2="12" />
+                    <line x1="21" x2="16" y1="20" y2="20" />
+                    <line x1="12" x2="3" y1="20" y2="20" />
+                    <line x1="14" x2="14" y1="2" y2="6" />
+                    <line x1="8" x2="8" y1="10" y2="14" />
+                    <line x1="16" x2="16" y1="18" y2="22" />
+                  </svg>
+                  Filtros
+                </span>
+              </Button>
             </div>
 
             {loadingMore ? (
@@ -572,9 +454,80 @@ export function FeedScreen() {
       >
         {renderFiltersContent()}
       </Modal>
+
+      <Modal
+        open={showLocationToolsModal}
+        onClose={() => setShowLocationToolsModal(false)}
+        title="Localidade"
+        description=""
+        actions={null}
+      >
+        <div className="space-y-4">
+          <label className="block text-sm font-semibold text-zinc-900">Selecionar nova localização</label>
+
+          <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-wine-700 shrink-0" aria-hidden="true">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <input
+              value={locationInput}
+              onChange={(event) => setLocationInput(event.target.value)}
+              placeholder="Digite sua localização"
+              className="h-9 flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-zinc-400"
+            />
+            {locationInput && (
+              <button
+                type="button"
+                onClick={() => {
+                  setLocationInput("");
+                  setSelectedCity("all");
+                }}
+                className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-wine-300 bg-wine-50 text-sm font-bold text-wine-700 transition hover:bg-wine-100 active:scale-95"
+                title="Remover localização"
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          {locationMatches.length > 0 ? (
+            <div className="max-h-40 space-y-1 overflow-y-auto pr-1">
+              {locationMatches.map((city) => (
+                <button
+                  key={city}
+                  type="button"
+                  onClick={() => applySelectedLocation(city)}
+                  className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-zinc-700 transition hover:bg-zinc-50"
+                >
+                  <span>SP, {city}</span>
+                  <span className="text-xs text-zinc-400">Selecionar</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          <Button onClick={useAutomaticLocation} className="flex w-full items-center justify-center gap-2 bg-wine-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-wine-800 active:bg-wine-900">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 2v4" />
+              <path d="M12 18v4" />
+              <path d="m4.93 4.93 2.83 2.83" />
+              <path d="m16.24 16.24 2.83 2.83" />
+              <path d="M2 12h4" />
+              <path d="M18 12h4" />
+              <path d="m4.93 19.07 2.83-2.83" />
+              <path d="m16.24 7.76 2.83-2.83" />
+            </svg>
+            <span className="whitespace-nowrap">Usar localização automática</span>
+          </Button>
+
+          {showLocationToast ? <Toast title="Localização atual aplicada" message="São Paulo, SP foi definida automaticamente." type="success" /> : null}
+        </div>
+      </Modal>
     </AppShell>
   );
 }
+
 
 const FEED_CARD_SIZE_CLASS = "h-[480px] w-full";
 

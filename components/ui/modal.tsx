@@ -4,6 +4,9 @@ import { ReactNode, useEffect } from "react";
 import { Button } from "./button";
 import { cn } from "@/lib/utils";
 
+let bodyScrollLockCount = 0;
+let previousBodyOverflow: string | null = null;
+
 interface ModalProps {
   open: boolean;
   title: string;
@@ -19,11 +22,20 @@ export function Modal({ open, title, description, onClose, children, actions, he
   useEffect(() => {
     if (!open) return;
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (bodyScrollLockCount === 0) {
+      previousBodyOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+    }
+
+    bodyScrollLockCount += 1;
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      bodyScrollLockCount = Math.max(0, bodyScrollLockCount - 1);
+
+      if (bodyScrollLockCount === 0 && previousBodyOverflow !== null) {
+        document.body.style.overflow = previousBodyOverflow;
+        previousBodyOverflow = null;
+      }
     };
   }, [open]);
 
