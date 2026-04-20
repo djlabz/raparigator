@@ -16,9 +16,10 @@ interface ModalProps {
   actions?: ReactNode | null;
   headerActions?: ReactNode;
   size?: "sm" | "md";
+  mobileCentered?: boolean;
 }
 
-export function Modal({ open, title, description, onClose, children, actions, headerActions, size = "sm" }: ModalProps) {
+export function Modal({ open, title, description, onClose, children, actions, headerActions, size = "sm", mobileCentered = false }: ModalProps) {
   useEffect(() => {
     if (!open) return;
 
@@ -48,17 +49,24 @@ export function Modal({ open, title, description, onClose, children, actions, he
   ) : actions;
 
   return (
-    <div className="fixed inset-0 z-220 flex items-end bg-zinc-900/50 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] touch-none sm:items-center sm:justify-center" role="dialog" aria-modal="true">
+    <div className={cn(
+      "fixed inset-0 z-220 flex bg-zinc-900/50 px-3 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] touch-none sm:px-4 sm:items-center sm:justify-center",
+      mobileCentered ? "items-center" : "items-end"
+    )} role="dialog" aria-modal="true">
       <div
-        className={cn("flex w-full flex-col overflow-hidden rounded-2xl bg-white p-5 shadow-xl", size === "md" ? "sm:max-w-2xl" : "sm:max-w-md")}
+        className={cn(
+          "flex w-full flex-col overflow-hidden rounded-3xl bg-white p-4 shadow-xl sm:rounded-2xl sm:p-5",
+          mobileCentered ? "max-h-[min(92dvh,48rem)]" : "max-h-[min(94dvh,48rem)]",
+          size === "md" ? "sm:max-w-2xl" : "sm:max-w-md"
+        )}
         style={{
-          maxHeight: "calc(100dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))",
+          maxHeight: mobileCentered ? "calc(92dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))" : "calc(94dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))",
         }}
       >
-        <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="mb-4 flex items-start justify-between gap-3 sm:gap-4">
           <div className="space-y-1">
-            <h3 className="text-lg font-semibold text-zinc-900">{title}</h3>
-            {description ? <p className="text-sm text-zinc-600">{description}</p> : null}
+            <h3 className="text-lg font-semibold leading-tight text-zinc-900 sm:text-lg">{title}</h3>
+            {description ? <p className="text-sm leading-snug text-zinc-600">{description}</p> : null}
           </div>
           <div className="flex items-center gap-2">
             {headerActions}
@@ -75,12 +83,35 @@ export function Modal({ open, title, description, onClose, children, actions, he
             </button>
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-1 overscroll-contain touch-pan-y">
+        <div className="modal-scroll min-h-0 flex-1 overflow-y-auto px-0.5 pr-1 overscroll-contain touch-pan-y sm:px-1">
           {children}
         </div>
-        {resolvedActions ? <div className="mt-5 flex shrink-0 gap-2 border-t border-zinc-100 pt-4">{resolvedActions}</div> : null}
+        {resolvedActions ? <div className={cn("mt-4 flex shrink-0 gap-2 border-t border-zinc-100 pt-4", mobileCentered ? "flex-col sm:flex-row" : "flex-col sm:flex-row")}>{resolvedActions}</div> : null}
       </div>
       <button aria-label="Fechar modal" className="absolute inset-0 -z-10" onClick={onClose} />
+      <style jsx>{`
+        .modal-scroll {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        .modal-scroll::-webkit-scrollbar {
+          width: 0;
+          height: 0;
+        }
+
+        @media (min-width: 640px) {
+          .modal-scroll {
+            scrollbar-width: auto;
+            -ms-overflow-style: auto;
+          }
+
+          .modal-scroll::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+          }
+        }
+      `}</style>
     </div>
   );
 }

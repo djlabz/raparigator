@@ -16,7 +16,18 @@ const ETHNICITY_OPTIONS = [SELECT_PLACEHOLDER, "Branca", "Preta", "Parda", "Amar
 const HAIR_COLOR_OPTIONS = [SELECT_PLACEHOLDER, "Preto", "Castanho", "Loiro", "Ruivo", "Colorido", "Rosa", "Platinado"];
 const SMOKER_OPTIONS = [SELECT_PLACEHOLDER, "Sim", "Não"];
 type VisibilityStatus = "Ativo" | "Pausado" | "Invisível";
-type SectionKey = "characteristics" | "location" | "description";
+type SectionKey = "characteristics" | "pricing" | "location" | "description";
+const SECTION_LABELS: Record<SectionKey, string> = {
+  characteristics: "Características físicas",
+  pricing: "Tabela de preços",
+  location: "Localização",
+  description: "Descrição do Perfil",
+};
+type PublishWarningItem = {
+  kind: "required" | "unsaved";
+  section: SectionKey;
+  label: string;
+};
 const MAX_LOCATION_ADDRESSES = 10;
 const GROUP_WARNING_AUTO_DISMISS_MS = 3200;
 type LocationStatusTone = "success" | "error" | "info";
@@ -189,6 +200,7 @@ function sanitizeTimeInput(value: string) {
 function buildSectionSnapshots(form: ProfileFormState) {
   return {
     characteristics: JSON.stringify(form.characteristics),
+    pricing: JSON.stringify(form.pricing),
     location: JSON.stringify({ locationState: form.locationState, locationCity: form.locationCity, acceptsTravel: form.acceptsTravel, locationAddresses: form.locationAddresses }),
     description: JSON.stringify({ shortDescription: form.shortDescription, description: form.description }),
   };
@@ -231,6 +243,7 @@ export function AnnouncementTab({
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
   const visibilityStatus: VisibilityStatus = status === "Pausado" ? "Pausado" : "Ativo";
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [publishErrorItems, setPublishErrorItems] = useState<PublishWarningItem[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
   const [availabilityCloseSignal, setAvailabilityCloseSignal] = useState(0);
   const [characteristicsError, setCharacteristicsError] = useState<string | null>(null);
@@ -247,10 +260,20 @@ export function AnnouncementTab({
   const [locationStatusMessage, setLocationStatusMessage] = useState<string | null>(null);
   const [locationStatusTone, setLocationStatusTone] = useState<LocationStatusTone>("info");
   const [savedSectionSnapshots, setSavedSectionSnapshots] = useState(() => buildSectionSnapshots(form));
+  const sectionRefs = useRef<Record<SectionKey, HTMLDivElement | null>>({
+    characteristics: null,
+    pricing: null,
+    location: null,
+    description: null,
+  });
+  const [isCharacteristicsSectionOpen, setIsCharacteristicsSectionOpen] = useState(false);
+  const [isPricingSectionOpen, setIsPricingSectionOpen] = useState(false);
+  const [isDescriptionSectionOpen, setIsDescriptionSectionOpen] = useState(false);
   const sectionSnapshots = useMemo(() => buildSectionSnapshots(form), [form]);
   const sectionDirtyState = useMemo(
     () => ({
       characteristics: sectionSnapshots.characteristics !== savedSectionSnapshots.characteristics,
+      pricing: sectionSnapshots.pricing !== savedSectionSnapshots.pricing,
       location: sectionSnapshots.location !== savedSectionSnapshots.location,
       description: sectionSnapshots.description !== savedSectionSnapshots.description,
     }),
@@ -280,6 +303,33 @@ export function AnnouncementTab({
 
     return () => clearTimeout(timeoutId);
   }, [locationStatusMessage]);
+  const scrollToSection = (section: SectionKey) => {
+    if (section === "characteristics") {
+      setIsCharacteristicsSectionOpen(true);
+    }
+
+    if (section === "pricing") {
+      setIsPricingSectionOpen(true);
+    }
+
+    if (section === "location") {
+      setIsLocationSectionOpen(true);
+    }
+
+    if (section === "description") {
+      setIsDescriptionSectionOpen(true);
+    }
+
+    window.setTimeout(() => {
+      const target = sectionRefs.current[section];
+      if (!target) {
+        return;
+      }
+
+      const block = window.innerWidth < 768 ? "start" : "center";
+      target.scrollIntoView({ behavior: "smooth", block, inline: "nearest" });
+    }, 140);
+  };
   const pushLocationStatus = (message: string, tone: LocationStatusTone) => {
     setLocationStatusTone(tone);
     setLocationStatusMessage(message);
@@ -522,17 +572,49 @@ export function AnnouncementTab({
     if (saveStatus === "saving" || isPublishing) return;
 
     const validationErrors = getPublishValidationErrors(form);
-    if (validationErrors.length > 0) {
-      setPublishError(validationErrors[0]);
+    const dirtySections = (Object.keys(sectionDirtyState) as SectionKey[])
+      .filter((section) => sectionDirtyState[section])
+      .map((section) => ({ kind: "unsaved" as const, section, label: SECTION_LABELS[section] }));
+
+    if (validationErrors.length > 0 || dirtySections.length > 0) {
+      const requiredItems: PublishWarningItem[] = [];
+
+      validationErrors.forEach((message) => {
+        if (message.includes("Características físicas")) {
+          requiredItems.push({ kind: "required", section: "characteristics", label: SECTION_LABELS.characteristics });
+          return;
+        }
+
+        if (message.includes("Tabela de preços")) {
+          requiredItems.push({ kind: "required", section: "pricing", label: SECTION_LABELS.pricing });
+          return;
+        }
+
+        if (message.includes("Localização")) {
+          requiredItems.push({ kind: "required", section: "location", label: SECTION_LABELS.location });
+          return;
+        }
+
+        if (message.includes("Descrição do Perfil")) {
+          requiredItems.push({ kind: "required", section: "description", label: SECTION_LABELS.description });
+        }
+      });
+
+      const blockingItems = [...requiredItems, ...dirtySections];
+
+      setPublishErrorItems(blockingItems);
+      setPublishError("Há pendências nos grupos abaixo.");
       return;
     }
 
     setPublishError(null);
+    setPublishErrorItems([]);
     setIsPublishing(true);
 
     const saveResult = await manualSave();
     if (saveResult === "error") {
       setPublishError("Não foi possível publicar agora. Tente novamente.");
+      setPublishErrorItems([]);
       setIsPublishing(false);
       return;
     }
@@ -542,6 +624,44 @@ export function AnnouncementTab({
       onToggleStatus();
     }
     setIsPublishing(false);
+  };
+
+  const cancelSectionChanges = (section: SectionKey) => {
+    if (!sectionDirtyState[section] || saveStatus === "saving") {
+      return;
+    }
+
+    if (section === "characteristics") {
+      const savedCharacteristics = JSON.parse(savedSectionSnapshots.characteristics) as ProfileCharacteristics;
+      updateField("characteristics", savedCharacteristics, { autoSave: false });
+      setCharacteristicsInvalidFields([]);
+      setCharacteristicsError(null);
+    }
+
+    if (section === "location") {
+      const savedLocation = JSON.parse(savedSectionSnapshots.location) as Pick<ProfileFormState, "locationState" | "locationCity" | "acceptsTravel" | "locationAddresses">;
+      updateForm((current) => ({
+        ...current,
+        locationState: savedLocation.locationState,
+        locationCity: savedLocation.locationCity,
+        acceptsTravel: savedLocation.acceptsTravel,
+        locationAddresses: savedLocation.locationAddresses,
+      }));
+      setHighlightedLocationId(null);
+      setLocationStatusMessage(null);
+    }
+
+    if (section === "description") {
+      const savedDescription = JSON.parse(savedSectionSnapshots.description) as Pick<ProfileFormState, "shortDescription" | "description">;
+      updateForm((current) => ({
+        ...current,
+        shortDescription: savedDescription.shortDescription,
+        description: savedDescription.description,
+      }));
+    }
+
+    setPublishError(null);
+    setPublishErrorItems([]);
   };
 
   const saveSection = async (section: SectionKey) => {
@@ -589,7 +709,28 @@ export function AnnouncementTab({
               {hasUnsavedChanges && <span className="ml-2 text-base font-semibold text-amber-700">(Alterações não salvas)</span>}
             </h1>
             <p className="text-zinc-500 mt-1">Gerencie sua identidade visual e informações do anúncio.</p>
-            {publishError && <p className="mt-2 text-sm font-medium text-red-600">{publishError}</p>}
+            {publishError ? (
+              <div className="mt-2 space-y-1 text-sm font-medium text-red-600">
+                <p>{publishError}</p>
+                {publishErrorItems.length > 0 ? (
+                  <ol className="space-y-1 text-red-600">
+                    {publishErrorItems.map((item, index) => (
+                      <li key={`${item.kind}-${item.section}-${index}`} className="leading-relaxed">
+                        {index + 1}. {item.kind === "unsaved" ? "Salve ou cancele as alterações em" : "Preencha os campos obrigatórios em"}{" "}
+                        <button
+                          type="button"
+                          onClick={() => scrollToSection(item.section)}
+                          className="inline-flex items-center rounded-md border border-red-200 bg-red-50 px-1.5 py-0.5 font-semibold text-red-700 underline decoration-red-300 underline-offset-2 transition hover:bg-red-100 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-300"
+                        >
+                          {item.label}
+                        </button>
+                        {item.kind === "unsaved" ? "." : "."}
+                      </li>
+                    ))}
+                  </ol>
+                ) : null}
+              </div>
+            ) : null}
           </div>
           <div className="flex gap-2 w-full sm:w-auto sm:gap-3">
             <button onClick={handleViewPublicAd} className="px-3 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base rounded-lg border border-zinc-200 bg-white font-bold text-zinc-700 hover:bg-zinc-50 transition-colors">
@@ -715,7 +856,7 @@ export function AnnouncementTab({
             <h2 className="text-xl font-bold text-zinc-900">Informações Obrigatórias</h2>
           </div>
 
-          <SectionCard title="Características físicas" requiredAsterisk dirty={sectionDirtyState.characteristics} showSaveAction onSaveAction={() => saveSection("characteristics")} saveDisabled={saveStatus === "saving"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}>
+          <SectionCard sectionRef={(node) => { sectionRefs.current.characteristics = node; }} title="Características físicas" requiredAsterisk dirty={sectionDirtyState.characteristics} showSaveAction onSaveAction={() => saveSection("characteristics")} onCancelAction={() => cancelSectionChanges("characteristics")} saveDisabled={saveStatus === "saving"} open={isCharacteristicsSectionOpen} onOpenChange={setIsCharacteristicsSectionOpen} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}>
             <CharacteristicsSection
               characteristics={form.characteristics}
               invalidFields={characteristicsInvalidFields}
@@ -746,7 +887,7 @@ export function AnnouncementTab({
             />
           </SectionCard>
 
-          <SectionCard title="Tabela de preços" requiredAsterisk icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
+          <SectionCard sectionRef={(node) => { sectionRefs.current.pricing = node; }} title="Tabela de preços" requiredAsterisk dirty={sectionDirtyState.pricing} showSaveAction onSaveAction={() => saveSection("pricing")} onCancelAction={() => cancelSectionChanges("pricing")} saveDisabled={saveStatus === "saving"} open={isPricingSectionOpen} onOpenChange={setIsPricingSectionOpen} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
             <PricingSection
               pricing={form.pricing}
               onUpdate={(idx: number, field: string, value: string | number) => {
@@ -764,7 +905,7 @@ export function AnnouncementTab({
             />
           </SectionCard>
 
-          <SectionCard title="Localização" requiredAsterisk dirty={sectionDirtyState.location} showSaveAction onSaveAction={() => saveSection("location")} saveDisabled={saveStatus === "saving"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>} open={isLocationSectionExpanded} onOpenChange={setIsLocationSectionOpen}>
+          <SectionCard sectionRef={(node) => { sectionRefs.current.location = node; }} title="Localização" requiredAsterisk dirty={sectionDirtyState.location} showSaveAction onSaveAction={() => saveSection("location")} onCancelAction={() => cancelSectionChanges("location")} saveDisabled={saveStatus === "saving"} open={isLocationSectionExpanded} onOpenChange={setIsLocationSectionOpen} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}>
             <LocationSection
               addresses={form.locationAddresses}
               activeLocation={activeLocation}
@@ -788,7 +929,7 @@ export function AnnouncementTab({
             <h2 className="text-xl font-bold text-zinc-900">Informações Opcionais</h2>
           </div>
 
-          <SectionCard title="Descrição do Perfil" dirty={sectionDirtyState.description} showSaveAction onSaveAction={() => saveSection("description")} saveDisabled={saveStatus === "saving"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h10" /></svg>}>
+          <SectionCard sectionRef={(node) => { sectionRefs.current.description = node; }} title="Descrição do Perfil" dirty={sectionDirtyState.description} showSaveAction onSaveAction={() => saveSection("description")} onCancelAction={() => cancelSectionChanges("description")} saveDisabled={saveStatus === "saving"} open={isDescriptionSectionOpen} onOpenChange={setIsDescriptionSectionOpen} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h10" /></svg>}>
             <DescriptionSection shortDescription={form.shortDescription} description={form.description} onShortDescChange={(v: string) => updateField("shortDescription", v.replace(/\s{2,}/g, " "), { autoSave: false })} onDescChange={(v: string) => updateField("description", v.replace(/\s{3,}/g, "  "), { autoSave: false })} />
           </SectionCard>
 
@@ -847,10 +988,12 @@ function SectionCard({
   dirty,
   showSaveAction,
   onSaveAction,
+  onCancelAction,
   saveDisabled,
   open,
   onOpenChange,
   defaultOpen = false,
+  sectionRef,
 }: {
   title: string;
   icon: React.ReactNode;
@@ -859,17 +1002,19 @@ function SectionCard({
   dirty?: boolean;
   showSaveAction?: boolean;
   onSaveAction?: () => void;
+  onCancelAction?: () => void;
   saveDisabled?: boolean;
   open?: boolean;
   onOpenChange?: (next: boolean) => void;
   defaultOpen?: boolean;
+  sectionRef?: (node: HTMLDivElement | null) => void;
 }) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const isOpen = open ?? internalOpen;
   const handleOpenChange = onOpenChange ?? setInternalOpen;
 
   return (
-    <div className={cn("bg-white rounded-2xl shadow-sm border overflow-hidden", dirty ? "border-amber-300 ring-1 ring-amber-200" : "border-zinc-100")}>
+    <div ref={sectionRef} className={cn("scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-32 bg-white rounded-2xl shadow-sm border overflow-hidden", dirty ? "border-amber-300 ring-1 ring-amber-200" : "border-zinc-100")}>
       <button
         type="button"
         onClick={() => handleOpenChange(!isOpen)}
@@ -891,7 +1036,17 @@ function SectionCard({
         <div className="p-6 sm:p-8">
           {children}
           {showSaveAction && (
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-end gap-3">
+              {dirty ? (
+                <button
+                  type="button"
+                  onClick={onCancelAction}
+                  disabled={saveDisabled}
+                  className="inline-flex items-center justify-center rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-sm font-bold text-zinc-700 transition-all hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  Cancelar alterações
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={onSaveAction}
@@ -1242,7 +1397,7 @@ function LocationSection({
 
   return (
     <div className="relative space-y-5">
-      {locationStatusMessage && !(suppressErrorOverlay && locationStatusTone === "error") ? (
+      {locationStatusMessage && !suppressErrorOverlay ? (
         <div className="pointer-events-none fixed inset-x-0 top-4 z-50 flex justify-center px-4">
           <div className={cn("w-full max-w-sm rounded-2xl border px-4 py-3 text-sm shadow-xl backdrop-blur-sm", statusStyles[locationStatusTone].container)}>
             <div className="flex items-start gap-3">
@@ -1466,6 +1621,7 @@ function LocationDraftModal({
       description="Preencha os campos abaixo ou use a detecção automática para ajustar os dados do local."
       onClose={onClose}
       size="md"
+      mobileCentered
       actions={
         <>
           {isEditing ? (
@@ -1483,22 +1639,31 @@ function LocationDraftModal({
         </>
       }
     >
-      <div className="space-y-4">
-        {locationStatusMessage && locationStatusTone === "error" ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+      <div className="space-y-3 sm:space-y-4">
+        {locationStatusMessage ? (
+          <div
+            className={cn(
+              "rounded-xl px-3 py-2 text-sm font-semibold",
+              locationStatusTone === "success"
+                ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                : locationStatusTone === "error"
+                  ? "border border-red-200 bg-red-50 text-red-700"
+                  : "border border-zinc-200 bg-zinc-50 text-zinc-700",
+            )}
+          >
             {locationStatusMessage}
           </div>
         ) : null}
 
-        <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+        <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3 sm:p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <p className="text-sm font-semibold text-zinc-900">Preenchimento automático</p>
-            <p className="text-sm text-zinc-600">Se quiser, detecte a localização atual e ajuste os campos em seguida.</p>
+            <p className="text-sm leading-snug text-zinc-600">Se quiser, detecte a localização atual e ajuste os campos em seguida.</p>
           </div>
           <button
             type="button"
             onClick={onDetectLocation}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-wine-200 bg-white px-3.5 py-2 text-sm font-bold text-wine-700 transition hover:bg-wine-50"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-wine-200 bg-white px-3.5 py-2.5 text-sm font-bold text-wine-700 transition hover:bg-wine-50 sm:w-auto"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -1508,7 +1673,7 @@ function LocationDraftModal({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
           <FormInput label="Nome do endereço" value={draft.label} onChange={(value) => onChange({ ...draft, label: value })} placeholder="Ex: Atendimento premium" />
           <FormInput label="País" value={draft.country} onChange={(value) => onChange({ ...draft, country: value })} placeholder="Ex: Brasil" />
           <FormInput label="Bairro" value={draft.addressLine} onChange={(value) => onChange({ ...draft, addressLine: value })} placeholder="Rua, bairro, hotel ou referência" />
