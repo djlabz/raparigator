@@ -78,6 +78,20 @@ function sanitizeServiceNameInput(value: string) {
     .slice(0, 60);
 }
 
+function sortServicesAlphabetically(services: ServiceOption[]) {
+  return [...services].sort((a, b) => a.label.localeCompare(b.label, "pt-BR", { sensitivity: "base" }));
+}
+
+function resolvePricingBillingType(item: PricingItem) {
+  if (item.billingType) {
+    return item.billingType;
+  }
+
+  const normalizedLabel = normalizeText(item.label);
+  const isHourly = normalizedLabel.includes("hora") || normalizedLabel.includes("min");
+  return isHourly ? "hourly" : "fixed";
+}
+
 function normalizeText(value: string) {
   return value
     .normalize("NFD")
@@ -894,12 +908,31 @@ export function AnnouncementTab({
                 const next = form.pricing.map((p, i) => i === idx ? { ...p, [field]: field === "price" ? sanitizeNumericInput(String(value), 5) : value } : p);
                 updateField("pricing", next);
               }}
+              onEditItem={(idx: number, updates: Partial<PricingItem>) => {
+                const next = form.pricing.map((p, i) => {
+                  if (i !== idx) {
+                    return p;
+                  }
+
+                  return {
+                    ...p,
+                    ...updates,
+                    label: updates.label !== undefined ? sanitizeServiceNameInput(updates.label).trim() : p.label,
+                    price: updates.price !== undefined ? sanitizeNumericInput(String(updates.price), 5) : p.price,
+                  };
+                });
+                updateField("pricing", next);
+              }}
+              onDeleteItem={(idx: number) => {
+                const next = form.pricing.filter((_, i) => i !== idx);
+                updateField("pricing", next);
+              }}
               onToggleDisabled={(idx: number) => {
                 const next = form.pricing.map((p, i) => i === idx ? { ...p, disabled: !p.disabled } : p);
                 updateField("pricing", next);
               }}
-              onAddCustom={(name: string, price: string | number) => {
-                const next = [...form.pricing, { label: name, price: String(price), disabled: false, isCustom: true }];
+              onAddCustom={(name: string, price: string | number, billingType: "hourly" | "fixed") => {
+                const next = [...form.pricing, { label: name, price: String(price), disabled: false, isCustom: true, billingType }];
                 updateField("pricing", next);
               }}
             />
@@ -936,6 +969,20 @@ export function AnnouncementTab({
           <SectionCard title="Serviços Oferecidos" icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}>
             <ServicesSection services={form.services} onToggle={(idx: number) => {
               const next = form.services.map((s, i) => i === idx ? { ...s, selected: !s.selected } : s);
+              updateField("services", next);
+            }} onAddCustom={(serviceName: string) => {
+              const normalizedTarget = normalizeText(serviceName);
+              const existingService = form.services.find((service) => normalizeText(service.label) === normalizedTarget);
+
+              if (existingService) {
+                const next = form.services.map((service) => normalizeText(service.label) === normalizedTarget
+                  ? { ...service, selected: true }
+                  : service);
+                updateField("services", sortServicesAlphabetically(next));
+                return;
+              }
+
+              const next = sortServicesAlphabetically([...form.services, { label: serviceName, selected: true }]);
               updateField("services", next);
             }} />
           </SectionCard>
@@ -1199,10 +1246,12 @@ function CharacteristicsSection({ characteristics: c, onUpdate, invalidFields, e
   )
 }
 
-function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: { pricing: Array<PricingItem & { isCustom?: boolean }>; onUpdate: (idx: number, field: string, value: string | number) => void; onToggleDisabled: (idx: number) => void; onAddCustom: (name: string, price: string | number) => void }) {
+function PricingSection({ pricing, onUpdate, onEditItem, onDeleteItem, onToggleDisabled, onAddCustom }: { pricing: Array<PricingItem & { isCustom?: boolean }>; onUpdate: (idx: number, field: string, value: string | number) => void; onEditItem: (idx: number, updates: Partial<PricingItem>) => void; onDeleteItem: (idx: number) => void; onToggleDisabled: (idx: number) => void; onAddCustom: (name: string, price: string | number, billingType: "hourly" | "fixed") => void }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [customName, setCustomName] = useState("");
   const [customPrice, setCustomPrice] = useState("");
+  const [customBillingType, setCustomBillingType] = useState<"hourly" | "fixed">("hourly");
   const [showSelectionWarning, setShowSelectionWarning] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
 
@@ -1218,15 +1267,17 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: { 
     return () => clearTimeout(timeoutId);
   }, [showSelectionWarning]);
 
-  const handleSaveCustom = () => {
-    if (customName && customPrice) {
-      onAddCustom(customName, customPrice);
-      setCustomName("");
-      setCustomPrice("");
-      setIsModalOpen(false);
-      setShowSelectionWarning(false);
-    }
-  }
+  const resetModalState = () => {
+    setEditingIndex(null);
+    setCustomName("");
+    setCustomPrice("");
+    setCustomBillingType("hourly");
+  };
+
+  const handleOpenCreate = () => {
+    resetModalState();
+    setIsModalOpen(true);
+  };
 
   const handleToggleService = (idx: number) => {
     const enabledCount = pricing.filter((item) => !item.disabled).length;
@@ -1243,33 +1294,128 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: { 
     onToggleDisabled(idx);
   };
 
+  const handleOpenEdit = (idx: number) => {
+    const item = pricing[idx];
+    if (!item) {
+      return;
+    }
+
+    setEditingIndex(idx);
+    setCustomName(item.label);
+    setCustomPrice(item.price);
+    setCustomBillingType(resolvePricingBillingType(item));
+    setIsModalOpen(true);
+  };
+
+  const handleSavePricingItem = () => {
+    if (!customName.trim() || !customPrice.trim()) {
+      return;
+    }
+
+    if (editingIndex === null) {
+      onAddCustom(customName, customPrice, customBillingType);
+    } else {
+      onEditItem(editingIndex, {
+        label: customName,
+        price: customPrice,
+        billingType: customBillingType,
+      });
+    }
+
+    setIsModalOpen(false);
+    resetModalState();
+    setShowSelectionWarning(false);
+  };
+
+  const handleDeleteItem = (idx: number) => {
+    if (pricing.length <= 1) {
+      setShowSelectionWarning(true);
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 420);
+      return;
+    }
+
+    const enabledCount = pricing.filter((item) => !item.disabled).length;
+    const removingEnabled = !pricing[idx].disabled;
+
+    if (removingEnabled && enabledCount === 1) {
+      setShowSelectionWarning(true);
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 420);
+      return;
+    }
+
+    onDeleteItem(idx);
+    setShowSelectionWarning(false);
+  };
+
   return (
     <div className="space-y-4">
       <div className="space-y-4" style={isShaking ? { animation: "pricing-shake 420ms ease-in-out" } : undefined}>
-        {pricing.map((item, idx: number) => (
-          <div key={idx} className={cn("flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 rounded-xl border transition-all gap-4", item.disabled ? "bg-zinc-50 border-zinc-100 opacity-60" : "bg-white border-zinc-200 shadow-sm")}>
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <div className="w-10 h-10 bg-zinc-50 rounded-lg flex items-center justify-center border border-zinc-200 shrink-0">
-                <svg className="w-5 h-5 text-wine-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              </div>
-              <div>
-                <p className="font-bold text-zinc-900">{item.label}</p>
-                <p className="text-xs text-zinc-500">{item.isCustom ? "Serviço personalizado" : "Serviço padrão"}</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
-              <div className="flex items-center bg-zinc-50 rounded-lg px-3 py-2 border border-zinc-200 focus-within:border-wine-500 focus-within:ring-1 focus-within:ring-wine-500 w-full sm:w-32">
-                <span className="text-sm font-bold text-zinc-400 mr-2">R$</span>
-                <input type="text" inputMode="numeric" value={item.price} disabled={item.disabled} onChange={(e) => onUpdate(idx, "price", sanitizeNumericInput(e.target.value, 5))} className={cn("w-full bg-transparent font-bold outline-none placeholder:text-zinc-300", item.disabled ? "text-zinc-400" : "text-zinc-900")} placeholder="0,00" />
+        {pricing.map((item, idx: number) => {
+          const itemKey = `${item.label}-${item.billingType ?? "none"}-${item.isCustom ? "custom" : "base"}`;
+          return (
+            <div key={itemKey} className={cn("rounded-xl border p-4 sm:p-5 transition-all", item.disabled ? "bg-zinc-50 border-zinc-200" : "bg-white border-zinc-200 shadow-sm")}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-4">
+                  <div className="w-10 h-10 bg-zinc-50 rounded-lg flex items-center justify-center border border-zinc-200 shrink-0">
+                    {resolvePricingBillingType(item) === "hourly" ? (
+                      <svg className="w-5 h-5 text-wine-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    ) : (
+                      <svg className="w-5 h-5 text-wine-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a5 5 0 00-10 0v2m-1 0h12a1 1 0 011 1v10a1 1 0 01-1 1H6a1 1 0 01-1-1V10a1 1 0 011-1z" /></svg>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate font-bold text-zinc-900">{item.label}</p>
+                    <p className="text-xs text-zinc-500">{item.isCustom ? "Serviço personalizado" : "Serviço padrão"}</p>
+                    <p className="text-[11px] text-zinc-500">{resolvePricingBillingType(item) === "hourly" ? "Cobrança por hora" : "Valor fixo"}</p>
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEdit(idx)}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-amber-200 bg-linear-to-b from-white to-amber-50 text-amber-600 shadow-sm transition hover:from-amber-50 hover:to-amber-100"
+                    aria-label="Editar serviço"
+                    title="Editar"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.5a2.121 2.121 0 113 3L8 18l-4 1 1-4L16.5 3.5z" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteItem(idx)}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-rose-200 bg-linear-to-b from-white to-rose-50 text-rose-600 shadow-sm transition hover:from-rose-50 hover:to-rose-100"
+                    aria-label="Excluir serviço"
+                    title="Excluir"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 6V4h8v2" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 6l-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 11v6M14 11v6" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
-              <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                <input type="checkbox" checked={!item.disabled} onChange={() => handleToggleService(idx)} className="sr-only peer" />
-                <div className="w-11 h-6 bg-zinc-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wine-700"></div>
-              </label>
+              <div className="mt-3 flex items-center justify-end gap-3">
+                <div className="flex items-center bg-zinc-50 rounded-lg px-3 py-2 border border-zinc-200 focus-within:border-wine-500 focus-within:ring-1 focus-within:ring-wine-500 w-full max-w-52.5">
+                  <span className="text-sm font-bold text-zinc-400 mr-2">R$</span>
+                  <input type="text" inputMode="numeric" value={item.price} disabled={item.disabled} onChange={(e) => onUpdate(idx, "price", sanitizeNumericInput(e.target.value, 5))} className={cn("w-full bg-transparent font-bold outline-none placeholder:text-zinc-300", item.disabled ? "text-zinc-400" : "text-zinc-900")} placeholder="0,00" />
+                </div>
+
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input type="checkbox" checked={!item.disabled} onChange={() => handleToggleService(idx)} className="sr-only peer" />
+                  <div className="w-11 h-6 bg-zinc-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wine-700"></div>
+                </label>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {showSelectionWarning && (
@@ -1278,14 +1424,40 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: { 
         </p>
       )}
 
-      <button onClick={() => setIsModalOpen(true)} className="w-full py-4 mt-2 border-2 border-dashed border-zinc-300 rounded-xl text-zinc-600 font-bold hover:text-wine-700 hover:border-wine-700 hover:bg-wine-50 transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-wine-500/30">
+      <button onClick={handleOpenCreate} className="w-full py-4 mt-2 border-2 border-dashed border-zinc-300 rounded-xl text-zinc-600 font-bold hover:text-wine-700 hover:border-wine-700 hover:bg-wine-50 transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-wine-500/30">
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
         CRIAR SERVIÇO CUSTOMIZADO
       </button>
 
-      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} title="Adicionar Serviço">
+      <Modal
+        open={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          resetModalState();
+        }}
+        title={editingIndex === null ? "Adicionar Serviço" : "Editar Serviço"}
+      >
         <div className="space-y-4 pt-2">
           <FormInput label="Nome do serviço" value={customName} onChange={(value) => setCustomName(sanitizeServiceNameInput(value))} placeholder="Ex: Acompanhamento em Evento" />
+          <div>
+            <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Tipo de cobrança</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setCustomBillingType("hourly")}
+                className={cn("rounded-xl border px-3 py-2 text-sm font-bold transition", customBillingType === "hourly" ? "border-wine-700 bg-wine-50 text-wine-700" : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-300")}
+              >
+                Por hora
+              </button>
+              <button
+                type="button"
+                onClick={() => setCustomBillingType("fixed")}
+                className={cn("rounded-xl border px-3 py-2 text-sm font-bold transition", customBillingType === "fixed" ? "border-wine-700 bg-wine-50 text-wine-700" : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-300")}
+              >
+                Fixo
+              </button>
+            </div>
+          </div>
           <div>
             <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Valor sugerido (R$)</label>
             <input
@@ -1298,8 +1470,8 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: { 
               className="w-full bg-zinc-50/50 border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-wine-500 focus:border-wine-500 focus:bg-white outline-none transition-all"
             />
           </div>
-          <button onClick={handleSaveCustom} className="w-full mt-4 bg-wine-700 hover:bg-wine-800 text-white font-bold py-3 rounded-xl transition-colors">
-            Adicionar e Ativar
+          <button onClick={handleSavePricingItem} className="w-full mt-4 bg-wine-700 hover:bg-wine-800 text-white font-bold py-3 rounded-xl transition-colors">
+            {editingIndex === null ? "Adicionar e Ativar" : "Salvar alterações"}
           </button>
         </div>
       </Modal>
@@ -1752,18 +1924,50 @@ function DescriptionSection({ shortDescription, description, onShortDescChange, 
   )
 }
 
-function ServicesSection({ services, onToggle }: { services: ServiceOption[]; onToggle: (idx: number) => void }) {
+function ServicesSection({ services, onToggle, onAddCustom }: { services: ServiceOption[]; onToggle: (idx: number) => void; onAddCustom: (serviceName: string) => void }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [customName, setCustomName] = useState("");
+
+  const handleSaveCustomService = () => {
+    const cleanName = sanitizeServiceNameInput(customName).trim();
+    if (!cleanName) {
+      return;
+    }
+
+    onAddCustom(cleanName);
+    setCustomName("");
+    setIsModalOpen(false);
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {services.map((svc, idx: number) => (
-        <button key={svc.label} onClick={() => onToggle(idx)} className={cn("flex items-center justify-between p-4 rounded-xl border text-left transition-all", svc.selected ? "border-wine-500 bg-wine-50/50 shadow-sm" : "border-zinc-200 bg-zinc-50/50 hover:bg-zinc-100")}>
-          <span className={cn("text-sm font-bold", svc.selected ? "text-wine-900" : "text-zinc-600")}>{svc.label}</span>
-          <div className={cn("w-5 h-5 rounded-md border flex items-center justify-center transition-colors", svc.selected ? "bg-wine-700 border-wine-700 text-white" : "border-zinc-300 bg-white")}>
-            {svc.selected && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
-          </div>
-        </button>
-      ))}
-    </div>
+    <>
+      <div className="max-h-84 overflow-y-auto pr-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {services.map((svc, idx: number) => (
+            <button key={svc.label} onClick={() => onToggle(idx)} className={cn("flex items-center justify-between p-4 rounded-xl border text-left transition-all", svc.selected ? "border-wine-500 bg-wine-50/50 shadow-sm" : "border-zinc-200 bg-zinc-50/50 hover:bg-zinc-100")}>
+              <span className={cn("text-sm font-bold", svc.selected ? "text-wine-900" : "text-zinc-600")}>{svc.label}</span>
+              <div className={cn("w-5 h-5 rounded-md border flex items-center justify-center transition-colors", svc.selected ? "bg-wine-700 border-wine-700 text-white" : "border-zinc-300 bg-white")}>
+                {svc.selected && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <button onClick={() => setIsModalOpen(true)} className="w-full py-4 mt-2 border-2 border-dashed border-zinc-300 rounded-xl text-zinc-600 font-bold hover:text-wine-700 hover:border-wine-700 hover:bg-wine-50 transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-wine-500/30">
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+        CRIAR SERVIÇO CUSTOMIZADO
+      </button>
+
+      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} title="Adicionar Serviço">
+        <div className="space-y-4 pt-2">
+          <FormInput label="Nome do serviço" value={customName} onChange={(value) => setCustomName(sanitizeServiceNameInput(value))} placeholder="Ex: Atendimento corporativo avançado" />
+          <button onClick={handleSaveCustomService} className="w-full mt-4 bg-wine-700 hover:bg-wine-800 text-white font-bold py-3 rounded-xl transition-colors">
+            Adicionar e Ativar
+          </button>
+        </div>
+      </Modal>
+    </>
   )
 }
 
@@ -1784,7 +1988,7 @@ function AvailabilitySection({ showAvailability, availability, onToggleShow, onD
       {showAvailability && (
         <div className="grid grid-cols-1 gap-2">
           {availability.map((entry, idx: number) => (
-            <div key={entry.day} className={cn("flex items-center gap-4 p-3 rounded-xl border transition-all", entry.enabled ? "bg-white border-zinc-200 shadow-sm" : "bg-zinc-50 border-zinc-100 opacity-60")}>
+            <div key={entry.day} className={cn("flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 transition-all", entry.enabled ? "bg-white border-zinc-200 shadow-sm" : "bg-zinc-50 border-zinc-100 opacity-60")}>
               <div className="flex items-center gap-3 w-28 shrink-0">
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" checked={entry.enabled} onChange={(e) => onDayToggle(idx, e.target.checked)} className="sr-only peer" />
@@ -1793,7 +1997,7 @@ function AvailabilitySection({ showAvailability, availability, onToggleShow, onD
                 <span className="text-xs font-black text-zinc-700 w-10">{entry.day}</span>
               </div>
 
-              <div className="flex-1 flex items-center justify-end gap-2">
+              <div className="flex items-center justify-center gap-2">
                 <input type="text" value={entry.start} disabled={!entry.enabled} onChange={(e) => onTimeChange(idx, "start", e.target.value)} className="w-16 text-center border border-zinc-200 bg-zinc-50 rounded-lg text-sm font-bold py-2 focus:border-wine-500 outline-none disabled:opacity-50" />
                 <span className="text-zinc-400 text-sm font-bold">às</span>
                 <input type="text" value={entry.end} disabled={!entry.enabled} onChange={(e) => onTimeChange(idx, "end", e.target.value)} className="w-16 text-center border border-zinc-200 bg-zinc-50 rounded-lg text-sm font-bold py-2 focus:border-wine-500 outline-none disabled:opacity-50" />

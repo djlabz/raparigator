@@ -53,22 +53,32 @@ const defaultCharacteristics: ProfileCharacteristics = {
 };
 
 const defaultServices: ServiceOption[] = [
-  { label: "Acompanhamento corporativo", selected: false },
-  { label: "Atendimento em hotel", selected: false },
-  { label: "Companhia", selected: false },
-  { label: "Evento social", selected: false },
+  { label: "Atendimento em Hotel", selected: false },
+  { label: "Casais", selected: false },
+  { label: "Com Local", selected: false },
+  { label: "Dominação", selected: false },
+  { label: "Dupla Penetração", selected: false },
   { label: "Festas", selected: false },
+  { label: "Fetiches", selected: false },
+  { label: "Fisting", selected: false },
+  { label: "Inversão de Papeis", selected: false },
   { label: "Jantar", selected: false },
-  { label: "Viagens ao exterior", selected: false },
-  { label: "Viagens curtas", selected: false },
+  { label: "Massagens", selected: false },
+  { label: "Namorada Fake", selected: false },
+  { label: "Podolatria", selected: false },
+  { label: "Sexo Anal com preservativo", selected: false },
+  { label: "Squirt", selected: false },
+  { label: "Submissão", selected: false },
+  { label: "Viagens", selected: false },
 ];
 
 const defaultPricing: PricingItem[] = [
-  { label: "15 min", price: "", disabled: true },
-  { label: "30 min", price: "", disabled: true },
-  { label: "1 hora", price: "300", disabled: false },
-  { label: "Pernoite", price: "", disabled: true },
-  { label: "Diária", price: "", disabled: true },
+  { label: "15 min", price: "", disabled: true, billingType: "hourly" },
+  { label: "30 min", price: "", disabled: true, billingType: "hourly" },
+  { label: "1 hora", price: "300", disabled: false, billingType: "hourly" },
+  { label: "Pernoite", price: "", disabled: true, billingType: "fixed" },
+  { label: "Diária", price: "", disabled: true, billingType: "fixed" },
+  { label: "Adição de sexo anal", price: "", disabled: true, billingType: "fixed" },
 ];
 
 const defaultVenues: LocationVenue[] = [
@@ -109,10 +119,26 @@ function buildInitialState(ad: AdPreview): ProfileFormState {
     return { ...defaultItem, price: String(match.price), disabled: false };
   });
 
-  const services = defaultServices.map((defaultService) => ({
-    ...defaultService,
-    selected: ad.services?.includes(defaultService.label) ?? false,
-  }));
+  const normalizedAdServices = new Set((ad.services ?? []).map((service) =>
+    service
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim(),
+  ));
+
+  const services = defaultServices.map((defaultService) => {
+    const normalizedDefaultService = defaultService.label
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+
+    return {
+      ...defaultService,
+      selected: normalizedAdServices.has(normalizedDefaultService),
+    };
+  });
 
   const initialLocationAddress: LocationAddress = {
     id: createLocationId(),
