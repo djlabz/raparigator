@@ -1,14 +1,37 @@
-﻿import Link from "next/link";
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { AuthShell } from "./auth-shell";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { useAuthSession } from "../../lib/auth-session";
+import { mockUsers } from "../../lib/mock-users";
 
 export function LoginScreen() {
+  const router = useRouter();
+  const { setRole } = useAuthSession();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const user = mockUsers.find((item) => item.email === email.trim() && item.password === password);
+
+    if (!user) {
+      setError("Credenciais inválidas. Verifique seu e-mail e senha.");
+      return;
+    }
+
+    setRole(user.role);
+    router.push("/conta");
+  };
+
   return (
-    <AuthShell
-      title="Bem-vindo de volta 👋"
-      description="Acesse sua conta com segurança para continuar na plataforma."
-    >
+    <AuthShell title="Bem-vindo de volta 👋" description="Acesse sua conta com segurança para continuar na plataforma.">
       {/* Opções de Login Social (Acelera o acesso e traz modernidade) */}
       <div className="mb-6 grid grid-cols-2 gap-3">
         <Button variant="secondary" className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-300 bg-white text-zinc-700 shadow-sm shadow-zinc-300/40 hover:-translate-y-0.5 hover:bg-zinc-50 hover:shadow-md hover:shadow-zinc-300/50">
@@ -30,50 +53,51 @@ export function LoginScreen() {
         <div className="grow border-t border-zinc-200"></div>
       </div>
 
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={handleSubmit}>
         <Input
           id="email"
           label="E-mail"
           type="email"
           placeholder="voce@email.com"
           className="bg-zinc-50 focus:bg-white transition-colors"
+          value={email}
+          onChange={(event: ChangeEvent<HTMLInputElement>) => setEmail(event.target.value)}
         />
 
         <div className="space-y-1">
-          {/* Supondo que o seu Input aceite children ou que possamos colocar o link perto dele */}
           <Input
             id="password"
             label="Senha"
             type="password"
             placeholder="••••••••"
             className="bg-zinc-50 focus:bg-white transition-colors"
+            value={password}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => setPassword(event.target.value)}
           />
           <div className="flex justify-end pt-1">
-            <Link
-              href="/auth/recuperar-senha"
-              className="text-xs font-semibold text-wine-700 hover:text-wine-800 hover:underline transition-all"
-            >
+            <Link href="/auth/recuperar-senha" className="text-xs font-semibold text-wine-700 transition-all hover:text-wine-800 hover:underline">
               Esqueceu a senha?
             </Link>
           </div>
         </div>
+
+        {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
 
         <Button fullWidth className="mt-2 rounded-xl border border-wine-800/30 bg-wine-700 py-6 text-base text-white shadow-lg shadow-wine-700/30 hover:-translate-y-0.5 hover:bg-wine-800 hover:shadow-xl hover:shadow-wine-700/35">
           Entrar na plataforma
         </Button>
       </form>
 
-      {/* Rodapé de Cadastro redesenhado */}
-      <div className="mt-8 pt-6 border-t border-zinc-100 flex flex-col gap-3 text-center text-sm text-zinc-600">
+      <div className="mt-8 pt-6 border-t border-zinc-100 flex flex-col gap-4 text-center text-sm text-zinc-600">
         <p>
           Ainda não é cliente?{' '}
           <Link href="/auth/cadastro/cliente" className="font-bold text-wine-700 hover:underline">
             Criar conta grátis
           </Link>
         </p>
-        <p className="text-xs text-zinc-500">
+        <p className="text-zinc-600">
           Você é profissional?{' '}
-          <Link href="/auth/cadastro/profissional" className="font-bold text-zinc-900 hover:underline">
+          <Link href="/auth/cadastro/profissional" className="font-bold text-wine-700 hover:underline">
             Anuncie seu perfil aqui
           </Link>
         </p>

@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RiskWarningModal } from "@/components/ui/risk-warning-modal";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { useAuthSession } from "@/lib/auth-session";
 import { ads, reviews } from "@/lib/mock-data";
 import { currency } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ interface AdDetailsScreenProps {
 }
 
 export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
+  const { role } = useAuthSession();
   const [riskTarget, setRiskTarget] = useState<"WhatsApp" | "Telegram" | null>(null);
   const ad = useMemo(() => ads.find((item) => item.slug === slug), [slug]);
   const adReviews = reviews.filter((review) => review.adId === ad?.id);
@@ -92,8 +94,26 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
             <Card className="space-y-3">
               <p className="text-sm text-zinc-600">A partir de</p>
               <p className="text-2xl font-semibold text-zinc-900">{currency(ad.startingPrice)}</p>
-              <Button fullWidth>Iniciar chat</Button>
-              <Link href="/checkout" className="block"><Button fullWidth variant="secondary">Contratar com custodia</Button></Link>
+
+              {role === "visitor" ? (
+                <Link href="/auth/login" className="block">
+                  <Button fullWidth>Entrar para interagir</Button>
+                </Link>
+              ) : (
+                <Link href="/chat" className="block">
+                  <Button fullWidth>Iniciar chat</Button>
+                </Link>
+              )}
+
+              {role === "cliente" ? (
+                <Link href="/checkout" className="block">
+                  <Button fullWidth variant="secondary">Contratar com custodia</Button>
+                </Link>
+              ) : role === "profissional" ? (
+                <Link href="/profissional/dashboard" className="block">
+                  <Button fullWidth variant="secondary">Ir para o painel</Button>
+                </Link>
+              ) : null}
               <Button fullWidth variant="ghost" onClick={() => setRiskTarget("WhatsApp")}>Abrir WhatsApp</Button>
               <Button fullWidth variant="ghost" onClick={() => setRiskTarget("Telegram")}>Abrir Telegram</Button>
             </Card>

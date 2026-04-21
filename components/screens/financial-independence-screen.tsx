@@ -5,8 +5,6 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { currency } from "@/lib/utils";
 
 // --- Constantes e Configurações ---
@@ -46,6 +44,90 @@ function IconTrophy(props: any) {
 function IconRefresh(props: any) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>;
 }
+function IconMinus(props: any) {
+  return <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="0.5" y="0.5" width="23" height="23" rx="11.5" stroke="currentColor" strokeWidth="1" /><path d="M17.3334 12H6.66669" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>;
+}
+function IconPlus(props: any) {
+  return <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="0.5" y="0.5" width="23" height="23" rx="11.5" stroke="currentColor" strokeWidth="1" /><path fillRule="evenodd" clipRule="evenodd" d="M11.3334 11.3333V7.33332C11.3334 6.96666 11.6334 6.66666 12 6.66666C12.3667 6.66666 12.6667 6.96666 12.6667 7.33332V11.3333H16.6667C17.0334 11.3333 17.3334 11.6333 17.3334 12C17.3334 12.3667 17.0334 12.6667 16.6667 12.6667H12.6667V16.6667C12.6667 17.0333 12.3667 17.3333 12 17.3333C11.6334 17.3333 11.3334 17.0333 11.3334 16.6667V12.6667H7.33335C6.96669 12.6667 6.66669 12.3667 6.66669 12C6.66669 11.6333 6.96669 11.3333 7.33335 11.3333H11.3334Z" fill="currentColor" /></svg>;
+}
+function IconUsers(props: any) {
+  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
+}
+function IconTarget(props: any) {
+  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="9" /></svg>;
+}
+function IconDollarSign(props: any) {
+  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="1" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>;
+}
+function IconClock(props: any) {
+  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;
+}
+
+// --- Componente Counter (input com botões +/-) ---
+interface CounterProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  step?: number;
+  min?: number;
+  max?: number;
+  prefix?: string;
+  suffix?: string;
+  icon?: React.ReactNode;
+  highlighted?: boolean;
+}
+
+function Counter({ label, value, onChange, step = 1, min = 0, max = 9999, prefix, suffix, icon, highlighted = false }: CounterProps) {
+  const adjust = (delta: number) => {
+    const current = Number(value) || min;
+    const next = Math.max(min, Math.min(max, current + delta));
+    onChange(String(next));
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <label className="text-sm font-medium text-zinc-700 flex items-center gap-2">
+        {icon && <span className="text-zinc-600">{icon}</span>}
+        {label}
+      </label>
+      <div className={`flex h-11 items-center justify-between rounded-xl border px-3 transition-all ${highlighted
+          ? 'border-wine-300 bg-wine-50/30 shadow-sm'
+          : 'border-zinc-200 bg-white'
+        }`}>
+        <button
+          type="button"
+          onClick={() => adjust(-step)}
+          className="flex shrink-0 items-center justify-center border-0 bg-transparent p-1.5 hover:bg-zinc-100 rounded-lg transition-colors -ml-1.5"
+          aria-label={`diminui ${step}`}
+        >
+          <IconMinus className="w-5 h-5 text-zinc-700" />
+        </button>
+        <div className="flex items-center text-sm font-semibold text-zinc-900">
+          {prefix && <span className="text-xs text-zinc-500 mr-1">{prefix}</span>}
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => {
+              const num = e.target.value.replace(/\D/g, "");
+              if (num) onChange(num);
+            }}
+            className="w-12 text-center text-sm rounded-none border-none bg-transparent font-semibold text-zinc-900 focus:outline-none"
+            inputMode="numeric"
+          />
+          {suffix && <span className="text-xs text-zinc-500 ml-1">/{suffix}</span>}
+        </div>
+        <button
+          type="button"
+          onClick={() => adjust(step)}
+          className="flex shrink-0 items-center justify-center border-0 bg-transparent p-1.5 hover:bg-zinc-100 rounded-lg transition-colors -mr-1.5"
+          aria-label={`adiciona ${step}`}
+        >
+          <IconPlus className="w-5 h-5 text-zinc-700" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // --- Funções Auxiliares ---
 function formatDurationDetailed(totalMonths: number) {
@@ -60,9 +142,8 @@ function formatDurationDetailed(totalMonths: number) {
 }
 
 export function FinancialIndependenceScreen() {
-  // Alterado o valor inicial para 300 conforme solicitado
-  const [serviceValue, setServiceValue] = useState("300");
-  const [serviceHours, setServiceHours] = useState("2");
+  const [valuePerService, setValuePerService] = useState("300");
+  const [servicesPerDay, setServicesPerDay] = useState("4");
   const [workDaysPerWeek, setWorkDaysPerWeek] = useState("5");
 
   const [projectionTime, setProjectionTime] = useState("");
@@ -71,20 +152,20 @@ export function FinancialIndependenceScreen() {
   const [submitted, setSubmitted] = useState(false);
 
   const parsed = useMemo(() => {
-    const value = Number(serviceValue);
-    const hours = Number(serviceHours);
+    const value = Number(valuePerService);
+    const services = Number(servicesPerDay);
     const days = Number(workDaysPerWeek);
 
     // Validação básica
-    const valid = value > 0 && hours > 0 && days > 0 && days <= 7;
+    const valid = value > 0 && services > 0 && days > 0 && days <= 7;
     if (!valid) return null;
 
     // Receita do Usuário
-    const appointmentsPerDay = Math.max(Math.floor(8 / hours), 1);
-    const weeklyRevenue = value * appointmentsPerDay * days;
+    const dailyRevenue = value * services;
+    const weeklyRevenue = dailyRevenue * days;
     const monthlyRevenue = weeklyRevenue * 4.33;
 
-    // Dados CLT (Referência)
+    // Dados CLT (Referência) — jornada fixa de 8h/dia
     const cltInss = MIN_WAGE * 0.075;
     const cltTransport = MIN_WAGE * 0.06;
     const cltNet = MIN_WAGE - cltInss - cltTransport;
@@ -107,9 +188,9 @@ export function FinancialIndependenceScreen() {
     }));
 
     // CÁLCULO DA PROJEÇÃO (MONTANTE ACUMULADO)
-    // Se não preencheu nada, o padrão é 1 mês
-    const effectiveTimeNum = projectionTime ? Number(projectionTime) : 1;
-    const effectiveUnit = projectionTime ? projectionUnit : "months";
+    // Se não preencheu nada ou valor é 0, o padrão é 1 mês
+    const effectiveTimeNum = Number(projectionTime) > 0 ? Number(projectionTime) : 1;
+    const effectiveUnit = Number(projectionTime) > 0 ? projectionUnit : "months";
 
     const projectionMonths = effectiveUnit === "years" ? effectiveTimeNum * 12 : effectiveTimeNum;
     const projectedAmount = monthlyRevenue * projectionMonths;
@@ -125,13 +206,14 @@ export function FinancialIndependenceScreen() {
       effectiveTimeNum,
       effectiveUnit
     };
-  }, [serviceHours, serviceValue, workDaysPerWeek, projectionTime, projectionUnit]);
+  }, [valuePerService, servicesPerDay, workDaysPerWeek, projectionTime, projectionUnit]);
 
   const handleReset = () => {
     setSubmitted(false);
   };
 
   // Lógica para clarear/escurecer os inputs de meta de tempo
+  // Reseta ao estado inicial se o valor for 0 ou vazio
   const hasProjection = Number(projectionTime) > 0;
 
   return (
@@ -146,59 +228,76 @@ export function FinancialIndependenceScreen() {
               <p className="text-sm text-zinc-600">Descubra o quão rápido você pode atingir sua independência financeira.</p>
             </header>
 
-            <Card className="space-y-4 p-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <Input
-                  id="valor-servico"
-                  label="Valor do serviço (R$)"
-                  value={serviceValue}
-                  onChange={(e) => setServiceValue(e.target.value)}
-                  inputMode="decimal"
+            <Card className="space-y-6 p-6">
+              <div className="grid gap-5 md:grid-cols-2">
+                <Counter
+                  label="Valor por atendimento"
+                  value={valuePerService}
+                  onChange={setValuePerService}
+                  step={50}
+                  min={50}
+                  max={9999}
+                  prefix="R$"
+                  icon={<IconDollarSign className="w-4 h-4" />}
                 />
-                <Input
-                  id="tempo-atendimento"
-                  label="Tempo por atendimento (horas)"
-                  value={serviceHours}
-                  onChange={(e) => setServiceHours(e.target.value)}
-                  inputMode="decimal"
+                <Counter
+                  label="Atendimentos por dia"
+                  value={servicesPerDay}
+                  onChange={setServicesPerDay}
+                  step={1}
+                  min={1}
+                  max={20}
+                  icon={<IconUsers className="w-4 h-4" />}
                 />
-                <Input
-                  id="dias-semana"
+                <Counter
                   label="Dias de trabalho por semana"
                   value={workDaysPerWeek}
-                  onChange={(e) => setWorkDaysPerWeek(e.target.value)}
-                  inputMode="numeric"
+                  onChange={setWorkDaysPerWeek}
+                  step={1}
+                  min={1}
+                  max={7}
+                  icon={<IconCalendar className="w-4 h-4" />}
                 />
 
-                {/* Campos opcionais com opacidade dinâmica */}
+                {/* Campos opcionais com destaque especial */}
                 <div className={`flex gap-2 transition-all duration-300 ${hasProjection ? 'opacity-100 grayscale-0' : 'opacity-50 grayscale hover:opacity-100 hover:grayscale-0'}`}>
                   <div className="flex-1">
-                    <Input
-                      id="tempo-projecao"
+                    <Counter
                       label="Meta de tempo (Opcional)"
                       value={projectionTime}
-                      onChange={(e) => setProjectionTime(e.target.value.replace(/\D/g, ""))}
-                      inputMode="numeric"
-                      placeholder="Ex: 12"
+                      onChange={(e) => setProjectionTime(Number(e) > 0 ? e : "")}
+                      step={1}
+                      min={0}
+                      max={120}
+                      icon={<IconClock className="w-4 h-4" />}
+                      highlighted={hasProjection}
                     />
                   </div>
                   <div className="w-32">
-                    <Select
-                      id="unidade-tempo"
-                      label="Unidade"
-                      value={projectionUnit}
-                      onChange={(e) => setProjectionUnit(e.target.value)}
-                      options={[
-                        { label: "Meses", value: "months" },
-                        { label: "Anos", value: "years" },
-                      ]}
-                    />
+                    <div className="space-y-1.5">
+                      <label htmlFor="unidade-tempo" className={`text-sm font-medium transition-colors ${hasProjection ? 'text-wine-700' : 'text-zinc-700'}`}>
+                        Unidade
+                      </label>
+                      <div className="relative">
+                        <select
+                          id="unidade-tempo"
+                          value={projectionUnit}
+                          onChange={(e) => setProjectionUnit(e.target.value)}
+                          className={`h-11 w-full appearance-none rounded-xl border px-3 pr-10 text-sm font-medium transition-all focus:outline-none focus:ring-2 ${hasProjection ? 'border-wine-300 bg-wine-50/30 text-wine-900 focus:border-wine-600 focus:ring-wine-200' : 'border-zinc-200 bg-white text-zinc-900 focus:border-wine-600 focus:ring-wine-200'}`}
+                        >
+                          <option value="months">Meses</option>
+                          <option value="years">Anos</option>
+                        </select>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 ${hasProjection ? 'text-wine-600' : 'text-zinc-500'}`}><path d="m6 9 6 6 6-6" /></svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <Button size="lg" className="w-full text-lg font-semibold" onClick={() => setSubmitted(true)}>
+              <Button size="lg" className="w-full text-base md:text-lg font-semibold" onClick={() => setSubmitted(true)}>
                 Ver meu Painel da Liberdade 🚀
               </Button>
+              <p className="text-xs text-zinc-500 text-center mt-3">Cálculo base: (Valor × Atendimentos × Dias) × 4,33 semanas por mês. Comparação com salário CLT líquido (R$ 1.512 - descontos INSS/VT).</p>
             </Card>
           </>
         )}
