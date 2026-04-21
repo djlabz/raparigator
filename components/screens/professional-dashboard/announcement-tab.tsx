@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
-import type { AdPreview, AdStatus, AvailabilityDay, PricingItem, ProfileCharacteristics, ProfileFormState, ServiceOption } from "./types";
+import type { AdPreview, AdStatus, AvailabilityDay, LocationAddress, PricingItem, ProfileCharacteristics, ProfileFormState, ServiceOption } from "./types";
 import { useProfileForm } from "./use-profile-form";
 
 // ─── Options para selects ─────────────────────────────────────────
@@ -15,7 +16,36 @@ const ETHNICITY_OPTIONS = [SELECT_PLACEHOLDER, "Branca", "Preta", "Parda", "Amar
 const HAIR_COLOR_OPTIONS = [SELECT_PLACEHOLDER, "Preto", "Castanho", "Loiro", "Ruivo", "Colorido", "Rosa", "Platinado"];
 const SMOKER_OPTIONS = [SELECT_PLACEHOLDER, "Sim", "Não"];
 type VisibilityStatus = "Ativo" | "Pausado" | "Invisível";
-type SectionKey = "characteristics" | "location" | "description";
+type SectionKey = "characteristics" | "pricing" | "location" | "description";
+const SECTION_LABELS: Record<SectionKey, string> = {
+  characteristics: "Características físicas",
+  pricing: "Tabela de preços",
+  location: "Localização",
+  description: "Descrição do Perfil",
+};
+type PublishWarningItem = {
+  kind: "required" | "unsaved";
+  section: SectionKey;
+  label: string;
+};
+const MAX_LOCATION_ADDRESSES = 10;
+const GROUP_WARNING_AUTO_DISMISS_MS = 3200;
+type LocationStatusTone = "success" | "error" | "info";
+
+type LocationDraft = {
+  label: string;
+  addressLine: string;
+  city: string;
+  state: string;
+  country: string;
+  notes: string;
+};
+
+type DetectedLocation = LocationDraft & {
+  latitude: number;
+  longitude: number;
+  displayName: string;
+};
 
 const CHARACTERISTICS_FIELD_LABELS: Record<keyof Pick<ProfileCharacteristics, "gender" | "ethnicity" | "height" | "weight" | "hairColor" | "smoker">, string> = {
   gender: "Gênero",
@@ -48,6 +78,119 @@ function sanitizeServiceNameInput(value: string) {
     .slice(0, 60);
 }
 
+function normalizeText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function createLocationId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `location-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function buildLocationLabel(location: LocationDraft) {
+  if (location.label.trim()) {
+    return location.label.trim();
+  }
+
+  if (location.addressLine.trim()) {
+    return location.addressLine.trim();
+  }
+
+  return `${location.city.trim()}${location.state.trim() ? `, ${location.state.trim()}` : ""}`.trim();
+}
+
+function createDraftFromLocation(location: Partial<LocationDraft> = {}): LocationDraft {
+  return {
+    label: location.label ?? "",
+    addressLine: location.addressLine ?? "",
+    city: location.city ?? "",
+    state: location.state ?? "",
+    country: location.country ?? "",
+    notes: location.notes ?? "",
+  };
+}
+
+function isSameLocation(a: Partial<LocationDraft>, b: Partial<LocationDraft>) {
+  return normalizeText(a.city ?? "") === normalizeText(b.city ?? "") && normalizeText(a.state ?? "") === normalizeText(b.state ?? "");
+}
+
+function hasSameAddressData(a: Partial<LocationDraft>, b: Partial<LocationDraft>) {
+  return (
+    normalizeText(a.addressLine ?? "") === normalizeText(b.addressLine ?? "")
+    && normalizeText(a.city ?? "") === normalizeText(b.city ?? "")
+    && normalizeText(a.state ?? "") === normalizeText(b.state ?? "")
+    && normalizeText(a.country ?? "") === normalizeText(b.country ?? "")
+  );
+}
+
+function formatLocationSummary(location: LocationAddress) {
+  const parts = [location.addressLine, `${location.city}${location.state ? `, ${location.state}` : ""}`, location.country, location.notes].filter(Boolean);
+  return parts.join(" • ");
+}
+
+function extractNeighborhood(address: Record<string, string | undefined>) {
+  const candidates = [
+    address.suburb,
+    address.neighbourhood,
+    address.city_district,
+    address.quarter,
+    address.residential,
+    address.hamlet,
+  ];
+
+  return candidates.find((value) => Boolean(value?.trim()))?.trim() ?? "";
+}
+
+async function reverseGeocode(latitude: number, longitude: number): Promise<DetectedLocation> {
+  const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+
+  if (!response.ok) {
+    throw new Error("Falha ao consultar localização");
+  }
+
+  const data = await response.json() as {
+    display_name?: string;
+    address?: Record<string, string | undefined>;
+  };
+
+  const address = data.address ?? {};
+  const city = address.city ?? address.town ?? address.village ?? address.municipality ?? address.county ?? "";
+  const state = address.state ?? address.region ?? address.province ?? "";
+  const country = address.country ?? "";
+  const neighborhood = extractNeighborhood(address);
+  const label = (city || state) ? `${city}${state ? `, ${state}` : ""}` : data.display_name ?? "Local detectado";
+
+  return {
+    label,
+    addressLine: neighborhood,
+    city,
+    state,
+    country,
+    notes: "",
+    latitude,
+    longitude,
+    displayName: data.display_name ?? "",
+  };
+}
+
+function buildLocationFromDetected(detected: DetectedLocation): LocationDraft {
+  return {
+    label: detected.label || `${detected.city}${detected.state ? `, ${detected.state}` : ""}`,
+    addressLine: detected.addressLine,
+    city: detected.city,
+    state: detected.state,
+    country: detected.country || "",
+    notes: detected.notes,
+  };
+}
+
 function sanitizeTimeInput(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 4);
   if (digits.length <= 2) return digits;
@@ -57,7 +200,8 @@ function sanitizeTimeInput(value: string) {
 function buildSectionSnapshots(form: ProfileFormState) {
   return {
     characteristics: JSON.stringify(form.characteristics),
-    location: JSON.stringify({ locationState: form.locationState, locationCity: form.locationCity }),
+    pricing: JSON.stringify(form.pricing),
+    location: JSON.stringify({ locationState: form.locationState, locationCity: form.locationCity, acceptsTravel: form.acceptsTravel, locationAddresses: form.locationAddresses }),
     description: JSON.stringify({ shortDescription: form.shortDescription, description: form.description }),
   };
 }
@@ -93,27 +237,314 @@ export function AnnouncementTab({
   onToggleStatus: () => void;
 }) {
   const formHook = useProfileForm(ad);
-  const { form, saveStatus, hasUnsavedChanges, lastSavedAt, score, tips, updateField, updateNestedField, manualSave } = formHook;
+  const { form, saveStatus, hasUnsavedChanges, lastSavedAt, score, tips, updateField, updateNestedField, updateForm, manualSave } = formHook;
 
   // Estado para Modal de Fotos
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
   const visibilityStatus: VisibilityStatus = status === "Pausado" ? "Pausado" : "Ativo";
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [publishErrorItems, setPublishErrorItems] = useState<PublishWarningItem[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
   const [availabilityCloseSignal, setAvailabilityCloseSignal] = useState(0);
   const [characteristicsError, setCharacteristicsError] = useState<string | null>(null);
   const [characteristicsInvalidFields, setCharacteristicsInvalidFields] = useState<Array<keyof ProfileCharacteristics>>([]);
   const [isCharacteristicsShaking, setIsCharacteristicsShaking] = useState(false);
+  const [isLocationSectionOpen, setIsLocationSectionOpen] = useState(false);
+  const [highlightedLocationId, setHighlightedLocationId] = useState<string | null>(null);
+  const [isLocationDecisionOpen, setIsLocationDecisionOpen] = useState(false);
+  const [isLocationDraftOpen, setIsLocationDraftOpen] = useState(false);
+  const [detectedLocation, setDetectedLocation] = useState<DetectedLocation | null>(null);
+  const [pendingLocationDraft, setPendingLocationDraft] = useState<LocationDraft>(createDraftFromLocation());
+  const [draftEditingLocationId, setDraftEditingLocationId] = useState<string | null>(null);
+  const [removingLocationId, setRemovingLocationId] = useState<string | null>(null);
+  const [locationStatusMessage, setLocationStatusMessage] = useState<string | null>(null);
+  const [locationStatusTone, setLocationStatusTone] = useState<LocationStatusTone>("info");
   const [savedSectionSnapshots, setSavedSectionSnapshots] = useState(() => buildSectionSnapshots(form));
+  const sectionRefs = useRef<Record<SectionKey, HTMLDivElement | null>>({
+    characteristics: null,
+    pricing: null,
+    location: null,
+    description: null,
+  });
+  const [isCharacteristicsSectionOpen, setIsCharacteristicsSectionOpen] = useState(false);
+  const [isPricingSectionOpen, setIsPricingSectionOpen] = useState(false);
+  const [isDescriptionSectionOpen, setIsDescriptionSectionOpen] = useState(false);
   const sectionSnapshots = useMemo(() => buildSectionSnapshots(form), [form]);
   const sectionDirtyState = useMemo(
     () => ({
       characteristics: sectionSnapshots.characteristics !== savedSectionSnapshots.characteristics,
+      pricing: sectionSnapshots.pricing !== savedSectionSnapshots.pricing,
       location: sectionSnapshots.location !== savedSectionSnapshots.location,
       description: sectionSnapshots.description !== savedSectionSnapshots.description,
     }),
     [savedSectionSnapshots, sectionSnapshots],
   );
+
+  useEffect(() => {
+    if (!highlightedLocationId) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setHighlightedLocationId(null);
+    }, 2400);
+
+    return () => clearTimeout(timeoutId);
+  }, [highlightedLocationId]);
+
+  useEffect(() => {
+    if (!locationStatusMessage) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setLocationStatusMessage(null);
+    }, 3200);
+
+    return () => clearTimeout(timeoutId);
+  }, [locationStatusMessage]);
+  const scrollToSection = (section: SectionKey) => {
+    if (section === "characteristics") {
+      setIsCharacteristicsSectionOpen(true);
+    }
+
+    if (section === "pricing") {
+      setIsPricingSectionOpen(true);
+    }
+
+    if (section === "location") {
+      setIsLocationSectionOpen(true);
+    }
+
+    if (section === "description") {
+      setIsDescriptionSectionOpen(true);
+    }
+
+    window.setTimeout(() => {
+      const target = sectionRefs.current[section];
+      if (!target) {
+        return;
+      }
+
+      const block = window.innerWidth < 768 ? "start" : "center";
+      target.scrollIntoView({ behavior: "smooth", block, inline: "nearest" });
+    }, 140);
+  };
+  const pushLocationStatus = (message: string, tone: LocationStatusTone) => {
+    setLocationStatusTone(tone);
+    setLocationStatusMessage(message);
+  };
+
+  const isLocationSectionExpanded = isLocationSectionOpen || isLocationDraftOpen || isLocationDecisionOpen;
+  const hasReachedLocationLimit = form.locationAddresses.length >= MAX_LOCATION_ADDRESSES;
+  const activeLocation = form.locationAddresses.find((location) => location.active) ?? null;
+
+  const activateLocation = (locationId: string) => {
+    updateForm((current) => {
+      const nextLocations = current.locationAddresses.map((location) => ({
+        ...location,
+        active: location.id === locationId,
+      }));
+
+      const nextActive = nextLocations.find((location) => location.active) ?? null;
+
+      return {
+        ...current,
+        locationAddresses: nextLocations,
+        locationState: nextActive?.state ?? current.locationState,
+        locationCity: nextActive?.city ?? current.locationCity,
+      };
+    });
+
+    setHighlightedLocationId(locationId);
+  };
+
+  const openLocationDraft = (draft: LocationDraft, locationId: string | null = null) => {
+    if (!locationId && hasReachedLocationLimit) {
+      pushLocationStatus(`Você pode cadastrar até ${MAX_LOCATION_ADDRESSES} endereços.`, "error");
+      return;
+    }
+
+    setPendingLocationDraft(draft);
+    setDraftEditingLocationId(locationId);
+    setIsLocationDraftOpen(true);
+    setIsLocationSectionOpen(true);
+  };
+
+  const saveLocationDraft = () => {
+    const isEditing = Boolean(draftEditingLocationId);
+
+    if (!isEditing && hasReachedLocationLimit) {
+      pushLocationStatus(`Limite de ${MAX_LOCATION_ADDRESSES} endereços atingido.`, "error");
+      setIsLocationDraftOpen(false);
+      return;
+    }
+
+    const nextLabel = buildLocationLabel(pendingLocationDraft);
+    const nextAddress: LocationAddress = {
+      id: draftEditingLocationId ?? createLocationId(),
+      label: nextLabel,
+      addressLine: pendingLocationDraft.addressLine.trim(),
+      city: pendingLocationDraft.city.trim(),
+      state: pendingLocationDraft.state.trim().toUpperCase().slice(0, 2),
+      country: pendingLocationDraft.country.trim(),
+      notes: pendingLocationDraft.notes.trim(),
+      active: true,
+    };
+
+    const hasDuplicateAddress = form.locationAddresses.some((location) => {
+      if (isEditing && location.id === draftEditingLocationId) {
+        return false;
+      }
+
+      return hasSameAddressData(location, nextAddress);
+    });
+
+    if (hasDuplicateAddress) {
+      pushLocationStatus("Já existe um endereço cadastrado com os mesmos dados. Revise os campos para salvar.", "error");
+      return;
+    }
+
+    updateForm((current) => {
+      const withoutEdited = isEditing ? current.locationAddresses.filter((location) => location.id !== draftEditingLocationId) : current.locationAddresses;
+      const nextLocations = withoutEdited.map((location) => ({ ...location, active: false }));
+
+      return {
+        ...current,
+        locationAddresses: [...nextLocations, nextAddress],
+        locationState: nextAddress.state,
+        locationCity: nextAddress.city,
+      };
+    });
+
+    setIsLocationDraftOpen(false);
+    setDraftEditingLocationId(null);
+    setHighlightedLocationId(nextAddress.id);
+    pushLocationStatus(isEditing ? "Endereço atualizado e definido como ativo." : "Nova localização cadastrada e definida como ativa.", "success");
+  };
+
+  const captureDeviceLocation = async () => {
+    if (!navigator.geolocation) {
+      throw new Error("Geolocalização indisponível");
+    }
+
+    const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
+    });
+
+    return reverseGeocode(position.coords.latitude, position.coords.longitude);
+  };
+
+  const runDeviceLocationDetection = async () => {
+    setLocationStatusMessage(null);
+    setLocationStatusTone("info");
+    setIsLocationSectionOpen(true);
+
+    try {
+      const detected = await captureDeviceLocation();
+      setDetectedLocation(detected);
+
+      const matchingRegisteredLocation = form.locationAddresses.find((location) => isSameLocation(location, detected));
+
+      if (matchingRegisteredLocation) {
+        if (matchingRegisteredLocation.id !== activeLocation?.id) {
+          setIsLocationDecisionOpen(true);
+        } else {
+          setHighlightedLocationId(matchingRegisteredLocation.id);
+          pushLocationStatus("A localização detectada já corresponde ao endereço ativo atual.", "info");
+        }
+        return;
+      }
+
+      if (hasReachedLocationLimit) {
+        pushLocationStatus(`Você atingiu o limite de ${MAX_LOCATION_ADDRESSES} endereços. Edite ou exclua um para adicionar outro.`, "error");
+        return;
+      }
+
+      openLocationDraft(buildLocationFromDetected(detected));
+    } catch {
+      pushLocationStatus("Não foi possível detectar sua localização automaticamente. Verifique as permissões do navegador e tente novamente.", "error");
+    }
+  };
+
+  const handleLocationDecisionConfirm = () => {
+    if (!detectedLocation) {
+      setIsLocationDecisionOpen(false);
+      return;
+    }
+
+    const matchingRegisteredLocation = form.locationAddresses.find((location) => isSameLocation(location, detectedLocation));
+
+    if (!matchingRegisteredLocation) {
+      setIsLocationDecisionOpen(false);
+
+      if (hasReachedLocationLimit) {
+        pushLocationStatus(`Você atingiu o limite de ${MAX_LOCATION_ADDRESSES} endereços. Edite ou exclua um para adicionar outro.`, "error");
+        return;
+      }
+
+      openLocationDraft(buildLocationFromDetected(detectedLocation));
+      return;
+    }
+
+    activateLocation(matchingRegisteredLocation.id);
+    setIsLocationDecisionOpen(false);
+    setIsLocationSectionOpen(true);
+    pushLocationStatus("Localização ativa atualizada para o endereço detectado.", "success");
+  };
+
+  const handleEditLocation = (location: LocationAddress) => {
+    openLocationDraft(
+      {
+        label: location.label,
+        addressLine: location.addressLine,
+        city: location.city,
+        state: location.state,
+        country: location.country,
+        notes: location.notes,
+      },
+      location.id,
+    );
+  };
+
+  const handleDeleteLocation = () => {
+    if (!draftEditingLocationId) {
+      return;
+    }
+
+    const deletingLocationId = draftEditingLocationId;
+    setIsLocationDraftOpen(false);
+    setDraftEditingLocationId(null);
+    setRemovingLocationId(deletingLocationId);
+
+    setTimeout(() => {
+      updateForm((current) => {
+        const remainingLocations = current.locationAddresses.filter((location) => location.id !== deletingLocationId);
+        const hasActiveLocation = remainingLocations.some((location) => location.active);
+        const nextLocations = hasActiveLocation
+          ? remainingLocations
+          : remainingLocations.map((location, index) => ({
+            ...location,
+            active: index === 0,
+          }));
+        const nextActive = nextLocations.find((location) => location.active) ?? null;
+
+        return {
+          ...current,
+          locationAddresses: nextLocations,
+          locationState: nextActive?.state ?? "",
+          locationCity: nextActive?.city ?? "",
+        };
+      });
+
+      setRemovingLocationId(null);
+      pushLocationStatus("Endereço excluído com sucesso.", "success");
+    }, 220);
+  };
+
+  const handleTravelToggle = (enabled: boolean) => {
+    updateField("acceptsTravel", enabled, { autoSave: false });
+  };
 
   const statusStyles = {
     Ativo: {
@@ -141,17 +572,49 @@ export function AnnouncementTab({
     if (saveStatus === "saving" || isPublishing) return;
 
     const validationErrors = getPublishValidationErrors(form);
-    if (validationErrors.length > 0) {
-      setPublishError(validationErrors[0]);
+    const dirtySections = (Object.keys(sectionDirtyState) as SectionKey[])
+      .filter((section) => sectionDirtyState[section])
+      .map((section) => ({ kind: "unsaved" as const, section, label: SECTION_LABELS[section] }));
+
+    if (validationErrors.length > 0 || dirtySections.length > 0) {
+      const requiredItems: PublishWarningItem[] = [];
+
+      validationErrors.forEach((message) => {
+        if (message.includes("Características físicas")) {
+          requiredItems.push({ kind: "required", section: "characteristics", label: SECTION_LABELS.characteristics });
+          return;
+        }
+
+        if (message.includes("Tabela de preços")) {
+          requiredItems.push({ kind: "required", section: "pricing", label: SECTION_LABELS.pricing });
+          return;
+        }
+
+        if (message.includes("Localização")) {
+          requiredItems.push({ kind: "required", section: "location", label: SECTION_LABELS.location });
+          return;
+        }
+
+        if (message.includes("Descrição do Perfil")) {
+          requiredItems.push({ kind: "required", section: "description", label: SECTION_LABELS.description });
+        }
+      });
+
+      const blockingItems = [...requiredItems, ...dirtySections];
+
+      setPublishErrorItems(blockingItems);
+      setPublishError("Há pendências nos grupos abaixo.");
       return;
     }
 
     setPublishError(null);
+    setPublishErrorItems([]);
     setIsPublishing(true);
 
     const saveResult = await manualSave();
     if (saveResult === "error") {
       setPublishError("Não foi possível publicar agora. Tente novamente.");
+      setPublishErrorItems([]);
       setIsPublishing(false);
       return;
     }
@@ -161,6 +624,44 @@ export function AnnouncementTab({
       onToggleStatus();
     }
     setIsPublishing(false);
+  };
+
+  const cancelSectionChanges = (section: SectionKey) => {
+    if (!sectionDirtyState[section] || saveStatus === "saving") {
+      return;
+    }
+
+    if (section === "characteristics") {
+      const savedCharacteristics = JSON.parse(savedSectionSnapshots.characteristics) as ProfileCharacteristics;
+      updateField("characteristics", savedCharacteristics, { autoSave: false });
+      setCharacteristicsInvalidFields([]);
+      setCharacteristicsError(null);
+    }
+
+    if (section === "location") {
+      const savedLocation = JSON.parse(savedSectionSnapshots.location) as Pick<ProfileFormState, "locationState" | "locationCity" | "acceptsTravel" | "locationAddresses">;
+      updateForm((current) => ({
+        ...current,
+        locationState: savedLocation.locationState,
+        locationCity: savedLocation.locationCity,
+        acceptsTravel: savedLocation.acceptsTravel,
+        locationAddresses: savedLocation.locationAddresses,
+      }));
+      setHighlightedLocationId(null);
+      setLocationStatusMessage(null);
+    }
+
+    if (section === "description") {
+      const savedDescription = JSON.parse(savedSectionSnapshots.description) as Pick<ProfileFormState, "shortDescription" | "description">;
+      updateForm((current) => ({
+        ...current,
+        shortDescription: savedDescription.shortDescription,
+        description: savedDescription.description,
+      }));
+    }
+
+    setPublishError(null);
+    setPublishErrorItems([]);
   };
 
   const saveSection = async (section: SectionKey) => {
@@ -208,7 +709,28 @@ export function AnnouncementTab({
               {hasUnsavedChanges && <span className="ml-2 text-base font-semibold text-amber-700">(Alterações não salvas)</span>}
             </h1>
             <p className="text-zinc-500 mt-1">Gerencie sua identidade visual e informações do anúncio.</p>
-            {publishError && <p className="mt-2 text-sm font-medium text-red-600">{publishError}</p>}
+            {publishError ? (
+              <div className="mt-2 space-y-1 text-sm font-medium text-red-600">
+                <p>{publishError}</p>
+                {publishErrorItems.length > 0 ? (
+                  <ol className="space-y-1 text-red-600">
+                    {publishErrorItems.map((item, index) => (
+                      <li key={`${item.kind}-${item.section}-${index}`} className="leading-relaxed">
+                        {index + 1}. {item.kind === "unsaved" ? "Salve ou cancele as alterações em" : "Preencha os campos obrigatórios em"}{" "}
+                        <button
+                          type="button"
+                          onClick={() => scrollToSection(item.section)}
+                          className="inline-flex items-center rounded-md border border-red-200 bg-red-50 px-1.5 py-0.5 font-semibold text-red-700 underline decoration-red-300 underline-offset-2 transition hover:bg-red-100 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-300"
+                        >
+                          {item.label}
+                        </button>
+                        {item.kind === "unsaved" ? "." : "."}
+                      </li>
+                    ))}
+                  </ol>
+                ) : null}
+              </div>
+            ) : null}
           </div>
           <div className="flex gap-2 w-full sm:w-auto sm:gap-3">
             <button onClick={handleViewPublicAd} className="px-3 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base rounded-lg border border-zinc-200 bg-white font-bold text-zinc-700 hover:bg-zinc-50 transition-colors">
@@ -242,6 +764,41 @@ export function AnnouncementTab({
           activeIndex={activePhotoIndex}
           onClose={() => setActivePhotoIndex(null)}
           onChange={(idx) => setActivePhotoIndex(idx)}
+        />
+      )}
+
+      {isLocationDecisionOpen && detectedLocation && (
+        <LocationDecisionModal
+          activeLocation={activeLocation}
+          detectedLocation={detectedLocation}
+          onClose={() => setIsLocationDecisionOpen(false)}
+          onConfirm={handleLocationDecisionConfirm}
+        />
+      )}
+
+      {isLocationDraftOpen && (
+        <LocationDraftModal
+          draft={pendingLocationDraft}
+          locationStatusMessage={locationStatusMessage}
+          locationStatusTone={locationStatusTone}
+          onClose={() => {
+            setIsLocationDraftOpen(false);
+            setDraftEditingLocationId(null);
+          }}
+          onChange={setPendingLocationDraft}
+          onConfirm={saveLocationDraft}
+          onDelete={handleDeleteLocation}
+          onDetectLocation={async () => {
+            try {
+              const detected = await captureDeviceLocation();
+              setDetectedLocation(detected);
+              setPendingLocationDraft(buildLocationFromDetected(detected));
+              pushLocationStatus("Localização atual aplicada ao rascunho do endereço.", "success");
+            } catch {
+              pushLocationStatus("Não foi possível detectar sua localização automaticamente. Verifique as permissões do navegador e tente novamente.", "error");
+            }
+          }}
+          isEditing={Boolean(draftEditingLocationId)}
         />
       )}
 
@@ -299,7 +856,7 @@ export function AnnouncementTab({
             <h2 className="text-xl font-bold text-zinc-900">Informações Obrigatórias</h2>
           </div>
 
-          <SectionCard title="Características físicas" requiredAsterisk dirty={sectionDirtyState.characteristics} showSaveAction onSaveAction={() => saveSection("characteristics")} saveDisabled={saveStatus === "saving"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}>
+          <SectionCard sectionRef={(node) => { sectionRefs.current.characteristics = node; }} title="Características físicas" requiredAsterisk dirty={sectionDirtyState.characteristics} showSaveAction onSaveAction={() => saveSection("characteristics")} onCancelAction={() => cancelSectionChanges("characteristics")} saveDisabled={saveStatus === "saving"} open={isCharacteristicsSectionOpen} onOpenChange={setIsCharacteristicsSectionOpen} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}>
             <CharacteristicsSection
               characteristics={form.characteristics}
               invalidFields={characteristicsInvalidFields}
@@ -330,7 +887,7 @@ export function AnnouncementTab({
             />
           </SectionCard>
 
-          <SectionCard title="Tabela de preços" requiredAsterisk icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
+          <SectionCard sectionRef={(node) => { sectionRefs.current.pricing = node; }} title="Tabela de preços" requiredAsterisk dirty={sectionDirtyState.pricing} showSaveAction onSaveAction={() => saveSection("pricing")} onCancelAction={() => cancelSectionChanges("pricing")} saveDisabled={saveStatus === "saving"} open={isPricingSectionOpen} onOpenChange={setIsPricingSectionOpen} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
             <PricingSection
               pricing={form.pricing}
               onUpdate={(idx: number, field: string, value: string | number) => {
@@ -348,11 +905,22 @@ export function AnnouncementTab({
             />
           </SectionCard>
 
-          <SectionCard title="Localização" requiredAsterisk dirty={sectionDirtyState.location} showSaveAction onSaveAction={() => saveSection("location")} saveDisabled={saveStatus === "saving"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}>
+          <SectionCard sectionRef={(node) => { sectionRefs.current.location = node; }} title="Localização" requiredAsterisk dirty={sectionDirtyState.location} showSaveAction onSaveAction={() => saveSection("location")} onCancelAction={() => cancelSectionChanges("location")} saveDisabled={saveStatus === "saving"} open={isLocationSectionExpanded} onOpenChange={setIsLocationSectionOpen} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}>
             <LocationSection
-              state={form.locationState} city={form.locationCity}
-              onStateChange={(v: string) => updateField("locationState", v.replace(/[^A-Za-z]/g, "").toUpperCase().slice(0, 2), { autoSave: false })}
-              onCityChange={(v: string) => updateField("locationCity", sanitizeCityInput(v), { autoSave: false })}
+              addresses={form.locationAddresses}
+              activeLocation={activeLocation}
+              highlightedLocationId={highlightedLocationId}
+              onDetectLocation={runDeviceLocationDetection}
+              onAddLocation={() => openLocationDraft(createDraftFromLocation())}
+              onEditLocation={handleEditLocation}
+              onToggleActive={activateLocation}
+              onToggleTravel={handleTravelToggle}
+              acceptsTravel={form.acceptsTravel}
+              removingLocationId={removingLocationId}
+              canAddLocation={!hasReachedLocationLimit}
+              locationStatusMessage={locationStatusMessage}
+              locationStatusTone={locationStatusTone}
+              suppressErrorOverlay={isLocationDraftOpen}
             />
           </SectionCard>
 
@@ -361,7 +929,7 @@ export function AnnouncementTab({
             <h2 className="text-xl font-bold text-zinc-900">Informações Opcionais</h2>
           </div>
 
-          <SectionCard title="Descrição do Perfil" dirty={sectionDirtyState.description} showSaveAction onSaveAction={() => saveSection("description")} saveDisabled={saveStatus === "saving"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h10" /></svg>}>
+          <SectionCard sectionRef={(node) => { sectionRefs.current.description = node; }} title="Descrição do Perfil" dirty={sectionDirtyState.description} showSaveAction onSaveAction={() => saveSection("description")} onCancelAction={() => cancelSectionChanges("description")} saveDisabled={saveStatus === "saving"} open={isDescriptionSectionOpen} onOpenChange={setIsDescriptionSectionOpen} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h10" /></svg>}>
             <DescriptionSection shortDescription={form.shortDescription} description={form.description} onShortDescChange={(v: string) => updateField("shortDescription", v.replace(/\s{2,}/g, " "), { autoSave: false })} onDescChange={(v: string) => updateField("description", v.replace(/\s{3,}/g, "  "), { autoSave: false })} />
           </SectionCard>
 
@@ -412,14 +980,44 @@ export function AnnouncementTab({
 
 // ─── Componentes Visuais do Redesign ──────────────────────────────
 
-function SectionCard({ title, icon, children, requiredAsterisk, dirty, showSaveAction, onSaveAction, saveDisabled }: { title: string, icon: React.ReactNode, children: React.ReactNode, requiredAsterisk?: boolean, dirty?: boolean, showSaveAction?: boolean, onSaveAction?: () => void, saveDisabled?: boolean }) {
-  const [isOpen, setIsOpen] = useState(false);
+function SectionCard({
+  title,
+  icon,
+  children,
+  requiredAsterisk,
+  dirty,
+  showSaveAction,
+  onSaveAction,
+  onCancelAction,
+  saveDisabled,
+  open,
+  onOpenChange,
+  defaultOpen = false,
+  sectionRef,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  requiredAsterisk?: boolean;
+  dirty?: boolean;
+  showSaveAction?: boolean;
+  onSaveAction?: () => void;
+  onCancelAction?: () => void;
+  saveDisabled?: boolean;
+  open?: boolean;
+  onOpenChange?: (next: boolean) => void;
+  defaultOpen?: boolean;
+  sectionRef?: (node: HTMLDivElement | null) => void;
+}) {
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const isOpen = open ?? internalOpen;
+  const handleOpenChange = onOpenChange ?? setInternalOpen;
 
   return (
-    <div className={cn("bg-white rounded-2xl shadow-sm border overflow-hidden", dirty ? "border-amber-300 ring-1 ring-amber-200" : "border-zinc-100")}>
+    <div ref={sectionRef} className={cn("scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-32 bg-white rounded-2xl shadow-sm border overflow-hidden", dirty ? "border-amber-300 ring-1 ring-amber-200" : "border-zinc-100")}>
       <button
         type="button"
-        onClick={() => setIsOpen((v) => !v)}
+        onClick={() => handleOpenChange(!isOpen)}
         aria-expanded={isOpen}
         className="w-full p-5 sm:p-6 bg-zinc-50/50 border-b border-zinc-100 flex items-center justify-between gap-4 text-left cursor-pointer hover:bg-zinc-100/60 transition-colors"
       >
@@ -438,7 +1036,17 @@ function SectionCard({ title, icon, children, requiredAsterisk, dirty, showSaveA
         <div className="p-6 sm:p-8">
           {children}
           {showSaveAction && (
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-end gap-3">
+              {dirty ? (
+                <button
+                  type="button"
+                  onClick={onCancelAction}
+                  disabled={saveDisabled}
+                  className="inline-flex items-center justify-center rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-sm font-bold text-zinc-700 transition-all hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  Cancelar alterações
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={onSaveAction}
@@ -598,6 +1206,18 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: { 
   const [showSelectionWarning, setShowSelectionWarning] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
 
+  useEffect(() => {
+    if (!showSelectionWarning) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setShowSelectionWarning(false);
+    }, GROUP_WARNING_AUTO_DISMISS_MS);
+
+    return () => clearTimeout(timeoutId);
+  }, [showSelectionWarning]);
+
   const handleSaveCustom = () => {
     if (customName && customPrice) {
       onAddCustom(customName, customPrice);
@@ -626,30 +1246,30 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: { 
   return (
     <div className="space-y-4">
       <div className="space-y-4" style={isShaking ? { animation: "pricing-shake 420ms ease-in-out" } : undefined}>
-      {pricing.map((item, idx: number) => (
-        <div key={idx} className={cn("flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 rounded-xl border transition-all gap-4", item.disabled ? "bg-zinc-50 border-zinc-100 opacity-60" : "bg-white border-zinc-200 shadow-sm")}>
-          <div className="flex items-center gap-4 w-full sm:w-auto">
-            <div className="w-10 h-10 bg-zinc-50 rounded-lg flex items-center justify-center border border-zinc-200 shrink-0">
-              <svg className="w-5 h-5 text-wine-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        {pricing.map((item, idx: number) => (
+          <div key={idx} className={cn("flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 rounded-xl border transition-all gap-4", item.disabled ? "bg-zinc-50 border-zinc-100 opacity-60" : "bg-white border-zinc-200 shadow-sm")}>
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <div className="w-10 h-10 bg-zinc-50 rounded-lg flex items-center justify-center border border-zinc-200 shrink-0">
+                <svg className="w-5 h-5 text-wine-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <div>
+                <p className="font-bold text-zinc-900">{item.label}</p>
+                <p className="text-xs text-zinc-500">{item.isCustom ? "Serviço personalizado" : "Serviço padrão"}</p>
+              </div>
             </div>
-            <div>
-              <p className="font-bold text-zinc-900">{item.label}</p>
-              <p className="text-xs text-zinc-500">{item.isCustom ? "Serviço personalizado" : "Serviço padrão"}</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
-            <div className="flex items-center bg-zinc-50 rounded-lg px-3 py-2 border border-zinc-200 focus-within:border-wine-500 focus-within:ring-1 focus-within:ring-wine-500 w-full sm:w-32">
-              <span className="text-sm font-bold text-zinc-400 mr-2">R$</span>
-              <input type="text" inputMode="numeric" value={item.price} disabled={item.disabled} onChange={(e) => onUpdate(idx, "price", sanitizeNumericInput(e.target.value, 5))} className={cn("w-full bg-transparent font-bold outline-none placeholder:text-zinc-300", item.disabled ? "text-zinc-400" : "text-zinc-900")} placeholder="0,00" />
-            </div>
+            <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+              <div className="flex items-center bg-zinc-50 rounded-lg px-3 py-2 border border-zinc-200 focus-within:border-wine-500 focus-within:ring-1 focus-within:ring-wine-500 w-full sm:w-32">
+                <span className="text-sm font-bold text-zinc-400 mr-2">R$</span>
+                <input type="text" inputMode="numeric" value={item.price} disabled={item.disabled} onChange={(e) => onUpdate(idx, "price", sanitizeNumericInput(e.target.value, 5))} className={cn("w-full bg-transparent font-bold outline-none placeholder:text-zinc-300", item.disabled ? "text-zinc-400" : "text-zinc-900")} placeholder="0,00" />
+              </div>
 
-            <label className="relative inline-flex items-center cursor-pointer shrink-0">
-              <input type="checkbox" checked={!item.disabled} onChange={() => handleToggleService(idx)} className="sr-only peer" />
-              <div className="w-11 h-6 bg-zinc-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wine-700"></div>
-            </label>
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                <input type="checkbox" checked={!item.disabled} onChange={() => handleToggleService(idx)} className="sr-only peer" />
+                <div className="w-11 h-6 bg-zinc-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wine-700"></div>
+              </label>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
       </div>
 
       {showSelectionWarning && (
@@ -698,22 +1318,372 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled, onAddCustom }: { 
   )
 }
 
-function LocationSection({ state, city, onStateChange, onCityChange }: { state: string; city: string; onStateChange: (value: string) => void; onCityChange: (value: string) => void }) {
+function LocationSection({
+  addresses,
+  activeLocation,
+  highlightedLocationId,
+  onDetectLocation,
+  onAddLocation,
+  onEditLocation,
+  onToggleActive,
+  onToggleTravel,
+  acceptsTravel,
+  removingLocationId,
+  canAddLocation,
+  locationStatusMessage,
+  locationStatusTone,
+  suppressErrorOverlay,
+}: {
+  addresses: LocationAddress[];
+  activeLocation: LocationAddress | null;
+  highlightedLocationId: string | null;
+  onDetectLocation: () => void;
+  onAddLocation: () => void;
+  onEditLocation: (location: LocationAddress) => void;
+  onToggleActive: (locationId: string) => void;
+  onToggleTravel: (enabled: boolean) => void;
+  acceptsTravel: boolean;
+  removingLocationId: string | null;
+  canAddLocation: boolean;
+  locationStatusMessage: string | null;
+  locationStatusTone: LocationStatusTone;
+  suppressErrorOverlay: boolean;
+}) {
+  const activeSummary = activeLocation ? formatLocationSummary(activeLocation) : "Nenhum endereço ativo no momento.";
+  const [showSelectionWarning, setShowSelectionWarning] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
+
+  useEffect(() => {
+    if (!showSelectionWarning) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setShowSelectionWarning(false);
+    }, GROUP_WARNING_AUTO_DISMISS_MS);
+
+    return () => clearTimeout(timeoutId);
+  }, [showSelectionWarning]);
+
+  const statusStyles = {
+    success: {
+      container: "border-emerald-200 bg-emerald-50/95 text-emerald-900",
+      iconWrap: "bg-emerald-100 text-emerald-700",
+      iconPath: "M5 13l4 4L19 7",
+    },
+    error: {
+      container: "border-red-200 bg-red-50/95 text-red-900",
+      iconWrap: "bg-red-100 text-red-700",
+      iconPath: "M12 8v4m0 4h.01",
+    },
+    info: {
+      container: "border-zinc-300 bg-white/95 text-zinc-900",
+      iconWrap: "bg-zinc-100 text-zinc-700",
+      iconPath: "M12 16v-4m0-4h.01",
+    },
+  } as const;
+
+  const handleToggleActive = (locationId: string, isCurrentlyActive: boolean) => {
+    if (isCurrentlyActive) {
+      setShowSelectionWarning(true);
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 420);
+      return;
+    }
+
+    setShowSelectionWarning(false);
+    onToggleActive(locationId);
+  };
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500">Sede Principal</label>
-        <button className="text-[11px] font-bold text-wine-700 border border-wine-200 bg-wine-50 px-2.5 py-1.5 rounded-lg hover:bg-wine-100 transition-colors flex items-center gap-1 cursor-pointer">
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+    <div className="relative space-y-5">
+      {locationStatusMessage && !suppressErrorOverlay ? (
+        <div className="pointer-events-none fixed inset-x-0 top-4 z-50 flex justify-center px-4">
+          <div className={cn("w-full max-w-sm rounded-2xl border px-4 py-3 text-sm shadow-xl backdrop-blur-sm", statusStyles[locationStatusTone].container)}>
+            <div className="flex items-start gap-3">
+              <span className={cn("mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full", statusStyles[locationStatusTone].iconWrap)}>
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={statusStyles[locationStatusTone].iconPath} />
+                </svg>
+              </span>
+              <p className="leading-relaxed">{locationStatusMessage}</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div
+        className={cn(
+          "rounded-2xl border p-4 sm:p-5 transition-all",
+          acceptsTravel
+            ? "border-wine-200 bg-wine-50/70 shadow-sm"
+            : "border-zinc-200 bg-white opacity-75",
+        )}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <p className={cn("text-[11px] font-black uppercase tracking-[0.24em]", acceptsTravel ? "text-wine-700" : "text-zinc-500")}>
+              Aceito me deslocar
+            </p>
+            <p className={cn("text-sm", acceptsTravel ? "text-zinc-700" : "text-zinc-500")}>
+              Ative para informar no anúncio que você também atende fora do endereço ativo.
+            </p>
+          </div>
+          <label className="relative inline-flex cursor-pointer items-center shrink-0" aria-label="Aceita deslocamento">
+            <input type="checkbox" checked={acceptsTravel} onChange={(event) => onToggleTravel(event.target.checked)} className="peer sr-only" />
+            <div className="h-6 w-11 rounded-full bg-zinc-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-wine-700 peer-checked:after:translate-x-full peer-focus-visible:ring-2 peer-focus-visible:ring-wine-400/60" />
+          </label>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-zinc-500">Endereço ativo</p>
+          <p className="mt-1 text-sm text-zinc-700">{activeSummary}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onDetectLocation}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-wine-200 bg-wine-50 px-3.5 py-2 text-sm font-bold text-wine-700 transition hover:bg-wine-100"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
           Detectar localização atual
         </button>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <FormInput label="Estado" value={state} onChange={onStateChange} placeholder="Ex: SP" />
-        <FormInput label="Cidade" value={city} onChange={onCityChange} placeholder="Ex: São Paulo" />
+
+      <div className="space-y-3" style={isShaking ? { animation: "location-shake 420ms ease-in-out" } : undefined}>
+        {addresses.length > 0 ? addresses.map((location) => {
+          const isHighlighted = highlightedLocationId === location.id;
+          const isRemoving = removingLocationId === location.id;
+
+          return (
+            <div
+              key={location.id}
+              className={cn(
+                "rounded-2xl border p-4 transition-all duration-200",
+                location.active ? "border-wine-200 bg-wine-50/70 shadow-sm" : "border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-sm",
+                isHighlighted && "ring-2 ring-zinc-300 animate-pulse",
+                isRemoving && "opacity-0 scale-[0.98] -translate-y-1",
+              )}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="truncate text-sm font-bold text-zinc-900">{location.label}</h4>
+                    {location.active ? (
+                      <span className="rounded-full bg-wine-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">Ativo</span>
+                    ) : (
+                      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Inativa</span>
+                    )}
+                  </div>
+                  <p className="text-sm text-zinc-600">{formatLocationSummary(location)}</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onEditLocation(location)}
+                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-bold text-zinc-700 transition hover:bg-zinc-50"
+                  >
+                    Editar
+                  </button>
+                  <label className="relative inline-flex cursor-pointer items-center shrink-0" aria-label={`Ativar ${location.label}`}>
+                    <input type="checkbox" checked={location.active} onChange={() => handleToggleActive(location.id, location.active)} className="peer sr-only" />
+                    <div className={cn("relative h-6 w-11 rounded-full transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full", location.active ? "bg-wine-700" : "bg-zinc-300 peer-checked:bg-wine-700")} />
+                  </label>
+                </div>
+              </div>
+
+              {location.addressLine ? <p className="mt-3 text-xs text-zinc-500">{location.addressLine}</p> : null}
+
+              {isHighlighted ? (
+                <div className="mt-3 rounded-xl border border-zinc-300 bg-zinc-100/80 px-3 py-2 text-xs font-semibold text-zinc-700">
+                  Este endereço foi selecionado agora.
+                </div>
+              ) : null}
+            </div>
+          );
+        }) : (
+          <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50/60 p-5 text-sm text-zinc-600">
+            Você ainda não cadastrou endereços de atendimento.
+          </div>
+        )}
       </div>
+
+      {showSelectionWarning ? (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+          Ao menos um endereço deve permanecer ativo no grupo obrigatório.
+        </p>
+      ) : null}
+
+      <button
+        type="button"
+        onClick={onAddLocation}
+        disabled={!canAddLocation}
+        className={cn(
+          "w-full rounded-2xl border-2 border-dashed px-4 py-4 text-sm font-bold transition",
+          canAddLocation
+            ? "border-zinc-300 bg-white text-zinc-600 hover:border-wine-300 hover:bg-wine-50 hover:text-wine-700"
+            : "cursor-not-allowed border-zinc-200 bg-zinc-100 text-zinc-400",
+        )}
+      >
+        {canAddLocation ? "Cadastrar novo endereço" : `Limite de ${MAX_LOCATION_ADDRESSES} endereços atingido`}
+      </button>
+
+      <style jsx>{`
+        @keyframes location-shake {
+          0% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-6px); }
+          80% { transform: translateX(6px); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
     </div>
   )
+}
+
+function LocationDecisionModal({
+  activeLocation,
+  detectedLocation,
+  onClose,
+  onConfirm,
+}: {
+  activeLocation: LocationAddress | null;
+  detectedLocation: DetectedLocation;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <Modal
+      open
+      title="Alterar localização ativa?"
+      description="Detectamos uma localização diferente da ativa no seu dispositivo. Você deseja trocar agora?"
+      onClose={onClose}
+      actions={
+        <>
+          <Button variant="secondary" fullWidth onClick={onClose}>
+            Agora não
+          </Button>
+          <Button fullWidth onClick={onConfirm}>
+            Sim, alterar
+          </Button>
+        </>
+      }
+      size="md"
+    >
+      <div className="space-y-3">
+        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-zinc-500">Endereço ativo atual</p>
+          <p className="mt-2 text-sm font-semibold text-zinc-900">{activeLocation ? formatLocationSummary(activeLocation) : "Nenhum endereço ativo"}</p>
+        </div>
+        <div className="rounded-2xl border border-wine-200 bg-wine-50 p-4">
+          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-wine-700">Localização detectada</p>
+          <p className="mt-2 text-sm font-semibold text-wine-950">{detectedLocation.label}</p>
+          <p className="mt-1 text-sm text-wine-900/80">{detectedLocation.addressLine || detectedLocation.displayName || `${detectedLocation.city}${detectedLocation.state ? `, ${detectedLocation.state}` : ""}`}</p>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function LocationDraftModal({
+  draft,
+  locationStatusMessage,
+  locationStatusTone,
+  onClose,
+  onChange,
+  onConfirm,
+  onDelete,
+  onDetectLocation,
+  isEditing,
+}: {
+  draft: LocationDraft;
+  locationStatusMessage: string | null;
+  locationStatusTone: LocationStatusTone;
+  onClose: () => void;
+  onChange: (draft: LocationDraft) => void;
+  onConfirm: () => void;
+  onDelete: () => void;
+  onDetectLocation: () => Promise<void> | void;
+  isEditing: boolean;
+}) {
+  const canSave = draft.city.trim().length > 0 && draft.state.trim().length > 0 && draft.country.trim().length > 0;
+
+  return (
+    <Modal
+      open
+      title={isEditing ? "Editar endereço de atendimento" : "Cadastrar novo endereço"}
+      description="Preencha os campos abaixo ou use a detecção automática para ajustar os dados do local."
+      onClose={onClose}
+      size="md"
+      mobileCentered
+      actions={
+        <>
+          {isEditing ? (
+            <Button variant="secondary" fullWidth onClick={onDelete}>
+              Excluir endereço
+            </Button>
+          ) : (
+            <Button variant="secondary" fullWidth onClick={onClose}>
+              Cancelar
+            </Button>
+          )}
+          <Button fullWidth onClick={onConfirm} disabled={!canSave}>
+            Salvar endereço
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-3 sm:space-y-4">
+        {locationStatusMessage ? (
+          <div
+            className={cn(
+              "rounded-xl px-3 py-2 text-sm font-semibold",
+              locationStatusTone === "success"
+                ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                : locationStatusTone === "error"
+                  ? "border border-red-200 bg-red-50 text-red-700"
+                  : "border border-zinc-200 bg-zinc-50 text-zinc-700",
+            )}
+          >
+            {locationStatusMessage}
+          </div>
+        ) : null}
+
+        <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3 sm:p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-zinc-900">Preenchimento automático</p>
+            <p className="text-sm leading-snug text-zinc-600">Se quiser, detecte a localização atual e ajuste os campos em seguida.</p>
+          </div>
+          <button
+            type="button"
+            onClick={onDetectLocation}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-wine-200 bg-white px-3.5 py-2.5 text-sm font-bold text-wine-700 transition hover:bg-wine-50 sm:w-auto"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Detectar automaticamente
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+          <FormInput label="Nome do endereço" value={draft.label} onChange={(value) => onChange({ ...draft, label: value })} placeholder="Ex: Atendimento premium" />
+          <FormInput label="País" value={draft.country} onChange={(value) => onChange({ ...draft, country: value })} placeholder="Ex: Brasil" />
+          <FormInput label="Bairro" value={draft.addressLine} onChange={(value) => onChange({ ...draft, addressLine: value })} placeholder="Rua, bairro, hotel ou referência" />
+          <FormInput label="Cidade" value={draft.city} onChange={(value) => onChange({ ...draft, city: sanitizeCityInput(value) })} placeholder="Ex: São Paulo" />
+          <FormInput label="Estado" value={draft.state} onChange={(value) => onChange({ ...draft, state: value.replace(/[^A-Za-z]/g, "").toUpperCase().slice(0, 2) })} placeholder="Ex: SP" />
+          <FormInput label="Observações" value={draft.notes} onChange={(value) => onChange({ ...draft, notes: value })} placeholder="Opcional" />
+        </div>
+      </div>
+    </Modal>
+  );
 }
 
 function DescriptionSection({ shortDescription, description, onShortDescChange, onDescChange }: { shortDescription: string; description: string; onShortDescChange: (value: string) => void; onDescChange: (value: string) => void }) {

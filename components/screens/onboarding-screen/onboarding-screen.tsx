@@ -132,9 +132,10 @@ export function OnboardingScreen() {
                     Localização
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-3 flex items-center text-zinc-500 pointer-events-none">
-                      📍
-                    </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute inset-y-0 left-3 my-auto text-wine-700 pointer-events-none" aria-hidden="true">
+                      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
                     <input
                       id="location"
                       type="text"
@@ -159,11 +160,15 @@ export function OnboardingScreen() {
                             key={idx}
                             className="px-3 py-2 hover:bg-zinc-100 cursor-pointer text-zinc-700 flex items-center gap-2"
                             onClick={() => {
-                              setLocationQuery(`${loc.city}, ${loc.state}`);
+                              setLocationQuery(`${loc.state}, ${loc.city}`);
                               setShowSuggestions(false);
                             }}
                           >
-                            <span>📍</span> {loc.city}, {loc.state}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-wine-700" aria-hidden="true">
+                              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                              <circle cx="12" cy="10" r="3" />
+                            </svg>
+                            <span>{loc.state}, {loc.city}</span>
                           </li>
                         ))
                       ) : (
@@ -200,7 +205,7 @@ export function OnboardingScreen() {
                 </button>
               </div>
 
-              <Link href="/feed" className="block pt-2">
+              <Link href={`/feed?location=${encodeURIComponent(locationQuery)}`} className="block pt-2">
                 <Button fullWidth size="lg" className="bg-[#800020] hover:bg-[#600018] text-white py-6 text-base rounded-lg shadow-lg">
                   Entrar no feed
                 </Button>

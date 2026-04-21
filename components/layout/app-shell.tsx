@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import { DesktopNav } from "./desktop-nav";
 import { TopHeader } from "./top-header";
 import { BottomNav } from "./bottom-nav";
-import { Button } from "@/components/ui/button";
 
 interface AppShellProps extends PropsWithChildren {
   location?: string;
@@ -23,7 +22,7 @@ export function AppShell({ children, location = "Sao Paulo, SP", hideMobileBotto
     <div className="min-h-screen bg-zinc-50">
       <TopHeader location={location} role={role} user={user} isLoggedIn={isLoggedIn} onLogout={logout} />
       <DesktopNav items={navigationItems} />
-      <main className={cn("mx-auto w-full max-w-7xl px-4 pt-6 pb-20 sm:px-6 lg:px-8 md:pb-10")}>{children}</main>
+      <main className={cn("mx-auto w-full max-w-7xl px-4 pt-6 pb-20 sm:px-6 lg:max-w-430 lg:px-8 md:pb-10")}>{children}</main>
       {hideMobileBottomNav ? null : <BottomNav items={navigationItems} />}
     </div>
   );

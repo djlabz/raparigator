@@ -18,7 +18,7 @@ export function DesktopNav({ items }: DesktopNavProps) {
 
   return (
     <nav aria-label="Navegação principal" className="sticky top-16 z-20 hidden border-b border-zinc-200 bg-white/90 backdrop-blur md:block">
-      <div className="mx-auto flex w-full max-w-7xl items-center gap-2 overflow-x-auto px-4 py-3 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl items-center gap-2 overflow-x-auto px-4 py-3 sm:px-6 lg:max-w-430 lg:px-8">
         {items.map((item) => {
           const active = pathname.startsWith(item.href);
 
