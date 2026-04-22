@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { ads } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
@@ -18,9 +18,25 @@ const TABS = [
 ] as const;
 
 export function ProfessionalDashboardScreen() {
-  const [activeTab, setActiveTab] = useState<string>("Anúncio"); // Alterado para exibir "Anúncio" inicialmente para teste
+  const [activeTab, setActiveTab] = useState<string>("Anúncio");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [adStatus, setAdStatus] = useState<AdStatus>("Ativo");
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const requestedTab = new URLSearchParams(window.location.search).get("tab");
+    if (!requestedTab) {
+      return;
+    }
+
+    const isValidTab = TABS.some((tab) => tab.id === requestedTab);
+    if (isValidTab) {
+      setActiveTab(requestedTab);
+    }
+  }, []);
 
   const currentAd = ads[0];
   const adSlug = currentAd.slug;
@@ -104,9 +120,79 @@ export function ProfessionalDashboardScreen() {
           )}
           {activeTab === "Avaliações" && <div className="p-4 bg-white rounded-xl shadow-sm"><h2 className="text-lg font-bold">Avaliações em breve</h2></div>}
           {activeTab === "Histórico" && <HistoryTab />}
-          {activeTab === "Verificação" && <div className="p-4 bg-white rounded-xl shadow-sm"><h2 className="text-lg font-bold">Verificação em breve</h2></div>}
+          {activeTab === "Verificação" && <VerificationTab />}
         </div>
       </div>
     </AppShell>
+  );
+}
+
+function VerificationTab() {
+  const [verificationState] = useState({
+    email: true,
+    phone: false,
+    document: false,
+  });
+
+  const verifiedItems = [verificationState.email, verificationState.phone, verificationState.document].filter(Boolean).length;
+  const verificationProgress = Math.round((verifiedItems / 3) * 100);
+
+  return (
+    <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Verificação da conta</p>
+          <h2 className="mt-1 text-2xl font-semibold text-zinc-900">Confiança do perfil</h2>
+          <p className="mt-1 text-sm text-zinc-600">Conclua as etapas abaixo para elevar a segurança da conta e fortalecer seu perfil.</p>
+        </div>
+        <span className="self-start rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
+          {verifiedItems}/3 concluídas
+        </span>
+      </div>
+
+      <div className="mt-5 space-y-2">
+        <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
+          <div className="h-full rounded-full bg-emerald-500 transition-all duration-300" style={{ width: `${verificationProgress}%` }} />
+        </div>
+        <p className="text-xs font-medium text-zinc-500">Progresso de verificação: {verificationProgress}%</p>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <VerificationItem title="E-mail" description="Contato principal confirmado." done={verificationState.email} actionLabel="Verificado" />
+        <VerificationItem title="Telefone" description="Confirme com código por SMS." done={verificationState.phone} actionLabel="Verificar" />
+        <VerificationItem title="Documento" description="Envie documento para validação." done={verificationState.document} actionLabel="Verificar" />
+      </div>
+    </div>
+  );
+}
+
+function VerificationItem({
+  title,
+  description,
+  done,
+  actionLabel,
+}: {
+  title: string;
+  description: string;
+  done: boolean;
+  actionLabel: string;
+}) {
+  return (
+    <div className={cn("rounded-xl border p-4", done ? "border-emerald-200 bg-emerald-50/70" : "border-zinc-200 bg-zinc-50")}>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">{title}</p>
+      <p className="mt-2 text-sm text-zinc-600">{description}</p>
+      <div className="mt-4 flex items-center justify-between">
+        <span className={cn("text-sm font-semibold", done ? "text-emerald-700" : "text-zinc-700")}>{done ? "Concluído" : "Pendente"}</span>
+        <button
+          type="button"
+          className={cn(
+            "rounded-lg px-3 py-1.5 text-xs font-semibold transition",
+            done ? "bg-emerald-100 text-emerald-700" : "bg-wine-50 text-wine-700 hover:bg-wine-100",
+          )}
+        >
+          {actionLabel}
+        </button>
+      </div>
+    </div>
   );
 }
