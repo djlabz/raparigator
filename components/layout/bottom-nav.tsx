@@ -96,7 +96,7 @@ export function BottomNav({ items }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-[280px] rounded-full bg-white/70 backdrop-blur-xl border border-zinc-200/50 shadow-2xl md:hidden"
+      className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-70 rounded-full bg-white/70 backdrop-blur-xl border border-zinc-200/50 shadow-2xl md:hidden"
       aria-label="Navegação principal"
     >
       <ul className="flex items-center justify-around gap-0.5 px-2 py-2">
