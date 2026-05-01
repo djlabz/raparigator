@@ -35,6 +35,16 @@ function createLocationId() {
   return `location-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function toCurrencyMaskDigits(value: number | string) {
+  const numericValue = typeof value === "number" ? value : Number(String(value).replace(/\D/g, ""));
+
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return "";
+  }
+
+  return String(Math.round(numericValue * 100));
+}
+
 const defaultCharacteristics: ProfileCharacteristics = {
   gender: "Selecionar",
   genitalia: "",
@@ -72,7 +82,7 @@ const defaultServices: ServiceOption[] = [
 ];
 
 const defaultPricing: PricingItem[] = [
-  { label: "1 hora", price: "300", disabled: false, billingType: "hourly" },
+  { label: "1 hora", price: "30000", disabled: false, billingType: "hourly" },
   { label: "30 min", price: "", disabled: true, billingType: "hourly" },
   { label: "15 min", price: "", disabled: true, billingType: "hourly" },
   { label: "Diária", price: "", disabled: true, billingType: "fixed" },
@@ -117,18 +127,19 @@ function buildInitialState(ad: AdPreview): ProfileFormState {
     // Regra de carregamento inicial solicitada:
     // 1 hora deve sempre iniciar com 300 ativo, independentemente do valor salvo anterior.
     if (defaultItem.label === "1 hora") {
-      return { ...defaultItem, price: "300", disabled: false };
+      return { ...defaultItem, price: "30000", disabled: false };
+    }
+
+    // Pernoite deve sempre vir zerado (price vazio), independentemente do valor salvo anterior.
+    if (defaultItem.label === "Pernoite") {
+      return { ...defaultItem, price: "", disabled: true };
     }
 
     if (!match) {
       return defaultItem;
     }
 
-    if (defaultItem.label === "Pernoite") {
-      return { ...defaultItem, price: String(match.price), disabled: true };
-    }
-
-    return { ...defaultItem, price: String(match.price), disabled: false };
+    return { ...defaultItem, price: toCurrencyMaskDigits(match.price), disabled: false };
   });
 
   const services = defaultServices.map((defaultService) => ({

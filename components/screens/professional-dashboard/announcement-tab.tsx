@@ -67,6 +67,53 @@ function sanitizeNumericInput(value: string, maxLength = 4) {
   return value.replace(/\D/g, "").slice(0, maxLength);
 }
 
+const currencyInputFormatter = new Intl.NumberFormat("pt-BR", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function formatIntegerGroup(value: string) {
+  const normalized = value.replace(/^0+(?=\d)/, "");
+
+  if (!normalized) {
+    return "0";
+  }
+
+  return normalized.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+function formatCurrencyInput(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 0) {
+    return "0,00";
+  }
+
+  const normalizedDigits = digits.padStart(3, "0");
+  const integerPart = normalizedDigits.slice(0, -2);
+  const fractionPart = normalizedDigits.slice(-2);
+
+  return `${formatIntegerGroup(integerPart)},${fractionPart}`;
+}
+
+function formatWeightInput(value: string) {
+  const digits = value.replace(/\D/g, "");
+
+  if (digits.length === 0) {
+    return "0,0";
+  }
+
+  const clampedDigits = Number(digits) > 1000 ? "1000" : digits;
+  const normalizedDigits = clampedDigits.padStart(2, "0");
+  const integerPart = normalizedDigits.slice(0, -1);
+  const fractionPart = normalizedDigits.slice(-1);
+
+  return `${formatIntegerGroup(integerPart)},${fractionPart}`;
+}
+
+function formatHeightInput(value: string) {
+  return value.replace(/\D/g, "").slice(0, 3);
+}
+
 function sanitizeCityInput(value: string) {
   return value
     .replace(/[^A-Za-zÀ-ÿ' -]/g, "")
@@ -985,7 +1032,18 @@ export function AnnouncementTab({
               errorMessage={characteristicsError}
               isShaking={isCharacteristicsShaking}
               onUpdate={(field, value) => {
-                const sanitizedValue = field === "height" || field === "weight" ? sanitizeNumericInput(value, 3) : value;
+                const sanitizedValue = field === "height"
+                  ? formatHeightInput(value)
+                  : field === "weight"
+                    ? (() => {
+                      const digits = value.replace(/\D/g, "");
+                      if (!digits) {
+                        return "";
+                      }
+
+                      return Number(digits) > 1000 ? "1000" : digits;
+                    })()
+                    : value;
 
                 setCharacteristicsInvalidFields((prev) => prev.filter((item) => item !== field));
                 setCharacteristicsError(null);
@@ -1013,7 +1071,7 @@ export function AnnouncementTab({
             <PricingSection
               pricing={form.pricing}
               onUpdate={(idx: number, field: string, value: string | number) => {
-                const next = form.pricing.map((p, i) => i === idx ? { ...p, [field]: field === "price" ? sanitizeNumericInput(String(value), 5) : value } : p);
+                const next = form.pricing.map((p, i) => i === idx ? { ...p, [field]: field === "price" ? String(value).replace(/\D/g, "") : value } : p);
                 updateField("pricing", next, { autoSave: false });
               }}
               onToggleDisabled={(idx: number) => {
@@ -1375,8 +1433,8 @@ function CharacteristicsSection({ characteristics: c, onUpdate, invalidFields, e
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         <FormSelect label="Gênero" value={c.gender} options={GENDER_OPTIONS} onChange={(v) => onUpdate("gender", v)} invalid={isInvalid("gender")} />
         <FormSelect label="Etnia" value={c.ethnicity} options={ETHNICITY_OPTIONS} onChange={(v) => onUpdate("ethnicity", v)} invalid={isInvalid("ethnicity")} />
-        <FormInput label="Altura (cm)" value={c.height} onChange={(v) => onUpdate("height", v)} placeholder="Ex: 170" invalid={isInvalid("height")} />
-        <FormInput label="Peso (kg)" value={c.weight} onChange={(v) => onUpdate("weight", v)} placeholder="Ex: 60" invalid={isInvalid("weight")} />
+        <FormInput label="Altura (cm)" value={formatHeightInput(c.height)} onChange={(v) => onUpdate("height", formatHeightInput(v))} placeholder="Ex: 170" invalid={isInvalid("height")} />
+        <FormInput label="Peso (kg)" value={formatWeightInput(c.weight)} onChange={(v) => onUpdate("weight", v)} placeholder="Ex: 60" invalid={isInvalid("weight")} />
         <FormSelect label="Cor do Cabelo" value={c.hairColor} options={HAIR_COLOR_OPTIONS} onChange={(v) => onUpdate("hairColor", v)} invalid={isInvalid("hairColor")} />
         <FormSelect label="Fumante" value={c.smoker} options={SMOKER_OPTIONS} onChange={(v) => onUpdate("smoker", v)} invalid={isInvalid("smoker")} />
       </div>
@@ -1427,9 +1485,9 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled }: { pricing: Arra
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={item.price}
+                      value={formatCurrencyInput(item.price)}
                       disabled={item.disabled && !isPrimary}
-                      onChange={(e) => onUpdate(idx, "price", sanitizeNumericInput(e.target.value, 5))}
+                      onChange={(e) => onUpdate(idx, "price", e.target.value)}
                       className={cn("w-full bg-transparent font-bold outline-none placeholder:text-zinc-300", item.disabled && !isPrimary ? "text-zinc-400" : "text-zinc-900")}
                       placeholder="0,00"
                     />
