@@ -1080,11 +1080,11 @@ function SectionCard({
         aria-expanded={isOpen}
         className="w-full p-5 sm:p-6 bg-zinc-50/50 border-b border-zinc-100 flex items-center justify-between gap-4 text-left cursor-pointer hover:bg-zinc-100/60 transition-colors"
       >
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-start gap-3 min-w-0">
           <div className={cn("p-2 rounded-lg shrink-0", dirty ? "text-amber-700 bg-amber-100" : "text-wine-700 bg-wine-50")}>{icon}</div>
-          <h3 className="text-lg sm:text-xl font-bold text-zinc-900 truncate">
-            {title}
-            {requiredAsterisk && <span className="text-red-600 ml-1">*</span>}
+          <h3 className="flex min-w-0 items-start gap-1 text-lg sm:text-xl font-bold text-zinc-900">
+            <span className="min-w-0 truncate">{title}</span>
+            {requiredAsterisk && <span className="mt-0.5 shrink-0 text-red-600" aria-hidden="true">*</span>}
           </h3>
         </div>
         <span className="h-8 w-8 rounded-full border border-zinc-200 bg-white text-zinc-600 flex items-center justify-center shrink-0" aria-hidden="true">
