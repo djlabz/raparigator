@@ -131,26 +131,10 @@ function buildInitialState(ad: AdPreview): ProfileFormState {
     return { ...defaultItem, price: String(match.price), disabled: false };
   });
 
-  const normalizedAdServices = new Set((ad.services ?? []).map((service) =>
-    service
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .trim(),
-  ));
-
-  const services = defaultServices.map((defaultService) => {
-    const normalizedDefaultService = defaultService.label
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .trim();
-
-    return {
-      ...defaultService,
-      selected: normalizedAdServices.has(normalizedDefaultService),
-    };
-  });
+  const services = defaultServices.map((defaultService) => ({
+    ...defaultService,
+    selected: false,
+  }));
 
   const initialLocationAddress: LocationAddress = {
     id: createLocationId(),
@@ -189,28 +173,43 @@ function buildInitialState(ad: AdPreview): ProfileFormState {
 }
 
 function calculateProfileScore(state: ProfileFormState): ProfileScore {
-  // Photos (0-25): 3+ photos = 25, 2 = 18, 1 = 10, 0 = 0
-  const photosScore = state.images.length >= 3 ? 25 : state.images.length === 2 ? 18 : state.images.length === 1 ? 10 : 0;
+  // Photos (0-15): 3+ photos = 15, 2 = 11, 1 = 6, 0 = 0
+  const photosScore = state.images.length >= 3 ? 15 : state.images.length === 2 ? 11 : state.images.length === 1 ? 6 : 0;
 
-  // Description (0-20): has both short + long = 20, only short = 10, only long = 12, none = 0
-  const hasShort = state.shortDescription.trim().length > 0;
-  const hasLong = state.description.trim().length > 10;
-  const descriptionScore = hasShort && hasLong ? 20 : hasShort ? 10 : hasLong ? 12 : 0;
+  // Characteristics (0-20): all visible fields filled = 20
+  const hasCharacteristics = [
+    state.characteristics.gender,
+    state.characteristics.ethnicity,
+    state.characteristics.height,
+    state.characteristics.weight,
+    state.characteristics.hairColor,
+    state.characteristics.smoker,
+  ].every((value) => value.trim().length > 0 && value !== "Selecionar");
+  const characteristicsScore = hasCharacteristics ? 20 : 0;
 
-  // Pricing (0-25): at least 2 prices defined = 25, 1 = 12, 0 = 0
+  // Pricing (0-20): at least one active price defined = 20, none = 0
   const definedPrices = state.pricing.filter((p) => !p.disabled && p.price.trim().length > 0).length;
-  const pricingScore = definedPrices >= 2 ? 25 : definedPrices === 1 ? 12 : 0;
+  const pricingScore = definedPrices >= 1 ? 20 : 0;
 
-  // Services (0-15): at least 3 selected = 15, 2 = 10, 1 = 5, 0 = 0
-  const selectedServices = state.services.filter((s) => s.selected).length;
-  const servicesScore = selectedServices >= 3 ? 15 : selectedServices === 2 ? 10 : selectedServices === 1 ? 5 : 0;
-
-  // Location (0-15): active address + state/city = 15, partial = 8, none = 0
+  // Location (0-15): active address + state/city = 15, partial = 7, none = 0
   const hasLocation = state.locationState.trim().length > 0 && state.locationCity.trim().length > 0;
   const hasActiveAddress = state.locationAddresses.some((address) => address.active);
-  const locationScore = hasLocation && hasActiveAddress ? 15 : hasLocation || hasActiveAddress ? 8 : 0;
+  const locationScore = hasLocation && hasActiveAddress ? 15 : hasLocation || hasActiveAddress ? 7 : 0;
 
-  const total = photosScore + descriptionScore + pricingScore + servicesScore + locationScore;
+  // Description (0-15): short + long = 15, only one filled = 8, none = 0
+  const hasShort = state.shortDescription.trim().length > 0;
+  const hasLong = state.description.trim().length > 10;
+  const descriptionScore = hasShort && hasLong ? 15 : hasShort || hasLong ? 8 : 0;
+
+  // Services (0-10): at least 1 selected = 10, none = 0
+  const selectedServices = state.services.filter((s) => s.selected).length;
+  const servicesScore = selectedServices > 0 ? 10 : 0;
+
+  // Availability (0-5): public schedule visible + at least one enabled day = 5, partial = 2, none = 0
+  const hasAvailableDays = state.availability.some((day) => day.enabled);
+  const availabilityScore = state.showAvailability && hasAvailableDays ? 5 : state.showAvailability || hasAvailableDays ? 2 : 0;
+
+  const total = photosScore + characteristicsScore + pricingScore + locationScore + descriptionScore + servicesScore + availabilityScore;
 
   return {
     percentage: Math.min(total, 100),
