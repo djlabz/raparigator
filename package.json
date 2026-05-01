@@ -11,6 +11,7 @@
     "share": "npx cloudflared tunnel --url http://localhost:3000"
   },
   "dependencies": {
+    "lucide-react": "^1.12.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3"

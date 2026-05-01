@@ -66,19 +66,18 @@ const defaultServices: ServiceOption[] = [
   { label: "Massagens", selected: false },
   { label: "Namorada Fake", selected: false },
   { label: "Podolatria", selected: false },
-  { label: "Sexo Anal com preservativo", selected: false },
   { label: "Squirt", selected: false },
   { label: "Submissão", selected: false },
   { label: "Viagens", selected: false },
 ];
 
 const defaultPricing: PricingItem[] = [
-  { label: "15 min", price: "", disabled: true, billingType: "hourly" },
-  { label: "30 min", price: "", disabled: true, billingType: "hourly" },
   { label: "1 hora", price: "300", disabled: false, billingType: "hourly" },
-  { label: "Pernoite", price: "", disabled: true, billingType: "fixed" },
+  { label: "30 min", price: "", disabled: true, billingType: "hourly" },
+  { label: "15 min", price: "", disabled: true, billingType: "hourly" },
   { label: "Diária", price: "", disabled: true, billingType: "fixed" },
-  { label: "Adição de sexo anal", price: "", disabled: true, billingType: "fixed" },
+  { label: "Pernoite", price: "", disabled: true, billingType: "fixed" },
+  { label: "Sexo anal com preservativo", price: "", disabled: true, billingType: "fixed" },
 ];
 
 const defaultVenues: LocationVenue[] = [
@@ -100,7 +99,20 @@ const defaultAvailability: AvailabilityDay[] = [
 
 function buildInitialState(ad: AdPreview): ProfileFormState {
   const pricing = defaultPricing.map((defaultItem) => {
-    const match = ad.pricingTable?.find((p) => p.label === defaultItem.label);
+    const match = ad.pricingTable?.find((p) => {
+      const normalizedDefaultLabel = defaultItem.label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+      const normalizedLabel = p.label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+      if (normalizedLabel === normalizedDefaultLabel) {
+        return true;
+      }
+
+      if (defaultItem.label === "Sexo anal com preservativo") {
+        return normalizedLabel === "adicao de sexo anal";
+      }
+
+      return false;
+    });
 
     // Regra de carregamento inicial solicitada:
     // 1 hora deve sempre iniciar com 300 ativo, independentemente do valor salvo anterior.

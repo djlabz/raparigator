@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
+import { BadgeDollarSign, Clock3, Edit, Image as ImageIcon, Lock } from "lucide-react";
 import type { AdPreview, AdStatus, AvailabilityDay, LocationAddress, PricingItem, ProfileCharacteristics, ProfileFormState, ServiceOption } from "./types";
 import { useProfileForm } from "./use-profile-form";
 
@@ -69,17 +70,6 @@ function sanitizeCityInput(value: string) {
     .replace(/[^A-Za-zÀ-ÿ' -]/g, "")
     .replace(/\s{2,}/g, " ")
     .slice(0, 60);
-}
-
-function sanitizeServiceNameInput(value: string) {
-  return value
-    .replace(/[^A-Za-zÀ-ÿ0-9'.,()\- ]/g, "")
-    .replace(/\s{2,}/g, " ")
-    .slice(0, 60);
-}
-
-function sortServicesAlphabetically(services: ServiceOption[]) {
-  return [...services].sort((a, b) => a.label.localeCompare(b.label, "pt-BR", { sensitivity: "base" }));
 }
 
 function resolvePricingBillingType(item: PricingItem) {
@@ -260,6 +250,8 @@ export function AnnouncementTab({
   const [publishErrorItems, setPublishErrorItems] = useState<PublishWarningItem[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
   const [availabilityCloseSignal, setAvailabilityCloseSignal] = useState(0);
+  const [isGallerySectionOpen, setIsGallerySectionOpen] = useState(true);
+  const [isTipsModalOpen, setIsTipsModalOpen] = useState(false);
   const [characteristicsError, setCharacteristicsError] = useState<string | null>(null);
   const [characteristicsInvalidFields, setCharacteristicsInvalidFields] = useState<Array<keyof ProfileCharacteristics>>([]);
   const [isCharacteristicsShaking, setIsCharacteristicsShaking] = useState(false);
@@ -652,6 +644,11 @@ export function AnnouncementTab({
       setCharacteristicsError(null);
     }
 
+    if (section === "pricing") {
+      const savedPricing = JSON.parse(savedSectionSnapshots.pricing) as PricingItem[];
+      updateField("pricing", savedPricing, { autoSave: false });
+    }
+
     if (section === "location") {
       const savedLocation = JSON.parse(savedSectionSnapshots.location) as Pick<ProfileFormState, "locationState" | "locationCity" | "acceptsTravel" | "locationAddresses">;
       updateForm((current) => ({
@@ -744,6 +741,7 @@ export function AnnouncementTab({
                   </ol>
                 ) : null}
               </div>
+
             ) : null}
           </div>
           <div className="flex gap-2 w-full sm:w-auto sm:gap-3">
@@ -760,15 +758,6 @@ export function AnnouncementTab({
           </div>
         </div>
 
-        {/* Bento Grid Gallery */}
-        <BentoPhotoGallery
-          images={form.images}
-          onPhotoClick={(idx) => setActivePhotoIndex(idx)}
-          onAddPhoto={() => {
-            const placeholder = `https://images.unsplash.com/photo-${Date.now()}?w=800&auto=format&fit=crop`;
-            updateField("images", [...form.images, placeholder], { autoSave: false });
-          }}
-        />
       </section>
 
       {/* Fullscreen Photo Modal */}
@@ -819,8 +808,8 @@ export function AnnouncementTab({
       {/* ── 2. Conteúdo e Informações (Split Layout) ─────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-        {/* Coluna Esquerda: Status & Dicas */}
-        <div className="lg:col-span-4 space-y-6">
+        {/* Coluna Lateral (Direita no Desktop, Topo no Mobile) */}
+        <div className="lg:col-span-4 space-y-6 order-1 lg:order-2">
           <Card className="p-5 sm:p-6 bg-white shadow-sm border-zinc-200">
             <div className="flex justify-between items-center mb-4">
               <span className="text-xs font-black uppercase tracking-widest text-zinc-900">Status do Anúncio</span>
@@ -853,22 +842,40 @@ export function AnnouncementTab({
               <h3 className="text-lg font-bold mb-3 relative z-10 flex items-center gap-2">
                 <span className="text-amber-400">💡</span> Dicas Inteligentes
               </h3>
-              <p className="text-zinc-400 text-sm leading-relaxed relative z-10 mb-4">
+              <p className="text-zinc-400 text-sm leading-relaxed relative z-10 mb-4 line-clamp-3">
                 {tips[0].text}
               </p>
-              <button className="text-xs font-black uppercase tracking-widest text-amber-400 hover:text-white transition-colors">Ver todas</button>
+              <button onClick={() => setIsTipsModalOpen(true)} className="text-xs font-black uppercase tracking-widest text-amber-400 hover:text-white transition-colors">Ver todas</button>
             </div>
           )}
         </div>
 
-        {/* Coluna Direita: Campos de Edição */}
-        <div className="lg:col-span-8 space-y-8">
+        {/* Coluna Principal (Esquerda no Desktop, Baixo no Mobile) */}
+        <div className="lg:col-span-8 space-y-8 order-2 lg:order-1">
 
           {/* ================= SEÇÃO OBRIGATÓRIOS ================= */}
           <div className="flex items-center gap-3 border-b border-zinc-200 pb-2">
-            <div className="w-8 h-8 rounded-full bg-red-100 text-red-700 flex items-center justify-center font-bold">*</div>
+            <div className="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-black">*</div>
             <h2 className="text-xl font-bold text-zinc-900">Informações Obrigatórias</h2>
           </div>
+
+          {/* Galeria como SectionCard Expansível */}
+          <SectionCard
+            title="Galeria"
+            requiredAsterisk
+            open={isGallerySectionOpen}
+            onOpenChange={setIsGallerySectionOpen}
+            icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
+          >
+            <BentoPhotoGallery
+              images={form.images}
+              onPhotoClick={(idx) => setActivePhotoIndex(idx)}
+              onAddPhoto={() => {
+                const placeholder = `https://images.unsplash.com/photo-${Date.now()}?w=800&auto=format&fit=crop`;
+                updateField("images", [...form.images, placeholder], { autoSave: false });
+              }}
+            />
+          </SectionCard>
 
           <SectionCard sectionRef={(node) => { sectionRefs.current.characteristics = node; }} title="Características físicas" requiredAsterisk dirty={sectionDirtyState.characteristics} showSaveAction onSaveAction={() => saveSection("characteristics")} onCancelAction={() => cancelSectionChanges("characteristics")} saveDisabled={saveStatus === "saving"} open={isCharacteristicsSectionOpen} onOpenChange={setIsCharacteristicsSectionOpen} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}>
             <CharacteristicsSection
@@ -908,31 +915,8 @@ export function AnnouncementTab({
                 const next = form.pricing.map((p, i) => i === idx ? { ...p, [field]: field === "price" ? sanitizeNumericInput(String(value), 5) : value } : p);
                 updateField("pricing", next);
               }}
-              onEditItem={(idx: number, updates: Partial<PricingItem>) => {
-                const next = form.pricing.map((p, i) => {
-                  if (i !== idx) {
-                    return p;
-                  }
-
-                  return {
-                    ...p,
-                    ...updates,
-                    label: updates.label !== undefined ? sanitizeServiceNameInput(updates.label).trim() : p.label,
-                    price: updates.price !== undefined ? sanitizeNumericInput(String(updates.price), 5) : p.price,
-                  };
-                });
-                updateField("pricing", next);
-              }}
-              onDeleteItem={(idx: number) => {
-                const next = form.pricing.filter((_, i) => i !== idx);
-                updateField("pricing", next);
-              }}
               onToggleDisabled={(idx: number) => {
                 const next = form.pricing.map((p, i) => i === idx ? { ...p, disabled: !p.disabled } : p);
-                updateField("pricing", next);
-              }}
-              onAddCustom={(name: string, price: string | number, billingType: "hourly" | "fixed") => {
-                const next = [...form.pricing, { label: name, price: String(price), disabled: false, isCustom: true, billingType }];
                 updateField("pricing", next);
               }}
             />
@@ -969,20 +953,6 @@ export function AnnouncementTab({
           <SectionCard title="Serviços Oferecidos" icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}>
             <ServicesSection services={form.services} onToggle={(idx: number) => {
               const next = form.services.map((s, i) => i === idx ? { ...s, selected: !s.selected } : s);
-              updateField("services", next);
-            }} onAddCustom={(serviceName: string) => {
-              const normalizedTarget = normalizeText(serviceName);
-              const existingService = form.services.find((service) => normalizeText(service.label) === normalizedTarget);
-
-              if (existingService) {
-                const next = form.services.map((service) => normalizeText(service.label) === normalizedTarget
-                  ? { ...service, selected: true }
-                  : service);
-                updateField("services", sortServicesAlphabetically(next));
-                return;
-              }
-
-              const next = sortServicesAlphabetically([...form.services, { label: serviceName, selected: true }]);
               updateField("services", next);
             }} />
           </SectionCard>
@@ -1021,6 +991,48 @@ export function AnnouncementTab({
 
         </div>
       </div>
+
+      {/* Tips Modal */}
+      {isTipsModalOpen && (
+        <Modal open onClose={() => setIsTipsModalOpen(false)} title="Dicas Inteligentes para o seu Perfil" size="md">
+          <div className="space-y-6 pt-2">
+
+            {/* Bloco 1: Amber - Descrição */}
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <h4 className="font-bold text-amber-900 mb-2 flex items-center gap-2">
+                <Edit className="w-4 h-4" /> Descrição Irresistível
+              </h4>
+              <p className="text-sm text-amber-800 leading-relaxed">
+                No campo de descrição, evite escrever muito, seja breve quanto aos seus objetivos, a maioria das pessoas ao entrar em um perfil e ver muito texto não irá ler, ela preferirá ver fotos ou gatilhos que despertem seu interesse, como especialidades ou habilidades únicas.
+              </p>
+            </div>
+
+            {/* Bloco 2: Indigo - Imagem */}
+            <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+              <h4 className="font-bold text-indigo-900 mb-2 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" /> O Poder da Imagem
+              </h4>
+              <p className="text-sm text-indigo-800 leading-relaxed">
+                Um bom ensaio fotográfico não é apenas capricho, e sim transmitir uma ideia de exclusividade e garantir uma experiência única. Certifique-se de ter boa iluminação e mostrar diferentes ângulos que valorizem suas características.
+              </p>
+            </div>
+
+            {/* Bloco 3: Emerald - Valores */}
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+              <h4 className="font-bold text-emerald-900 mb-2 flex items-center gap-2">
+                <BadgeDollarSign className="w-4 h-4" /> Transparência nos Valores
+              </h4>
+              <p className="text-sm text-emerald-800 leading-relaxed">
+                Perfis com os valores preenchidos na tabela de preços convertem muito mais. O cliente prefere anúncios onde já saiba o valor esperado, descartando contatos casuais.
+              </p>
+            </div>
+
+            <button onClick={() => setIsTipsModalOpen(false)} className="w-full mt-4 bg-zinc-900 hover:bg-zinc-800 text-white font-bold py-3 rounded-xl transition-colors">
+              Entendi
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -1083,13 +1095,13 @@ function SectionCard({
         <div className="p-6 sm:p-8">
           {children}
           {showSaveAction && (
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-3">
               {dirty ? (
                 <button
                   type="button"
                   onClick={onCancelAction}
                   disabled={saveDisabled}
-                  className="inline-flex items-center justify-center rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-sm font-bold text-zinc-700 transition-all hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex w-full shrink-0 items-center justify-center whitespace-nowrap rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-sm font-bold text-zinc-700 transition-all hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
                 >
                   Cancelar alterações
                 </button>
@@ -1098,7 +1110,7 @@ function SectionCard({
                 type="button"
                 onClick={onSaveAction}
                 disabled={!dirty || saveDisabled}
-                className="inline-flex items-center justify-center rounded-lg bg-wine-700 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-wine-800 disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex w-full shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-wine-700 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-wine-800 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
               >
                 Salvar seção
               </button>
@@ -1246,248 +1258,62 @@ function CharacteristicsSection({ characteristics: c, onUpdate, invalidFields, e
   )
 }
 
-function PricingSection({ pricing, onUpdate, onEditItem, onDeleteItem, onToggleDisabled, onAddCustom }: { pricing: Array<PricingItem & { isCustom?: boolean }>; onUpdate: (idx: number, field: string, value: string | number) => void; onEditItem: (idx: number, updates: Partial<PricingItem>) => void; onDeleteItem: (idx: number) => void; onToggleDisabled: (idx: number) => void; onAddCustom: (name: string, price: string | number, billingType: "hourly" | "fixed") => void }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [customName, setCustomName] = useState("");
-  const [customPrice, setCustomPrice] = useState("");
-  const [customBillingType, setCustomBillingType] = useState<"hourly" | "fixed">("hourly");
-  const [showSelectionWarning, setShowSelectionWarning] = useState(false);
-  const [isShaking, setIsShaking] = useState(false);
-
-  useEffect(() => {
-    if (!showSelectionWarning) {
-      return;
-    }
-
-    const timeoutId = setTimeout(() => {
-      setShowSelectionWarning(false);
-    }, GROUP_WARNING_AUTO_DISMISS_MS);
-
-    return () => clearTimeout(timeoutId);
-  }, [showSelectionWarning]);
-
-  const resetModalState = () => {
-    setEditingIndex(null);
-    setCustomName("");
-    setCustomPrice("");
-    setCustomBillingType("hourly");
-  };
-
-  const handleOpenCreate = () => {
-    resetModalState();
-    setIsModalOpen(true);
-  };
-
-  const handleToggleService = (idx: number) => {
-    const enabledCount = pricing.filter((item) => !item.disabled).length;
-    const isCurrentEnabled = !pricing[idx].disabled;
-
-    if (isCurrentEnabled && enabledCount === 1) {
-      setShowSelectionWarning(true);
-      setIsShaking(true);
-      setTimeout(() => setIsShaking(false), 420);
-      return;
-    }
-
-    setShowSelectionWarning(false);
-    onToggleDisabled(idx);
-  };
-
-  const handleOpenEdit = (idx: number) => {
-    const item = pricing[idx];
-    if (!item) {
-      return;
-    }
-
-    setEditingIndex(idx);
-    setCustomName(item.label);
-    setCustomPrice(item.price);
-    setCustomBillingType(resolvePricingBillingType(item));
-    setIsModalOpen(true);
-  };
-
-  const handleSavePricingItem = () => {
-    if (!customName.trim() || !customPrice.trim()) {
-      return;
-    }
-
-    if (editingIndex === null) {
-      onAddCustom(customName, customPrice, customBillingType);
-    } else {
-      onEditItem(editingIndex, {
-        label: customName,
-        price: customPrice,
-        billingType: customBillingType,
-      });
-    }
-
-    setIsModalOpen(false);
-    resetModalState();
-    setShowSelectionWarning(false);
-  };
-
-  const handleDeleteItem = (idx: number) => {
-    if (pricing.length <= 1) {
-      setShowSelectionWarning(true);
-      setIsShaking(true);
-      setTimeout(() => setIsShaking(false), 420);
-      return;
-    }
-
-    const enabledCount = pricing.filter((item) => !item.disabled).length;
-    const removingEnabled = !pricing[idx].disabled;
-
-    if (removingEnabled && enabledCount === 1) {
-      setShowSelectionWarning(true);
-      setIsShaking(true);
-      setTimeout(() => setIsShaking(false), 420);
-      return;
-    }
-
-    onDeleteItem(idx);
-    setShowSelectionWarning(false);
-  };
-
+function PricingSection({ pricing, onUpdate, onToggleDisabled }: { pricing: Array<PricingItem & { isCustom?: boolean }>; onUpdate: (idx: number, field: string, value: string | number) => void; onToggleDisabled: (idx: number) => void }) {
   return (
     <div className="space-y-4">
-      <div className="space-y-4" style={isShaking ? { animation: "pricing-shake 420ms ease-in-out" } : undefined}>
+      <div className="space-y-4">
         {pricing.map((item, idx: number) => {
-          const itemKey = `${item.label}-${item.billingType ?? "none"}-${item.isCustom ? "custom" : "base"}`;
+          const isPrimary = idx === 0;
+          const billingType = resolvePricingBillingType(item);
+
           return (
-            <div key={itemKey} className={cn("rounded-xl border p-4 sm:p-5 transition-all", item.disabled ? "bg-zinc-50 border-zinc-200" : "bg-white border-zinc-200 shadow-sm")}>
-              <div className="flex items-start justify-between gap-3">
+            <div key={`${item.label}-${billingType}-${idx}`} className={cn("rounded-xl border p-4 sm:p-5 transition-all", item.disabled && !isPrimary ? "bg-zinc-50 border-zinc-200" : "bg-white border-zinc-200 shadow-sm")}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div className="flex min-w-0 items-center gap-4">
                   <div className="w-10 h-10 bg-zinc-50 rounded-lg flex items-center justify-center border border-zinc-200 shrink-0">
-                    {resolvePricingBillingType(item) === "hourly" ? (
-                      <svg className="w-5 h-5 text-wine-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    {isPrimary ? (
+                      <Lock className="h-5 w-5 text-wine-700" />
+                    ) : billingType === "hourly" ? (
+                      <Clock3 className="h-5 w-5 text-wine-700" />
                     ) : (
-                      <svg className="w-5 h-5 text-wine-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a5 5 0 00-10 0v2m-1 0h12a1 1 0 011 1v10a1 1 0 01-1 1H6a1 1 0 01-1-1V10a1 1 0 011-1z" /></svg>
+                      <BadgeDollarSign className="h-5 w-5 text-wine-700" />
                     )}
                   </div>
-                  <div className="min-w-0">
-                    <p className="truncate font-bold text-zinc-900">{item.label}</p>
-                    <p className="text-xs text-zinc-500">{item.isCustom ? "Serviço personalizado" : "Serviço padrão"}</p>
-                    <p className="text-[11px] text-zinc-500">{resolvePricingBillingType(item) === "hourly" ? "Cobrança por hora" : "Valor fixo"}</p>
+                  <p className="truncate font-bold text-zinc-900">{item.label}</p>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2 sm:gap-2">
+                  <div className="flex min-w-0 flex-1 items-center bg-zinc-50 rounded-lg px-3 py-2 border border-zinc-200 focus-within:border-wine-500 focus-within:ring-1 focus-within:ring-wine-500">
+                    <span className="text-sm font-bold text-zinc-400 mr-2">R$</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={item.price}
+                      disabled={item.disabled && !isPrimary}
+                      onChange={(e) => onUpdate(idx, "price", sanitizeNumericInput(e.target.value, 5))}
+                      className={cn("w-full bg-transparent font-bold outline-none placeholder:text-zinc-300", item.disabled && !isPrimary ? "text-zinc-400" : "text-zinc-900")}
+                      placeholder="0,00"
+                    />
                   </div>
-                </div>
 
-                <div className="flex shrink-0 items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEdit(idx)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-amber-200 bg-linear-to-b from-white to-amber-50 text-amber-600 shadow-sm transition hover:from-amber-50 hover:to-amber-100"
-                    aria-label="Editar serviço"
-                    title="Editar"
-                  >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.5a2.121 2.121 0 113 3L8 18l-4 1 1-4L16.5 3.5z" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteItem(idx)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-rose-200 bg-linear-to-b from-white to-rose-50 text-rose-600 shadow-sm transition hover:from-rose-50 hover:to-rose-100"
-                    aria-label="Excluir serviço"
-                    title="Excluir"
-                  >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 6V4h8v2" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 6l-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 11v6M14 11v6" />
-                    </svg>
-                  </button>
+                  {isPrimary ? (
+                    <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-wine-200 bg-wine-50 text-wine-700" aria-label="Serviço bloqueado">
+                      <Lock className="h-4 w-4" />
+                    </div>
+                  ) : (
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input type="checkbox" checked={!item.disabled} onChange={() => onToggleDisabled(idx)} className="sr-only peer" />
+                      <div className="w-11 h-6 bg-zinc-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wine-700"></div>
+                    </label>
+                  )}
                 </div>
-              </div>
-
-              <div className="mt-3 flex items-center justify-end gap-3">
-                <div className="flex items-center bg-zinc-50 rounded-lg px-3 py-2 border border-zinc-200 focus-within:border-wine-500 focus-within:ring-1 focus-within:ring-wine-500 w-full max-w-52.5">
-                  <span className="text-sm font-bold text-zinc-400 mr-2">R$</span>
-                  <input type="text" inputMode="numeric" value={item.price} disabled={item.disabled} onChange={(e) => onUpdate(idx, "price", sanitizeNumericInput(e.target.value, 5))} className={cn("w-full bg-transparent font-bold outline-none placeholder:text-zinc-300", item.disabled ? "text-zinc-400" : "text-zinc-900")} placeholder="0,00" />
-                </div>
-
-                <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                  <input type="checkbox" checked={!item.disabled} onChange={() => handleToggleService(idx)} className="sr-only peer" />
-                  <div className="w-11 h-6 bg-zinc-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wine-700"></div>
-                </label>
               </div>
             </div>
-          )
+          );
         })}
       </div>
-
-      {showSelectionWarning && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
-          Ao menos um serviço deve ser selecionado!
-        </p>
-      )}
-
-      <button onClick={handleOpenCreate} className="w-full py-4 mt-2 border-2 border-dashed border-zinc-300 rounded-xl text-zinc-600 font-bold hover:text-wine-700 hover:border-wine-700 hover:bg-wine-50 transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-wine-500/30">
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-        CRIAR SERVIÇO CUSTOMIZADO
-      </button>
-
-      <Modal
-        open={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          resetModalState();
-        }}
-        title={editingIndex === null ? "Adicionar Serviço" : "Editar Serviço"}
-      >
-        <div className="space-y-4 pt-2">
-          <FormInput label="Nome do serviço" value={customName} onChange={(value) => setCustomName(sanitizeServiceNameInput(value))} placeholder="Ex: Acompanhamento em Evento" />
-          <div>
-            <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Tipo de cobrança</label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setCustomBillingType("hourly")}
-                className={cn("rounded-xl border px-3 py-2 text-sm font-bold transition", customBillingType === "hourly" ? "border-wine-700 bg-wine-50 text-wine-700" : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-300")}
-              >
-                Por hora
-              </button>
-              <button
-                type="button"
-                onClick={() => setCustomBillingType("fixed")}
-                className={cn("rounded-xl border px-3 py-2 text-sm font-bold transition", customBillingType === "fixed" ? "border-wine-700 bg-wine-50 text-wine-700" : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-300")}
-              >
-                Fixo
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Valor sugerido (R$)</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={customPrice}
-              onChange={(e) => setCustomPrice(e.target.value.replace(/\D/g, ""))}
-              placeholder="Ex: 500"
-              className="w-full bg-zinc-50/50 border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-wine-500 focus:border-wine-500 focus:bg-white outline-none transition-all"
-            />
-          </div>
-          <button onClick={handleSavePricingItem} className="w-full mt-4 bg-wine-700 hover:bg-wine-800 text-white font-bold py-3 rounded-xl transition-colors">
-            {editingIndex === null ? "Adicionar e Ativar" : "Salvar alterações"}
-          </button>
-        </div>
-      </Modal>
-
-      <style jsx>{`
-        @keyframes pricing-shake {
-          0% { transform: translateX(0); }
-          20% { transform: translateX(-8px); }
-          40% { transform: translateX(8px); }
-          60% { transform: translateX(-6px); }
-          80% { transform: translateX(6px); }
-          100% { transform: translateX(0); }
-        }
-      `}</style>
     </div>
-  )
+  );
 }
 
 function LocationSection({
@@ -1924,50 +1750,20 @@ function DescriptionSection({ shortDescription, description, onShortDescChange, 
   )
 }
 
-function ServicesSection({ services, onToggle, onAddCustom }: { services: ServiceOption[]; onToggle: (idx: number) => void; onAddCustom: (serviceName: string) => void }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [customName, setCustomName] = useState("");
-
-  const handleSaveCustomService = () => {
-    const cleanName = sanitizeServiceNameInput(customName).trim();
-    if (!cleanName) {
-      return;
-    }
-
-    onAddCustom(cleanName);
-    setCustomName("");
-    setIsModalOpen(false);
-  };
-
+function ServicesSection({ services, onToggle }: { services: ServiceOption[]; onToggle: (idx: number) => void }) {
   return (
-    <>
-      <div className="max-h-84 overflow-y-auto pr-1">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {services.map((svc, idx: number) => (
-            <button key={svc.label} onClick={() => onToggle(idx)} className={cn("flex items-center justify-between p-4 rounded-xl border text-left transition-all", svc.selected ? "border-wine-500 bg-wine-50/50 shadow-sm" : "border-zinc-200 bg-zinc-50/50 hover:bg-zinc-100")}>
-              <span className={cn("text-sm font-bold", svc.selected ? "text-wine-900" : "text-zinc-600")}>{svc.label}</span>
-              <div className={cn("w-5 h-5 rounded-md border flex items-center justify-center transition-colors", svc.selected ? "bg-wine-700 border-wine-700 text-white" : "border-zinc-300 bg-white")}>
-                {svc.selected && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <button onClick={() => setIsModalOpen(true)} className="w-full py-4 mt-2 border-2 border-dashed border-zinc-300 rounded-xl text-zinc-600 font-bold hover:text-wine-700 hover:border-wine-700 hover:bg-wine-50 transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-wine-500/30">
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-        CRIAR SERVIÇO CUSTOMIZADO
-      </button>
-
-      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} title="Adicionar Serviço">
-        <div className="space-y-4 pt-2">
-          <FormInput label="Nome do serviço" value={customName} onChange={(value) => setCustomName(sanitizeServiceNameInput(value))} placeholder="Ex: Atendimento corporativo avançado" />
-          <button onClick={handleSaveCustomService} className="w-full mt-4 bg-wine-700 hover:bg-wine-800 text-white font-bold py-3 rounded-xl transition-colors">
-            Adicionar e Ativar
+    <div className="max-h-84 overflow-y-auto pr-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {services.map((svc, idx: number) => (
+          <button key={svc.label} onClick={() => onToggle(idx)} className={cn("flex items-center justify-between p-4 rounded-xl border text-left transition-all", svc.selected ? "border-wine-500 bg-wine-50/50 shadow-sm" : "border-zinc-200 bg-zinc-50/50 hover:bg-zinc-100")}>
+            <span className={cn("text-sm font-bold", svc.selected ? "text-wine-900" : "text-zinc-600")}>{svc.label}</span>
+            <div className={cn("w-5 h-5 rounded-md border flex items-center justify-center transition-colors", svc.selected ? "bg-wine-700 border-wine-700 text-white" : "border-zinc-300 bg-white")}>
+              {svc.selected && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+            </div>
           </button>
-        </div>
-      </Modal>
-    </>
+        ))}
+      </div>
+    </div>
   )
 }
 
