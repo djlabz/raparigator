@@ -95,17 +95,25 @@ export function BottomNav({ items }: BottomNavProps) {
   }
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 w-full border-t border-zinc-200 bg-white/95 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden" aria-label="Navegação principal">
-      <ul className="grid gap-1" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+    <nav
+      className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-[280px] rounded-full bg-white/70 backdrop-blur-xl border border-zinc-200/50 shadow-2xl md:hidden"
+      aria-label="Navegação principal"
+    >
+      <ul className="flex items-center justify-around gap-0.5 px-2 py-2">
         {items.map((item) => {
           const active = pathname.startsWith(item.href);
           return (
-            <li key={item.href}>
+            <li key={item.href} className="flex-1">
               <Link
                 href={item.href}
                 aria-label={item.label}
                 title={item.label}
-                className={cn("flex h-12 min-w-0 items-center justify-center rounded-xl px-2 transition-colors", active ? "bg-wine-700 text-white shadow-sm" : "text-zinc-700 hover:bg-zinc-100")}
+                className={cn(
+                  "flex h-9 w-full items-center justify-center rounded-full transition-all duration-300",
+                  active
+                    ? "bg-wine-700 text-white shadow-md scale-105"
+                    : "text-zinc-600 hover:bg-zinc-100/50"
+                )}
                 style={active ? { color: "#fff" } : undefined}
               >
                 {getNavIcon(item.label, item.href, active)}
