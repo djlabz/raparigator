@@ -281,8 +281,6 @@ export function useProfileForm(ad: AdPreview) {
     formRef.current = form;
   }, [form]);
 
-  const hasUnsavedChanges = serializeProfileForm(form) !== lastSavedSnapshotRef.current;
-
   // Profile score
   const score = calculateProfileScore(form);
 
@@ -387,6 +385,11 @@ export function useProfileForm(ad: AdPreview) {
     },
     [scheduleSave],
   );
+
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  useEffect(() => {
+    setHasUnsavedChanges(serializeProfileForm(form) !== lastSavedSnapshotRef.current);
+  }, [form]);
 
   return {
     form,

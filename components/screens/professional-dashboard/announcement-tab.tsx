@@ -9,6 +9,11 @@ import { cn } from "@/lib/utils";
 import { BadgeDollarSign, Clock3, Edit, Image as ImageIcon, Lock } from "lucide-react";
 import type { AdPreview, AdStatus, AvailabilityDay, LocationAddress, PricingItem, ProfileCharacteristics, ProfileFormState, ServiceOption } from "./types";
 import { useProfileForm } from "./use-profile-form";
+import { ImageCropperModal } from "@/components/ui/image-cropper-modal";
+import { ImageBlurModal } from "@/components/ui/image-blur-modal";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Switch } from "@/components/ui/switch";
+import { getCroppedImg } from "@/lib/cropImage";
 
 // ─── Options para selects ─────────────────────────────────────────
 const SELECT_PLACEHOLDER = "Selecionar";
@@ -66,11 +71,6 @@ function isSelectUnselected(value: string) {
 function sanitizeNumericInput(value: string, maxLength = 4) {
   return value.replace(/\D/g, "").slice(0, maxLength);
 }
-
-const currencyInputFormatter = new Intl.NumberFormat("pt-BR", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
 
 function formatIntegerGroup(value: string) {
   const normalized = value.replace(/^0+(?=\d)/, "");
@@ -296,6 +296,7 @@ export function AnnouncementTab({
 
   // Estado para Modal de Fotos
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
+  const [blurHistoryMap, setBlurHistoryMap] = useState<Record<string, string>>({});
   const visibilityStatus: VisibilityStatus = status === "Pausado" ? "Pausado" : "Ativo";
   const [publishError, setPublishError] = useState<string | null>(null);
   const [publishErrorItems, setPublishErrorItems] = useState<PublishWarningItem[]>([]);
@@ -915,6 +916,101 @@ export function AnnouncementTab({
           activeIndex={activePhotoIndex}
           onClose={() => setActivePhotoIndex(null)}
           onChange={(idx) => setActivePhotoIndex(idx)}
+          onSetCover={(idx, croppedSrc) => {
+            updateForm(current => {
+              const newImages = [...current.images];
+              const imgToMove = croppedSrc || newImages[idx];
+              newImages.splice(idx, 1);
+              newImages.unshift(imgToMove);
+              return { ...current, images: newImages };
+            });
+            setActivePhotoIndex(0);
+          }}
+          onUpdateImage={(idx, blurredSrc) => {
+            const currentSrc = form.images[idx];
+            const originalSrc = blurHistoryMap[currentSrc] || currentSrc;
+
+            if (blurHistoryMap[currentSrc] && currentSrc.startsWith('blob:')) {
+              URL.revokeObjectURL(currentSrc);
+            }
+
+            setBlurHistoryMap(prev => {
+              const next = { ...prev };
+              if (blurHistoryMap[currentSrc]) {
+                delete next[currentSrc];
+              }
+              next[blurredSrc] = originalSrc;
+              return next;
+            });
+
+            updateForm(current => {
+              const newImages = [...current.images];
+              newImages[idx] = blurredSrc;
+              return { ...current, images: newImages };
+            });
+          }}
+          canRevertBlur={!!blurHistoryMap[form.images[activePhotoIndex]]}
+          onRevertBlur={(idx) => {
+            const currentSrc = form.images[idx];
+            const originalSrc = blurHistoryMap[currentSrc];
+            if (originalSrc) {
+              if (currentSrc.startsWith('blob:')) {
+                URL.revokeObjectURL(currentSrc);
+              }
+              setBlurHistoryMap(prev => {
+                const next = { ...prev };
+                delete next[currentSrc];
+                return next;
+              });
+              updateForm(current => {
+                const newImages = [...current.images];
+                newImages[idx] = originalSrc;
+                return { ...current, images: newImages };
+              });
+            }
+          }}
+          onDelete={(idx) => {
+            updateForm(current => {
+              const newImages = [...current.images];
+              newImages.splice(idx, 1);
+              return { ...current, images: newImages };
+            });
+            if (form.images.length === 1) {
+              setActivePhotoIndex(null);
+            } else if (idx === form.images.length - 1) {
+              setActivePhotoIndex(idx - 1);
+            }
+          }}
+          onAddPhoto={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.multiple = true;
+            input.accept = '.webp,.jpg,.jpeg,.avif,.mp4,.mov,.webm,image/webp,image/jpeg,image/avif,video/mp4,video/quicktime,video/webm';
+            input.onchange = (e) => {
+              const files = Array.from((e.target as HTMLInputElement).files || []);
+              if (!files.length) return;
+
+              let currentVideos = form.images.filter(img => img.startsWith('data:video')).length;
+              let currentPhotos = form.images.length - currentVideos;
+
+              files.forEach(file => {
+                const isVid = file.type.startsWith('video/');
+                if (isVid && currentVideos >= 5) return;
+                if (!isVid && currentPhotos >= 15) return;
+
+                if (isVid) currentVideos++;
+                else currentPhotos++;
+
+                const reader = new FileReader();
+                reader.onload = (readerEvent) => {
+                  const result = readerEvent.target?.result as string;
+                  updateForm(current => ({ ...current, images: [...current.images, result] }), { autoSave: false });
+                };
+                reader.readAsDataURL(file);
+              });
+            };
+            input.click();
+          }}
         />
       )}
 
@@ -1018,9 +1114,42 @@ export function AnnouncementTab({
             <BentoPhotoGallery
               images={form.images}
               onPhotoClick={(idx) => setActivePhotoIndex(idx)}
+              onDeletePhoto={(idx) => {
+                updateForm(current => {
+                  const newImages = [...current.images];
+                  newImages.splice(idx, 1);
+                  return { ...current, images: newImages };
+                });
+              }}
               onAddPhoto={() => {
-                const placeholder = `https://images.unsplash.com/photo-${Date.now()}?w=800&auto=format&fit=crop`;
-                updateField("images", [...form.images, placeholder], { autoSave: false });
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.multiple = true;
+                input.accept = '.webp,.jpg,.jpeg,.avif,.mp4,.mov,.webm,image/webp,image/jpeg,image/avif,video/mp4,video/quicktime,video/webm';
+                input.onchange = (e) => {
+                  const files = Array.from((e.target as HTMLInputElement).files || []);
+                  if (!files.length) return;
+
+                  let currentVideos = form.images.filter(img => img.startsWith('data:video')).length;
+                  let currentPhotos = form.images.length - currentVideos;
+
+                  files.forEach(file => {
+                    const isVid = file.type.startsWith('video/');
+                    if (isVid && currentVideos >= 5) return;
+                    if (!isVid && currentPhotos >= 15) return;
+
+                    if (isVid) currentVideos++;
+                    else currentPhotos++;
+
+                    const reader = new FileReader();
+                    reader.onload = (readerEvent) => {
+                      const result = readerEvent.target?.result as string;
+                      updateForm(current => ({ ...current, images: [...current.images, result] }), { autoSave: false });
+                    };
+                    reader.readAsDataURL(file);
+                  });
+                };
+                input.click();
               }}
             />
           </SectionCard>
@@ -1319,85 +1448,276 @@ function SectionCard({
   )
 }
 
-function BentoPhotoGallery({ images, onPhotoClick, onAddPhoto }: { images: string[], onPhotoClick: (idx: number) => void, onAddPhoto: () => void }) {
-  const displayPhotos = images.slice(0, 4);
+function BentoPhotoGallery({ images, onPhotoClick, onDeletePhoto, onAddPhoto }: { images: string[], onPhotoClick: (idx: number) => void, onDeletePhoto: (idx: number) => void, onAddPhoto: () => void }) {
+  const [viewMode, setViewMode] = useState<"bento" | "grid">("bento");
+
+  const videosCount = images.filter(img => img.startsWith('data:video')).length;
+  const photosCount = images.length - videosCount;
+  const canAddMore = photosCount < 15 || videosCount < 5;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 auto-rows-[200px] sm:auto-rows-[250px]">
-      {/* Imagem Principal */}
-      <div
-        className="col-span-2 row-span-2 relative group rounded-2xl overflow-hidden shadow-sm cursor-pointer"
-        onClick={() => images.length > 0 && onPhotoClick(0)}
-      >
-        {images[0] ? (
-          <>
-            <Image src={images[0]} alt="Principal" fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 640px) 100vw, 50vw" />
-            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-              <svg className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
-            </div>
-            <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest text-wine-700 shadow-lg">Capa do Perfil</div>
-          </>
-        ) : (
-          <div className="w-full h-full bg-zinc-100 flex items-center justify-center text-zinc-400">Sem fotos</div>
-        )}
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-zinc-500">
+          Clique nas fotos para interagir
+          <span className="block sm:inline sm:ml-2">({images.length}/20 mídias)</span>
+        </p>
+        <div className="flex bg-zinc-100 rounded-lg p-1 w-fit">
+          <button
+            onClick={() => setViewMode("bento")}
+            className={cn("p-1.5 rounded-md transition-colors", viewMode === "bento" ? "bg-white shadow-sm text-wine-700" : "text-zinc-500 hover:text-zinc-900")}
+            title="Destaque"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h10v10H4zM16 4h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h10v4H10z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setViewMode("grid")}
+            className={cn("p-1.5 rounded-md transition-colors", viewMode === "grid" ? "bg-white shadow-sm text-wine-700" : "text-zinc-500 hover:text-zinc-900")}
+            title="Grade Instagram"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path fillRule="evenodd" d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
       </div>
 
-      {/* Imagens Menores */}
-      {Array.from({ length: 3 }).map((_, i) => {
-        const idx = i + 1;
-        const img = displayPhotos[idx];
-        if (img) {
-          return (
-            <div key={idx} onClick={() => onPhotoClick(idx)} className="relative rounded-2xl overflow-hidden shadow-sm group cursor-pointer aspect-square sm:aspect-auto">
-              <Image src={img} alt={`Foto ${idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
-              </div>
-            </div>
-          )
-        }
+      {viewMode === "bento" ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 auto-rows-[150px] sm:auto-rows-[200px] grid-flow-dense">
+          {images.map((img, idx) => {
+            const BENTO_PATTERNS = [
+              "col-span-2 row-span-2",
+              "col-span-1 row-span-1",
+              "col-span-1 row-span-1",
+              "col-span-1 row-span-2",
+              "col-span-1 row-span-1",
+              "col-span-1 row-span-1",
+              "col-span-1 row-span-1",
+              "col-span-1 row-span-2",
+              "col-span-1 row-span-1",
+            ];
+            const spanClass = BENTO_PATTERNS[idx % BENTO_PATTERNS.length];
 
-        // Se for o primeiro slot vazio, mostra o Add Photo
-        if (idx === displayPhotos.length) {
-          return (
-            <div key={idx} onClick={onAddPhoto} className="relative rounded-2xl border-2 border-dashed border-zinc-200 bg-zinc-50 flex flex-col items-center justify-center cursor-pointer hover:border-wine-300 hover:bg-wine-50 hover:text-wine-700 text-zinc-400 transition-all group aspect-square sm:aspect-auto">
+            return (
+              <div
+                key={idx}
+                className={cn("relative group rounded-2xl overflow-hidden shadow-sm cursor-pointer", spanClass)}
+                onClick={() => onPhotoClick(idx)}
+              >
+                <Image src={img} alt={`Foto ${idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes={spanClass.includes("col-span-2") ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 50vw, 33vw"} />
+
+                {idx === 0 && (
+                  <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest text-wine-700 shadow-lg">
+                    Capa do Perfil
+                  </div>
+                )}
+
+                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <svg className="w-8 h-8 text-white relative z-10 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  </svg>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeletePhoto(idx);
+                  }}
+                  className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-700 text-white p-1.5 sm:p-2 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20 shadow-md"
+                  title="Excluir"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            );
+          })}
+
+          {images.length === 0 && (
+            <div className="col-span-2 sm:col-span-3 row-span-2 bg-zinc-100 rounded-2xl flex items-center justify-center text-zinc-400">Sem fotos</div>
+          )}
+
+          {canAddMore && (
+            <div
+              onClick={onAddPhoto}
+              className={cn(
+                "relative rounded-2xl border-2 border-dashed border-zinc-200 bg-zinc-50 flex flex-col items-center justify-center cursor-pointer hover:border-wine-300 hover:bg-wine-50 hover:text-wine-700 text-zinc-400 transition-all group",
+                images.length === 0
+                  ? "col-span-2 sm:col-span-3 row-span-1"
+                  : "col-span-1 row-span-1"
+              )}
+            >
               <svg className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
               <span className="text-[11px] font-bold uppercase tracking-wider">Add Foto</span>
             </div>
-          )
-        }
-
-        return <div key={idx} className="hidden sm:block rounded-2xl bg-zinc-50/50 border border-zinc-100 aspect-square sm:aspect-auto" />
-      })}
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-1">
+          {images.map((img, idx) => (
+            <div key={idx} onClick={() => onPhotoClick(idx)} className="relative aspect-square cursor-pointer overflow-hidden group">
+              <Image src={img} alt={`Foto ${idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+              {idx === 0 && (
+                <div className="absolute top-2 right-2 bg-wine-700/80 backdrop-blur px-2 py-0.5 rounded text-[9px] font-bold text-white uppercase shadow-sm">Capa</div>
+              )}
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+              </div>
+            </div>
+          ))}
+          {canAddMore && (
+            <div onClick={onAddPhoto} className="relative aspect-square bg-zinc-50 border border-dashed border-zinc-300 flex flex-col items-center justify-center cursor-pointer hover:bg-wine-50 text-zinc-400 hover:text-wine-700 hover:border-wine-300 transition-colors">
+              <svg className="w-6 h-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
 
-function PhotoGalleryModal({ images, activeIndex, onClose, onChange }: { images: string[], activeIndex: number, onClose: () => void, onChange: (idx: number) => void }) {
+function PhotoGalleryModal({ images, activeIndex, onClose, onChange, onSetCover, onUpdateImage, canRevertBlur, onRevertBlur, onDelete, onAddPhoto }: { images: string[], activeIndex: number, onClose: () => void, onChange: (idx: number) => void, onSetCover: (idx: number, croppedSrc?: string) => void, onUpdateImage: (idx: number, src: string) => void, canRevertBlur: boolean, onRevertBlur: (idx: number) => void, onDelete: (idx: number) => void, onAddPhoto: () => void }) {
+  const [isCropping, setIsCropping] = useState(false);
+  const [isBlurring, setIsBlurring] = useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+
+  const handleSetCover = async () => {
+    const src = images[activeIndex];
+    const img = new window.Image();
+    img.src = src;
+    await new Promise(r => img.onload = r);
+    const ratio = img.width / img.height;
+    if (Math.abs(ratio - 16 / 9) > 0.1) {
+      setIsCropping(true);
+    } else {
+      onSetCover(activeIndex);
+    }
+  };
+
+  const handleCropComplete = async (croppedAreaPixels: { x: number; y: number; width: number; height: number; }) => {
+    try {
+      const croppedUrl = await getCroppedImg(images[activeIndex], croppedAreaPixels);
+      setIsCropping(false);
+      onSetCover(activeIndex, croppedUrl);
+    } catch (e) {
+      console.error(e);
+      setIsCropping(false);
+    }
+  };
+
+  const handleBlurComplete = (blurredSrc: string) => {
+    setIsBlurring(false);
+    onUpdateImage(activeIndex, blurredSrc);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center backdrop-blur-sm">
-      <button onClick={onClose} className="absolute top-6 right-6 p-2 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all">
-        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-      </button>
+    <>
+      <div className="fixed inset-0 z-[100] h-[100dvh] bg-black flex flex-col items-center justify-center backdrop-blur-sm">
+        <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 flex justify-between items-start z-20 bg-gradient-to-b from-black/80 to-transparent">
+          <div className="flex flex-wrap gap-2 pointer-events-auto">
+            {activeIndex !== 0 && (
+              <button
+                onClick={handleSetCover}
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 hover:bg-white/20 backdrop-blur rounded-full text-white text-xs sm:text-sm font-bold transition-all"
+                title="Definir como primeira imagem (capa do anúncio)"
+              >
+                Definir como Capa
+              </button>
+            )}
 
-      <div className="relative w-full max-w-5xl h-[60vh] sm:h-[70vh] px-4">
-        <Image src={images[activeIndex]} fill className="object-contain" alt="Fullscreen" />
-      </div>
-
-      <div className="w-full max-w-5xl mt-6 px-4">
-        <div className="flex gap-3 overflow-x-auto pb-4 hide-scrollbar snap-x">
-          {images.map((img, i) => (
             <button
-              key={i}
-              onClick={() => onChange(i)}
-              className={cn("relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden snap-center transition-all", i === activeIndex ? "ring-2 ring-wine-500 opacity-100 scale-105" : "opacity-50 hover:opacity-100")}
+              onClick={() => setIsBlurring(true)}
+              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 hover:bg-white/20 backdrop-blur rounded-full text-white text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2"
             >
-              <Image src={img} fill className="object-cover" alt={`Thumb ${i}`} />
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+              Borrar Detalhes
             </button>
-          ))}
+
+            {canRevertBlur && (
+              <button
+                onClick={() => onRevertBlur(activeIndex)}
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 backdrop-blur rounded-full text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                Reverter Borrão
+              </button>
+            )}
+
+            <button
+              onClick={() => onDelete(activeIndex)}
+              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-red-500/20 hover:bg-red-500/40 text-red-300 backdrop-blur rounded-full text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2"
+              title="Excluir mídia"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              Excluir
+            </button>
+          </div>
+
+          <button onClick={onClose} className="p-2 ml-4 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all shrink-0 pointer-events-auto">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <div className="relative w-full max-w-5xl flex-1 px-4 mt-24 mb-4 min-h-0">
+          <Image src={images[activeIndex]} fill className="object-contain" alt="Fullscreen" />
+        </div>
+
+        <div className="w-full max-w-5xl px-4 shrink-0 pb-safe mb-6">
+          <div className="flex gap-3 overflow-x-auto pb-4 hide-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x scroll-smooth">
+            {images.map((img, i) => (
+              <button
+                key={i}
+                onClick={() => onChange(i)}
+                className={cn("relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden snap-center transition-all", i === activeIndex ? "ring-2 ring-wine-500 opacity-100 scale-105" : "opacity-50 hover:opacity-100")}
+              >
+                <Image src={img} fill className="object-cover" alt={`Thumb ${i}`} />
+              </button>
+            ))}
+
+            {(images.length < 20) && (
+              <button
+                onClick={onAddPhoto}
+                className="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg border-2 border-dashed border-white/20 hover:border-white/50 bg-white/5 hover:bg-white/10 flex flex-col items-center justify-center snap-center transition-all text-white/50 hover:text-white group"
+              >
+                <svg className="w-6 h-6 mb-1 sm:mb-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">Mídia</span>
+              </button>
+            )}
+
+            {/* spacer for scrolling */}
+            <div className="w-2 sm:w-4 shrink-0" />
+          </div>
         </div>
       </div>
-    </div>
+
+      {isCropping && (
+        <ImageCropperModal
+          imageSrc={images[activeIndex]}
+          onClose={() => setIsCropping(false)}
+          onCropComplete={handleCropComplete}
+        />
+      )}
+
+      {isBlurring && (
+        <ImageBlurModal
+          imageSrc={images[activeIndex]}
+          onClose={() => setIsBlurring(false)}
+          onBlurComplete={handleBlurComplete}
+        />
+      )}
+    </>
   )
 }
 
@@ -1412,17 +1732,6 @@ function FormInput({ label, value, onChange, placeholder, disabled, invalid }: {
   )
 }
 
-function FormSelect({ label, value, options, onChange, invalid }: { label: string, value: string, options: string[], onChange: (v: string) => void, invalid?: boolean }) {
-  return (
-    <div>
-      <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">{label}</label>
-      <select value={value} onChange={e => onChange(e.target.value)} className={cn("w-full bg-zinc-50/50 border rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-wine-500 focus:border-wine-500 focus:bg-white outline-none transition-all", invalid ? "border-red-400 ring-1 ring-red-200" : "border-zinc-200")}>
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
-      </select>
-    </div>
-  )
-}
-
 // ─── Seções Específicas ──────────────────────────────────────────
 
 function CharacteristicsSection({ characteristics: c, onUpdate, invalidFields, errorMessage, isShaking }: { characteristics: ProfileCharacteristics; onUpdate: (key: keyof ProfileCharacteristics, value: string) => void; invalidFields: Array<keyof ProfileCharacteristics>; errorMessage: string | null; isShaking: boolean }) {
@@ -1431,12 +1740,48 @@ function CharacteristicsSection({ characteristics: c, onUpdate, invalidFields, e
   return (
     <div className={cn("space-y-4 rounded-xl border p-4", errorMessage ? "border-red-300 bg-red-50/30" : "border-zinc-200")} style={isShaking ? { animation: "characteristics-shake 420ms ease-in-out" } : undefined}>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        <FormSelect label="Gênero" value={c.gender} options={GENDER_OPTIONS} onChange={(v) => onUpdate("gender", v)} invalid={isInvalid("gender")} />
-        <FormSelect label="Etnia" value={c.ethnicity} options={ETHNICITY_OPTIONS} onChange={(v) => onUpdate("ethnicity", v)} invalid={isInvalid("ethnicity")} />
+        <div>
+          <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Gênero</label>
+          <SegmentedControl
+            options={GENDER_OPTIONS.filter(o => o !== SELECT_PLACEHOLDER)}
+            selected={c.gender === SELECT_PLACEHOLDER ? "" : c.gender}
+            onChange={(v) => onUpdate("gender", v)}
+          />
+          {isInvalid("gender") && <p className="mt-1 text-xs text-red-500">Selecione uma opção.</p>}
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Etnia</label>
+          <SegmentedControl
+            options={ETHNICITY_OPTIONS.filter(o => o !== SELECT_PLACEHOLDER)}
+            selected={c.ethnicity === SELECT_PLACEHOLDER ? "" : c.ethnicity}
+            onChange={(v) => onUpdate("ethnicity", v)}
+          />
+          {isInvalid("ethnicity") && <p className="mt-1 text-xs text-red-500">Selecione uma opção.</p>}
+        </div>
+
         <FormInput label="Altura (cm)" value={formatHeightInput(c.height)} onChange={(v) => onUpdate("height", formatHeightInput(v))} placeholder="Ex: 170" invalid={isInvalid("height")} />
         <FormInput label="Peso (kg)" value={formatWeightInput(c.weight)} onChange={(v) => onUpdate("weight", v)} placeholder="Ex: 60" invalid={isInvalid("weight")} />
-        <FormSelect label="Cor do Cabelo" value={c.hairColor} options={HAIR_COLOR_OPTIONS} onChange={(v) => onUpdate("hairColor", v)} invalid={isInvalid("hairColor")} />
-        <FormSelect label="Fumante" value={c.smoker} options={SMOKER_OPTIONS} onChange={(v) => onUpdate("smoker", v)} invalid={isInvalid("smoker")} />
+
+        <div>
+          <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Cor do Cabelo</label>
+          <SegmentedControl
+            options={HAIR_COLOR_OPTIONS.filter(o => o !== SELECT_PLACEHOLDER)}
+            selected={c.hairColor === SELECT_PLACEHOLDER ? "" : c.hairColor}
+            onChange={(v) => onUpdate("hairColor", v)}
+          />
+          {isInvalid("hairColor") && <p className="mt-1 text-xs text-red-500">Selecione uma opção.</p>}
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Fumante</label>
+          <SegmentedControl
+            options={SMOKER_OPTIONS.filter(o => o !== SELECT_PLACEHOLDER)}
+            selected={c.smoker === SELECT_PLACEHOLDER ? "" : c.smoker}
+            onChange={(v) => onUpdate("smoker", v)}
+          />
+          {isInvalid("smoker") && <p className="mt-1 text-xs text-red-500">Selecione uma opção.</p>}
+        </div>
       </div>
 
       {errorMessage && <p className="text-sm font-semibold text-red-700">{errorMessage}</p>}
@@ -1498,10 +1843,11 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled }: { pricing: Arra
                       <Lock className="h-4 w-4" />
                     </div>
                   ) : (
-                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                      <input type="checkbox" checked={!item.disabled} onChange={() => onToggleDisabled(idx)} className="sr-only peer" />
-                      <div className="w-11 h-6 bg-zinc-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wine-700"></div>
-                    </label>
+                    <Switch
+                      checked={!item.disabled}
+                      onCheckedChange={() => onToggleDisabled(idx)}
+                      disabled={false}
+                    />
                   )}
                 </div>
               </div>
@@ -1624,10 +1970,11 @@ function LocationSection({
               Ative para informar no anúncio que você também atende fora do endereço ativo.
             </p>
           </div>
-          <label className="relative inline-flex cursor-pointer items-center shrink-0" aria-label="Aceita deslocamento">
-            <input type="checkbox" checked={acceptsTravel} onChange={(event) => onToggleTravel(event.target.checked)} className="peer sr-only" />
-            <div className="h-6 w-11 rounded-full bg-zinc-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-wine-700 peer-checked:after:translate-x-full peer-focus-visible:ring-2 peer-focus-visible:ring-wine-400/60" />
-          </label>
+          <Switch
+            checked={acceptsTravel}
+            onCheckedChange={onToggleTravel}
+            aria-label="Aceita deslocamento"
+          />
         </div>
       </div>
 
@@ -1685,10 +2032,11 @@ function LocationSection({
                   >
                     Editar
                   </button>
-                  <label className="relative inline-flex cursor-pointer items-center shrink-0" aria-label={`Ativar ${location.label}`}>
-                    <input type="checkbox" checked={location.active} onChange={() => handleToggleActive(location.id, location.active)} className="peer sr-only" />
-                    <div className={cn("relative h-6 w-11 rounded-full transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full", location.active ? "bg-wine-700" : "bg-zinc-300 peer-checked:bg-wine-700")} />
-                  </label>
+                  <Switch
+                    checked={location.active}
+                    onCheckedChange={() => handleToggleActive(location.id, location.active)}
+                    aria-label={`Ativar ${location.label}`}
+                  />
                 </div>
               </div>
 
@@ -1972,28 +2320,28 @@ function AvailabilitySection({ showAvailability, availability, onToggleShow, onD
           <span className="text-base font-bold text-zinc-900 block">Exibir grade de horários pública</span>
           <span className="text-xs text-zinc-500">Deixe os clientes saberem exatamente quando você atende.</span>
         </div>
-        <div className="relative">
-          <input type="checkbox" checked={showAvailability} onChange={(e) => onToggleShow(e.target.checked)} className="sr-only peer" />
-          <div className="relative h-6 w-11 rounded-full bg-zinc-200 peer-checked:bg-wine-700 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5"></div>
-        </div>
+        <Switch
+          checked={showAvailability}
+          onCheckedChange={(checked) => onToggleShow(checked)}
+        />
       </label>
 
       {showAvailability && (
-        <div className="grid grid-cols-1 gap-2">
+        <div className="grid grid-cols-1 gap-2.5">
           {availability.map((entry, idx: number) => (
-            <div key={entry.day} className={cn("flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 transition-all", entry.enabled ? "bg-white border-zinc-200 shadow-sm" : "bg-zinc-50 border-zinc-100 opacity-60")}>
-              <div className="flex items-center gap-3 w-28 shrink-0">
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" checked={entry.enabled} onChange={(e) => onDayToggle(idx, e.target.checked)} className="sr-only peer" />
-                  <div className="w-9 h-5 bg-zinc-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-wine-700"></div>
-                </label>
-                <span className="text-xs font-black text-zinc-700 w-10">{entry.day}</span>
+            <div key={entry.day} className={cn("flex items-center justify-between gap-2 sm:gap-3 rounded-xl border px-3 sm:px-4 py-2.5 sm:py-3 transition-all w-full", entry.enabled ? "bg-white border-zinc-200 shadow-sm" : "bg-zinc-50 border-zinc-100 opacity-60")}>
+              <div className="flex items-center gap-2.5 sm:gap-4 min-w-[5rem] sm:w-28 shrink-0">
+                <Switch
+                  checked={entry.enabled}
+                  onCheckedChange={(checked) => onDayToggle(idx, checked)}
+                />
+                <span className="text-xs sm:text-sm font-black text-zinc-700">{entry.day}</span>
               </div>
 
-              <div className="flex items-center justify-center gap-2">
-                <input type="text" value={entry.start} disabled={!entry.enabled} onChange={(e) => onTimeChange(idx, "start", e.target.value)} className="w-16 text-center border border-zinc-200 bg-zinc-50 rounded-lg text-sm font-bold py-2 focus:border-wine-500 outline-none disabled:opacity-50" />
-                <span className="text-zinc-400 text-sm font-bold">às</span>
-                <input type="text" value={entry.end} disabled={!entry.enabled} onChange={(e) => onTimeChange(idx, "end", e.target.value)} className="w-16 text-center border border-zinc-200 bg-zinc-50 rounded-lg text-sm font-bold py-2 focus:border-wine-500 outline-none disabled:opacity-50" />
+              <div className="flex items-center justify-end gap-2 sm:gap-3 flex-1">
+                <input type="text" value={entry.start} disabled={!entry.enabled} onChange={(e) => onTimeChange(idx, "start", e.target.value)} className="w-14 sm:w-20 text-center border border-zinc-200 bg-zinc-50 rounded-md sm:rounded-lg text-xs sm:text-sm font-bold py-2 sm:py-2.5 focus:border-wine-500 outline-none disabled:opacity-50" />
+                <span className="text-zinc-400 text-xs sm:text-sm font-bold">às</span>
+                <input type="text" value={entry.end} disabled={!entry.enabled} onChange={(e) => onTimeChange(idx, "end", e.target.value)} className="w-14 sm:w-20 text-center border border-zinc-200 bg-zinc-50 rounded-md sm:rounded-lg text-xs sm:text-sm font-bold py-2 sm:py-2.5 focus:border-wine-500 outline-none disabled:opacity-50" />
               </div>
             </div>
           ))}

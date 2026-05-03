@@ -45,7 +45,7 @@ export function ProfessionalDashboardScreen() {
               className="p-1.5 text-zinc-400 hover:text-wine-700 hover:bg-wine-50 rounded-lg transition-colors ml-auto"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d={isSidebarCollapsed ? "M4 6h16M4 12h16M4 18h16" : "M4 6h16M4 12h8m-8 6h16"} />
+                <path strokeLinecap="round" strokeLinejoin="round" d={isSidebarCollapsed ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} />
               </svg>
             </button>
           </div>
