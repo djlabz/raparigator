@@ -11,7 +11,7 @@ import type { AdPreview, AdStatus, AvailabilityDay, LocationAddress, PricingItem
 import { useProfileForm } from "./use-profile-form";
 import { ImageCropperModal } from "@/components/ui/image-cropper-modal";
 import { ImageBlurModal } from "@/components/ui/image-blur-modal";
-import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { getCroppedImg } from "@/lib/cropImage";
 
@@ -859,7 +859,7 @@ export function AnnouncementTab({
   };
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8 pb-12 px-1 lg:px-0">
       {/* ── 1. Header & Bento Grid Fotos ──────────────────────────── */}
       <section>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
@@ -1095,7 +1095,7 @@ export function AnnouncementTab({
         </div>
 
         {/* Coluna Principal (Esquerda no Desktop, Baixo no Mobile) */}
-        <div className="lg:col-span-8 space-y-8 order-2 lg:order-1">
+        <div className="lg:col-span-8 space-y-8 order-2 lg:order-1 px-0.5 sm:px-0">
 
           {/* ================= SEÇÃO OBRIGATÓRIOS ================= */}
           <div className="flex items-center gap-3 border-b border-zinc-200 pb-2">
@@ -1282,7 +1282,17 @@ export function AnnouncementTab({
 
       {/* Tips Modal */}
       {isTipsModalOpen && (
-        <Modal open onClose={() => setIsTipsModalOpen(false)} title="Dicas Inteligentes para o seu Perfil" size="md">
+        <Modal
+          open
+          onClose={() => setIsTipsModalOpen(false)}
+          title="Dicas Inteligentes para o seu Perfil"
+          size="md"
+          actions={
+            <button onClick={() => setIsTipsModalOpen(false)} className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold py-3.5 rounded-2xl transition-colors shadow-lg shadow-zinc-900/10">
+              Entendi
+            </button>
+          }
+        >
           <div className="space-y-6 pt-2">
 
             {/* Bloco 1: Amber - Descrição */}
@@ -1314,10 +1324,6 @@ export function AnnouncementTab({
                 Perfis com os valores preenchidos na tabela de preços convertem muito mais. O cliente prefere anúncios onde já saiba o valor esperado, descartando contatos casuais.
               </p>
             </div>
-
-            <button onClick={() => setIsTipsModalOpen(false)} className="w-full mt-4 bg-zinc-900 hover:bg-zinc-800 text-white font-bold py-3 rounded-xl transition-colors">
-              Entendi
-            </button>
           </div>
         </Modal>
       )}
@@ -1382,7 +1388,13 @@ function SectionCard({
   }, [highlighted]);
 
   return (
-    <div ref={sectionRef} className={cn("relative scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-32 bg-white rounded-2xl shadow-sm border overflow-hidden transition-all", dirty ? "border-amber-300 ring-1 ring-amber-200" : "border-zinc-100", highlighted ? "ring-2 ring-wine-500/60 shadow-lg shadow-wine-900/10" : "")}>
+    <div ref={sectionRef} className={cn(
+      "relative scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-32 bg-white rounded-2xl shadow-sm border transition-all duration-300",
+      highlighted
+        ? "border-red-500 ring-4 ring-red-500/10 z-20 scale-[1.002]"
+        : (dirty ? "border-amber-400 ring-2 ring-amber-400/10 z-10" : "border-zinc-200 z-0"),
+      "overflow-hidden"
+    )}>
       {showHighlightOverlay ? (
         <div
           aria-hidden="true"
@@ -1622,49 +1634,43 @@ function PhotoGalleryModal({ images, activeIndex, onClose, onChange, onSetCover,
 
   return (
     <>
-      <div className="fixed inset-0 z-[100] h-[100dvh] bg-black flex flex-col items-center justify-center backdrop-blur-sm">
-        <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 flex justify-between items-start z-20 bg-gradient-to-b from-black/80 to-transparent">
-          <div className="flex flex-wrap gap-2 pointer-events-auto">
+      <div className="fixed inset-0 z-100 h-dvh bg-black flex flex-col items-center justify-center backdrop-blur-sm">
+        <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 flex justify-between items-center z-20 bg-linear-to-b from-black/90 via-black/40 to-transparent">
+          <div className="flex flex-wrap items-center gap-2 pointer-events-auto">
+            {canRevertBlur && (
+              <button
+                onClick={() => onRevertBlur(activeIndex)}
+                className="inline-flex h-9 sm:h-10 items-center justify-center gap-2 px-4 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 backdrop-blur-md rounded-full text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-emerald-500/30 shadow-lg"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                <span className="hidden sm:inline">Reverter Borrão</span>
+                <span className="sm:hidden">Reverter</span>
+              </button>
+            )}
+
             {activeIndex !== 0 && (
               <button
                 onClick={handleSetCover}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 hover:bg-white/20 backdrop-blur rounded-full text-white text-xs sm:text-sm font-bold transition-all"
+                className="inline-flex h-9 sm:h-10 items-center justify-center gap-2 px-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-white/20 shadow-lg"
                 title="Definir como primeira imagem (capa do anúncio)"
               >
-                Definir como Capa
+                <span className="hidden sm:inline">Definir como Capa</span>
+                <span className="sm:hidden">Capa</span>
               </button>
             )}
 
             <button
               onClick={() => setIsBlurring(true)}
-              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 hover:bg-white/20 backdrop-blur rounded-full text-white text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2"
+              className="inline-flex h-9 sm:h-10 items-center justify-center gap-2 px-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-white/20 shadow-lg"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-              Borrar Detalhes
-            </button>
-
-            {canRevertBlur && (
-              <button
-                onClick={() => onRevertBlur(activeIndex)}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 backdrop-blur rounded-full text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-                Reverter Borrão
-              </button>
-            )}
-
-            <button
-              onClick={() => onDelete(activeIndex)}
-              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-red-500/20 hover:bg-red-500/40 text-red-300 backdrop-blur rounded-full text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2"
-              title="Excluir mídia"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-              Excluir
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+              <span className="hidden sm:inline">Borrar Detalhes</span>
+              <span className="sm:hidden">Borrar</span>
             </button>
           </div>
 
-          <button onClick={onClose} className="p-2 ml-4 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all shrink-0 pointer-events-auto">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all shrink-0 pointer-events-auto border border-white/10" aria-label="Fechar">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
 
@@ -1675,13 +1681,27 @@ function PhotoGalleryModal({ images, activeIndex, onClose, onChange, onSetCover,
         <div className="w-full max-w-5xl px-4 shrink-0 pb-safe mb-6">
           <div className="flex gap-3 overflow-x-auto pb-4 hide-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x scroll-smooth">
             {images.map((img, i) => (
-              <button
-                key={i}
-                onClick={() => onChange(i)}
-                className={cn("relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden snap-center transition-all", i === activeIndex ? "ring-2 ring-wine-500 opacity-100 scale-105" : "opacity-50 hover:opacity-100")}
-              >
-                <Image src={img} fill className="object-cover" alt={`Thumb ${i}`} />
-              </button>
+              <div key={i} className="relative shrink-0 group snap-center">
+                <button
+                  onClick={() => onChange(i)}
+                  className={cn("relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden transition-all block", i === activeIndex ? "ring-2 ring-wine-600 opacity-100 scale-105 z-10" : "opacity-60 hover:opacity-100")}
+                >
+                  <Image src={img} fill className="object-cover" alt={`Thumb ${i}`} />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(i);
+                  }}
+                  className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all z-20 shadow-md border border-white/20"
+                  title="Excluir"
+                >
+                  <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             ))}
 
             {(images.length < 20) && (
@@ -1741,21 +1761,25 @@ function CharacteristicsSection({ characteristics: c, onUpdate, invalidFields, e
     <div className={cn("space-y-4 rounded-xl border p-4", errorMessage ? "border-red-300 bg-red-50/30" : "border-zinc-200")} style={isShaking ? { animation: "characteristics-shake 420ms ease-in-out" } : undefined}>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         <div>
-          <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Gênero</label>
-          <SegmentedControl
-            options={GENDER_OPTIONS.filter(o => o !== SELECT_PLACEHOLDER)}
-            selected={c.gender === SELECT_PLACEHOLDER ? "" : c.gender}
-            onChange={(v) => onUpdate("gender", v)}
+          <Select
+            label="Gênero"
+            id="gender"
+            options={GENDER_OPTIONS.map(o => ({ label: o, value: o }))}
+            value={c.gender}
+            onChange={(e) => onUpdate("gender", e.target.value)}
+            className={cn(isInvalid("gender") && "border-red-400 ring-1 ring-red-200")}
           />
           {isInvalid("gender") && <p className="mt-1 text-xs text-red-500">Selecione uma opção.</p>}
         </div>
 
         <div>
-          <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Etnia</label>
-          <SegmentedControl
-            options={ETHNICITY_OPTIONS.filter(o => o !== SELECT_PLACEHOLDER)}
-            selected={c.ethnicity === SELECT_PLACEHOLDER ? "" : c.ethnicity}
-            onChange={(v) => onUpdate("ethnicity", v)}
+          <Select
+            label="Etnia"
+            id="ethnicity"
+            options={ETHNICITY_OPTIONS.map(o => ({ label: o, value: o }))}
+            value={c.ethnicity}
+            onChange={(e) => onUpdate("ethnicity", e.target.value)}
+            className={cn(isInvalid("ethnicity") && "border-red-400 ring-1 ring-red-200")}
           />
           {isInvalid("ethnicity") && <p className="mt-1 text-xs text-red-500">Selecione uma opção.</p>}
         </div>
@@ -1764,21 +1788,25 @@ function CharacteristicsSection({ characteristics: c, onUpdate, invalidFields, e
         <FormInput label="Peso (kg)" value={formatWeightInput(c.weight)} onChange={(v) => onUpdate("weight", v)} placeholder="Ex: 60" invalid={isInvalid("weight")} />
 
         <div>
-          <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Cor do Cabelo</label>
-          <SegmentedControl
-            options={HAIR_COLOR_OPTIONS.filter(o => o !== SELECT_PLACEHOLDER)}
-            selected={c.hairColor === SELECT_PLACEHOLDER ? "" : c.hairColor}
-            onChange={(v) => onUpdate("hairColor", v)}
+          <Select
+            label="Cor do Cabelo"
+            id="hairColor"
+            options={HAIR_COLOR_OPTIONS.map(o => ({ label: o, value: o }))}
+            value={c.hairColor}
+            onChange={(e) => onUpdate("hairColor", e.target.value)}
+            className={cn(isInvalid("hairColor") && "border-red-400 ring-1 ring-red-200")}
           />
           {isInvalid("hairColor") && <p className="mt-1 text-xs text-red-500">Selecione uma opção.</p>}
         </div>
 
         <div>
-          <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Fumante</label>
-          <SegmentedControl
-            options={SMOKER_OPTIONS.filter(o => o !== SELECT_PLACEHOLDER)}
-            selected={c.smoker === SELECT_PLACEHOLDER ? "" : c.smoker}
-            onChange={(v) => onUpdate("smoker", v)}
+          <Select
+            label="Fumante"
+            id="smoker"
+            options={SMOKER_OPTIONS.map(o => ({ label: o, value: o }))}
+            value={c.smoker}
+            onChange={(e) => onUpdate("smoker", e.target.value)}
+            className={cn(isInvalid("smoker") && "border-red-400 ring-1 ring-red-200")}
           />
           {isInvalid("smoker") && <p className="mt-1 text-xs text-red-500">Selecione uma opção.</p>}
         </div>
@@ -2230,66 +2258,114 @@ function LocationDraftModal({
 }
 
 function DescriptionSection({ shortDescription, description, onShortDescChange, onDescChange }: { shortDescription: string; description: string; onShortDescChange: (value: string) => void; onDescChange: (value: string) => void }) {
-  const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
 
-  const applyFormat = (type: "bold" | "italic" | "underline" | "bullet" | "number") => {
-    const textArea = textAreaRef.current;
-    if (!textArea) return;
+  // Sync initial description to editor content (only once or when externally changed significantly)
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.innerHTML !== description) {
+      const html = description
+        .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+        .replace(/_(.*?)_/g, '<i>$1</i>')
+        .replace(/~(.*?)~/g, '<u>$1</u>')
+        .replace(/\n- (.*)/g, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>');
 
-    const start = textArea.selectionStart;
-    const end = textArea.selectionEnd;
-    const selectedText = description.slice(start, end);
-
-    let prefix = "";
-    let suffix = "";
-
-    if (type === "bold") {
-      prefix = "**";
-      suffix = "**";
+      if (editorRef.current.innerHTML !== html) {
+        editorRef.current.innerHTML = html;
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only on mount to avoid cursor issues
 
-    if (type === "italic") {
-      prefix = "_";
-      suffix = "_";
+  const handleInput = () => {
+    if (editorRef.current) {
+      onDescChange(editorRef.current.innerHTML);
     }
+  };
 
-    if (type === "underline") {
-      prefix = "<u>";
-      suffix = "</u>";
+  const applyFormat = (command: string, value: string | undefined = undefined) => {
+    document.execCommand(command, false, value);
+    if (editorRef.current) {
+      onDescChange(editorRef.current.innerHTML);
     }
-
-    if (type === "bullet") {
-      prefix = "- ";
-      suffix = "";
-    }
-
-    if (type === "number") {
-      prefix = "1. ";
-      suffix = "";
-    }
-
-    const fallbackText = type === "bullet" || type === "number" ? "Novo item" : "texto";
-    const replacement = `${prefix}${selectedText || fallbackText}${suffix}`;
-    const nextDescription = `${description.slice(0, start)}${replacement}${description.slice(end)}`;
-    onDescChange(nextDescription);
   };
 
   return (
     <div className="space-y-6">
       <div>
         <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Resumo em uma frase (Headline)</label>
-        <input type="text" value={shortDescription} onChange={(e) => onShortDescChange(e.target.value)} placeholder="Ex: Atendimento discreto com experiência premium..." maxLength={150} className="w-full rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm focus:border-wine-700 focus:ring-2 focus:ring-wine-700 outline-none transition-all" />
+        <input
+          type="text"
+          value={shortDescription}
+          onChange={(e) => onShortDescChange(e.target.value)}
+          placeholder="Ex: Atendimento discreto com experiência premium..."
+          maxLength={150}
+          className="w-full rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm focus:border-wine-700 focus:ring-2 focus:ring-wine-700 outline-none transition-all"
+        />
       </div>
       <div>
         <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">Narrativa Profissional Completa</label>
-        <div className="mb-2 flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-2">
-          <button type="button" onClick={() => applyFormat("bold")} className="min-w-8 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-black text-zinc-700 hover:border-wine-300 hover:text-wine-700">B</button>
-          <button type="button" onClick={() => applyFormat("italic")} className="min-w-8 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-black italic text-zinc-700 hover:border-wine-300 hover:text-wine-700">I</button>
-          <button type="button" onClick={() => applyFormat("underline")} className="min-w-8 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-black underline text-zinc-700 hover:border-wine-300 hover:text-wine-700">U</button>
-          <button type="button" onClick={() => applyFormat("bullet")} className="min-w-8 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-black text-zinc-700 hover:border-wine-300 hover:text-wine-700">• Lista</button>
-          <button type="button" onClick={() => applyFormat("number")} className="min-w-8 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-black text-zinc-700 hover:border-wine-300 hover:text-wine-700">1. Lista</button>
+        <div className="mb-2 flex flex-wrap items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 p-1.5">
+          <button
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); applyFormat("bold"); }}
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-200 bg-white text-xs font-black text-zinc-700 hover:border-wine-300 hover:text-wine-700 focus:ring-2 focus:ring-wine-200"
+            title="Negrito"
+          >
+            B
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); applyFormat("italic"); }}
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-200 bg-white text-xs font-black italic text-zinc-700 hover:border-wine-300 hover:text-wine-700 focus:ring-2 focus:ring-wine-200"
+            title="Itálico"
+          >
+            I
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); applyFormat("underline"); }}
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-200 bg-white text-xs font-black underline text-zinc-700 hover:border-wine-300 hover:text-wine-700 focus:ring-2 focus:ring-wine-200"
+            title="Sublinhado"
+          >
+            U
+          </button>
+          <div className="mx-1 h-4 w-px bg-zinc-300" />
+          <button
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); applyFormat("insertUnorderedList"); }}
+            className="flex h-8 px-2 items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white text-[10px] font-bold text-zinc-700 hover:border-wine-300 hover:text-wine-700 focus:ring-2 focus:ring-wine-200"
+            title="Lista com Marcadores"
+          >
+            • Lista
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); applyFormat("insertOrderedList"); }}
+            className="flex h-8 px-2 items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white text-[10px] font-bold text-zinc-700 hover:border-wine-300 hover:text-wine-700 focus:ring-2 focus:ring-wine-200"
+            title="Lista Numerada"
+          >
+            1. Lista
+          </button>
         </div>
-        <textarea ref={textAreaRef} value={description} onChange={(e) => onDescChange(e.target.value)} placeholder="Descreva seu atendimento, diferenciais, o que o cliente pode esperar..." maxLength={1000} rows={5} className="w-full rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm focus:border-wine-700 focus:ring-2 focus:ring-wine-700 outline-none transition-all resize-none" />
+        <div
+          ref={editorRef}
+          contentEditable
+          onInput={handleInput}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          className={cn(
+            "w-full min-h-40 rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm outline-none transition-all prose prose-sm max-w-none",
+            isFocused && "border-wine-700 ring-2 ring-wine-700 bg-white"
+          )}
+          style={{ wordBreak: 'break-word' }}
+          role="textbox"
+          aria-multiline="true"
+        />
+        <p className="mt-1 text-right text-[10px] text-zinc-400">
+          {description.replace(/<[^>]*>/g, '').length} / 1000 caracteres
+        </p>
       </div>
     </div>
   )
@@ -2330,7 +2406,7 @@ function AvailabilitySection({ showAvailability, availability, onToggleShow, onD
         <div className="grid grid-cols-1 gap-2.5">
           {availability.map((entry, idx: number) => (
             <div key={entry.day} className={cn("flex items-center justify-between gap-2 sm:gap-3 rounded-xl border px-3 sm:px-4 py-2.5 sm:py-3 transition-all w-full", entry.enabled ? "bg-white border-zinc-200 shadow-sm" : "bg-zinc-50 border-zinc-100 opacity-60")}>
-              <div className="flex items-center gap-2.5 sm:gap-4 min-w-[5rem] sm:w-28 shrink-0">
+              <div className="flex items-center gap-2.5 sm:gap-4 min-w-20 sm:w-28 shrink-0">
                 <Switch
                   checked={entry.enabled}
                   onCheckedChange={(checked) => onDayToggle(idx, checked)}

@@ -10,7 +10,18 @@ interface ImageBlurModalProps {
 }
 
 export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurModalProps) {
-  const [crop, setCrop] = useState<Crop>();
+  const [crop, setCrop] = useState<Crop | undefined>(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      return {
+        unit: "%",
+        width: 50,
+        height: 50,
+        x: 25,
+        y: 25,
+      };
+    }
+    return undefined;
+  });
   const [mode, setMode] = useState<"crop" | "brush">("crop");
   const imageRef = useRef<HTMLImageElement>(null);
   const maskCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -109,8 +120,10 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
     ctx.drawImage(image, 0, 0);
 
     if (mode === "crop") {
-      const scaleX = image.naturalWidth / image.width;
-      const scaleY = image.naturalHeight / image.height;
+      const isPercent = crop!.unit === "%";
+      const scaleX = isPercent ? image.naturalWidth / 100 : image.naturalWidth / image.width;
+      const scaleY = isPercent ? image.naturalHeight / 100 : image.naturalHeight / image.height;
+
       const cx = crop!.x * scaleX;
       const cy = crop!.y * scaleY;
       const cWidth = crop!.width * scaleX;
@@ -120,7 +133,9 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
       ctx.beginPath();
       ctx.rect(cx, cy, cWidth, cHeight);
       ctx.clip();
-      ctx.filter = "blur(25px)";
+      // Increase blur relative to image size for consistent look
+      const blurAmount = Math.max(25, (image.naturalWidth / 1000) * 25);
+      ctx.filter = `blur(${blurAmount}px)`;
       ctx.drawImage(image, 0, 0);
       ctx.restore();
     } else {
@@ -146,7 +161,7 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
   }, [crop, mode, hasDrawn, onBlurComplete]);
 
   return (
-    <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col items-center justify-center p-4">
+    <div className="fixed inset-0 z-200 bg-black/95 flex flex-col items-center justify-center p-4">
       <div className="text-center mb-4 text-white shrink-0 mt-4">
         <h2 className="text-lg font-bold">Borrar Imagem</h2>
         <p className="text-sm text-zinc-400">Selecione a área que deseja borrar na foto</p>
