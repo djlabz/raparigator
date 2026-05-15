@@ -52,6 +52,7 @@ export type PricingItem = {
   label: string;
   price: string;
   disabled: boolean;
+  billingType?: "hourly" | "fixed";
 };
 
 export type LocationVenue = {

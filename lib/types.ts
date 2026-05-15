@@ -11,8 +11,11 @@ export interface MockUser {
   email: string;
   password: string;
   label: string;
+  phone?: string;
+  cpf?: string;
+  alias?: string;
+  city?: string;
 }
-
 export interface ProfessionalAd {
   id: string;
   slug: string;

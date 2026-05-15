@@ -91,8 +91,8 @@ function Counter({ label, value, onChange, step = 1, min = 0, max = 9999, prefix
         {label}
       </label>
       <div className={`flex h-11 items-center justify-between rounded-xl border px-3 transition-all ${highlighted
-          ? 'border-wine-300 bg-wine-50/30 shadow-sm'
-          : 'border-zinc-200 bg-white'
+        ? 'border-wine-300 bg-wine-50/30 shadow-sm'
+        : 'border-zinc-200 bg-white'
         }`}>
         <button
           type="button"
@@ -109,7 +109,7 @@ function Counter({ label, value, onChange, step = 1, min = 0, max = 9999, prefix
             value={value}
             onChange={(e) => {
               const num = e.target.value.replace(/\D/g, "");
-              if (num) onChange(num);
+              onChange(num);
             }}
             className="w-12 text-center text-sm rounded-none border-none bg-transparent font-semibold text-zinc-900 focus:outline-none"
             inputMode="numeric"
