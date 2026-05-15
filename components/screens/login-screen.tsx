@@ -8,6 +8,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useAuthSession } from "../../lib/auth-session";
 import { mockUsers } from "../../lib/mock-users";
+import { isProfileFormComplete, type ProfileCompletionForm } from "@/lib/profile-completion";
 
 export function LoginScreen() {
   const router = useRouter();
@@ -27,7 +28,31 @@ export function LoginScreen() {
     }
 
     setRole(user.role);
-    router.push("/conta");
+
+    const profileFormKey = `sigillus-account-profile-form-${user.role}-${user.email.toLowerCase()}`;
+    let profileComplete = false;
+
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem(profileFormKey);
+        if (raw) {
+          const parsed = JSON.parse(raw) as Partial<ProfileCompletionForm>;
+          profileComplete = isProfileFormComplete(user.role, {
+            fullName: parsed.fullName ?? user.fullName,
+            cpf: parsed.cpf ?? user.cpf ?? "",
+            email: parsed.email ?? user.email,
+            confirmEmail: parsed.confirmEmail ?? user.email,
+            phone: parsed.phone ?? user.phone ?? "",
+            city: parsed.city ?? user.city ?? "",
+            preference: parsed.preference ?? "",
+          });
+        }
+      } catch {
+        profileComplete = false;
+      }
+    }
+
+    router.push(profileComplete ? "/feed" : "/conta");
   };
 
   return (
