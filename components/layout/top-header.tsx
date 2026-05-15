@@ -21,7 +21,7 @@ export function TopHeader({ location, role, user, isLoggedIn, onLogout, onBack }
 
         <div className="flex items-center gap-2 md:gap-4">
           <BackButton onBack={onBack} />
-          <Link href="/" className="font-display text-xl tracking-wide text-wine-800">
+            <Link href={isLoggedIn ? "/feed" : "/"} className="font-display text-xl tracking-wide text-wine-800">
             Sigillus
           </Link>
         </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
+import { Modal } from "../ui/modal";
 import { AppShell } from "../layout/app-shell";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
@@ -11,6 +12,7 @@ import { Select } from "../ui/select";
 import { useAuthSession } from "../../lib/auth-session";
 import { useAccountNotifications } from "../../lib/account-notifications";
 import { getRoleLabel } from "../../lib/navigation";
+import { isProfileFormComplete } from "@/lib/profile-completion";
 import type { AuthRole, MockUser } from "../../lib/types";
 
 interface ProfileFormState {
@@ -19,14 +21,10 @@ interface ProfileFormState {
   cpf: string;
   email: string;
   confirmEmail: string;
-  password: string;
-  confirmPassword: string;
   phone: string;
   city: string;
-  notes: string;
   preference: string;
 }
-
 const profileCompleteKey = (role: AuthRole) => `sigillus-account-profile-complete-${role}`;
 const profileFormKey = (role: AuthRole, userEmail: string) => `sigillus-account-profile-form-${role}-${userEmail.toLowerCase()}`;
 const SAVE_CONFIRMATION_AUTO_DISMISS_MS = 3200;
@@ -44,15 +42,12 @@ function readStorageFlag(key: string) {
 function initialFormState(user: MockUser | null): ProfileFormState {
   return {
     fullName: user?.fullName ?? "",
-    alias: "",
-    cpf: "",
+    alias: user?.alias ?? "",
+    cpf: user?.cpf ?? "",
     email: user?.email ?? "",
     confirmEmail: user?.email ?? "",
-    password: "",
-    confirmPassword: "",
-    phone: "",
-    city: "",
-    notes: "",
+    phone: user?.phone ?? "",
+    city: user?.city ?? "",
     preference: "",
   };
 }
@@ -152,19 +147,20 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
   };
 
   const { unreadCount, bannerClosed, setBannerClosed, markAllAsRead } = useAccountNotifications(role);
-  const [profileCompleted, setProfileCompleted] = useState<boolean>(() => readStorageFlag(profileCompleteKey(role)));
+  const [profileCompleted, setProfileCompleted] = useState<boolean>(() => isProfileFormComplete(role, readStoredForm(profileFormKey(role, user.email), user)));
   const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [form, setForm] = useState<ProfileFormState>(() => readStoredForm(profileFormKey(role, user.email), user));
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [passwordModalError, setPasswordModalError] = useState<string | null>(null);
+  const [passwordModalSuccess, setPasswordModalSuccess] = useState(false);
 
   const clearFieldError = <FieldName extends keyof ProfileFormState>(fieldName: FieldName) => {
     setFieldErrors((current) => {
-      if (!current[fieldName]) {
-        return current;
-      }
-
+      if (!current[fieldName]) return current;
       const next = { ...current };
       delete next[fieldName];
       return next;
@@ -187,9 +183,54 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
     clearFieldError("cpf");
   };
 
+  const handlePasswordChange = () => {
+    setPasswordModalError(null);
+
+    if (newPassword.trim().length < 8) {
+      setPasswordModalError("A senha deve ter ao menos 8 caracteres.");
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setPasswordModalError("As senhas não coincidem.");
+      return;
+    }
+
+      setPasswordModalSuccess(true);
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setNewPassword("");
+        setConfirmNewPassword("");
+        setPasswordModalSuccess(false);
+        setSaveMessage("Senha alterada com sucesso.");
+      }, 1500);
+  };
+
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
+        const handlePasswordChange = () => {
+          setPasswordModalError(null);
+
+          if (newPassword.trim().length < 8) {
+            setPasswordModalError("A senha deve ter ao menos 8 caracteres.");
+            return;
+          }
+
+          if (newPassword !== confirmNewPassword) {
+            setPasswordModalError("As senhas não coincidem.");
+            return;
+          }
+
+          setPasswordModalSuccess(true);
+          setTimeout(() => {
+            setShowPasswordModal(false);
+            setNewPassword("");
+            setConfirmNewPassword("");
+            setPasswordModalSuccess(false);
+            setSaveMessage("Senha alterada com sucesso.");
+          }, 1500);
+        };
     }
 
     window.localStorage.setItem(profileCompleteKey(role), String(profileCompleted));
@@ -202,6 +243,10 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
 
     window.localStorage.setItem(profileFormKey(role, user.email), JSON.stringify(form));
   }, [form, role, user.email]);
+
+  useEffect(() => {
+    setProfileCompleted(isProfileFormComplete(role, form));
+  }, [form, role]);
 
   useEffect(() => {
     if (!saveMessage) {
@@ -229,7 +274,6 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
     const nextErrors: ProfileFieldErrors = {};
     const cpfDigits = form.cpf.replace(/\D/g, "");
     const phoneDigits = form.phone.replace(/\D/g, "");
-    const hasPasswordChange = form.password.trim().length > 0 || form.confirmPassword.trim().length > 0;
 
     if (!form.fullName.trim()) {
       nextErrors.fullName = "Informe seu nome completo.";
@@ -251,15 +295,6 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
       nextErrors.phone = "Informe um telefone válido com DDD.";
     }
 
-    if (hasPasswordChange) {
-      if (form.password.trim().length < 8) {
-        nextErrors.password = "A senha deve ter ao menos 8 caracteres.";
-      }
-
-      if (form.password !== form.confirmPassword) {
-        nextErrors.confirmPassword = "As senhas não coincidem.";
-      }
-    }
 
     if (role === "cliente") {
       if (!form.city.trim()) {
@@ -283,7 +318,6 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
       setSaveMessage(null);
       return;
     }
-
     setProfileCompleted(true);
     markAllAsRead();
     setBannerClosed(true);
@@ -300,7 +334,6 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
     window.location.href = "/profissional/dashboard?tab=Verificação";
   };
 
-  const passwordStrength = getPasswordStrength(form.password);
   const verificationState: VerificationState = {
     email: isValidEmail(form.email) && form.confirmEmail.trim() === form.email.trim(),
     phone: false,
@@ -327,6 +360,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
+              
             </span>
             <p className="leading-relaxed">{saveMessage}</p>
           </div>
@@ -344,16 +378,9 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="inline-flex h-11 items-center justify-center rounded-full border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-50"
-          >
-            Sair
-          </button>
-        </div>
+        <div className="flex items-center gap-2 self-start sm:self-auto" />
       </section>
+      
 
       {showBanner ? (
         <Card className="border-zinc-200 bg-white shadow-sm shadow-zinc-200/70">
@@ -401,7 +428,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
                 placeholder={role === "cliente" ? "Como deseja ser chamado(a)" : "Como deseja ser vista(o)"}
                 value={form.alias}
                 onChange={updateField("alias")}
-                hint={role === "cliente" ? "Use este campo se quiser um nome alternativo." : "Use este campo se quiser destacar seu nome artístico."}
+                
               />
             </div>
 
@@ -448,45 +475,11 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
               />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Input
-                id="password"
-                label="Senha"
-                type="password"
-                placeholder="••••••••"
-                value={form.password}
-                onChange={updateField("password")}
-                onFocus={() => setIsPasswordFocused(true)}
-                onBlur={() => setIsPasswordFocused(false)}
-                error={fieldErrors.password}
-              />
-              <Input
-                id="confirm-password"
-                label="Confirmação de senha"
-                type="password"
-                placeholder="Repita sua senha"
-                value={form.confirmPassword}
-                onChange={updateField("confirmPassword")}
-                error={fieldErrors.confirmPassword}
-              />
-            </div>
-
-            <div
-              aria-hidden={!isPasswordFocused}
-              className={`-mt-1 space-y-1 overflow-hidden transition-all duration-200 ease-out ${
-                isPasswordFocused ? "max-h-16 translate-y-0 opacity-100" : "pointer-events-none max-h-0 -translate-y-1 opacity-0"
-              }`}
-            >
-              <div className="flex items-center gap-1.5" aria-hidden="true">
-                <span className={`h-1.5 w-12 rounded-full transition-colors ${passwordStrength.level >= 1 ? "bg-red-400" : "bg-zinc-200"}`} />
-                <span className={`h-1.5 w-12 rounded-full transition-colors ${passwordStrength.level >= 2 ? "bg-amber-400" : "bg-zinc-200"}`} />
-                <span className={`h-1.5 w-12 rounded-full transition-colors ${passwordStrength.level >= 3 ? "bg-emerald-500" : "bg-zinc-200"}`} />
-              </div>
-              <p className="text-xs text-zinc-500">Força da senha: <span className="font-medium text-zinc-700">{passwordStrength.label}</span></p>
-            </div>
+              
 
             {role === "cliente" ? (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
                 <Input
                   id="city"
                   label="Cidade"
@@ -509,25 +502,47 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
                   className={fieldErrors.preference ? "border-red-500 focus:border-red-600 focus:ring-red-200" : undefined}
                 />
                 {fieldErrors.preference ? <p className="-mt-2 text-xs text-red-600 sm:col-span-2">{fieldErrors.preference}</p> : null}
-                <Input
-                  id="notes"
-                  label="Observações da conta"
-                  placeholder="Como você prefere usar a plataforma"
-                  value={form.notes}
-                  onChange={updateField("notes")}
-                />
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 sm:p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Dados operacionais do anúncio</p>
-                <h3 className="mt-2 text-lg font-semibold text-zinc-900">Localização, disponibilidade e resumo público</h3>
-                <p className="mt-2 text-sm text-zinc-600">
-                  Dados de anúncio são editados no painel profissional para manter tudo centralizado.
-                </p>
-                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                  <Button type="button" variant="secondary" onClick={openOperationalSettings}>
-                    Ir para gerenciar anúncio
+                </div>
+                
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Segurança</p>
+                    <p className="mt-1 font-medium text-zinc-900">Senha protegida</p>
+                    <p className="mt-0.5 text-sm text-zinc-600">••••••••</p>
+                  </div>
+                  <Button type="button" variant="secondary" onClick={() => setShowPasswordModal(true)}>
+                    Alterar Senha
                   </Button>
+                </div>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 sm:p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Dados operacionais do anúncio</p>
+                  <h3 className="mt-2 text-lg font-semibold text-zinc-900">Localização, disponibilidade e resumo público</h3>
+                  <p className="mt-2 text-sm text-zinc-600">
+                    Dados de anúncio são editados no painel profissional para manter tudo centralizado.
+                  </p>
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                    <Button type="button" variant="secondary" onClick={openOperationalSettings}>
+                      Ir para gerenciar anúncio
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 sm:p-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Segurança</p>
+                      <p className="mt-1 font-medium text-zinc-900">Senha protegida</p>
+                      <p className="mt-0.5 text-sm text-zinc-600">••••••••</p>
+                    </div>
+                    <Button type="button" variant="secondary" onClick={() => setShowPasswordModal(true)}>
+                      Alterar Senha
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -588,6 +603,80 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
           </div>
         </Card>
       ) : null}
+      <Modal
+        open={showPasswordModal}
+        title="Alterar Senha"
+        description="Digite uma nova senha com no mínimo 8 caracteres para aumentar a segurança da sua conta."
+        onClose={() => !passwordModalSuccess && setShowPasswordModal(false)}
+        mobileCentered={true}
+        actions={null}
+      >
+        <div className="space-y-5 max-w-md">
+
+          {!passwordModalSuccess ? (
+            <div className="space-y-4">
+              <Input
+                id="new-password"
+                label="Nova senha"
+                type="password"
+                placeholder="••••••••"
+                value={newPassword}
+                onChange={(e) => {
+                  setNewPassword(e.target.value);
+                  setPasswordModalError(null);
+                }}
+              />
+              <Input
+                id="confirm-new-password"
+                label="Confirmar nova senha"
+                type="password"
+                placeholder="••••••••"
+                value={confirmNewPassword}
+                onChange={(e) => {
+                  setConfirmNewPassword(e.target.value);
+                  setPasswordModalError(null);
+                }}
+              />
+
+              {passwordModalError ? (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {passwordModalError}
+                </div>
+              ) : null}
+
+              <div className="flex gap-3 justify-end pt-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setNewPassword("");
+                    setConfirmNewPassword("");
+                    setPasswordModalError(null);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button type="button" onClick={handlePasswordChange}>
+                  Salvar Nova Senha
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-4 py-6">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div className="text-center">
+                <p className="font-semibold text-zinc-900">Senha alterada com sucesso!</p>
+                <p className="mt-1 text-sm text-zinc-600">Você será redirecionado em breve.</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

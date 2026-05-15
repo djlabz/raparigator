@@ -8,6 +8,10 @@ export const mockUsers: MockUser[] = [
     email: "cliente@sigillus.dev",
     password: "Cliente@123",
     label: "Perfil Cliente",
+    phone: "(11) 99999-8888",
+    cpf: "123.456.789-00",
+    alias: "Cliente",
+    city: "São Paulo, SP",
   },
   {
     id: "profissional-sigillus",
@@ -16,6 +20,9 @@ export const mockUsers: MockUser[] = [
     email: "profissional@sigillus.dev",
     password: "Profissional@123",
     label: "Perfil Profissional",
+    phone: "(11) 98888-7777",
+    cpf: "987.654.321-00",
+    alias: "Profissional",
   },
 ];
 
