@@ -13,6 +13,7 @@ import { useAuthSession } from "../../lib/auth-session";
 import { useAccountNotifications } from "../../lib/account-notifications";
 import { getRoleLabel } from "../../lib/navigation";
 import { isProfileFormComplete } from "@/lib/profile-completion";
+import { getVerificationState } from "@/lib/verification";
 import type { AuthRole, MockUser } from "../../lib/types";
 
 interface ProfileFormState {
@@ -76,12 +77,6 @@ function readStoredForm(key: string, user: MockUser | null): ProfileFormState {
 function isValidEmail(value: string) {
   return /^\S+@\S+\.\S+$/.test(value.trim());
 }
-
-type VerificationState = {
-  email: boolean;
-  phone: boolean;
-  document: boolean;
-};
 
 function sanitizeCpfDigits(value: string) {
   return value.replace(/\D/g, "").slice(0, 11);
@@ -334,13 +329,9 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
     window.location.href = "/profissional/dashboard?tab=Verificação";
   };
 
-  const verificationState: VerificationState = {
-    email: isValidEmail(form.email) && form.confirmEmail.trim() === form.email.trim(),
-    phone: false,
-    document: false,
-  };
-  const verifiedItems = [verificationState.email, verificationState.phone, verificationState.document].filter(Boolean).length;
-  const verificationProgress = Math.round((verifiedItems / 3) * 100);
+  const verificationState = getVerificationState(user.id, { email: user.email, phone: user.phone ?? "" });
+  const verifiedItems = [verificationState.email.verified, verificationState.phone.verified].filter(Boolean).length;
+  const verificationProgress = Math.round((verifiedItems / 2) * 100);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -583,21 +574,21 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
               <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
                 <div className="h-full rounded-full bg-emerald-500 transition-all duration-300" style={{ width: `${verificationProgress}%` }} />
               </div>
-              <p className="text-xs font-medium text-zinc-500">{verifiedItems} de 3 etapas concluídas</p>
+              <p className="text-xs font-medium text-zinc-500">{verifiedItems} de 2 etapas concluídas</p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className={`rounded-xl border p-3 ${verificationState.email ? "border-emerald-200 bg-emerald-50/70" : "border-zinc-200 bg-zinc-50"}`}>
+              <div className={`rounded-xl border p-3 ${verificationState.email.verified ? "border-emerald-200 bg-emerald-50/70" : "border-zinc-200 bg-zinc-50"}`}>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">E-mail</p>
-                <p className={`mt-1 text-sm font-semibold ${verificationState.email ? "text-emerald-700" : "text-zinc-700"}`}>{verificationState.email ? "Validado" : "Pendente"}</p>
+                <p className={`mt-1 text-sm font-semibold ${verificationState.email.verified ? "text-emerald-700" : "text-zinc-700"}`}>{verificationState.email.verified ? "Validado" : "Pendente"}</p>
               </div>
-              <div className={`rounded-xl border p-3 ${verificationState.phone ? "border-emerald-200 bg-emerald-50/70" : "border-zinc-200 bg-zinc-50"}`}>
+              <div className={`rounded-xl border p-3 ${verificationState.phone.verified ? "border-emerald-200 bg-emerald-50/70" : "border-zinc-200 bg-zinc-50"}`}>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Telefone</p>
-                <p className={`mt-1 text-sm font-semibold ${verificationState.phone ? "text-emerald-700" : "text-zinc-700"}`}>{verificationState.phone ? "Validado" : "Verificar"}</p>
+                <p className={`mt-1 text-sm font-semibold ${verificationState.phone.verified ? "text-emerald-700" : "text-zinc-700"}`}>{verificationState.phone.verified ? "Validado" : "Verificar"}</p>
               </div>
-              <div className={`rounded-xl border p-3 ${verificationState.document ? "border-emerald-200 bg-emerald-50/70" : "border-zinc-200 bg-zinc-50"}`}>
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 opacity-75">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Documento</p>
-                <p className={`mt-1 text-sm font-semibold ${verificationState.document ? "text-emerald-700" : "text-zinc-700"}`}>{verificationState.document ? "Validado" : "Verificar"}</p>
+                <p className="mt-1 text-sm font-semibold text-zinc-700">Em breve</p>
               </div>
             </div>
           </div>
