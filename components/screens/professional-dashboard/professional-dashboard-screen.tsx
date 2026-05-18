@@ -2,12 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useAuthSession } from "@/lib/auth-session";
 import { ads } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { SummaryTab } from "./summary-tab";
 import { AnnouncementTab } from "./announcement-tab";
 import { HistoryTab } from "./history-tab";
 import type { AdStatus } from "./types";
+import { confirmVerificationCode, getVerificationState, sendVerificationCode, type VerificationChannel, type VerificationState } from "@/lib/verification";
 
 const TABS = [
   { id: "Resumo", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /> },
@@ -128,25 +133,81 @@ export function ProfessionalDashboardScreen() {
 }
 
 function VerificationTab() {
-  const [verificationState] = useState({
-    email: true,
-    phone: false,
-    document: false,
-  });
+  const { role, user } = useAuthSession();
+  const userId = user?.id ?? "anonymous";
+  const verificationTargets = {
+    email: user?.email ?? "",
+    phone: user?.phone ?? "",
+  };
+  const [verificationState, setVerificationState] = useState<VerificationState>(() => getVerificationState(userId, verificationTargets));
+  const [codeInputs, setCodeInputs] = useState<Record<VerificationChannel, string>>({ email: "", phone: "" });
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [infoTone, setInfoTone] = useState<"success" | "error" | "info">("info");
+  const [revealedCodes, setRevealedCodes] = useState<Record<VerificationChannel, string | null>>({ email: null, phone: null });
 
-  const verifiedItems = [verificationState.email, verificationState.phone, verificationState.document].filter(Boolean).length;
-  const verificationProgress = Math.round((verifiedItems / 3) * 100);
+  useEffect(() => {
+    setVerificationState(getVerificationState(userId, verificationTargets));
+    setCodeInputs({ email: "", phone: "" });
+    setRevealedCodes({ email: null, phone: null });
+  }, [userId, verificationTargets.email, verificationTargets.phone]);
+
+  useEffect(() => {
+    if (!infoMessage) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => setInfoMessage(null), 3200);
+    return () => window.clearTimeout(timeoutId);
+  }, [infoMessage]);
+
+  if (role === "visitor" || !user) {
+    return (
+      <Card className="border-zinc-200 bg-white shadow-sm shadow-zinc-200/70">
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Verificação da conta</p>
+          <h2 className="text-2xl font-semibold text-zinc-900">Acesse sua conta profissional</h2>
+          <p className="text-sm text-zinc-600">Entre com uma conta de profissional para validar e-mail e telefone.</p>
+        </div>
+      </Card>
+    );
+  }
+
+  const verifiedItems = [verificationState.email.verified, verificationState.phone.verified].filter(Boolean).length;
+  const verificationProgress = Math.round((verifiedItems / 2) * 100);
+
+  const pushInfo = (message: string, tone: "success" | "error" | "info") => {
+    setInfoTone(tone);
+    setInfoMessage(message);
+  };
+
+  const handleSendCode = (channel: VerificationChannel) => {
+    const result = sendVerificationCode(userId, verificationTargets, channel, verificationState);
+    setVerificationState(result.state);
+    setRevealedCodes((current) => ({ ...current, [channel]: result.code }));
+    pushInfo(channel === "email" ? `Código de teste enviado para ${verificationTargets.email}.` : `Código de teste enviado para ${verificationTargets.phone}.`, "info");
+  };
+
+  const handleConfirmCode = (channel: VerificationChannel) => {
+    const result = confirmVerificationCode(userId, verificationTargets, channel, codeInputs[channel], verificationState);
+    setVerificationState(result.state);
+    pushInfo(result.message, result.success ? "success" : "error");
+
+    if (result.success) {
+      setCodeInputs((current) => ({ ...current, [channel]: "" }));
+      setRevealedCodes((current) => ({ ...current, [channel]: null }));
+    }
+  };
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
+    <Card className="space-y-5 border-zinc-200 bg-white shadow-sm shadow-zinc-200/70 sm:p-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Verificação da conta</p>
           <h2 className="mt-1 text-2xl font-semibold text-zinc-900">Confiança do perfil</h2>
-          <p className="mt-1 text-sm text-zinc-600">Conclua as etapas abaixo para elevar a segurança da conta e fortalecer seu perfil.</p>
+          <p className="mt-1 text-sm text-zinc-600">Conclua as etapas de e-mail e telefone para elevar a segurança da conta.</p>
         </div>
         <span className="self-start rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
-          {verifiedItems}/3 concluídas
+          {verifiedItems}/2 concluídas
         </span>
       </div>
 
@@ -157,12 +218,55 @@ function VerificationTab() {
         <p className="text-xs font-medium text-zinc-500">Progresso de verificação: {verificationProgress}%</p>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        <VerificationItem title="E-mail" description="Contato principal confirmado." done={verificationState.email} actionLabel="Verificado" />
-        <VerificationItem title="Telefone" description="Confirme com código por SMS." done={verificationState.phone} actionLabel="Verificar" />
-        <VerificationItem title="Documento" description="Envie documento para validação." done={verificationState.document} actionLabel="Verificar" />
+      {infoMessage ? (
+        <div
+          className={cn(
+            "rounded-xl border px-4 py-3 text-sm",
+            infoTone === "success"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+              : infoTone === "error"
+                ? "border-red-200 bg-red-50 text-red-900"
+                : "border-zinc-200 bg-zinc-50 text-zinc-700",
+          )}
+        >
+          {infoMessage}
+        </div>
+      ) : null}
+
+      <div className="mt-5 grid items-stretch gap-3 xl:grid-cols-3">
+        <VerificationItem
+          title="E-mail"
+          description={`Confirme o contato principal em ${verificationTargets.email}.`}
+          done={verificationState.email.verified}
+          actionLabel={verificationState.email.verified ? "Validado" : verificationState.email.pendingCode ? "Reenviar código" : "Enviar código"}
+          codeLabel="Código de e-mail"
+          codeValue={codeInputs.email}
+          revealedCode={revealedCodes.email}
+          onCodeChange={(value) => setCodeInputs((current) => ({ ...current, email: value }))}
+          onAction={() => handleSendCode("email")}
+          onConfirm={() => handleConfirmCode("email")}
+        />
+        <VerificationItem
+          title="Telefone"
+          description={`Valide o número com DDD ${verificationTargets.phone}.`}
+          done={verificationState.phone.verified}
+          actionLabel={verificationState.phone.verified ? "Validado" : verificationState.phone.pendingCode ? "Reenviar código" : "Enviar SMS"}
+          codeLabel="Código de SMS"
+          codeValue={codeInputs.phone}
+          revealedCode={revealedCodes.phone}
+          onCodeChange={(value) => setCodeInputs((current) => ({ ...current, phone: value }))}
+          onAction={() => handleSendCode("phone")}
+          onConfirm={() => handleConfirmCode("phone")}
+        />
+        <VerificationItem
+          title="Documento"
+          description="Etapa prevista para a próxima fase do fluxo de validação."
+          done={false}
+          actionLabel="Em breve"
+          disabled
+        />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -171,28 +275,65 @@ function VerificationItem({
   description,
   done,
   actionLabel,
+  codeLabel,
+  codeValue,
+  revealedCode,
+  onCodeChange,
+  onAction,
+  onConfirm,
+  disabled = false,
 }: {
   title: string;
   description: string;
   done: boolean;
   actionLabel: string;
+  codeLabel?: string;
+  codeValue?: string;
+  revealedCode?: string | null;
+  onCodeChange?: (value: string) => void;
+  onAction?: () => void;
+  onConfirm?: () => void;
+  disabled?: boolean;
 }) {
   return (
-    <div className={cn("rounded-xl border p-4", done ? "border-emerald-200 bg-emerald-50/70" : "border-zinc-200 bg-zinc-50")}>
+    <div className={cn("flex h-full min-h-65 flex-col rounded-xl border p-4 sm:min-h-70", done ? "border-emerald-200 bg-emerald-50/70" : "border-zinc-200 bg-zinc-50", disabled && "opacity-70")}> 
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">{title}</p>
-      <p className="mt-2 text-sm text-zinc-600">{description}</p>
-      <div className="mt-4 flex items-center justify-between">
-        <span className={cn("text-sm font-semibold", done ? "text-emerald-700" : "text-zinc-700")}>{done ? "Concluído" : "Pendente"}</span>
-        <button
-          type="button"
-          className={cn(
-            "rounded-lg px-3 py-1.5 text-xs font-semibold transition",
-            done ? "bg-emerald-100 text-emerald-700" : "bg-wine-50 text-wine-700 hover:bg-wine-100",
-          )}
-        >
-          {actionLabel}
-        </button>
-      </div>
+      <p className="mt-2 min-h-12 text-sm text-zinc-600">{description}</p>
+      {revealedCode && codeLabel ? (
+        <div className="mt-3 rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-2 text-xs text-zinc-700">
+          <span className="font-semibold text-zinc-500">{codeLabel}:</span>{" "}
+          <span className="font-mono font-semibold tracking-[0.18em] text-zinc-900">{revealedCode}</span>
+        </div>
+      ) : null}
+      {codeValue !== undefined && onCodeChange && onConfirm ? (
+        <div className="mt-3 flex flex-1 flex-col">
+          <div className="space-y-2">
+          <Input
+            id={`${title.toLowerCase()}-code`}
+            label={codeLabel ?? "Código"}
+            placeholder="Digite o código"
+            value={codeValue}
+            onChange={(event) => onCodeChange(event.target.value)}
+            disabled={disabled || done}
+          />
+          </div>
+          <div className="mt-auto flex items-center gap-2 pt-3">
+            <Button type="button" size="sm" variant="secondary" onClick={onAction} disabled={disabled || done} className="min-w-27">
+              {actionLabel}
+            </Button>
+            <Button type="button" size="sm" onClick={onConfirm} disabled={disabled || done || !codeValue.trim()} className="min-w-24">
+              Confirmar
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+          <span className={cn("text-sm font-semibold", done ? "text-emerald-700" : "text-zinc-700")}>{done ? "Concluído" : disabled ? "Futuro" : "Pendente"}</span>
+          <Button type="button" size="sm" variant={done ? "secondary" : "primary"} onClick={onAction} disabled={disabled || done} className="min-w-27">
+            {actionLabel}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
