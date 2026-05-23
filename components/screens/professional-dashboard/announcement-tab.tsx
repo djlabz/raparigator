@@ -1679,12 +1679,12 @@ function PhotoGalleryModal({ images, activeIndex, onClose, onChange, onSetCover,
         </div>
 
         <div className="w-full max-w-5xl px-4 shrink-0 pb-safe mb-6">
-          <div className="flex gap-3 overflow-x-auto pb-4 hide-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x scroll-smooth">
+          <div className="flex gap-3 overflow-x-auto px-1 py-2 pb-4 hide-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x scroll-smooth">
             {images.map((img, i) => (
               <div key={i} className="relative shrink-0 group snap-center">
                 <button
                   onClick={() => onChange(i)}
-                  className={cn("relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden transition-all block", i === activeIndex ? "ring-2 ring-wine-600 opacity-100 scale-105 z-10" : "opacity-60 hover:opacity-100")}
+                  className={cn("relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden transition-all block", i === activeIndex ? "outline-2 outline-offset-2 outline-wine-500 opacity-100 z-10 shadow-lg" : "opacity-60 hover:opacity-100")}
                 >
                   <Image src={img} fill className="object-cover" alt={`Thumb ${i}`} />
                 </button>
