@@ -31,7 +31,7 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose }: ImageCr
   };
 
   return (
-    <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col items-center justify-center p-4">
+    <div className="fixed inset-0 z-200 bg-black/95 flex flex-col items-center justify-center p-4">
       <div className="relative w-full max-w-2xl h-[60vh] bg-black rounded-lg overflow-hidden">
         <Cropper
           image={imageSrc}
