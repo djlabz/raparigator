@@ -195,7 +195,7 @@ export function ClientSignupScreen() {
     <div className="min-h-screen bg-zinc-50 md:grid md:grid-cols-2 md:items-start">
       <section className="relative hidden h-screen overflow-hidden bg-black md:sticky md:top-0 md:block">
         <Image
-          src="/modelo_criar_conta_cliente_1.png"
+          src="/images/auth/signup-client-model-1.png"
           alt="Modelo para criacao de conta cliente"
           fill
           priority

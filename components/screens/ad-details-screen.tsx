@@ -35,11 +35,11 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
 
   const isPremium = ad.adTier === "premium";
   const premiumAttributes = [
-    { label: "Altura", value: `${ad.heightCm} cm`, icon: "/icons/icons-banner/size-womam.svg" },
-    { label: "Idade", value: `${ad.age} anos`, icon: "/icons/icons-banner/age.svg" },
-    { label: "Tipo e cor de cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: "/icons/icons-banner/hair-woman.svg" },
-    { label: "Cor dos olhos", value: ad.eyeColor, icon: "/icons/icons-banner/eye.svg" },
-    { label: "Peso", value: `${ad.weightKg} kg`, icon: "/icons/icons-banner/weight.svg" },
+    { label: "Altura", value: `${ad.heightCm} cm`, icon: "/icons/attributes/size-woman.svg" },
+    { label: "Idade", value: `${ad.age} anos`, icon: "/icons/attributes/age.svg" },
+    { label: "Tipo e cor de cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: "/icons/attributes/hair-woman.svg" },
+    { label: "Cor dos olhos", value: ad.eyeColor, icon: "/icons/attributes/eye.svg" },
+    { label: "Peso", value: `${ad.weightKg} kg`, icon: "/icons/attributes/weight.svg" },
   ];
 
   const nextPhoto = () => {
