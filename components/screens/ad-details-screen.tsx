@@ -34,6 +34,13 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
   }
 
   const isPremium = ad.adTier === "premium";
+  const premiumAttributes = [
+    { label: "Altura", value: `${ad.heightCm} cm`, icon: "/icons/icons-banner/size-womam.svg" },
+    { label: "Idade", value: `${ad.age} anos`, icon: "/icons/icons-banner/age.svg" },
+    { label: "Tipo e cor de cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: "/icons/icons-banner/hair-woman.svg" },
+    { label: "Cor dos olhos", value: ad.eyeColor, icon: "/icons/icons-banner/eye.svg" },
+    { label: "Peso", value: `${ad.weightKg} kg`, icon: "/icons/icons-banner/weight.svg" },
+  ];
 
   const nextPhoto = () => {
     if (selectedPhotoIndex !== null) {
@@ -51,7 +58,7 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
     <AppShell location={`${ad.city}, ${ad.state}`}>
       <div className="space-y-6">
         {isPremium && (
-          <section className="relative overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#121212] pb-6 shadow-xl md:pb-8">
+          <section className="relative overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#121212] shadow-xl">
             <div className="relative h-48 w-full overflow-hidden bg-zinc-900 sm:h-64 md:h-72">
               <Image src={ad.images[0]} alt="Foto de capa premium" fill className="object-cover" priority sizes="100vw" />
               <div className="absolute inset-x-0 bottom-0 z-10 h-32 bg-linear-to-t from-[#121212] via-[#121212]/70 to-transparent" />
@@ -60,50 +67,72 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
             <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-black/20 via-black/40 to-transparent" />
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,223,0,0.02)_0%,transparent_40%,rgba(218,165,32,0.03)_100%)]" />
 
-            <div className="pointer-events-none absolute right-4 top-51 bottom-6 z-0 flex items-start justify-end opacity-25 sm:right-8 sm:top-68 sm:bottom-8 md:right-12 md:top-76">
+            <div className="pointer-events-none absolute right-4 top-51 bottom-6 z-20 flex items-start justify-end opacity-35 sm:right-8 sm:top-68 sm:bottom-8 md:right-12 md:top-76">
               <Crown className="h-24 w-24 max-h-full max-w-full aspect-square fill-red-600/15 text-red-600 sm:h-32 sm:w-32 md:h-40 md:w-40" />
             </div>
 
-            <div className="relative z-10 w-full px-4 sm:px-8 md:px-12">
-              <div className="relative -mt-12 flex flex-col justify-between sm:-mt-16 md:-mt-20 md:flex-row md:items-end">
-                <div className="relative inline-block self-start align-bottom md:self-end">
-                  <div className="relative z-10 h-24 w-24 rounded-full bg-linear-to-tr from-amber-300 via-[#a88222] to-amber-300 p-1 shadow-[0_0_20px_rgba(218,165,32,0.35)] sm:h-32 sm:w-32 md:h-36 md:w-36">
-                    <div className="relative h-full w-full overflow-hidden rounded-full border-[3px] border-[#121212]">
-                      <Image
-                        src={ad.images[1] || ad.images[0]}
-                        alt={ad.artisticName}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 96px, (max-width: 768px) 128px, 144px"
-                      />
+            <div className="relative z-10 w-full px-4 pb-5 sm:px-8 sm:pb-6 md:px-12 md:pb-8">
+              <div className="flex flex-col gap-5 md:gap-6">
+                <div className="relative -mt-12 flex flex-col gap-4 sm:-mt-16 md:-mt-20 md:flex-row md:items-end md:justify-between">
+                  <div className="flex items-end gap-4">
+                    <div className="relative inline-block shrink-0 align-bottom">
+                      <div className="relative z-10 h-24 w-24 rounded-full bg-linear-to-tr from-amber-300 via-[#a88222] to-amber-300 p-1 shadow-[0_0_20px_rgba(218,165,32,0.35)] sm:h-32 sm:w-32 md:h-36 md:w-36">
+                        <div className="relative h-full w-full overflow-hidden rounded-full border-[3px] border-[#121212]">
+                          <Image
+                            src={ad.images[1] || ad.images[0]}
+                            alt={ad.artisticName}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 640px) 96px, (max-width: 768px) 128px, 144px"
+                          />
+                        </div>
+                      </div>
+                      <div className="absolute right-1 bottom-1 z-20 flex h-5 w-5 items-center justify-center rounded-full border-[3px] border-[#121212] bg-[#10b981] sm:right-2 sm:bottom-2 sm:h-6 sm:w-6">
+                        <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pb-1 text-left">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+                        <h1 className="font-display text-2xl font-bold text-[#FFDF00] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] sm:text-3xl">{ad.artisticName}</h1>
+
+                        <div className="flex items-center gap-1.5 self-start rounded-full border border-[#DAA520]/50 bg-black/60 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-amber-500 shadow-sm backdrop-blur-md">
+                          <Crown className="h-3.5 w-3.5 fill-amber-500" />
+                          Premium
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-zinc-400">
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <MapPin className="h-4 w-4 text-wine-500" />
+                          {ad.neighborhood}, {ad.city}
+                        </span>
+
+                        <div className="flex items-center gap-1.5 font-medium text-[#10b981]">
+                          <ShieldCheck className="h-4 w-4" />
+                          Identidade Verificada
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="absolute right-1 bottom-1 z-20 flex h-5 w-5 items-center justify-center rounded-full border-[3px] border-[#121212] bg-[#10b981] sm:right-2 sm:bottom-2 sm:h-6 sm:w-6">
-                    <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 text-left md:mt-3">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-                  <h1 className="font-display text-2xl font-bold text-[#FFDF00] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] sm:text-3xl">{ad.artisticName}</h1>
-
-                  <div className="flex items-center gap-1.5 self-start rounded-full border border-[#DAA520]/50 bg-black/60 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-amber-500 shadow-sm backdrop-blur-md">
-                    <Crown className="h-3.5 w-3.5 fill-amber-500" />
-                    Premium
-                  </div>
                 </div>
 
-                <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-zinc-400">
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <MapPin className="h-4 w-4 text-wine-500" />
-                    {ad.neighborhood}, {ad.city}
-                  </span>
+                <div className="relative z-10 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                  {premiumAttributes.map((attribute) => (
+                    <div
+                      key={attribute.label}
+                      className="flex min-h-24 items-center gap-3 rounded-2xl border border-white/8 bg-[#0c0c0c]/90 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-sm"
+                    >
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-black/55">
+                        <Image src={attribute.icon} alt={attribute.label} width={34} height={34} className="h-8 w-8 object-contain" />
+                      </div>
 
-                  <div className="flex items-center gap-1.5 font-medium text-[#10b981]">
-                    <ShieldCheck className="h-4 w-4" />
-                    Identidade Verificada
-                  </div>
+                      <div className="min-w-0 space-y-1">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-300/85">{attribute.label}</p>
+                        <p className="wrap-break-word text-sm font-semibold text-zinc-100 sm:text-[15px]">{attribute.value}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
