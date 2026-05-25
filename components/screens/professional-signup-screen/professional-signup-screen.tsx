@@ -11,15 +11,15 @@ import styles from "./professional-signup-screen.module.css";
 
 const stackedCards = [
   {
-    src: "/stacked_cards_1.png",
+    src: "/images/professional-signup/stacked-cards-1.png",
     alt: "Modelo em destaque com fundo escuro e luz suave",
   },
   {
-    src: "/stacked_cards_2.png",
+    src: "/images/professional-signup/stacked-cards-2.png",
     alt: "Modelo em destaque com composição premium e contraste dramático",
   },
   {
-    src: "/stacked_cards_3.png",
+    src: "/images/professional-signup/stacked-cards-3.png",
     alt: "Modelo em destaque com pose elegante e acabamento refinado",
   },
 ];
