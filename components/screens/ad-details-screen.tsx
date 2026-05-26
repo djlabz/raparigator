@@ -58,7 +58,7 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
     <AppShell location={`${ad.city}, ${ad.state}`}>
       <div className="space-y-6">
         {isPremium && (
-          <section className="relative overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#121212] shadow-xl">
+          <section className="relative isolate overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#121212] shadow-xl">
             <div className="relative h-48 w-full overflow-hidden bg-zinc-900 sm:h-64 md:h-72">
               <Image src={ad.images[0]} alt="Foto de capa premium" fill className="object-cover" priority sizes="100vw" />
               <div className="absolute inset-x-0 bottom-0 z-10 h-32 bg-linear-to-t from-[#121212] via-[#121212]/70 to-transparent" />
@@ -67,7 +67,7 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
             <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-black/20 via-black/40 to-transparent" />
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,223,0,0.02)_0%,transparent_40%,rgba(218,165,32,0.03)_100%)]" />
 
-            <div className="pointer-events-none absolute right-4 top-51 bottom-6 z-20 flex items-start justify-end opacity-35 sm:right-8 sm:top-68 sm:bottom-8 md:right-12 md:top-76">
+            <div className="pointer-events-none absolute right-4 top-51 z-20 flex opacity-35 sm:right-8 sm:top-68 md:right-12 md:top-76">
               <Crown className="h-24 w-24 max-h-full max-w-full aspect-square fill-red-600/15 text-red-600 sm:h-32 sm:w-32 md:h-40 md:w-40" />
             </div>
 
