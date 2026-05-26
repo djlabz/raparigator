@@ -117,19 +117,19 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
                   </div>
                 </div>
 
-                <div className="relative z-10 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                <div className="relative z-10 grid grid-cols-2 gap-2 sm:grid-cols-2 xl:grid-cols-5">
                   {premiumAttributes.map((attribute) => (
                     <div
                       key={attribute.label}
-                      className="flex min-h-24 items-center gap-3 rounded-2xl border border-white/8 bg-[#0c0c0c]/90 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-sm"
+                      className="flex min-h-20 items-center gap-2 rounded-2xl border border-white/8 bg-[#0c0c0c]/90 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-sm sm:min-h-24 sm:gap-3 sm:px-4 sm:py-4"
                     >
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-black/55">
-                        <Image src={attribute.icon} alt={attribute.label} width={34} height={34} className="h-8 w-8 object-contain" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-black/55 sm:h-12 sm:w-12">
+                        <Image src={attribute.icon} alt={attribute.label} width={34} height={34} className="h-7 w-7 object-contain sm:h-8 sm:w-8" />
                       </div>
 
                       <div className="min-w-0 space-y-1">
-                        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-300/85">{attribute.label}</p>
-                        <p className="wrap-break-word text-sm font-semibold text-zinc-100 sm:text-[15px]">{attribute.value}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300/85 sm:text-[11px] sm:tracking-[0.18em]">{attribute.label}</p>
+                        <p className="wrap-break-word text-xs font-semibold text-zinc-100 sm:text-[15px]">{attribute.value}</p>
                       </div>
                     </div>
                   ))}
