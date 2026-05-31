@@ -96,10 +96,11 @@ export function BottomNav({ items }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-70 rounded-full bg-white/70 backdrop-blur-xl border border-zinc-200/50 shadow-2xl md:hidden"
+      className="fixed bottom-2 left-1/2 z-50 w-[calc(100%-1.5rem)] max-w-70 -translate-x-1/2 rounded-full border border-white/25 bg-white/40 shadow-2xl backdrop-blur-3xl backdrop-saturate-150 supports-backdrop-filter:bg-white/30 md:hidden"
       aria-label="Navegação principal"
     >
-      <ul className="flex items-center justify-around gap-0.5 px-2 py-2">
+      <div className="pointer-events-none absolute inset-0 rounded-full bg-linear-to-b from-white/35 via-white/12 to-white/5" />
+      <ul className="relative flex items-center justify-around gap-0.5 px-2 py-2">
         {items.map((item) => {
           const active = pathname.startsWith(item.href);
           return (
