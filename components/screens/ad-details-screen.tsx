@@ -109,13 +109,13 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
                         {/* Premium badge is shown on the cover image corner; removed inline badge here to avoid duplication */}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-zinc-400 sm:gap-x-5 sm:text-sm">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-zinc-300 sm:gap-x-5 sm:text-sm">
                         <span className="flex items-center gap-1.5 font-medium leading-none">
                           <MapPin className="h-3.5 w-3.5 shrink-0 text-[#96001e] sm:h-4 sm:w-4" />
                           {ad.neighborhood}, {ad.city}
                         </span>
 
-                        <span className="flex items-center gap-1.5 font-medium leading-none text-zinc-300">
+                        <span className="flex items-center gap-1.5 font-medium leading-none">
                           <Image src="/icons/attributes/age.svg" alt="Idade" width={16} height={16} className="h-3.5 w-3.5 object-contain sm:h-4 sm:w-4" />
                           {ad.age} anos
                         </span>
@@ -174,7 +174,7 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
                 <div className="space-y-1 pb-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h1 className="font-display text-xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] sm:text-2xl md:text-3xl">{ad.artisticName}</h1>
-                    <span className="text-sm font-semibold text-zinc-100 sm:text-base">{ad.age} anos</span>
+                    <span className="text-base font-semibold text-zinc-100 sm:text-lg md:text-xl">{ad.age} anos</span>
                     <span className="origin-left scale-90">
                       <StatusBadge status={ad.status} />
                     </span>
