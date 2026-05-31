@@ -19,8 +19,10 @@ import { getCroppedImg } from "@/lib/cropImage";
 const SELECT_PLACEHOLDER = "Selecionar";
 const GENDER_OPTIONS = [SELECT_PLACEHOLDER, "Feminino", "Masculino", "Trans", "Não-binário"];
 const ETHNICITY_OPTIONS = [SELECT_PLACEHOLDER, "Branca", "Preta", "Parda", "Amarela", "Indígena"];
+const HAIR_TYPE_OPTIONS = [SELECT_PLACEHOLDER, "Liso", "Ondulado", "Cacheado", "Crespo", "Afro", "Trançado"];
 const HAIR_COLOR_OPTIONS = [SELECT_PLACEHOLDER, "Preto", "Castanho", "Loiro", "Ruivo", "Colorido", "Rosa", "Platinado"];
 const SMOKER_OPTIONS = [SELECT_PLACEHOLDER, "Sim", "Não"];
+const HAIR_SELECTION_SEPARATOR = "::";
 type VisibilityStatus = "Ativo" | "Pausado" | "Invisível";
 type SectionKey = "characteristics" | "pricing" | "location" | "description" | "services" | "availability";
 const SECTION_LABELS: Record<SectionKey, string> = {
@@ -60,7 +62,7 @@ const CHARACTERISTICS_FIELD_LABELS: Record<keyof Pick<ProfileCharacteristics, "g
   ethnicity: "Etnia",
   height: "Altura (cm)",
   weight: "Peso (kg)",
-  hairColor: "Cor do Cabelo",
+  hairColor: "Tipo e Cor do Cabelo",
   smoker: "Fumante",
 };
 
@@ -119,6 +121,65 @@ function sanitizeCityInput(value: string) {
     .replace(/[^A-Za-zÀ-ÿ' -]/g, "")
     .replace(/\s{2,}/g, " ")
     .slice(0, 60);
+}
+
+function parseHairSelection(value: string) {
+  if (!value.trim() || value === SELECT_PLACEHOLDER) {
+    return {
+      type: SELECT_PLACEHOLDER,
+      color: SELECT_PLACEHOLDER,
+    };
+  }
+
+  if (value.includes(HAIR_SELECTION_SEPARATOR)) {
+    const [type = SELECT_PLACEHOLDER, color = SELECT_PLACEHOLDER] = value.split(HAIR_SELECTION_SEPARATOR);
+
+    return {
+      type: type.trim() || SELECT_PLACEHOLDER,
+      color: color.trim() || SELECT_PLACEHOLDER,
+    };
+  }
+
+  return {
+    type: SELECT_PLACEHOLDER,
+    color: value,
+  };
+}
+
+function serializeHairSelection(type: string, color: string) {
+  return `${type}${HAIR_SELECTION_SEPARATOR}${color}`;
+}
+
+function isHairSelectionComplete(value: string) {
+  if (!value.trim() || value === SELECT_PLACEHOLDER) {
+    return false;
+  }
+
+  if (!value.includes(HAIR_SELECTION_SEPARATOR)) {
+    return true;
+  }
+
+  const { type, color } = parseHairSelection(value);
+
+  return !isSelectUnselected(type) && !isSelectUnselected(color);
+}
+
+function formatHairSelectionSummary(value: string) {
+  const { type, color } = parseHairSelection(value);
+
+  if (isHairSelectionComplete(value)) {
+    return `${type} • ${color}`;
+  }
+
+  if (!isSelectUnselected(type) && isSelectUnselected(color)) {
+    return `Tipo: ${type}`;
+  }
+
+  if (!isSelectUnselected(color) && isSelectUnselected(type)) {
+    return `Cor: ${color}`;
+  }
+
+  return "Selecione o tipo e a cor";
 }
 
 function resolvePricingBillingType(item: PricingItem) {
@@ -268,7 +329,7 @@ function getPublishValidationErrors(form: ProfileFormState) {
     isSelectUnselected(form.characteristics.ethnicity),
     sanitizeNumericInput(form.characteristics.height).length === 0,
     sanitizeNumericInput(form.characteristics.weight).length === 0,
-    isSelectUnselected(form.characteristics.hairColor),
+    !isHairSelectionComplete(form.characteristics.hairColor),
     isSelectUnselected(form.characteristics.smoker),
   ].some(Boolean);
   const hasPricing = form.pricing.some((item) => !item.disabled && item.price.trim().length > 0);
@@ -390,9 +451,8 @@ export function AnnouncementTab({
         form.characteristics.ethnicity,
         form.characteristics.height,
         form.characteristics.weight,
-        form.characteristics.hairColor,
         form.characteristics.smoker,
-      ].every((value) => value.trim().length > 0 && value !== SELECT_PLACEHOLDER);
+      ].every((value) => value.trim().length > 0 && value !== SELECT_PLACEHOLDER) && isHairSelectionComplete(form.characteristics.hairColor);
     }
 
     if (section === "pricing") {
@@ -833,6 +893,11 @@ export function AnnouncementTab({
       const requiredKeys: Array<keyof Pick<ProfileCharacteristics, "gender" | "ethnicity" | "height" | "weight" | "hairColor" | "smoker">> = ["gender", "ethnicity", "height", "weight", "hairColor", "smoker"];
       const missing = requiredKeys.filter((key) => {
         const value = form.characteristics[key];
+
+        if (key === "hairColor") {
+          return !isHairSelectionComplete(value);
+        }
+
         if (key === "height" || key === "weight") {
           return sanitizeNumericInput(value).length === 0;
         }
@@ -1752,6 +1817,110 @@ function FormInput({ label, value, onChange, placeholder, disabled, invalid }: {
   )
 }
 
+function HairTypeAndColorField({
+  value,
+  onChange,
+  invalid,
+}: {
+  value: string;
+  onChange: (nextValue: string) => void;
+  invalid?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selection, setSelection] = useState(() => parseHairSelection(value));
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setSelection(parseHairSelection(value));
+  }, [value]);
+
+  useEffect(() => {
+    const handleDocumentMouseDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleDocumentKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleDocumentMouseDown);
+    document.addEventListener("keydown", handleDocumentKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handleDocumentMouseDown);
+      document.removeEventListener("keydown", handleDocumentKeyDown);
+    };
+  }, []);
+
+  const updateSelection = (nextSelection: { type: string; color: string }) => {
+    setSelection(nextSelection);
+    onChange(serializeHairSelection(nextSelection.type, nextSelection.color));
+  };
+
+  const summary = formatHairSelectionSummary(value);
+
+  return (
+    <div ref={rootRef} className="space-y-1.5">
+      <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500">Tipo e Cor do Cabelo</label>
+      <button
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+        className={cn(
+          "flex h-11 w-full items-center justify-between gap-3 rounded-xl border bg-white px-4 text-left text-sm shadow-sm transition-all",
+          invalid ? "border-red-400 ring-1 ring-red-200" : "border-zinc-200 hover:border-wine-300 focus:border-wine-500 focus:outline-none focus:ring-2 focus:ring-wine-200",
+        )}
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
+      >
+        <span className={cn("truncate", isHairSelectionComplete(value) ? "text-zinc-900" : "text-zinc-500")}>
+          {summary}
+        </span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={cn("h-4 w-4 shrink-0 text-zinc-500 transition-transform", isOpen && "rotate-180")}
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+
+      {isOpen ? (
+        <div className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-3 shadow-sm">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Select
+              label="Tipo"
+              id="hairType"
+              options={HAIR_TYPE_OPTIONS.map((option) => ({ label: option, value: option }))}
+              value={selection.type}
+              onChange={(event) => updateSelection({ ...selection, type: event.target.value })}
+              premium
+            />
+            <Select
+              label="Cor"
+              id="hairColorTone"
+              options={HAIR_COLOR_OPTIONS.map((option) => ({ label: option, value: option }))}
+              value={selection.color}
+              onChange={(event) => updateSelection({ ...selection, color: event.target.value })}
+              premium
+            />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 // ─── Seções Específicas ──────────────────────────────────────────
 
 function CharacteristicsSection({ characteristics: c, onUpdate, invalidFields, errorMessage, isShaking }: { characteristics: ProfileCharacteristics; onUpdate: (key: keyof ProfileCharacteristics, value: string) => void; invalidFields: Array<keyof ProfileCharacteristics>; errorMessage: string | null; isShaking: boolean }) {
@@ -1788,13 +1957,10 @@ function CharacteristicsSection({ characteristics: c, onUpdate, invalidFields, e
         <FormInput label="Peso (kg)" value={formatWeightInput(c.weight)} onChange={(v) => onUpdate("weight", v)} placeholder="Ex: 60" invalid={isInvalid("weight")} />
 
         <div>
-          <Select
-            label="Cor do Cabelo"
-            id="hairColor"
-            options={HAIR_COLOR_OPTIONS.map(o => ({ label: o, value: o }))}
+          <HairTypeAndColorField
             value={c.hairColor}
-            onChange={(e) => onUpdate("hairColor", e.target.value)}
-            className={cn(isInvalid("hairColor") && "border-red-400 ring-1 ring-red-200")}
+            onChange={(nextValue) => onUpdate("hairColor", nextValue)}
+            invalid={isInvalid("hairColor")}
           />
           {isInvalid("hairColor") && <p className="mt-1 text-xs text-red-500">Selecione uma opção.</p>}
         </div>
