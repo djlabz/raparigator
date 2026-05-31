@@ -134,7 +134,7 @@ export function FeedFiltersContent({
         <div className="space-y-2">
           {[
             "Premium",
-            "Standard",
+            "Comum",
           ].map((type) => (
             <label key={type} className="group flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors hover:bg-wine-50/50">
               <input
@@ -154,13 +154,14 @@ export function FeedFiltersContent({
 
       <section className="space-y-5">
         <div>
-          <label className="mb-2 block text-sm font-bold text-zinc-900">Etnia</label>
+          <label className="mb-2 block text-sm font-bold text-zinc-900">Tipo</label>
           <div className="flex flex-wrap gap-2">
             {[
               "Caucasiana",
               "Negra",
               "Asiática",
               "Latina",
+              "Indígena"
             ].map((eth) => (
               <button
                 key={eth}
