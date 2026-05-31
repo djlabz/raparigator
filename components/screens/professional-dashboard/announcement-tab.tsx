@@ -18,7 +18,14 @@ import { getCroppedImg } from "@/lib/cropImage";
 // ─── Options para selects ─────────────────────────────────────────
 const SELECT_PLACEHOLDER = "Selecionar";
 const GENDER_OPTIONS = [SELECT_PLACEHOLDER, "Feminino", "Masculino", "Trans", "Não-binário"];
-const ETHNICITY_OPTIONS = [SELECT_PLACEHOLDER, "Branca", "Preta", "Parda", "Amarela", "Indígena"];
+const ETHNICITY_OPTIONS = [
+  { label: SELECT_PLACEHOLDER, value: SELECT_PLACEHOLDER },
+  { label: "Branca", value: "Branca" },
+  { label: "Preta", value: "Preta" },
+  { label: "Parda (miscigenados)", value: "Parda" },
+  { label: "Amarela (descendentes de asiáticos)", value: "Amarela" },
+  { label: "Indígena", value: "Indígena" },
+];
 const HAIR_TYPE_OPTIONS = [SELECT_PLACEHOLDER, "Liso", "Ondulado", "Cacheado", "Crespo", "Afro", "Trançado"];
 const HAIR_COLOR_OPTIONS = [SELECT_PLACEHOLDER, "Preto", "Castanho", "Loiro", "Ruivo", "Colorido", "Rosa", "Platinado"];
 const SMOKER_OPTIONS = [SELECT_PLACEHOLDER, "Sim", "Não"];
@@ -1945,7 +1952,7 @@ function CharacteristicsSection({ characteristics: c, onUpdate, invalidFields, e
           <Select
             label="Etnia"
             id="ethnicity"
-            options={ETHNICITY_OPTIONS.map(o => ({ label: o, value: o }))}
+            options={ETHNICITY_OPTIONS}
             value={c.ethnicity}
             onChange={(e) => onUpdate("ethnicity", e.target.value)}
             className={cn(isInvalid("ethnicity") && "border-red-400 ring-1 ring-red-200")}
