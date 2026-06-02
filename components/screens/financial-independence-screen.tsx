@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Select } from "@/components/ui/select";
 import { currency } from "@/lib/utils";
 
 // --- Constantes e Configurações ---
@@ -274,23 +275,17 @@ export function FinancialIndependenceScreen() {
                     />
                   </div>
                   <div className="w-32">
-                    <div className="space-y-1.5">
-                      <label htmlFor="unidade-tempo" className={`text-sm font-medium transition-colors ${hasProjection ? 'text-wine-700' : 'text-zinc-700'}`}>
-                        Unidade
-                      </label>
-                      <div className="relative">
-                        <select
-                          id="unidade-tempo"
-                          value={projectionUnit}
-                          onChange={(e) => setProjectionUnit(e.target.value)}
-                          className={`h-11 w-full appearance-none rounded-xl border px-3 pr-10 text-sm font-medium transition-all focus:outline-none focus:ring-2 ${hasProjection ? 'border-wine-300 bg-wine-50/30 text-wine-900 focus:border-wine-600 focus:ring-wine-200' : 'border-zinc-200 bg-white text-zinc-900 focus:border-wine-600 focus:ring-wine-200'}`}
-                        >
-                          <option value="months">Meses</option>
-                          <option value="years">Anos</option>
-                        </select>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 ${hasProjection ? 'text-wine-600' : 'text-zinc-500'}`}><path d="m6 9 6 6 6-6" /></svg>
-                      </div>
-                    </div>
+                    <Select
+                      id="unidade-tempo"
+                      label="Unidade"
+                      value={projectionUnit}
+                      onChange={(e) => setProjectionUnit(e.target.value)}
+                      options={[
+                        { value: "months", label: "Meses" },
+                        { value: "years", label: "Anos" },
+                      ]}
+                      className={hasProjection ? "border-wine-300 bg-wine-50/30 text-wine-900" : "border-zinc-200 bg-white text-zinc-900"}
+                    />
                   </div>
                 </div>
               </div>
