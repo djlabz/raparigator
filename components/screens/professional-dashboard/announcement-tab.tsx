@@ -1843,6 +1843,12 @@ function HairTypeAndColorField({
 
   useEffect(() => {
     const handleDocumentMouseDown = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+
+      if (target?.closest('[data-ui-select-floating-panel="true"]')) {
+        return;
+      }
+
       if (!rootRef.current?.contains(event.target as Node)) {
         setIsOpen(false);
       }
@@ -1904,7 +1910,7 @@ function HairTypeAndColorField({
 
       {isOpen ? (
         <div className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-3 shadow-sm">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3">
             <Select
               label="Tipo"
               id="hairType"
