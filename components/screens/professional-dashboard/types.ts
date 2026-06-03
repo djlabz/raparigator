@@ -97,6 +97,7 @@ export type ProfileFormState = {
   // Fotos
   images: string[];
   coverIndex: number;
+  coverPreviews: string[];
   // Descrição
   shortDescription: string;
   description: string;

@@ -174,6 +174,7 @@ function buildInitialState(ad: AdPreview): ProfileFormState {
   return {
     images: ad.images.length > 0 ? ad.images : [],
     coverIndex: 0,
+    coverPreviews: ad.images.length > 0 ? ad.images.map(() => "") : [],
     shortDescription: ad.shortDescription ?? "",
     description: ad.description ?? "",
     characteristics: {

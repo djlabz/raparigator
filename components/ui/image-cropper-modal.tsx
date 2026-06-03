@@ -37,7 +37,7 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose }: ImageCr
           image={imageSrc}
           crop={crop}
           zoom={zoom}
-          aspect={16 / 9}
+          aspect={21 / 9}
           onCropChange={setCrop}
           onCropComplete={onCropCompleteCallback}
           onZoomChange={setZoom}

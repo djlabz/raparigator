@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { BadgeDollarSign, Clock3, Edit, Image as ImageIcon, Lock } from "lucide-react";
 import type { AdPreview, AdStatus, AvailabilityDay, LocationAddress, PricingItem, ProfileCharacteristics, ProfileFormState, ServiceOption } from "./types";
 import { useProfileForm } from "./use-profile-form";
-import { ImageCropperModal } from "@/components/ui/image-cropper-modal";
+import { ImageCropperModal, type Area } from "@/components/ui/image-cropper-modal";
 import { ImageBlurModal } from "@/components/ui/image-blur-modal";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -48,6 +48,11 @@ type PublishWarningItem = {
 const MAX_LOCATION_ADDRESSES = 10;
 const GROUP_WARNING_AUTO_DISMISS_MS = 3200;
 type LocationStatusTone = "success" | "error" | "info";
+type PhotoCropMode = "edit" | "cover";
+type PhotoCropTarget = {
+  index: number;
+  mode: PhotoCropMode;
+};
 
 type LocationDraft = {
   label: string;
@@ -349,6 +354,18 @@ function getPublishValidationErrors(form: ProfileFormState) {
   return errors;
 }
 
+function resolveCoverIndex(coverIndex: number, imageCount: number) {
+  if (imageCount <= 0) {
+    return 0;
+  }
+
+  return Math.min(Math.max(coverIndex, 0), imageCount - 1);
+}
+
+function removeIndexedCoverPreview(previews: string[], removedIndex: number) {
+  return previews.filter((_, index) => index !== removedIndex);
+}
+
 export function AnnouncementTab({
   ad,
   status,
@@ -364,6 +381,7 @@ export function AnnouncementTab({
 
   // Estado para Modal de Fotos
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
+  const [photoCropTarget, setPhotoCropTarget] = useState<PhotoCropTarget | null>(null);
   const [blurHistoryMap, setBlurHistoryMap] = useState<Record<string, string>>({});
   const visibilityStatus: VisibilityStatus = status === "Pausado" ? "Pausado" : "Ativo";
   const [publishError, setPublishError] = useState<string | null>(null);
@@ -546,6 +564,81 @@ export function AnnouncementTab({
   const isLocationSectionExpanded = isLocationSectionOpen || isLocationDraftOpen || isLocationDecisionOpen;
   const hasReachedLocationLimit = form.locationAddresses.length >= MAX_LOCATION_ADDRESSES;
   const activeLocation = form.locationAddresses.find((location) => location.active) ?? null;
+  const resolvedCoverIndex = resolveCoverIndex(form.coverIndex, form.images.length);
+  const coverPreviewSrc = form.coverPreviews[resolvedCoverIndex] || form.images[resolvedCoverIndex] || "";
+
+  const openPhotoCropper = (index: number, mode: PhotoCropMode) => {
+    if (!form.images[index]) {
+      return;
+    }
+
+    setPhotoCropTarget({ index, mode });
+  };
+
+  const updateCoverPreview = (index: number, previewSrc: string, mode: PhotoCropMode) => {
+    updateForm((current) => {
+      const nextPreviews = [...current.coverPreviews];
+
+      while (nextPreviews.length < current.images.length) {
+        nextPreviews.push("");
+      }
+
+      nextPreviews[index] = previewSrc;
+
+      return {
+        ...current,
+        coverIndex: mode === "cover" ? index : current.coverIndex,
+        coverPreviews: nextPreviews,
+      };
+    });
+
+    setPhotoCropTarget(null);
+  };
+
+  const setCoverIndex = (index: number) => {
+    updateForm((current) => ({
+      ...current,
+      coverIndex: resolveCoverIndex(index, current.images.length),
+    }));
+  };
+
+  const deleteMediaAtIndex = (index: number) => {
+    updateForm((current) => {
+      const nextImages = current.images.filter((_, imageIndex) => imageIndex !== index);
+      const nextPreviews = removeIndexedCoverPreview(current.coverPreviews, index);
+
+      let nextCoverIndex = current.coverIndex;
+
+      if (nextImages.length === 0) {
+        nextCoverIndex = 0;
+      } else if (index < current.coverIndex) {
+        nextCoverIndex = current.coverIndex - 1;
+      } else if (index === current.coverIndex) {
+        nextCoverIndex = Math.min(index, nextImages.length - 1);
+      }
+
+      return {
+        ...current,
+        images: nextImages,
+        coverPreviews: nextPreviews,
+        coverIndex: resolveCoverIndex(nextCoverIndex, nextImages.length),
+      };
+    });
+  };
+
+  const handleCropComplete = async (croppedAreaPixels: Area) => {
+    if (!photoCropTarget) {
+      return;
+    }
+
+    try {
+      const croppedUrl = await getCroppedImg(form.images[photoCropTarget.index], croppedAreaPixels);
+      updateCoverPreview(photoCropTarget.index, croppedUrl, photoCropTarget.mode);
+    } catch (error) {
+      console.error(error);
+      setPhotoCropTarget(null);
+    }
+  };
 
   const activateLocation = (locationId: string) => {
     updateForm((current) => {
@@ -988,16 +1081,9 @@ export function AnnouncementTab({
           activeIndex={activePhotoIndex}
           onClose={() => setActivePhotoIndex(null)}
           onChange={(idx) => setActivePhotoIndex(idx)}
-          onSetCover={(idx, croppedSrc) => {
-            updateForm(current => {
-              const newImages = [...current.images];
-              const imgToMove = croppedSrc || newImages[idx];
-              newImages.splice(idx, 1);
-              newImages.unshift(imgToMove);
-              return { ...current, images: newImages };
-            });
-            setActivePhotoIndex(0);
-          }}
+          onSetCover={(idx) => setCoverIndex(idx)}
+          coverIndex={resolvedCoverIndex}
+          onEditPhoto={(idx, mode) => openPhotoCropper(idx, mode)}
           onUpdateImage={(idx, blurredSrc) => {
             const currentSrc = form.images[idx];
             const originalSrc = blurHistoryMap[currentSrc] || currentSrc;
@@ -1042,11 +1128,7 @@ export function AnnouncementTab({
             }
           }}
           onDelete={(idx) => {
-            updateForm(current => {
-              const newImages = [...current.images];
-              newImages.splice(idx, 1);
-              return { ...current, images: newImages };
-            });
+            deleteMediaAtIndex(idx);
             if (form.images.length === 1) {
               setActivePhotoIndex(null);
             } else if (idx === form.images.length - 1) {
@@ -1076,7 +1158,11 @@ export function AnnouncementTab({
                 const reader = new FileReader();
                 reader.onload = (readerEvent) => {
                   const result = readerEvent.target?.result as string;
-                  updateForm(current => ({ ...current, images: [...current.images, result] }), { autoSave: false });
+                  updateForm(current => ({
+                    ...current,
+                    images: [...current.images, result],
+                    coverPreviews: [...current.coverPreviews, ""],
+                  }), { autoSave: false });
                 };
                 reader.readAsDataURL(file);
               });
@@ -1120,6 +1206,14 @@ export function AnnouncementTab({
           isEditing={Boolean(draftEditingLocationId)}
         />
       )}
+
+      {photoCropTarget && form.images[photoCropTarget.index] ? (
+        <ImageCropperModal
+          imageSrc={form.images[photoCropTarget.index]}
+          onClose={() => setPhotoCropTarget(null)}
+          onCropComplete={handleCropComplete}
+        />
+      ) : null}
 
       {/* ── 2. Conteúdo e Informações (Split Layout) ─────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -1185,14 +1279,11 @@ export function AnnouncementTab({
           >
             <BentoPhotoGallery
               images={form.images}
+              coverIndex={resolvedCoverIndex}
+              coverPreview={coverPreviewSrc}
               onPhotoClick={(idx) => setActivePhotoIndex(idx)}
-              onDeletePhoto={(idx) => {
-                updateForm(current => {
-                  const newImages = [...current.images];
-                  newImages.splice(idx, 1);
-                  return { ...current, images: newImages };
-                });
-              }}
+              onEditPhoto={(idx) => openPhotoCropper(idx, "edit")}
+              onDeletePhoto={(idx) => deleteMediaAtIndex(idx)}
               onAddPhoto={() => {
                 const input = document.createElement('input');
                 input.type = 'file';
@@ -1216,7 +1307,11 @@ export function AnnouncementTab({
                     const reader = new FileReader();
                     reader.onload = (readerEvent) => {
                       const result = readerEvent.target?.result as string;
-                      updateForm(current => ({ ...current, images: [...current.images, result] }), { autoSave: false });
+                      updateForm(current => ({
+                        ...current,
+                        images: [...current.images, result],
+                        coverPreviews: [...current.coverPreviews, ""],
+                      }), { autoSave: false });
                     };
                     reader.readAsDataURL(file);
                   });
@@ -1532,12 +1627,30 @@ function SectionCard({
   )
 }
 
-function BentoPhotoGallery({ images, onPhotoClick, onDeletePhoto, onAddPhoto }: { images: string[], onPhotoClick: (idx: number) => void, onDeletePhoto: (idx: number) => void, onAddPhoto: () => void }) {
+function BentoPhotoGallery({
+  images,
+  coverIndex,
+  coverPreview,
+  onPhotoClick,
+  onEditPhoto,
+  onDeletePhoto,
+  onAddPhoto,
+}: {
+  images: string[];
+  coverIndex: number;
+  coverPreview: string;
+  onPhotoClick: (idx: number) => void;
+  onEditPhoto: (idx: number) => void;
+  onDeletePhoto: (idx: number) => void;
+  onAddPhoto: () => void;
+}) {
   const [viewMode, setViewMode] = useState<"bento" | "grid">("bento");
 
   const videosCount = images.filter(img => img.startsWith('data:video')).length;
   const photosCount = images.length - videosCount;
   const canAddMore = photosCount < 15 || videosCount < 5;
+  const resolvedCoverIndex = resolveCoverIndex(coverIndex, images.length);
+  const resolvedCoverSrc = coverPreview || images[resolvedCoverIndex] || "";
 
   return (
     <div className="flex flex-col gap-4">
@@ -1569,90 +1682,216 @@ function BentoPhotoGallery({ images, onPhotoClick, onDeletePhoto, onAddPhoto }: 
       </div>
 
       {viewMode === "bento" ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 auto-rows-[150px] sm:auto-rows-[200px] grid-flow-dense">
-          {images.map((img, idx) => {
-            const BENTO_PATTERNS = [
-              "col-span-2 row-span-2",
-              "col-span-1 row-span-1",
-              "col-span-1 row-span-1",
-              "col-span-1 row-span-2",
-              "col-span-1 row-span-1",
-              "col-span-1 row-span-1",
-              "col-span-1 row-span-1",
-              "col-span-1 row-span-2",
-              "col-span-1 row-span-1",
-            ];
-            const spanClass = BENTO_PATTERNS[idx % BENTO_PATTERNS.length];
-
-            return (
-              <div
-                key={idx}
-                className={cn("relative group rounded-2xl overflow-hidden shadow-sm cursor-pointer", spanClass)}
-                onClick={() => onPhotoClick(idx)}
-              >
-                <Image src={img} alt={`Foto ${idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes={spanClass.includes("col-span-2") ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 50vw, 33vw"} />
-
-                {idx === 0 && (
-                  <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest text-wine-700 shadow-lg">
-                    Capa do Perfil
-                  </div>
-                )}
-
-                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <svg className="w-8 h-8 text-white relative z-10 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                  </svg>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeletePhoto(idx);
-                  }}
-                  className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-700 text-white p-1.5 sm:p-2 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20 shadow-md"
-                  title="Excluir"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-            );
-          })}
-
-          {images.length === 0 && (
-            <div className="col-span-2 sm:col-span-3 row-span-2 bg-zinc-100 rounded-2xl flex items-center justify-center text-zinc-400">Sem fotos</div>
-          )}
-
-          {canAddMore && (
+        <div className="space-y-3">
+          {images.length > 0 ? (
             <div
-              onClick={onAddPhoto}
-              className={cn(
-                "relative rounded-2xl border-2 border-dashed border-zinc-200 bg-zinc-50 flex flex-col items-center justify-center cursor-pointer hover:border-wine-300 hover:bg-wine-50 hover:text-wine-700 text-zinc-400 transition-all group",
-                images.length === 0
-                  ? "col-span-2 sm:col-span-3 row-span-1"
-                  : "col-span-1 row-span-1"
-              )}
+              className="relative group w-full aspect-21/9 rounded-3xl overflow-hidden shadow-sm cursor-pointer"
+              onClick={() => onPhotoClick(resolvedCoverIndex)}
             >
-              <svg className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-              <span className="text-[11px] font-bold uppercase tracking-wider">Add Foto</span>
+              <Image
+                src={resolvedCoverSrc}
+                alt={`Foto ${resolvedCoverIndex}`}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="100vw"
+              />
+
+              <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest text-wine-700 shadow-lg">
+                Capa do Perfil
+              </div>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditPhoto(resolvedCoverIndex);
+                }}
+                className="absolute top-2 left-2 bg-white/95 hover:bg-white text-wine-700 p-1.5 rounded-full shadow-md transition-all border border-wine-100"
+                title="Editar enquadramento"
+              >
+                <Edit className="h-3.5 w-3.5" />
+              </button>
+
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <svg className="w-8 h-8 text-white relative z-10 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+              </div>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeletePhoto(resolvedCoverIndex);
+                }}
+                className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-700 text-white p-1.5 sm:p-2 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20 shadow-md"
+                title="Excluir"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
             </div>
-          )}
+          ) : null}
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 auto-rows-[150px] sm:auto-rows-[200px] grid-flow-dense">
+            {images.map((img, idx) => {
+              if (idx === resolvedCoverIndex) {
+                return null;
+              }
+              const BENTO_PATTERNS = [
+                "col-span-2 row-span-2",
+                "col-span-1 row-span-1",
+                "col-span-1 row-span-1",
+                "col-span-1 row-span-2",
+                "col-span-1 row-span-1",
+                "col-span-1 row-span-1",
+                "col-span-1 row-span-1",
+                "col-span-1 row-span-2",
+                "col-span-1 row-span-1",
+              ];
+              const spanClass = BENTO_PATTERNS[idx % BENTO_PATTERNS.length];
+
+              return (
+                <div
+                  key={idx}
+                  className={cn("relative group rounded-2xl overflow-hidden shadow-sm cursor-pointer", spanClass)}
+                  onClick={() => onPhotoClick(idx)}
+                >
+                  <Image src={img} alt={`Foto ${idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes={spanClass.includes("col-span-2") ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 50vw, 33vw"} />
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditPhoto(idx);
+                    }}
+                    className="absolute top-2 left-2 bg-white/95 hover:bg-white text-wine-700 p-1.5 rounded-full shadow-md transition-all border border-wine-100 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                    title="Editar enquadramento"
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                  </button>
+
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <svg className="w-8 h-8 text-white relative z-10 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeletePhoto(idx);
+                    }}
+                    className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-700 text-white p-1.5 sm:p-2 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20 shadow-md"
+                    title="Excluir"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
+
+            {images.length === 0 && (
+              <div className="col-span-2 sm:col-span-3 row-span-2 bg-zinc-100 rounded-2xl flex items-center justify-center text-zinc-400">Sem fotos</div>
+            )}
+
+            {canAddMore && (
+              <div
+                onClick={onAddPhoto}
+                className={cn(
+                  "relative rounded-2xl border-2 border-dashed border-zinc-200 bg-zinc-50 flex flex-col items-center justify-center cursor-pointer hover:border-wine-300 hover:bg-wine-50 hover:text-wine-700 text-zinc-400 transition-all group",
+                  images.length === 0
+                    ? "col-span-2 sm:col-span-3 row-span-1"
+                    : "col-span-1 row-span-1"
+                )}
+              >
+                <svg className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                <span className="text-[11px] font-bold uppercase tracking-wider">Add Foto</span>
+              </div>
+            )}
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-1">
-          {images.map((img, idx) => (
-            <div key={idx} onClick={() => onPhotoClick(idx)} className="relative aspect-square cursor-pointer overflow-hidden group">
-              <Image src={img} alt={`Foto ${idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
-              {idx === 0 && (
-                <div className="absolute top-2 right-2 bg-wine-700/80 backdrop-blur px-2 py-0.5 rounded text-[9px] font-bold text-white uppercase shadow-sm">Capa</div>
-              )}
+        <div className="space-y-2.5">
+          {images.length > 0 ? (
+            <div
+              className="relative group w-full aspect-21/9 rounded-3xl overflow-hidden shadow-sm cursor-pointer"
+              onClick={() => onPhotoClick(resolvedCoverIndex)}
+            >
+              <Image src={resolvedCoverSrc} alt={`Foto ${resolvedCoverIndex}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="100vw" />
+              <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest text-wine-700 shadow-lg">
+                Capa do Perfil
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditPhoto(resolvedCoverIndex);
+                }}
+                className="absolute top-2 left-2 bg-white/95 hover:bg-white text-wine-700 p-1.5 rounded-full shadow-md transition-all border border-wine-100"
+                title="Editar enquadramento"
+              >
+                <Edit className="h-3.5 w-3.5" />
+              </button>
               <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
               </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeletePhoto(resolvedCoverIndex);
+                }}
+                className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-700 text-white p-1.5 sm:p-2 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20 shadow-md"
+                title="Excluir"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </button>
             </div>
-          ))}
+          ) : null}
+
+          <div className="grid grid-cols-3 gap-1">
+            {images.map((img, idx) => {
+              if (idx === resolvedCoverIndex) {
+                return null;
+              }
+
+              return (
+                <div key={idx} onClick={() => onPhotoClick(idx)} className="relative aspect-square cursor-pointer overflow-hidden group">
+                  <Image src={img} alt={`Foto ${idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditPhoto(idx);
+                    }}
+                    className="absolute top-2 left-2 bg-white/95 hover:bg-white text-wine-700 p-1 rounded-full shadow-md transition-all border border-wine-100 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                    title="Editar enquadramento"
+                  >
+                    <Edit className="h-3 w-3" />
+                  </button>
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeletePhoto(idx);
+                    }}
+                    className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-700 text-white p-1.5 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20 shadow-md"
+                    title="Excluir"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
           {canAddMore && (
             <div onClick={onAddPhoto} className="relative aspect-square bg-zinc-50 border border-dashed border-zinc-300 flex flex-col items-center justify-center cursor-pointer hover:bg-wine-50 text-zinc-400 hover:text-wine-700 hover:border-wine-300 transition-colors">
               <svg className="w-6 h-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
@@ -1664,8 +1903,7 @@ function BentoPhotoGallery({ images, onPhotoClick, onDeletePhoto, onAddPhoto }: 
   )
 }
 
-function PhotoGalleryModal({ images, activeIndex, onClose, onChange, onSetCover, onUpdateImage, canRevertBlur, onRevertBlur, onDelete, onAddPhoto }: { images: string[], activeIndex: number, onClose: () => void, onChange: (idx: number) => void, onSetCover: (idx: number, croppedSrc?: string) => void, onUpdateImage: (idx: number, src: string) => void, canRevertBlur: boolean, onRevertBlur: (idx: number) => void, onDelete: (idx: number) => void, onAddPhoto: () => void }) {
-  const [isCropping, setIsCropping] = useState(false);
+function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange, onSetCover, onEditPhoto, onUpdateImage, canRevertBlur, onRevertBlur, onDelete, onAddPhoto }: { images: string[], activeIndex: number, coverIndex: number, onClose: () => void, onChange: (idx: number) => void, onSetCover: (idx: number) => void, onEditPhoto: (idx: number, mode: PhotoCropMode) => void, onUpdateImage: (idx: number, src: string) => void, canRevertBlur: boolean, onRevertBlur: (idx: number) => void, onDelete: (idx: number) => void, onAddPhoto: () => void }) {
   const [isBlurring, setIsBlurring] = useState(false);
 
   useEffect(() => {
@@ -1681,21 +1919,10 @@ function PhotoGalleryModal({ images, activeIndex, onClose, onChange, onSetCover,
     img.src = src;
     await new Promise(r => img.onload = r);
     const ratio = img.width / img.height;
-    if (Math.abs(ratio - 16 / 9) > 0.1) {
-      setIsCropping(true);
+    if (Math.abs(ratio - 21 / 9) > 0.1) {
+      onEditPhoto(activeIndex, "cover");
     } else {
       onSetCover(activeIndex);
-    }
-  };
-
-  const handleCropComplete = async (croppedAreaPixels: { x: number; y: number; width: number; height: number; }) => {
-    try {
-      const croppedUrl = await getCroppedImg(images[activeIndex], croppedAreaPixels);
-      setIsCropping(false);
-      onSetCover(activeIndex, croppedUrl);
-    } catch (e) {
-      console.error(e);
-      setIsCropping(false);
     }
   };
 
@@ -1720,7 +1947,17 @@ function PhotoGalleryModal({ images, activeIndex, onClose, onChange, onSetCover,
               </button>
             )}
 
-            {activeIndex !== 0 && (
+            <button
+              onClick={() => onEditPhoto(activeIndex, "edit")}
+              className="inline-flex h-9 sm:h-10 items-center justify-center gap-2 px-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-white/20 shadow-lg"
+              title="Editar enquadramento"
+            >
+              <Edit className="w-4 h-4" />
+              <span className="hidden sm:inline">Editar Enquadramento</span>
+              <span className="sm:hidden">Editar</span>
+            </button>
+
+            {activeIndex !== coverIndex && (
               <button
                 onClick={handleSetCover}
                 className="inline-flex h-9 sm:h-10 items-center justify-center gap-2 px-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-white/20 shadow-lg"
@@ -1793,14 +2030,6 @@ function PhotoGalleryModal({ images, activeIndex, onClose, onChange, onSetCover,
           </div>
         </div>
       </div>
-
-      {isCropping && (
-        <ImageCropperModal
-          imageSrc={images[activeIndex]}
-          onClose={() => setIsCropping(false)}
-          onCropComplete={handleCropComplete}
-        />
-      )}
 
       {isBlurring && (
         <ImageBlurModal
