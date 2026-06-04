@@ -10,7 +10,7 @@ import { BadgeDollarSign, Clock3, Edit, Image as ImageIcon, Lock } from "lucide-
 import type { AdPreview, AdStatus, AvailabilityDay, LocationAddress, PricingItem, ProfileCharacteristics, ProfileFormState, ServiceOption } from "./types";
 import { useProfileForm } from "./use-profile-form";
 import { ImageCropperModal, type Area } from "@/components/ui/image-cropper-modal";
-import { ImageBlurModal } from "@/components/ui/image-blur-modal";
+import { ImageBlurModal, type ImageBlurResult } from "@/components/ui/image-blur-modal";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { getCroppedImg } from "@/lib/cropImage";
@@ -54,9 +54,21 @@ type PhotoCropTarget = {
   mode: PhotoCropMode;
 };
 type MediaOperationKind = "blur" | "edit";
+type MediaBlurMode = "crop" | "brush";
 type MediaHistoryEntry = {
   parent: string;
   operation: MediaOperationKind;
+  cropArea?: Area;
+  blurMode?: MediaBlurMode;
+  blurMaskDataUrl?: string;
+};
+type MediaHistoryItem = {
+  src: string;
+  entry: MediaHistoryEntry;
+};
+type MediaSourceOffset = {
+  x: number;
+  y: number;
 };
 
 type LocationDraft = {
@@ -372,35 +384,176 @@ function removeIndexedCoverPreview(previews: string[], removedIndex: number) {
 }
 
 function hasOperationInHistory(currentSrc: string, historyMap: Record<string, MediaHistoryEntry>, operation: MediaOperationKind) {
-  let cursor = currentSrc;
-
-  while (historyMap[cursor]) {
-    const currentEntry = historyMap[cursor];
-
-    if (currentEntry.operation === operation) {
-      return true;
-    }
-
-    cursor = currentEntry.parent;
-  }
-
-  return false;
+  return getMediaHistoryChain(currentSrc, historyMap).some((item) => item.entry.operation === operation);
 }
 
-function resolveUndoTargetByOperation(currentSrc: string, historyMap: Record<string, MediaHistoryEntry>, operation: MediaOperationKind) {
+function getMediaHistoryChain(currentSrc: string, historyMap: Record<string, MediaHistoryEntry>) {
+  const chain: MediaHistoryItem[] = [];
   let cursor = currentSrc;
 
   while (historyMap[cursor]) {
     const currentEntry = historyMap[cursor];
-
-    if (currentEntry.operation === operation) {
-      return currentEntry.parent;
-    }
-
+    chain.push({
+      src: cursor,
+      entry: currentEntry,
+    });
     cursor = currentEntry.parent;
   }
 
-  return null;
+  return chain.reverse();
+}
+
+function getCurrentMediaOffset(currentSrc: string, historyMap: Record<string, MediaHistoryEntry>): MediaSourceOffset {
+  const chain = getMediaHistoryChain(currentSrc, historyMap);
+  const latestCrop = [...chain].reverse().find((item) => item.entry.operation === "edit" && item.entry.cropArea);
+
+  if (!latestCrop || !latestCrop.entry.cropArea) {
+    return { x: 0, y: 0 };
+  }
+
+  return {
+    x: latestCrop.entry.cropArea.x,
+    y: latestCrop.entry.cropArea.y,
+  };
+}
+
+function translateAreaToSource(area: Area, sourceOffset: MediaSourceOffset) {
+  return {
+    x: area.x - sourceOffset.x,
+    y: area.y - sourceOffset.y,
+    width: area.width,
+    height: area.height,
+  };
+}
+
+function loadImageElement(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new window.Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+function canvasToObjectUrl(canvas: HTMLCanvasElement) {
+  return new Promise<string>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("Falha ao gerar imagem editada"));
+        return;
+      }
+
+      resolve(URL.createObjectURL(blob));
+    }, "image/jpeg", 0.95);
+  });
+}
+
+async function applyBlurEntry(sourceSrc: string, entry: MediaHistoryEntry, sourceOffset: MediaSourceOffset) {
+  const image = await loadImageElement(sourceSrc);
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return sourceSrc;
+  }
+
+  ctx.drawImage(image, 0, 0);
+
+  if (entry.blurMode === "brush") {
+    const blurCanvas = document.createElement("canvas");
+    blurCanvas.width = image.naturalWidth;
+    blurCanvas.height = image.naturalHeight;
+
+    const blurCtx = blurCanvas.getContext("2d");
+    if (!blurCtx) {
+      return sourceSrc;
+    }
+
+    blurCtx.filter = "blur(25px)";
+    blurCtx.drawImage(image, 0, 0);
+
+    blurCtx.globalCompositeOperation = "destination-in";
+    if (entry.blurMaskDataUrl) {
+      const maskImage = await loadImageElement(entry.blurMaskDataUrl);
+      blurCtx.drawImage(maskImage, -sourceOffset.x, -sourceOffset.y, image.naturalWidth, image.naturalHeight);
+    }
+
+    ctx.drawImage(blurCanvas, 0, 0);
+    return canvasToObjectUrl(canvas);
+  }
+
+  if (!entry.cropArea) {
+    return sourceSrc;
+  }
+
+  const localArea = translateAreaToSource(entry.cropArea, sourceOffset);
+  const safeX = Math.max(0, Math.floor(localArea.x));
+  const safeY = Math.max(0, Math.floor(localArea.y));
+  const safeWidth = Math.min(Math.max(1, Math.floor(localArea.width)), Math.max(1, image.naturalWidth - safeX));
+  const safeHeight = Math.min(Math.max(1, Math.floor(localArea.height)), Math.max(1, image.naturalHeight - safeY));
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(safeX, safeY, safeWidth, safeHeight);
+  ctx.clip();
+  const blurAmount = Math.max(25, (image.naturalWidth / 1000) * 25);
+  ctx.filter = `blur(${blurAmount}px)`;
+  ctx.drawImage(image, 0, 0);
+  ctx.restore();
+
+  return canvasToObjectUrl(canvas);
+}
+
+async function rebuildMediaChainAfterUndo(currentSrc: string, historyMap: Record<string, MediaHistoryEntry>, operation: MediaOperationKind) {
+  const chain = getMediaHistoryChain(currentSrc, historyMap);
+  const targetIndex = chain.map((item) => item.entry.operation).lastIndexOf(operation);
+
+  if (targetIndex === -1) {
+    return null;
+  }
+
+  const baseSrc = chain.length > 0 ? chain[0].entry.parent : currentSrc;
+  const remainingEntries = chain.filter((_, index) => index !== targetIndex);
+  const rebuiltEntries: MediaHistoryItem[] = [];
+  let sourceSrc = baseSrc;
+  let sourceOffset: MediaSourceOffset = { x: 0, y: 0 };
+
+  for (const item of remainingEntries) {
+    let nextSrc = sourceSrc;
+
+    if (item.entry.operation === "edit") {
+      if (!item.entry.cropArea) {
+        return null;
+      }
+
+      const localArea = translateAreaToSource(item.entry.cropArea, sourceOffset);
+      nextSrc = await getCroppedImg(sourceSrc, localArea);
+      sourceOffset = {
+        x: item.entry.cropArea.x,
+        y: item.entry.cropArea.y,
+      };
+    } else {
+      nextSrc = await applyBlurEntry(sourceSrc, item.entry, sourceOffset);
+    }
+
+    rebuiltEntries.push({
+      src: nextSrc,
+      entry: {
+        ...item.entry,
+        parent: sourceSrc,
+      },
+    });
+
+    sourceSrc = nextSrc;
+  }
+
+  return {
+    src: sourceSrc,
+    entries: rebuiltEntries,
+  };
 }
 
 export function AnnouncementTab({
@@ -670,6 +823,7 @@ export function AnnouncementTab({
 
     try {
       const currentSrc = form.images[photoCropTarget.index];
+      const sourceOffset = getCurrentMediaOffset(currentSrc, mediaHistoryMap);
       const croppedUrl = await getCroppedImg(form.images[photoCropTarget.index], croppedAreaPixels);
 
       if (photoCropTarget.mode === "cover") {
@@ -686,6 +840,12 @@ export function AnnouncementTab({
         next[croppedUrl] = {
           parent: currentSrc,
           operation: "edit",
+          cropArea: {
+            x: sourceOffset.x + croppedAreaPixels.x,
+            y: sourceOffset.y + croppedAreaPixels.y,
+            width: croppedAreaPixels.width,
+            height: croppedAreaPixels.height,
+          },
         };
         return next;
       });
@@ -1150,8 +1310,9 @@ export function AnnouncementTab({
           onSetCover={(idx) => setCoverIndex(idx)}
           coverIndex={resolvedCoverIndex}
           onEditPhoto={(idx, mode) => openPhotoCropper(idx, mode)}
-          onUpdateImage={(idx, blurredSrc) => {
+          onUpdateImage={(idx, blurredSrc: ImageBlurResult) => {
             const currentSrc = form.images[idx];
+            const sourceOffset = getCurrentMediaOffset(currentSrc, mediaHistoryMap);
 
             if (mediaHistoryMap[currentSrc] && currentSrc.startsWith("blob:")) {
               URL.revokeObjectURL(currentSrc);
@@ -1159,44 +1320,62 @@ export function AnnouncementTab({
 
             setMediaHistoryMap((prev) => {
               const next = { ...prev };
-              next[blurredSrc] = {
+              next[blurredSrc.src] = {
                 parent: currentSrc,
                 operation: "blur",
+                blurMode: blurredSrc.mode,
+                cropArea: blurredSrc.cropArea
+                  ? {
+                    x: sourceOffset.x + blurredSrc.cropArea.x,
+                    y: sourceOffset.y + blurredSrc.cropArea.y,
+                    width: blurredSrc.cropArea.width,
+                    height: blurredSrc.cropArea.height,
+                  }
+                  : undefined,
+                blurMaskDataUrl: blurredSrc.maskDataUrl,
               };
               return next;
             });
 
             updateForm((current) => {
               const newImages = [...current.images];
-              newImages[idx] = blurredSrc;
+              newImages[idx] = blurredSrc.src;
               return { ...current, images: newImages };
             });
           }}
           canRevertBlur={hasOperationInHistory(form.images[activePhotoIndex], mediaHistoryMap, "blur")}
           canRevertEdit={hasOperationInHistory(form.images[activePhotoIndex], mediaHistoryMap, "edit")}
-          onRevertBlur={(idx) => {
+          onRevertBlur={async (idx) => {
             const currentSrc = form.images[idx];
-            const undoTarget = resolveUndoTargetByOperation(currentSrc, mediaHistoryMap, "blur");
+            const rebuilt = await rebuildMediaChainAfterUndo(currentSrc, mediaHistoryMap, "blur");
 
-            if (!undoTarget) {
+            if (!rebuilt) {
               return;
             }
 
             if (currentSrc.startsWith("blob:")) {
               URL.revokeObjectURL(currentSrc);
             }
+
+            setMediaHistoryMap((prev) => {
+              const next = { ...prev };
+              rebuilt.entries.forEach((item) => {
+                next[item.src] = item.entry;
+              });
+              return next;
+            });
 
             updateForm((current) => {
               const newImages = [...current.images];
-              newImages[idx] = undoTarget;
+              newImages[idx] = rebuilt.src;
               return { ...current, images: newImages };
             });
           }}
-          onRevertEdit={(idx) => {
+          onRevertEdit={async (idx) => {
             const currentSrc = form.images[idx];
-            const undoTarget = resolveUndoTargetByOperation(currentSrc, mediaHistoryMap, "edit");
+            const rebuilt = await rebuildMediaChainAfterUndo(currentSrc, mediaHistoryMap, "edit");
 
-            if (!undoTarget) {
+            if (!rebuilt) {
               return;
             }
 
@@ -1204,9 +1383,17 @@ export function AnnouncementTab({
               URL.revokeObjectURL(currentSrc);
             }
 
+            setMediaHistoryMap((prev) => {
+              const next = { ...prev };
+              rebuilt.entries.forEach((item) => {
+                next[item.src] = item.entry;
+              });
+              return next;
+            });
+
             updateForm((current) => {
               const nextImages = [...current.images];
-              nextImages[idx] = undoTarget;
+              nextImages[idx] = rebuilt.src;
               return {
                 ...current,
                 images: nextImages,
@@ -1302,11 +1489,11 @@ export function AnnouncementTab({
           canRevert={photoCropTarget.mode === "edit" && hasOperationInHistory(form.images[photoCropTarget.index], mediaHistoryMap, "edit")}
           onRevert={
             photoCropTarget.mode === "edit"
-              ? () => {
+              ? async () => {
                 const currentSrc = form.images[photoCropTarget.index];
-                const undoTarget = resolveUndoTargetByOperation(currentSrc, mediaHistoryMap, "edit");
+                const rebuilt = await rebuildMediaChainAfterUndo(currentSrc, mediaHistoryMap, "edit");
 
-                if (!undoTarget) {
+                if (!rebuilt) {
                   return;
                 }
 
@@ -1314,9 +1501,17 @@ export function AnnouncementTab({
                   URL.revokeObjectURL(currentSrc);
                 }
 
+                setMediaHistoryMap((prev) => {
+                  const next = { ...prev };
+                  rebuilt.entries.forEach((item) => {
+                    next[item.src] = item.entry;
+                  });
+                  return next;
+                });
+
                 updateForm((current) => {
                   const nextImages = [...current.images];
-                  nextImages[photoCropTarget.index] = undoTarget;
+                  nextImages[photoCropTarget.index] = rebuilt.src;
                   return {
                     ...current,
                     images: nextImages,
@@ -1977,7 +2172,7 @@ function BentoPhotoGallery({
   )
 }
 
-function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange, onSetCover, onEditPhoto, onUpdateImage, canRevertBlur, canRevertEdit, onRevertBlur, onRevertEdit, onDelete, onAddPhoto }: { images: string[], activeIndex: number, coverIndex: number, onClose: () => void, onChange: (idx: number) => void, onSetCover: (idx: number) => void, onEditPhoto: (idx: number, mode: PhotoCropMode) => void, onUpdateImage: (idx: number, src: string) => void, canRevertBlur: boolean, canRevertEdit: boolean, onRevertBlur: (idx: number) => void, onRevertEdit: (idx: number) => void, onDelete: (idx: number) => void, onAddPhoto: () => void }) {
+function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange, onSetCover, onEditPhoto, onUpdateImage, canRevertBlur, canRevertEdit, onRevertBlur, onRevertEdit, onDelete, onAddPhoto }: { images: string[], activeIndex: number, coverIndex: number, onClose: () => void, onChange: (idx: number) => void, onSetCover: (idx: number) => void, onEditPhoto: (idx: number, mode: PhotoCropMode) => void, onUpdateImage: (idx: number, result: ImageBlurResult) => void, canRevertBlur: boolean, canRevertEdit: boolean, onRevertBlur: (idx: number) => void, onRevertEdit: (idx: number) => void, onDelete: (idx: number) => void, onAddPhoto: () => void }) {
   const [isBlurring, setIsBlurring] = useState(false);
 
   useEffect(() => {
@@ -2000,9 +2195,9 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
     }
   };
 
-  const handleBlurComplete = (blurredSrc: string) => {
+  const handleBlurComplete = (result: ImageBlurResult) => {
     setIsBlurring(false);
-    onUpdateImage(activeIndex, blurredSrc);
+    onUpdateImage(activeIndex, result);
   };
 
   return (

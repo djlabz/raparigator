@@ -3,10 +3,18 @@ import ReactCrop, { type Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { Button } from "@/components/ui/button";
 import { createAdaptivePresetCrop, resolveMinSelectionSize } from "@/components/ui/image-selection-utils";
+import type { Area } from "@/components/ui/image-cropper-modal";
+
+export type ImageBlurResult = {
+  src: string;
+  mode: "crop" | "brush";
+  cropArea?: Area;
+  maskDataUrl?: string;
+};
 
 interface ImageBlurModalProps {
   imageSrc: string;
-  onBlurComplete: (blurredImageSrc: string) => void;
+  onBlurComplete: (result: ImageBlurResult) => void;
   onClose: () => void;
 }
 
@@ -120,6 +128,9 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
 
     ctx.drawImage(image, 0, 0);
 
+    let cropArea: Area | undefined;
+    let maskDataUrl: string | undefined;
+
     if (mode === "crop") {
       const isPercent = crop!.unit === "%";
       const displayRect = image.getBoundingClientRect();
@@ -137,6 +148,12 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
       const cy = Math.max(0, Math.min(image.naturalHeight - 1, rawY));
       const cWidth = Math.max(1, Math.min(rawWidth, image.naturalWidth - cx));
       const cHeight = Math.max(1, Math.min(rawHeight, image.naturalHeight - cy));
+      cropArea = {
+        x: Math.round(cx),
+        y: Math.round(cy),
+        width: Math.round(cWidth),
+        height: Math.round(cHeight),
+      };
 
       ctx.save();
       ctx.beginPath();
@@ -163,11 +180,17 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
       }
 
       ctx.drawImage(blurCanvas, 0, 0);
+      maskDataUrl = maskCanvasRef.current?.toDataURL("image/png");
     }
 
     canvas.toBlob((blob) => {
       if (!blob) return;
-      onBlurComplete(URL.createObjectURL(blob));
+      onBlurComplete({
+        src: URL.createObjectURL(blob),
+        mode,
+        cropArea,
+        maskDataUrl,
+      });
     }, "image/jpeg", 0.95);
   }, [crop, mode, hasDrawn, onBlurComplete]);
 
