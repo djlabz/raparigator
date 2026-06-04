@@ -2203,12 +2203,12 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
   return (
     <>
       <div className="fixed inset-0 z-100 h-dvh bg-black flex flex-col items-center justify-center backdrop-blur-sm">
-        <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 flex justify-between items-center z-20 bg-linear-to-b from-black/90 via-black/40 to-transparent">
-          <div className="flex flex-wrap items-center gap-2 pointer-events-auto">
+        <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 flex items-start gap-3 sm:gap-4 z-20 bg-linear-to-b from-black/90 via-black/40 to-transparent">
+          <div className="grid flex-1 min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center pointer-events-auto">
             {canRevertBlur && (
               <button
                 onClick={() => onRevertBlur(activeIndex)}
-                className="inline-flex h-9 sm:h-10 items-center justify-center gap-2 px-4 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 backdrop-blur-md rounded-full text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-emerald-500/30 shadow-lg"
+                className="inline-flex h-9 sm:h-10 w-full sm:w-auto items-center justify-center gap-2 px-4 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 backdrop-blur-md rounded-full text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-emerald-500/30 shadow-lg"
                 title="Reverter apenas o borrão aplicado"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
@@ -2220,7 +2220,7 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
             {canRevertEdit && (
               <button
                 onClick={() => onRevertEdit(activeIndex)}
-                className="inline-flex h-9 sm:h-10 items-center justify-center gap-2 px-4 bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 backdrop-blur-md rounded-full text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-sky-500/30 shadow-lg"
+                className="inline-flex h-9 sm:h-10 w-full sm:w-auto items-center justify-center gap-2 px-4 bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 backdrop-blur-md rounded-full text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-sky-500/30 shadow-lg"
                 title="Reverter apenas o recorte/enquadramento"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 7h8M4 11h8M4 15h5" /><path strokeLinecap="round" strokeLinejoin="round" d="M14 8l6-3v8l-6 3V8z" /></svg>
@@ -2231,7 +2231,7 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
 
             <button
               onClick={() => onEditPhoto(activeIndex, "edit")}
-              className="inline-flex h-9 sm:h-10 items-center justify-center gap-2 px-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-white/20 shadow-lg"
+              className="inline-flex h-9 sm:h-10 w-full sm:w-auto items-center justify-center gap-2 px-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-white/20 shadow-lg"
               title="Editar enquadramento"
             >
               <Edit className="w-4 h-4" />
@@ -2242,7 +2242,7 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
             {activeIndex !== coverIndex && (
               <button
                 onClick={handleSetCover}
-                className="inline-flex h-9 sm:h-10 items-center justify-center gap-2 px-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-white/20 shadow-lg"
+                className="inline-flex h-9 sm:h-10 w-full sm:w-auto items-center justify-center gap-2 px-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-white/20 shadow-lg"
                 title="Definir como primeira imagem (capa do anúncio)"
               >
                 <span className="hidden sm:inline">Definir como Capa</span>
@@ -2252,7 +2252,7 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
 
             <button
               onClick={() => setIsBlurring(true)}
-              className="inline-flex h-9 sm:h-10 items-center justify-center gap-2 px-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-white/20 shadow-lg"
+              className="inline-flex h-9 sm:h-10 w-full sm:w-auto items-center justify-center gap-2 px-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-white/20 shadow-lg"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               <span className="hidden sm:inline">Borrar Detalhes</span>
