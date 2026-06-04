@@ -2259,7 +2259,7 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
                 title="Definir como primeira imagem (capa do anúncio)"
               >
                 <span className="hidden sm:inline">Definir como Capa</span>
-                <span className="sm:hidden">Capa</span>
+                <span className="sm:hidden">Definir como Capa</span>
               </button>
             )}
 

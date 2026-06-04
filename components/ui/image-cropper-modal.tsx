@@ -20,7 +20,6 @@ interface ImageCropperModalProps {
 }
 
 const MIN_SELECTION_PX = 120;
-const DEFAULT_SELECTION_RATIO = 0.42;
 
 function buildCenteredSelection(mediaWidth: number, mediaHeight: number, aspect?: number): Crop {
   if (aspect) {
@@ -38,16 +37,13 @@ function buildCenteredSelection(mediaWidth: number, mediaHeight: number, aspect?
     return centerCrop(aspectCrop, mediaWidth, mediaHeight);
   }
 
-  const shortEdge = Math.min(mediaWidth, mediaHeight);
-  const preferredSize = Math.max(MIN_SELECTION_PX, Math.floor(shortEdge * DEFAULT_SELECTION_RATIO));
-  const clampedSize = Math.min(preferredSize, Math.floor(mediaWidth * 0.9), Math.floor(mediaHeight * 0.9));
-
+  // In free edit mode, start with the whole image selected (gallery-like behavior).
   return {
-    unit: "px",
-    width: clampedSize,
-    height: clampedSize,
-    x: Math.max(0, Math.floor((mediaWidth - clampedSize) / 2)),
-    y: Math.max(0, Math.floor((mediaHeight - clampedSize) / 2)),
+    unit: "%",
+    width: 100,
+    height: 100,
+    x: 0,
+    y: 0,
   };
 }
 
@@ -109,8 +105,8 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose, aspect, c
   };
 
   return (
-    <div className="fixed inset-0 z-200 bg-black/95 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-5xl flex items-center justify-between px-2 sm:px-4 mb-5">
+    <div className="fixed inset-0 z-200 bg-black flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-5xl flex items-center justify-between px-2 sm:px-4 mb-5 relative z-10">
         <button
           type="button"
           onClick={onClose}
