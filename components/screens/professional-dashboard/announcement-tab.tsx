@@ -53,6 +53,11 @@ type PhotoCropTarget = {
   index: number;
   mode: PhotoCropMode;
 };
+type MediaOperationKind = "blur" | "edit";
+type MediaHistoryEntry = {
+  parent: string;
+  operation: MediaOperationKind;
+};
 
 type LocationDraft = {
   label: string;
@@ -366,6 +371,38 @@ function removeIndexedCoverPreview(previews: string[], removedIndex: number) {
   return previews.filter((_, index) => index !== removedIndex);
 }
 
+function hasOperationInHistory(currentSrc: string, historyMap: Record<string, MediaHistoryEntry>, operation: MediaOperationKind) {
+  let cursor = currentSrc;
+
+  while (historyMap[cursor]) {
+    const currentEntry = historyMap[cursor];
+
+    if (currentEntry.operation === operation) {
+      return true;
+    }
+
+    cursor = currentEntry.parent;
+  }
+
+  return false;
+}
+
+function resolveUndoTargetByOperation(currentSrc: string, historyMap: Record<string, MediaHistoryEntry>, operation: MediaOperationKind) {
+  let cursor = currentSrc;
+
+  while (historyMap[cursor]) {
+    const currentEntry = historyMap[cursor];
+
+    if (currentEntry.operation === operation) {
+      return currentEntry.parent;
+    }
+
+    cursor = currentEntry.parent;
+  }
+
+  return null;
+}
+
 export function AnnouncementTab({
   ad,
   status,
@@ -382,7 +419,7 @@ export function AnnouncementTab({
   // Estado para Modal de Fotos
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
   const [photoCropTarget, setPhotoCropTarget] = useState<PhotoCropTarget | null>(null);
-  const [blurHistoryMap, setBlurHistoryMap] = useState<Record<string, string>>({});
+  const [mediaHistoryMap, setMediaHistoryMap] = useState<Record<string, MediaHistoryEntry>>({});
   const visibilityStatus: VisibilityStatus = status === "Pausado" ? "Pausado" : "Ativo";
   const [publishError, setPublishError] = useState<string | null>(null);
   const [publishErrorItems, setPublishErrorItems] = useState<PublishWarningItem[]>([]);
@@ -632,8 +669,37 @@ export function AnnouncementTab({
     }
 
     try {
+      const currentSrc = form.images[photoCropTarget.index];
       const croppedUrl = await getCroppedImg(form.images[photoCropTarget.index], croppedAreaPixels);
-      updateCoverPreview(photoCropTarget.index, croppedUrl, photoCropTarget.mode);
+
+      if (photoCropTarget.mode === "cover") {
+        updateCoverPreview(photoCropTarget.index, croppedUrl, photoCropTarget.mode);
+        return;
+      }
+
+      if (mediaHistoryMap[currentSrc] && currentSrc.startsWith("blob:")) {
+        URL.revokeObjectURL(currentSrc);
+      }
+
+      setMediaHistoryMap((prev) => {
+        const next = { ...prev };
+        next[croppedUrl] = {
+          parent: currentSrc,
+          operation: "edit",
+        };
+        return next;
+      });
+
+      updateForm((current) => {
+        const nextImages = [...current.images];
+        nextImages[photoCropTarget.index] = croppedUrl;
+        return {
+          ...current,
+          images: nextImages,
+        };
+      });
+
+      setPhotoCropTarget(null);
     } catch (error) {
       console.error(error);
       setPhotoCropTarget(null);
@@ -1086,46 +1152,66 @@ export function AnnouncementTab({
           onEditPhoto={(idx, mode) => openPhotoCropper(idx, mode)}
           onUpdateImage={(idx, blurredSrc) => {
             const currentSrc = form.images[idx];
-            const originalSrc = blurHistoryMap[currentSrc] || currentSrc;
 
-            if (blurHistoryMap[currentSrc] && currentSrc.startsWith('blob:')) {
+            if (mediaHistoryMap[currentSrc] && currentSrc.startsWith("blob:")) {
               URL.revokeObjectURL(currentSrc);
             }
 
-            setBlurHistoryMap(prev => {
+            setMediaHistoryMap((prev) => {
               const next = { ...prev };
-              if (blurHistoryMap[currentSrc]) {
-                delete next[currentSrc];
-              }
-              next[blurredSrc] = originalSrc;
+              next[blurredSrc] = {
+                parent: currentSrc,
+                operation: "blur",
+              };
               return next;
             });
 
-            updateForm(current => {
+            updateForm((current) => {
               const newImages = [...current.images];
               newImages[idx] = blurredSrc;
               return { ...current, images: newImages };
             });
           }}
-          canRevertBlur={!!blurHistoryMap[form.images[activePhotoIndex]]}
+          canRevertBlur={hasOperationInHistory(form.images[activePhotoIndex], mediaHistoryMap, "blur")}
+          canRevertEdit={hasOperationInHistory(form.images[activePhotoIndex], mediaHistoryMap, "edit")}
           onRevertBlur={(idx) => {
             const currentSrc = form.images[idx];
-            const originalSrc = blurHistoryMap[currentSrc];
-            if (originalSrc) {
-              if (currentSrc.startsWith('blob:')) {
-                URL.revokeObjectURL(currentSrc);
-              }
-              setBlurHistoryMap(prev => {
-                const next = { ...prev };
-                delete next[currentSrc];
-                return next;
-              });
-              updateForm(current => {
-                const newImages = [...current.images];
-                newImages[idx] = originalSrc;
-                return { ...current, images: newImages };
-              });
+            const undoTarget = resolveUndoTargetByOperation(currentSrc, mediaHistoryMap, "blur");
+
+            if (!undoTarget) {
+              return;
             }
+
+            if (currentSrc.startsWith("blob:")) {
+              URL.revokeObjectURL(currentSrc);
+            }
+
+            updateForm((current) => {
+              const newImages = [...current.images];
+              newImages[idx] = undoTarget;
+              return { ...current, images: newImages };
+            });
+          }}
+          onRevertEdit={(idx) => {
+            const currentSrc = form.images[idx];
+            const undoTarget = resolveUndoTargetByOperation(currentSrc, mediaHistoryMap, "edit");
+
+            if (!undoTarget) {
+              return;
+            }
+
+            if (currentSrc.startsWith("blob:")) {
+              URL.revokeObjectURL(currentSrc);
+            }
+
+            updateForm((current) => {
+              const nextImages = [...current.images];
+              nextImages[idx] = undoTarget;
+              return {
+                ...current,
+                images: nextImages,
+              };
+            });
           }}
           onDelete={(idx) => {
             deleteMediaAtIndex(idx);
@@ -1212,6 +1298,35 @@ export function AnnouncementTab({
           imageSrc={form.images[photoCropTarget.index]}
           onClose={() => setPhotoCropTarget(null)}
           onCropComplete={handleCropComplete}
+          aspect={photoCropTarget.mode === "cover" ? 21 / 9 : undefined}
+          canRevert={photoCropTarget.mode === "edit" && hasOperationInHistory(form.images[photoCropTarget.index], mediaHistoryMap, "edit")}
+          onRevert={
+            photoCropTarget.mode === "edit"
+              ? () => {
+                const currentSrc = form.images[photoCropTarget.index];
+                const undoTarget = resolveUndoTargetByOperation(currentSrc, mediaHistoryMap, "edit");
+
+                if (!undoTarget) {
+                  return;
+                }
+
+                if (currentSrc.startsWith("blob:")) {
+                  URL.revokeObjectURL(currentSrc);
+                }
+
+                updateForm((current) => {
+                  const nextImages = [...current.images];
+                  nextImages[photoCropTarget.index] = undoTarget;
+                  return {
+                    ...current,
+                    images: nextImages,
+                  };
+                });
+
+                setPhotoCropTarget(null);
+              }
+              : undefined
+          }
         />
       ) : null}
 
@@ -1281,8 +1396,8 @@ export function AnnouncementTab({
               images={form.images}
               coverIndex={resolvedCoverIndex}
               coverPreview={coverPreviewSrc}
+              coverPreviews={form.coverPreviews}
               onPhotoClick={(idx) => setActivePhotoIndex(idx)}
-              onEditPhoto={(idx) => openPhotoCropper(idx, "edit")}
               onDeletePhoto={(idx) => deleteMediaAtIndex(idx)}
               onAddPhoto={() => {
                 const input = document.createElement('input');
@@ -1542,14 +1657,19 @@ function SectionCard({
   useEffect(() => {
     if (highlighted && !flashingRef.current) {
       flashingRef.current = true;
-      setShowHighlightOverlay(true);
+      const openTimeoutId = window.setTimeout(() => {
+        setShowHighlightOverlay(true);
+      }, 0);
 
       const timeoutId = window.setTimeout(() => {
         setShowHighlightOverlay(false);
         flashingRef.current = false;
       }, 1600);
 
-      return () => window.clearTimeout(timeoutId);
+      return () => {
+        window.clearTimeout(openTimeoutId);
+        window.clearTimeout(timeoutId);
+      };
     }
     return;
   }, [highlighted]);
@@ -1631,16 +1751,16 @@ function BentoPhotoGallery({
   images,
   coverIndex,
   coverPreview,
+  coverPreviews,
   onPhotoClick,
-  onEditPhoto,
   onDeletePhoto,
   onAddPhoto,
 }: {
   images: string[];
   coverIndex: number;
   coverPreview: string;
+  coverPreviews: string[];
   onPhotoClick: (idx: number) => void;
-  onEditPhoto: (idx: number) => void;
   onDeletePhoto: (idx: number) => void;
   onAddPhoto: () => void;
 }) {
@@ -1700,18 +1820,6 @@ function BentoPhotoGallery({
                 Capa do Perfil
               </div>
 
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditPhoto(resolvedCoverIndex);
-                }}
-                className="absolute top-2 left-2 bg-white/95 hover:bg-white text-wine-700 p-1.5 rounded-full shadow-md transition-all border border-wine-100"
-                title="Editar enquadramento"
-              >
-                <Edit className="h-3.5 w-3.5" />
-              </button>
-
               <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                 <svg className="w-8 h-8 text-white relative z-10 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
@@ -1758,19 +1866,7 @@ function BentoPhotoGallery({
                   className={cn("relative group rounded-2xl overflow-hidden shadow-sm cursor-pointer", spanClass)}
                   onClick={() => onPhotoClick(idx)}
                 >
-                  <Image src={img} alt={`Foto ${idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes={spanClass.includes("col-span-2") ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 50vw, 33vw"} />
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEditPhoto(idx);
-                    }}
-                    className="absolute top-2 left-2 bg-white/95 hover:bg-white text-wine-700 p-1.5 rounded-full shadow-md transition-all border border-wine-100 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
-                    title="Editar enquadramento"
-                  >
-                    <Edit className="h-3.5 w-3.5" />
-                  </button>
+                  <Image src={coverPreviews[idx] || img} alt={`Foto ${idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes={spanClass.includes("col-span-2") ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 50vw, 33vw"} />
 
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <svg className="w-8 h-8 text-white relative z-10 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1826,17 +1922,6 @@ function BentoPhotoGallery({
               <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest text-wine-700 shadow-lg">
                 Capa do Perfil
               </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditPhoto(resolvedCoverIndex);
-                }}
-                className="absolute top-2 left-2 bg-white/95 hover:bg-white text-wine-700 p-1.5 rounded-full shadow-md transition-all border border-wine-100"
-                title="Editar enquadramento"
-              >
-                <Edit className="h-3.5 w-3.5" />
-              </button>
               <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
               </div>
@@ -1862,18 +1947,7 @@ function BentoPhotoGallery({
 
               return (
                 <div key={idx} onClick={() => onPhotoClick(idx)} className="relative aspect-square cursor-pointer overflow-hidden group">
-                  <Image src={img} alt={`Foto ${idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEditPhoto(idx);
-                    }}
-                    className="absolute top-2 left-2 bg-white/95 hover:bg-white text-wine-700 p-1 rounded-full shadow-md transition-all border border-wine-100 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
-                    title="Editar enquadramento"
-                  >
-                    <Edit className="h-3 w-3" />
-                  </button>
+                  <Image src={coverPreviews[idx] || img} alt={`Foto ${idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
                   </div>
@@ -1903,7 +1977,7 @@ function BentoPhotoGallery({
   )
 }
 
-function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange, onSetCover, onEditPhoto, onUpdateImage, canRevertBlur, onRevertBlur, onDelete, onAddPhoto }: { images: string[], activeIndex: number, coverIndex: number, onClose: () => void, onChange: (idx: number) => void, onSetCover: (idx: number) => void, onEditPhoto: (idx: number, mode: PhotoCropMode) => void, onUpdateImage: (idx: number, src: string) => void, canRevertBlur: boolean, onRevertBlur: (idx: number) => void, onDelete: (idx: number) => void, onAddPhoto: () => void }) {
+function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange, onSetCover, onEditPhoto, onUpdateImage, canRevertBlur, canRevertEdit, onRevertBlur, onRevertEdit, onDelete, onAddPhoto }: { images: string[], activeIndex: number, coverIndex: number, onClose: () => void, onChange: (idx: number) => void, onSetCover: (idx: number) => void, onEditPhoto: (idx: number, mode: PhotoCropMode) => void, onUpdateImage: (idx: number, src: string) => void, canRevertBlur: boolean, canRevertEdit: boolean, onRevertBlur: (idx: number) => void, onRevertEdit: (idx: number) => void, onDelete: (idx: number) => void, onAddPhoto: () => void }) {
   const [isBlurring, setIsBlurring] = useState(false);
 
   useEffect(() => {
@@ -1940,10 +2014,23 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
               <button
                 onClick={() => onRevertBlur(activeIndex)}
                 className="inline-flex h-9 sm:h-10 items-center justify-center gap-2 px-4 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 backdrop-blur-md rounded-full text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-emerald-500/30 shadow-lg"
+                title="Reverter apenas o borrão aplicado"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-                <span className="hidden sm:inline">Reverter Borrão</span>
-                <span className="sm:hidden">Reverter</span>
+                <span className="hidden sm:inline">Desfazer Borrão</span>
+                <span className="sm:hidden">Desf. Borrão</span>
+              </button>
+            )}
+
+            {canRevertEdit && (
+              <button
+                onClick={() => onRevertEdit(activeIndex)}
+                className="inline-flex h-9 sm:h-10 items-center justify-center gap-2 px-4 bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 backdrop-blur-md rounded-full text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-sky-500/30 shadow-lg"
+                title="Reverter apenas o recorte/enquadramento"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 7h8M4 11h8M4 15h5" /><path strokeLinecap="round" strokeLinejoin="round" d="M14 8l6-3v8l-6 3V8z" /></svg>
+                <span className="hidden sm:inline">Desfazer Enquadramento</span>
+                <span className="sm:hidden">Desf. Enquad.</span>
               </button>
             )}
 
@@ -1983,8 +2070,20 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
           </button>
         </div>
 
-        <div className="relative w-full max-w-5xl flex-1 px-4 mt-24 mb-4 min-h-0">
-          <Image src={images[activeIndex]} fill className="object-contain" alt="Fullscreen" />
+        <div className="relative w-full max-w-5xl flex-1 px-4 mt-24 mb-4 min-h-0 flex items-center justify-center">
+          <div className="relative max-w-full max-h-full inline-block">
+            {activeIndex === coverIndex && (
+              <div className="absolute top-3 left-3 z-10 bg-white/95 text-zinc-900 px-3 py-1 rounded-md text-[11px] font-black uppercase tracking-widest shadow-lg">
+                CAPA
+              </div>
+            )}
+            <img
+              src={images[activeIndex]}
+              alt="Fullscreen"
+              className="block w-auto h-auto max-w-full max-h-full object-contain"
+              style={{ maxHeight: "calc(100dvh - 240px)" }}
+            />
+          </div>
         </div>
 
         <div className="w-full max-w-5xl px-4 shrink-0 pb-safe mb-6">
