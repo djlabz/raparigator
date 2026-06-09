@@ -249,17 +249,17 @@ export const mediaHighlights: MediaHighlight[] = [
 ];
 
 export const conversations: Conversation[] = [
-  { id: "c1", contactName: "Luna Velvet", contactStatus: "Online", lastMessage: "Posso te receber as 21h.", lastMessageAt: "16:20", unread: 1 },
-  { id: "c2", contactName: "Valentina Noir", contactStatus: "Visto ha 5 min", lastMessage: "Confirmei seu agendamento.", lastMessageAt: "15:02", unread: 0 },
-  { id: "c3", contactName: "Suporte Sigillus", contactStatus: "Online", lastMessage: "Seu pagamento esta em custodia.", lastMessageAt: "13:11", unread: 0 },
+  { id: "c1", participantId: "p-luna", contactName: "Luna Velvet", contactStatus: "online", lastMessage: "Posso te receber as 21h.", lastMessageAt: "16:20", unread: 1, currentUserAlias: "Cliente reservado" },
+  { id: "c2", participantId: "p-valentina", contactName: "Valentina Noir", contactStatus: "offline", lastMessage: "Confirmei seu agendamento.", lastMessageAt: "15:02", unread: 0 },
+  { id: "c3", participantId: "support", contactName: "Suporte Sigillus", contactStatus: "online", lastMessage: "Seu pagamento esta em custodia.", lastMessageAt: "13:11", unread: 0 },
 ];
 
 export const messages: Message[] = [
-  { id: "m1", conversationId: "c1", from: "other", content: "Oi, vi seu pedido para hoje.", sentAt: "16:00" },
-  { id: "m2", conversationId: "c1", from: "me", content: "Perfeito, consegue as 21h?", sentAt: "16:05" },
-  { id: "m3", conversationId: "c1", from: "other", content: "Consigo sim. Local discreto e seguro.", sentAt: "16:08" },
-  { id: "m4", conversationId: "c1", from: "me", content: "Fechado. Vou finalizar no app.", sentAt: "16:11" },
-  { id: "m5", conversationId: "c1", from: "other", content: "Posso te receber as 21h.", sentAt: "16:20" },
+  { id: "m1", conversationId: "c1", senderId: "p-luna", senderRole: "profissional", senderDisplayName: "Luna Velvet", from: "other", content: "Oi, vi seu pedido para hoje.", messageType: "text", status: "delivered", sentAt: "16:00", deliveredAt: "16:00" },
+  { id: "m2", conversationId: "c1", senderId: "current-user", senderRole: "cliente", senderDisplayName: "Cliente reservado", from: "me", content: "Perfeito, consegue as 21h?", messageType: "text", status: "delivered", sentAt: "16:05", deliveredAt: "16:05" },
+  { id: "m3", conversationId: "c1", senderId: "p-luna", senderRole: "profissional", senderDisplayName: "Luna Velvet", from: "other", content: "Consigo sim. Local discreto e seguro.", messageType: "text", status: "delivered", sentAt: "16:08", deliveredAt: "16:08" },
+  { id: "m4", conversationId: "c1", senderId: "current-user", senderRole: "cliente", senderDisplayName: "Cliente reservado", from: "me", content: "Fechado. Vou finalizar no app.", messageType: "text", status: "delivered", sentAt: "16:11", deliveredAt: "16:11" },
+  { id: "m5", conversationId: "c1", senderId: "p-luna", senderRole: "profissional", senderDisplayName: "Luna Velvet", from: "other", content: "Posso te receber as 21h.", messageType: "text", status: "delivered", sentAt: "16:20", deliveredAt: "16:20" },
 ];
 
 export const serviceTracking = {
