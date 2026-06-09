@@ -56,19 +56,41 @@ export interface Review {
 
 export interface Conversation {
   id: string;
+  participantId: string;
   contactName: string;
-  contactStatus: string;
+  contactStatus: "online" | "offline";
   lastMessage: string;
   lastMessageAt: string;
   unread: number;
+  currentUserAlias?: string;
+  isBlocked?: boolean;
+  deletedFromInboxAt?: string | null;
 }
+
+export type MessageStatus = "sending" | "sent" | "delivered" | "failed";
+export type MessageType = "text" | "media";
 
 export interface Message {
   id: string;
   conversationId: string;
+  senderId: string;
+  senderRole: "cliente" | "profissional" | "suporte";
+  senderDisplayName: string;
   from: "me" | "other";
-  content: string;
+  content?: string;
+  messageType: MessageType;
+  status: MessageStatus;
+  media?: {
+    id: string;
+    kind: "image" | "video";
+    name: string;
+    isViewOnce: boolean;
+    openedAt?: string | null;
+  };
   sentAt: string;
+  deliveredAt?: string | null;
+  editedAt?: string | null;
+  deletedAt?: string | null;
 }
 
 export interface MediaHighlight {
