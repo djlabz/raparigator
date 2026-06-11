@@ -1,4 +1,4 @@
-import type { AuthRole, MockUser } from "@/lib/types";
+import type { AdminUser, AuthRole, MockUser } from "@/lib/types";
 
 export const mockUsers: MockUser[] = [
   {
@@ -28,4 +28,18 @@ export const mockUsers: MockUser[] = [
 
 export function getMockUserByRole(role: Exclude<AuthRole, "visitor">) {
   return mockUsers.find((user) => user.role === role) ?? mockUsers[0];
+}
+
+export const adminUsers: AdminUser[] = [
+  {
+    id: "admin-sigillus",
+    role: "admin",
+    fullName: "Administrador Sigillus",
+    email: "admin@sigillus.dev",
+    password: "Admin@123",
+  },
+];
+
+export function getMockAdminByEmail(email: string): AdminUser | null {
+  return adminUsers.find((u) => u.email === email) ?? null;
 }

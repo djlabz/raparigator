@@ -27,6 +27,7 @@ const USE_MOCK = true;
 // ---------------------------------------------------------------------------
 // Base URL da API — definida via variável de ambiente
 // ---------------------------------------------------------------------------
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 // ---------------------------------------------------------------------------
@@ -243,7 +244,9 @@ export async function sendViewOnceMediaMessage(
 // ---------------------------------------------------------------------------
 
 export async function setConversationBlocked(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   conversationId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   isBlocked: boolean,
 ): Promise<void> {
   if (USE_MOCK) {
@@ -279,7 +282,10 @@ export async function setConversationBlocked(
 //    - O frontend já filtra conversas com deletedFromInboxAt preenchido.
 // ---------------------------------------------------------------------------
 
-export async function deleteConversationFromInbox(conversationId: string): Promise<void> {
+export async function deleteConversationFromInbox(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  conversationId: string,
+): Promise<void> {
   if (USE_MOCK) {
     await delay(200);
     return;
@@ -311,7 +317,12 @@ export async function deleteConversationFromInbox(conversationId: string): Promi
 //      conversa mais de uma vez em curto período de tempo.
 // ---------------------------------------------------------------------------
 
-export async function reportConversation(conversationId: string, reason: string): Promise<void> {
+export async function reportConversation(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  conversationId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  reason: string,
+): Promise<void> {
   if (USE_MOCK) {
     await delay(300);
     return;
@@ -349,7 +360,9 @@ export async function reportConversation(conversationId: string, reason: string)
 // ---------------------------------------------------------------------------
 
 export async function updateParticipantAlias(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   conversationId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   alias: string | null,
 ): Promise<void> {
   if (USE_MOCK) {
