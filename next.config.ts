@@ -1,15 +1,13 @@
-﻿import type {NextConfig} from 'next';
+import type {NextConfig} from 'next';
 
-const nextConfig = {
+const nextConfig: NextConfig = {
   reactStrictMode: true,
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: false,
   },
   // Allow access to remote image placeholder.
   images: {
+    qualities: [100, 75],
     remotePatterns: [
       {
         protocol: 'https',
@@ -33,11 +31,10 @@ const nextConfig = {
   },
   output: 'standalone',
   transpilePackages: ['motion'],
-  // Permitir hostnames do Cloudflare em desenvolvimento
-  allowedDevOrigins: ['*.trycloudflare.com', 'localhost:3000'],
+  turbopack: {},
   webpack: (config: any, {dev}: {dev: boolean}) => {
     // HMR is disabled in AI Studio via DISABLE_HMR env var.
-    // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+    // Do not modifyâ€”file watching is disabled to prevent flickering during agent edits.
     if (dev && process.env.DISABLE_HMR === 'true') {
       config.watchOptions = {
         ignored: /.*/,

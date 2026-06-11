@@ -428,7 +428,7 @@ export function ChatScreen() {
               <Link href="/auth/login">
                 <Button>Entrar</Button>
               </Link>
-              <Link href="/auth/cadastro/cliente">
+              <Link href="/auth/cadastro">
                 <Button variant="secondary">Criar conta</Button>
               </Link>
             </div>
@@ -594,7 +594,7 @@ export function ChatScreen() {
                   type="button"
                   onClick={() => setProfilePanelOpen(true)}
                   className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
-                  aria-label="Abrir opcoes do contato"
+                  aria-label="Abrir opções do contato"
                 >
                   <MoreHorizontal size={18} />
                 </button>
@@ -642,7 +642,7 @@ export function ChatScreen() {
                     )}
 
                     <a href={whatsappUrl} target="_blank" rel="noreferrer" className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
-                      Ir para whatsapp
+                      Ir para WhatsApp
                     </a>
 
                     <button type="button" onClick={() => setBlockModalOpen(true)} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50">
@@ -749,7 +749,7 @@ export function ChatScreen() {
                     disabled={activeConversation.isBlocked}
                     className="h-11 flex-1 rounded-full border border-zinc-200 bg-zinc-50 px-5 text-sm shadow-sm transition-all focus:border-wine-500 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
                   />
-                  <Button type="submit" className="h-11 rounded-full px-4 font-bold sm:px-6" disabled={!draft.trim() || activeConversation.isBlocked}>
+                  <Button type="submit" className="h-11 rounded-full px-4 font-bold sm:px-6 gap-2" disabled={!draft.trim() || activeConversation.isBlocked}>
                     <Send size={17} />
                     <span className="hidden sm:inline">Enviar</span>
                   </Button>

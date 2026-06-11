@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuthSession } from "@/lib/auth-session";
+import { useAccountNotifications } from "@/lib/account-notifications";
+import type { AuthRole } from "@/lib/types";
 import { ads } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import { InfoBanner } from "@/components/ui/info-banner";
 import { SummaryTab } from "./summary-tab";
 import { AnnouncementTab } from "./announcement-tab";
 import { HistoryTab } from "./history-tab";
@@ -23,6 +26,10 @@ const TABS = [
 ] as const;
 
 export function ProfessionalDashboardScreen() {
+  const { role } = useAuthSession();
+  const safeRole = role === "visitor" ? "profissional" : (role as Exclude<AuthRole, "visitor">);
+  const { bannerClosed, setBannerClosed } = useAccountNotifications(safeRole);
+
   const [activeTab, setActiveTab] = useState<string>("Anúncio");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [adStatus, setAdStatus] = useState<AdStatus>("Ativo");
@@ -39,6 +46,7 @@ export function ProfessionalDashboardScreen() {
 
     const isValidTab = TABS.some((tab) => tab.id === requestedTab);
     if (isValidTab) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(requestedTab);
     }
   }, []);
@@ -94,6 +102,15 @@ export function ProfessionalDashboardScreen() {
         </aside>
 
         <div className="space-y-4 overflow-x-hidden lg:space-y-6">
+          {!bannerClosed && (
+            <InfoBanner 
+              title="Configure seu anúncio" 
+              description="Para começar sua nova independência, configure seu anúncio e complete as informações do seu perfil na guia correspondente." 
+              tone="info" 
+              onClose={() => setBannerClosed(true)}
+            />
+          )}
+
           {/* Menu Superior Mobile */}
           <div className="flex gap-2 overflow-auto lg:hidden hide-scrollbar pb-2">
             {TABS.map((tab) => (
@@ -146,9 +163,11 @@ function VerificationTab() {
   const [revealedCodes, setRevealedCodes] = useState<Record<VerificationChannel, string | null>>({ email: null, phone: null });
 
   useEffect(() => {
+     
     setVerificationState(getVerificationState(userId, verificationTargets));
     setCodeInputs({ email: "", phone: "" });
     setRevealedCodes({ email: null, phone: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, verificationTargets.email, verificationTargets.phone]);
 
   useEffect(() => {

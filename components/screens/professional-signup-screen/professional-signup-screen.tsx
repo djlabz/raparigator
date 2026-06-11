@@ -1,12 +1,17 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { User, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { InfoBanner } from "@/components/ui/info-banner";
 import { Input } from "@/components/ui/input";
+import { Toast } from "@/components/ui/toast";
+import { Stepper, StepItem } from "@/components/ui/stepper";
+import { useAuthSession } from "@/lib/auth-session";
 import styles from "./professional-signup-screen.module.css";
 
 const stackedCards = [
@@ -31,6 +36,8 @@ const cardPlacements = [
 ];
 
 export function ProfessionalSignupScreen() {
+  const router = useRouter();
+  const { setRole } = useAuthSession();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -52,7 +59,32 @@ export function ProfessionalSignupScreen() {
     password?: string;
     confirmPassword?: string;
   }>({});
+  const [toast, setToast] = useState<{ title: string; message: string; type: "success" | "error" | "info" } | null>(null);
+
+  const professionalSteps: StepItem[] = [
+    { id: 1, label: "Identidade", icon: <User size={20} strokeWidth={2.5} /> },
+    { id: 2, label: "Segurança", icon: <ShieldCheck size={20} strokeWidth={2.5} /> },
+    { id: 3, label: "Sucesso", icon: <CheckCircle2 size={20} strokeWidth={2.5} /> },
+  ];
+
   const iconClassName = "h-4 w-4";
+
+  const showToast = (payload: { title: string; message: string; type: "success" | "error" | "info" }) => {
+    setToast(payload);
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleCreateAccount = () => {
+    setRole("profissional");
+    showToast({
+      title: "Conta criada com sucesso!",
+      message: "Redirecionando para o seu dashboard...",
+      type: "success",
+    });
+    setTimeout(() => {
+      router.push("/profissional/dashboard");
+    }, 1000);
+  };
 
   const handleArtisticNameToggle = (enabled: boolean) => {
     setArtisticNameEnabled(enabled);
@@ -266,23 +298,22 @@ export function ProfessionalSignupScreen() {
               </Link>
             </div>
             <h1 className="mt-4 text-3xl font-semibold text-zinc-900">Criar conta profissional</h1>
-            <p className="mt-1 text-base text-zinc-700">
-              Passo {step} de 3: {step === 1 ? "Informacoes basicas" : step === 2 ? "Credenciais de acesso" : "Revisao final"}
-            </p>
-
-            <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200">
-              <div className={`h-full bg-wine-800 transition-all duration-300 ease-in-out ${step === 1 ? "w-1/3" : step === 2 ? "w-2/3" : "w-full"}`} />
-            </div>
+            <p className="mt-1 text-base text-zinc-700">Inicie seu perfil e faça parte da seleção exclusiva Sigillus.</p>
           </header>
 
           <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-300/40 md:p-6">
+            <div className="mb-10 px-2 sm:px-6">
+              <Stepper steps={professionalSteps} currentStep={step} />
+            </div>
+
             <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
 
               {/* PASSO 1 */}
               {step === 1 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-1 mb-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">Passo 1: Informacoes basicas</p>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">Executive Profile</span>
+                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">Dados Iniciais</h2>
                     <p className="text-sm text-zinc-700">Seu perfil inicia com CPF, nome civil e nome artístico opcional.</p>
                   </div>
 
@@ -364,7 +395,8 @@ export function ProfessionalSignupScreen() {
               {step === 2 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-1 mb-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">Passo 2: Credenciais de acesso</p>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">Secure Vault</span>
+                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">Credenciais de Acesso</h2>
                     <p className="text-sm text-zinc-700">Informe telefone, e-mail e senha para proteger o acesso da conta.</p>
                   </div>
 
@@ -484,7 +516,8 @@ export function ProfessionalSignupScreen() {
               {step === 3 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-1 mb-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">Passo 3: Revisão final</p>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">Quase lá</span>
+                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">Revisão Final</h2>
                     <p className="text-sm text-zinc-700">Confira os dados obrigatórios validados e finalize seu cadastro.</p>
                   </div>
 
@@ -511,8 +544,9 @@ export function ProfessionalSignupScreen() {
                   <Button
                     type="button"
                     variant="secondary"
+                    size="lg"
                     onClick={prevStep}
-                    className="flex items-center justify-center w-1/3 border-zinc-200 text-zinc-700 hover:bg-zinc-100 font-medium"
+                    className="w-1/3"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 h-4 w-4">
                       <path d="m12 19-7-7 7-7" />
@@ -523,7 +557,7 @@ export function ProfessionalSignupScreen() {
                 )}
 
                 {step === 1 ? (
-                  <Button type="button" fullWidth onClick={nextFromStepOne} className="flex items-center justify-center font-medium">
+                  <Button type="button" fullWidth size="lg" onClick={nextFromStepOne} className="shadow-md shadow-wine-700/20">
                     Continuar
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5 h-4 w-4">
                       <path d="M5 12h14" />
@@ -531,7 +565,7 @@ export function ProfessionalSignupScreen() {
                     </svg>
                   </Button>
                 ) : step === 2 ? (
-                  <Button type="button" onClick={nextFromStepTwo} className="flex items-center justify-center w-2/3 font-medium">
+                  <Button type="button" size="lg" onClick={nextFromStepTwo} className="w-2/3 shadow-md shadow-wine-700/20">
                     Continuar para verificacao
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5 h-4 w-4">
                       <path d="M5 12h14" />
@@ -539,19 +573,21 @@ export function ProfessionalSignupScreen() {
                     </svg>
                   </Button>
                 ) : (
-                  <Button type="button" className="flex items-center justify-center w-2/3 font-medium">
+                  <Button type="button" size="lg" onClick={handleCreateAccount} className="w-2/3 shadow-md shadow-wine-700/20">
                     Criar conta profissional
                   </Button>
                 )}
               </div>
 
               <p className="text-center text-sm text-zinc-600">
-                Ainda não é cliente?{" "}
-                <Link href="/auth/cadastro/cliente" className="font-semibold text-wine-800 hover:text-wine-900 hover:underline">
+                Ainda não tem conta cliente?{" "}
+                <Link href="/auth/cadastro" className="font-semibold text-wine-800 hover:text-wine-900 hover:underline">
                   Criar conta grátis
                 </Link>
               </p>
             </form>
+
+            {toast ? <Toast title={toast.title} message={toast.message} type={toast.type} /> : null}
 
             <p className="mt-6 text-center text-xs font-semibold uppercase tracking-[0.17em] text-zinc-600">
               Seguro. Criptografado. Exclusivo.

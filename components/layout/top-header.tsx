@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { BackButton } from "@/components/ui/back-button";
@@ -34,7 +34,7 @@ export function TopHeader({ location, role, user, isLoggedIn, onLogout, onBack }
               <Link href="/auth/login" className="rounded-lg px-3 py-2 text-zinc-700 transition hover:bg-zinc-100">
                 Entrar
               </Link>
-              <Link href="/auth/cadastro/cliente" className="rounded-lg bg-wine-700 px-3 py-2 font-medium text-white transition hover:bg-wine-800" style={{ color: "#fff" }}>
+              <Link href="/auth/cadastro" className="rounded-lg bg-wine-700 px-3 py-2 font-medium text-white transition hover:bg-wine-800" style={{ color: "#fff" }}>
                 Criar conta
               </Link>
             </div>
