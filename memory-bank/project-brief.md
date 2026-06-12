@@ -4,26 +4,10 @@
 
 Sigillus e uma plataforma frontend em portugues do Brasil para conectar clientes e profissionais com foco em seguranca, discricao, custodia financeira e experiencia premium.
 
-## Stack
+## Arquitetura E Stack
 
-- Next.js App Router.
-- React 19.
-- TypeScript strict.
-- Tailwind CSS v4.
-- `npm` com `package-lock.json`.
-- Icones via `lucide-react`.
-- Animacoes pontuais via `motion`.
-- Imagens com `next/image` quando aplicavel.
-
-## Arquitetura Atual
-
-- `app/**` define rotas e metadata.
-- `components/screens/**` implementa telas de produto.
-- `components/layout/**` implementa shell e navegacao.
-- `components/ui/**` implementa primitives reutilizaveis.
-- `lib/types.ts` concentra tipos de dominio mockado.
-- `lib/mock-data.ts` contem anuncios, reviews, conversas e midia mockados.
-- `lib/auth-session.ts` implementa sessao mockada em `localStorage`.
+- Consulte **`AGENTS.md`** e **`docs/design-guidelines.md`** para diretrizes estritas sobre stack, configuracao e regras por caminhos da aplicacao.
+- Elementos chave do frontend: `lib/types.ts` (tipos de dominio mockado), `lib/mock-data.ts` (dados fake), `lib/auth-session.ts` (sessao no localStorage).
 
 ## Papeis
 
