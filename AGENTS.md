@@ -44,12 +44,9 @@
 
 ## UI E Estilo
 
-- Use Tailwind CSS v4 e os tokens definidos em `app/globals.css`.
-- Use `components/ui/button.tsx`, `card.tsx`, `modal.tsx`, `select.tsx`, `switch.tsx` e componentes existentes antes de criar novos primitives.
-- Use `lucide-react` para icones quando houver icone equivalente.
-- Use `next/image` para imagens de produto/remotas quando aplicavel.
-- Preserve fontes globais configuradas em `app/layout.tsx`: Manrope e Cormorant Garamond.
-- Nao faca redesign global ou troca de paleta sem tarefa explicita.
+- **Consulte `docs/design-guidelines.md`** para diretrizes estritas e completas sobre estilizacao, Tailwind, Tipografia, UI Components, acessibilidade e temas premium.
+- Use `components/ui/*` (Button, Card, Modal, etc.) antes de criar novos primitivos.
+- Mantenha `pt-BR` e um tom seguro, discreto e premium.
 
 ## Dados, Auth E Seguranca
 
