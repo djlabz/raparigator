@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -72,6 +72,7 @@ function MobileContactFAB({
     if (!constraintsRef.current) return;
     const rect = constraintsRef.current.getBoundingClientRect();
     const currentX = x.get();
+    const currentY = y.get();
 
     const fabSize = 56;
     const midPoint = (rect.width - fabSize) / 2;
@@ -81,11 +82,15 @@ function MobileContactFAB({
     } else {
       animate(x, 0, { type: "spring", bounce: 0.2, duration: 0.5 });
     }
+
+    if (currentY > 0) {
+      animate(y, 0, { type: "spring", bounce: 0.4, duration: 0.5 });
+    }
   };
 
   return (
     <div
-      className="fixed left-4 right-4 top-4 bottom-21.25 z-60 pointer-events-none md:hidden"
+      className="fixed left-4 right-4 top-4 bottom-4 z-[60] pointer-events-none md:hidden"
       ref={constraintsRef}
     >
       <AnimatePresence>
@@ -101,7 +106,7 @@ function MobileContactFAB({
             dragMomentum={false}
             onDragEnd={handleDragEnd}
             style={{ x, y }}
-            className="absolute bottom-0 flex w-14 pointer-events-auto flex-col items-center justify-end"
+            className="absolute bottom-[69px] flex w-14 pointer-events-auto flex-col items-center justify-end"
           >
             <div className="relative flex w-full items-center justify-center">
               <AnimatePresence>
@@ -790,10 +795,10 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
               <div className="flex flex-col gap-3">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1.5 pr-2">
-                    <h3 className="flex items-center gap-2 font-display text-base font-bold text-zinc-900">
-                      <Zap className="h-4 w-4 shrink-0 text-[#96001e]" /> Simulador de Agendamento
+                    <h3 className="flex items-center gap-2.5 font-display text-lg sm:text-xl font-bold tracking-tight text-zinc-900">
+                      <Zap className="h-5 w-5 shrink-0 text-[#96001e]" /> Simulador de Agendamento
                     </h3>
-                    <p className="max-w-[320px] text-xs text-zinc-500 sm:text-xs">
+                    <p className="max-w-[320px] text-xs text-zinc-500 sm:text-sm">
                       Configure a duração do seu agendamento e adicione preferências instantaneamente.
                     </p>
                   </div>
@@ -937,8 +942,8 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
             <Card className="space-y-4 rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm">
               <div className="flex flex-col gap-2 border-b border-zinc-100 pb-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h3 className="font-display text-base font-bold text-zinc-900">Avaliações dos Clientes ({ad.reviewsCount})</h3>
-                  <p className="text-xs text-zinc-400">Comentários autênticos gerados após transações com custódia resolvida</p>
+                  <h3 className="font-display text-lg sm:text-xl font-bold tracking-tight text-zinc-900">Avaliações dos Clientes ({ad.reviewsCount})</h3>
+                  <p className="text-xs text-zinc-500 sm:text-sm">Comentários autênticos gerados após transações com custódia resolvida</p>
                 </div>
                 <div className="self-start rounded-full border border-amber-200 bg-amber-50 px-3 py-1 sm:self-center">
                   <div className="flex items-center gap-1.5">
@@ -1075,8 +1080,8 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
 
 
             <Card className="space-y-4 rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm">
-              <h3 className="flex items-center gap-2 border-b border-zinc-100 pb-2 font-display text-base font-bold text-zinc-900">
-                <Award className="h-5 w-5 text-[#96001e]" /> Especialidades e Especificações
+              <h3 className="flex items-center gap-2.5 border-b border-zinc-100 pb-2 font-display text-lg sm:text-xl font-bold tracking-tight text-zinc-900">
+                <Award className="h-5 w-5 shrink-0 text-[#96001e]" /> Especialidades e Especificações
               </h3>
 
               <div className="space-y-4 text-sm text-zinc-700">
