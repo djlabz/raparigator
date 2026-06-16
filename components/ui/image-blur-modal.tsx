@@ -2,26 +2,25 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import ReactCrop, { type Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { Button } from "@/components/ui/button";
+import { createAdaptivePresetCrop, resolveMinSelectionSize } from "@/components/ui/image-selection-utils";
+import type { Area } from "@/components/ui/image-cropper-modal";
+
+export type ImageBlurResult = {
+  src: string;
+  mode: "crop" | "brush";
+  cropArea?: Area;
+  maskDataUrl?: string;
+};
 
 interface ImageBlurModalProps {
   imageSrc: string;
-  onBlurComplete: (blurredImageSrc: string) => void;
+  onBlurComplete: (result: ImageBlurResult) => void;
   onClose: () => void;
 }
 
 export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurModalProps) {
-  const [crop, setCrop] = useState<Crop | undefined>(() => {
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      return {
-        unit: "%",
-        width: 50,
-        height: 50,
-        x: 25,
-        y: 25,
-      };
-    }
-    return undefined;
-  });
+  const [crop, setCrop] = useState<Crop | undefined>();
+  const [minSelection, setMinSelection] = useState({ width: 72, height: 72 });
   const [mode, setMode] = useState<"crop" | "brush">("crop");
   const imageRef = useRef<HTMLImageElement>(null);
   const maskCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -35,9 +34,19 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
       if (imageRef.current && maskCanvasRef.current && mode === "brush") {
         const img = imageRef.current;
         const cvs = maskCanvasRef.current;
-        if (cvs.width !== img.width || cvs.height !== img.height) {
-          cvs.width = img.width;
-          cvs.height = img.height;
+        const rect = img.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const canvasWidth = Math.max(1, Math.round(rect.width * dpr));
+        const canvasHeight = Math.max(1, Math.round(rect.height * dpr));
+
+        if (cvs.width !== canvasWidth || cvs.height !== canvasHeight) {
+          cvs.width = canvasWidth;
+          cvs.height = canvasHeight;
+
+          const ctx = cvs.getContext("2d");
+          if (ctx) {
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          }
         }
       }
     };
@@ -119,15 +128,32 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
 
     ctx.drawImage(image, 0, 0);
 
+    let cropArea: Area | undefined;
+    let maskDataUrl: string | undefined;
+
     if (mode === "crop") {
       const isPercent = crop!.unit === "%";
-      const scaleX = isPercent ? image.naturalWidth / 100 : image.naturalWidth / image.width;
-      const scaleY = isPercent ? image.naturalHeight / 100 : image.naturalHeight / image.height;
+      const displayRect = image.getBoundingClientRect();
+      const displayWidth = Math.max(1, displayRect.width);
+      const displayHeight = Math.max(1, displayRect.height);
+      const scaleX = isPercent ? image.naturalWidth / 100 : image.naturalWidth / displayWidth;
+      const scaleY = isPercent ? image.naturalHeight / 100 : image.naturalHeight / displayHeight;
 
-      const cx = crop!.x * scaleX;
-      const cy = crop!.y * scaleY;
-      const cWidth = crop!.width * scaleX;
-      const cHeight = crop!.height * scaleY;
+      const rawX = crop!.x * scaleX;
+      const rawY = crop!.y * scaleY;
+      const rawWidth = crop!.width * scaleX;
+      const rawHeight = crop!.height * scaleY;
+
+      const cx = Math.max(0, Math.min(image.naturalWidth - 1, rawX));
+      const cy = Math.max(0, Math.min(image.naturalHeight - 1, rawY));
+      const cWidth = Math.max(1, Math.min(rawWidth, image.naturalWidth - cx));
+      const cHeight = Math.max(1, Math.min(rawHeight, image.naturalHeight - cy));
+      cropArea = {
+        x: Math.round(cx),
+        y: Math.round(cy),
+        width: Math.round(cWidth),
+        height: Math.round(cHeight),
+      };
 
       ctx.save();
       ctx.beginPath();
@@ -148,17 +174,37 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
         blurCtx.drawImage(image, 0, 0);
 
         blurCtx.globalCompositeOperation = "destination-in";
-        blurCtx.drawImage(maskCanvasRef.current!, 0, 0, blurCanvas.width, blurCanvas.height);
+        if (maskCanvasRef.current) {
+          blurCtx.drawImage(maskCanvasRef.current, 0, 0, blurCanvas.width, blurCanvas.height);
+        }
       }
 
       ctx.drawImage(blurCanvas, 0, 0);
+      maskDataUrl = maskCanvasRef.current?.toDataURL("image/png");
     }
 
     canvas.toBlob((blob) => {
       if (!blob) return;
-      onBlurComplete(URL.createObjectURL(blob));
+      onBlurComplete({
+        src: URL.createObjectURL(blob),
+        mode,
+        cropArea,
+        maskDataUrl,
+      });
     }, "image/jpeg", 0.95);
   }, [crop, mode, hasDrawn, onBlurComplete]);
+
+  const handleImageLoad = useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
+    const width = event.currentTarget.width;
+    const height = event.currentTarget.height;
+
+    if (!width || !height) {
+      return;
+    }
+
+    setMinSelection(resolveMinSelectionSize({ width, height }));
+    setCrop(createAdaptivePresetCrop(width, height));
+  }, []);
 
   return (
     <div className="fixed inset-0 z-200 bg-black/95 flex flex-col items-center justify-center p-4">
@@ -183,13 +229,23 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
 
       <div className="relative w-full max-w-5xl flex-1 bg-black/50 rounded-lg overflow-hidden border border-white/10 min-h-0 select-none flex items-center justify-center p-4">
         {mode === "crop" ? (
-          <ReactCrop crop={crop} onChange={c => setCrop(c)} className="max-w-full max-h-full inline-block">
+          <ReactCrop
+            key={`blur-crop-${imageSrc}`}
+            crop={crop}
+            onChange={c => setCrop(c)}
+            minWidth={minSelection.width}
+            minHeight={minSelection.height}
+            keepSelection
+            ruleOfThirds
+            className="max-w-full max-h-full inline-block"
+          >
             <img
               ref={imageRef}
               src={imageSrc}
               alt="Blur Area"
               className="block pointer-events-none select-none"
               crossOrigin="anonymous"
+              onLoad={handleImageLoad}
               style={{ maxWidth: '100%', maxHeight: 'calc(100dvh - 280px)', width: 'auto', height: 'auto' }}
             />
           </ReactCrop>

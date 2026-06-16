@@ -10,9 +10,20 @@ export async function getCroppedImg(
     img.onerror = (e) => reject(e);
   });
 
+  const safeX = Math.max(0, Math.floor(pixelCrop.x));
+  const safeY = Math.max(0, Math.floor(pixelCrop.y));
+  const safeWidth = Math.min(
+    Math.max(1, Math.floor(pixelCrop.width)),
+    Math.max(1, image.naturalWidth - safeX),
+  );
+  const safeHeight = Math.min(
+    Math.max(1, Math.floor(pixelCrop.height)),
+    Math.max(1, image.naturalHeight - safeY),
+  );
+
   const canvas = document.createElement("canvas");
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
+  canvas.width = safeWidth;
+  canvas.height = safeHeight;
 
   const ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -21,23 +32,15 @@ export async function getCroppedImg(
 
   ctx.drawImage(
     image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
+    safeX,
+    safeY,
+    safeWidth,
+    safeHeight,
     0,
     0,
-    pixelCrop.width,
-    pixelCrop.height
+    safeWidth,
+    safeHeight
   );
 
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        resolve("");
-        return;
-      }
-      resolve(URL.createObjectURL(blob));
-    }, "image/jpeg");
-  });
+  return canvas.toDataURL("image/jpeg", 0.92);
 }
