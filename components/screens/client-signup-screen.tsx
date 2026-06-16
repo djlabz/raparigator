@@ -1,13 +1,23 @@
-﻿"use client"; // Importante para gerenciar estado no cliente
+"use client"; // Importante para gerenciar estado no cliente
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { User, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { InfoBanner } from "@/components/ui/info-banner";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
+import { Stepper, StepItem } from "@/components/ui/stepper";
+import { useAuthSession } from "@/lib/auth-session";
+
+const clientImages = [
+  "/modelo_criar_conta_cliente_1.png",
+  "/mulher_1.png",
+  "/home_page2_.png"
+];
 
 // Função auxiliar para aplicar a máscara de CPF (Formata: 000.000.000-00)
 // E remove qualquer caractere que não seja número (Previne: letras, símbolos)
@@ -21,6 +31,8 @@ const maskCPF = (value: string) => {
 };
 
 export function ClientSignupScreen() {
+  const router = useRouter();
+  const { setRole } = useAuthSession();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [cpfValue, setCpfValue] = useState("");
   const [fullName, setFullName] = useState("");
@@ -32,6 +44,8 @@ export function ClientSignupScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
   const [emailError, setEmailError] = useState<string | undefined>();
   const [confirmEmailError, setConfirmEmailError] = useState<string | undefined>();
   const [passwordError, setPasswordError] = useState<string | undefined>();
@@ -41,6 +55,12 @@ export function ClientSignupScreen() {
   const [shakeStep, setShakeStep] = useState<1 | 2 | null>(null);
 
   const [toast, setToast] = useState<{ title: string; message: string; type: "success" | "error" | "info" } | null>(null);
+
+  const clientSteps: StepItem[] = [
+    { id: 1, label: "Identidade", icon: <User size={20} strokeWidth={2.5} /> },
+    { id: 2, label: "Segurança", icon: <ShieldCheck size={20} strokeWidth={2.5} /> },
+    { id: 3, label: "Sucesso", icon: <CheckCircle2 size={20} strokeWidth={2.5} /> },
+  ];
 
   const iconClassName = "h-4 w-4";
 
@@ -76,6 +96,13 @@ export function ClientSignupScreen() {
       setCpfValue(masked);
     }
   };
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setActiveImageIndex((current) => (current + 1) % clientImages.length);
+    }, 4500); // 4.5s per image
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   const handleNicknameToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
     const enabled = event.target.checked;
@@ -184,34 +211,45 @@ export function ClientSignupScreen() {
   };
 
   const handleCreateAccount = () => {
+    setRole("cliente");
     showToast({
-      title: "Dados validados",
-      message: "Cadastro pronto para criacao da conta.",
+      title: "Conta criada com sucesso!",
+      message: "Bem-vindo ao Sigillus.",
       type: "success",
     });
+    // Dá um tempo curto para o usuário ver o toast antes de mudar de tela
+    setTimeout(() => {
+      router.push("/feed");
+    }, 1000);
   };
 
   return (
     <div className="min-h-screen bg-zinc-50 md:grid md:grid-cols-2 md:items-start">
-      <section className="relative hidden h-screen overflow-hidden bg-black md:sticky md:top-0 md:block">
-        <Image
-          src="/images/auth/signup-client-model-1.png"
-          alt="Modelo para criacao de conta cliente"
-          fill
-          priority
-          quality={100}
-          className="object-contain object-center"
-          sizes="(max-width: 768px) 100vw, 50vw"
-        />
-        <div className="absolute inset-0 bg-linear-to-br from-black/55 via-black/25 to-transparent" />
-        <div className="absolute inset-0 bg-linear-to-t from-wine-900/35 via-transparent to-transparent" />
-        <div className="relative z-10 flex h-full flex-col justify-end px-10 pb-14 text-white lg:px-14">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">Cadastro cliente</p>
-          <h2 className="mt-4 max-w-lg font-display text-5xl leading-[0.95] text-white lg:text-6xl">Controle premium da sua experiencia.</h2>
-          <div className="mt-7 h-px w-24 bg-white/45" />
-          <p className="mt-6 max-w-md text-base leading-relaxed text-white/80">
-            Entre em um ambiente com suporte dedicado, contratacao protegida e rastreabilidade completa em cada interacao.
-          </p>
+      <section className="hidden h-screen bg-black md:sticky md:top-0 md:block">
+        <div className="relative h-full w-full overflow-hidden">
+          {clientImages.map((src, index) => (
+            <Image
+              key={src}
+              src={src}
+              alt={`Modelo para criacao de conta cliente ${index + 1}`}
+              fill
+              priority={index === 0}
+              quality={100}
+              className={`object-cover object-center transition-opacity duration-1000 ease-in-out ${index === activeImageIndex ? "opacity-90" : "opacity-0"
+                }`}
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          ))}
+          <div className="absolute inset-0 bg-linear-to-br from-black/55 via-black/25 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-wine-900/35 via-transparent to-transparent" />
+          <div className="relative z-10 flex h-full flex-col justify-end px-10 pb-14 text-white lg:px-14">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">Cadastro cliente</p>
+            <h2 className="mt-4 max-w-lg font-display text-5xl leading-[0.95] text-white lg:text-6xl">Controle premium da sua experiencia.</h2>
+            <div className="mt-7 h-px w-24 bg-white/45" />
+            <p className="mt-6 max-w-md text-base leading-relaxed text-white/80">
+              Entre em um ambiente com suporte dedicado, contratacao protegida e rastreabilidade completa em cada interacao.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -225,19 +263,21 @@ export function ClientSignupScreen() {
               </Link>
             </div>
             <h1 className="mt-4 text-3xl font-semibold text-zinc-900">Crie sua conta Sigillus</h1>
-            <p className="mt-1 text-base text-zinc-700">Passo {step} de 3: {step === 1 ? "Dados iniciais" : step === 2 ? "Credenciais de acesso" : "Revisao final"}</p>
-            <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200">
-              <div className={`h-full bg-wine-800 transition-all duration-300 ease-in-out ${step === 1 ? "w-1/3" : step === 2 ? "w-2/3" : "w-full"}`} />
-            </div>
+            <p className="mt-1 text-base text-zinc-700">Inicie sua jornada no ecossistema e experimente o padrão de excelência.</p>
           </header>
 
           <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-300/40 md:p-6">
+            <div className="mb-10 px-2 sm:px-6">
+              <Stepper steps={clientSteps} currentStep={step} />
+            </div>
+
             <form className="space-y-6" onSubmit={(event) => event.preventDefault()}>
               {step === 1 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="mb-4 space-y-1">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">Passo 1: Dados iniciais</p>
-                    <p className="text-sm text-zinc-700">Informe seus dados civis e configure como deseja ser chamada(o).</p>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">Premium Membership</span>
+                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">Dados Iniciais</h2>
+                    <p className="text-sm font-medium text-zinc-500 leading-relaxed">Informe seus dados civis e configure como deseja ser chamada(o).</p>
                   </div>
 
                   <Input
@@ -276,7 +316,7 @@ export function ClientSignupScreen() {
                     }
                   />
 
-                  <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-3">
+                  <div className="rounded-xl border border-zinc-200 bg-white/40 p-4 shadow-sm backdrop-blur-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-zinc-900">Usar apelido (opcional)</p>
@@ -311,8 +351,9 @@ export function ClientSignupScreen() {
               {step === 2 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="mb-4 space-y-1">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">Passo 2: Credenciais de acesso</p>
-                    <p className="text-sm text-zinc-700">Confirme e-mail e senha para proteger o acesso da sua conta.</p>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">Secure Vault</span>
+                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">Credenciais de Acesso</h2>
+                    <p className="text-sm font-medium text-zinc-500 leading-relaxed">Confirme e-mail e senha para proteger o acesso da sua conta.</p>
                   </div>
 
                   <Input
@@ -412,9 +453,10 @@ export function ClientSignupScreen() {
 
               {step === 3 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <div className="mb-2 space-y-1">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">Passo 3: Revisão final</p>
-                    <p className="text-sm text-zinc-700">Tudo pronto. Confira os dados obrigatórios e finalize sua conta.</p>
+                  <div className="mb-4 space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">Quase lá</span>
+                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">Revisão Final</h2>
+                    <p className="text-sm font-medium text-zinc-500 leading-relaxed">Tudo pronto. Confira os dados obrigatórios e finalize sua conta.</p>
                   </div>
 
                   <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-700">
@@ -434,8 +476,9 @@ export function ClientSignupScreen() {
                     <Button
                       type="button"
                       variant="secondary"
+                      size="lg"
                       onClick={prevStep}
-                      className="flex w-1/3 items-center justify-center border-zinc-200 text-zinc-700 hover:bg-zinc-100"
+                      className="w-1/3"
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 h-4 w-4">
                         <path d="m12 19-7-7 7-7" />
@@ -446,16 +489,18 @@ export function ClientSignupScreen() {
                     {step === 2 ? (
                       <Button
                         type="button"
+                        size="lg"
                         onClick={handleFinishSignup}
-                        className="mt-0 w-2/3 bg-wine-700 py-6 text-base text-white shadow-md shadow-wine-700/20 hover:bg-wine-800"
+                        className="w-2/3 shadow-md shadow-wine-700/20"
                       >
                         Continuar
                       </Button>
                     ) : (
                       <Button
                         type="button"
+                        size="lg"
                         onClick={handleCreateAccount}
-                        className="mt-0 w-2/3 bg-wine-700 py-6 text-base text-white shadow-md shadow-wine-700/20 hover:bg-wine-800"
+                        className="w-2/3 shadow-md shadow-wine-700/20"
                       >
                         Criar conta
                       </Button>
@@ -465,8 +510,9 @@ export function ClientSignupScreen() {
                   <Button
                     type="button"
                     fullWidth
+                    size="lg"
                     onClick={nextStep}
-                    className="mt-0 flex items-center justify-center bg-wine-700 py-6 text-base text-white shadow-md shadow-wine-700/20 hover:bg-wine-800"
+                    className="shadow-md shadow-wine-700/20"
                   >
                     Continuar
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5 h-4 w-4">

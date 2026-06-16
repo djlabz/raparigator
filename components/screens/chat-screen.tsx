@@ -1,74 +1,154 @@
-﻿"use client";
+"use client";
 
+import {
+  AlertCircle,
+  ArrowLeft,
+  Ban,
+  Check,
+  CheckCheck,
+  Clock,
+  Flag,
+  Image as ImageIcon,
+  MoreHorizontal,
+  Plus,
+  RefreshCcw,
+  Send,
+  Shield,
+  Trash2,
+  UserRound,
+  WifiOff,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState, useRef, useEffect } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { ads, conversations, messages } from "@/lib/mock-data";
+import { Toast } from "@/components/ui/toast";
+import {
+  deleteConversationFromInbox as apiDeleteConversationFromInbox,
+  getChatSnapshot,
+  reportConversation as apiReportConversation,
+  sendTextMessage,
+  sendViewOnceMediaMessage,
+  setConversationBlocked as apiSetConversationBlocked,
+  updateParticipantAlias as apiUpdateParticipantAlias,
+} from "@/lib/chat-service";
+import { ads } from "@/lib/mock-data";
+import type { Conversation, Message } from "@/lib/types";
+import { useAuthSession } from "@/lib/auth-session";
 import { cn } from "@/lib/utils";
 
-/**
- * Cores de status baseadas na disponibilidade da profissional na plataforma
- */
-const getStatusColor = (status: string) => {
-  const normalized = normalizeText(status);
-  if (normalized.includes("online") || normalized.includes("livre")) return "bg-emerald-500";
-  if (normalized.includes("atendimento")) return "bg-amber-500";
-  return "bg-zinc-400"; // Indisponível/Offline
+const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+const getStatusColor = (status: Conversation["contactStatus"]) => status === "online" ? "bg-emerald-500" : "bg-zinc-400";
+const getStatusLabel = (status: Conversation["contactStatus"]) => status === "online" ? "Online" : "Offline";
+
+const getMessageStatus = (message: Message) => {
+  if (message.from !== "me") return null;
+
+  if (message.status === "sending") return { label: "Enviando", icon: Clock, className: "text-zinc-400" };
+  if (message.status === "failed") return { label: "Falhou", icon: AlertCircle, className: "text-wine-600" };
+  if (message.status === "delivered") return { label: "Entregue", icon: CheckCheck, className: "text-zinc-400" };
+  return { label: "Enviada", icon: Check, className: "text-zinc-400" };
 };
 
-const normalizeText = (v: string) => v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+type ToastState = { title: string; message: string; type?: "success" | "error" | "info" } | null;
 
 export function ChatScreen() {
-  const [localConversations, setLocalConversations] = useState(conversations);
-  const [activeConversationId, setActiveConversationId] = useState(conversations[0]?.id ?? "");
+  const { isLoggedIn, user } = useAuthSession();
+  const [localConversations, setLocalConversations] = useState<Conversation[]>([]);
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState("");
   const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [profilePanelOpen, setProfilePanelOpen] = useState(false);
-  const [conversationParticipantAliases, setConversationParticipantAliases] = useState<Record<string, string>>({});
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [renameDraft, setRenameDraft] = useState("");
   const [draft, setDraft] = useState("");
-  const [localMessages, setLocalMessages] = useState(messages);
   const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastState>(null);
+  const [globalAlias, setGlobalAlias] = useState(user?.alias ?? "Cliente reservado");
+  const [globalAliasDraft, setGlobalAliasDraft] = useState(globalAlias);
+  const [globalAliasModalOpen, setGlobalAliasModalOpen] = useState(false);
+  const [presenceVisible, setPresenceVisible] = useState(true);
+  const [attachmentMenuOpen, setAttachmentMenuOpen] = useState(false);
+  const [viewOnceModalOpen, setViewOnceModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [blockModalOpen, setBlockModalOpen] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
 
-  const activeConversation = localConversations.find((c) => c.id === activeConversationId) || localConversations[0];
+  const activeConversation = localConversations.find((conversation) => conversation.id === activeConversationId) ?? localConversations[0];
   const displayContactName = activeConversation?.contactName ?? "";
-  const participantAlias = activeConversation ? (conversationParticipantAliases[activeConversation.id] ?? "") : "";
+  const participantAlias = activeConversation?.currentUserAlias ?? "";
+  const currentDisplayName = participantAlias || globalAlias || "Cliente reservado";
 
   const activeAd = useMemo(() => {
     if (!activeConversation) return null;
-
     return ads.find((ad) => normalizeText(ad.artisticName).includes(normalizeText(activeConversation.contactName))) ?? null;
   }, [activeConversation]);
 
   const currentMessages = useMemo(() =>
-    localMessages.filter((m) => m.conversationId === activeConversation?.id),
+    localMessages.filter((message) => message.conversationId === activeConversation?.id && !message.deletedAt),
     [activeConversation?.id, localMessages]
   );
 
-  // Mapeia avatares baseados nos anúncios (Ads)
   const conversationAvatars = useMemo(() => {
     return Object.fromEntries(
-      localConversations.map((c) => {
-        const ad = ads.find((a) => normalizeText(a.artisticName).includes(normalizeText(c.contactName)));
-        return [c.id, ad?.images[0] ?? null];
+      localConversations.map((conversation) => {
+        const ad = ads.find((item) => normalizeText(item.artisticName).includes(normalizeText(conversation.contactName)));
+        return [conversation.id, ad?.images[0] ?? null];
       })
     );
   }, [localConversations]);
 
+  const visibleConversations = useMemo(
+    () => localConversations.filter((conversation) => !conversation.deletedFromInboxAt),
+    [localConversations]
+  );
+
+  const showToast = (payload: NonNullable<ToastState>) => {
+    setToast(payload);
+    window.setTimeout(() => setToast(null), 3600);
+  };
+
+  const loadChat = async () => {
+    setIsLoading(true);
+    setLoadError(null);
+
+    try {
+      const snapshot = await getChatSnapshot();
+      setLocalConversations(snapshot.conversations);
+      setLocalMessages(snapshot.messages);
+      setActiveConversationId((current) => current || snapshot.conversations[0]?.id || "");
+    } catch {
+      setLoadError("Não foi possível carregar suas conversas agora.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (!activeConversationId && localConversations[0]?.id) {
-      setActiveConversationId(localConversations[0].id);
+    loadChat();
+  }, []);
+
+  useEffect(() => {
+    setGlobalAlias(user?.alias ?? "Cliente reservado");
+  }, [user?.alias]);
+
+  useEffect(() => {
+    if (!activeConversationId && visibleConversations[0]?.id) {
+      setActiveConversationId(visibleConversations[0].id);
       return;
     }
 
-    if (activeConversationId && !localConversations.some((conversation) => conversation.id === activeConversationId)) {
-      setActiveConversationId(localConversations[0]?.id ?? "");
+    if (activeConversationId && !visibleConversations.some((conversation) => conversation.id === activeConversationId)) {
+      setActiveConversationId(visibleConversations[0]?.id ?? "");
     }
-  }, [activeConversationId, localConversations]);
+  }, [activeConversationId, visibleConversations]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 767px)");
@@ -91,7 +171,6 @@ export function ChatScreen() {
     const previousHtmlOverflow = document.documentElement.style.overflow;
     const previousHtmlOverscrollBehavior = document.documentElement.style.overscrollBehavior;
 
-    // On mobile chat, keep page fixed and allow scroll only in conversation/message panes.
     document.body.style.overflow = "hidden";
     document.body.style.overscrollBehavior = "none";
     document.documentElement.style.overflow = "hidden";
@@ -105,28 +184,6 @@ export function ChatScreen() {
     };
   }, [isMobileViewport]);
 
-  const handleSend = () => {
-    const content = draft.trim();
-    if (!content || !activeConversation) return;
-
-    const messageId = `local-${Date.now()}`;
-
-    setLocalMessages((prev) => [
-      ...prev,
-      { id: messageId, conversationId: activeConversation.id, from: "me", content, sentAt: "agora" }
-    ]);
-
-    setLocalConversations((prev) => prev.map((conversation) => (
-      conversation.id === activeConversation.id
-        ? { ...conversation, lastMessage: content, lastMessageAt: "agora", unread: 0 }
-        : conversation
-    )));
-
-    setLastSentMessageId(messageId);
-    setDraft("");
-  };
-
-  // Scroll automático para a última mensagem
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -139,67 +196,258 @@ export function ChatScreen() {
     return () => window.clearTimeout(timeout);
   }, [lastSentMessageId]);
 
+  const syncConversationPreview = (conversationId: string, lastMessage: string) => {
+    setLocalConversations((previous) => previous.map((conversation) => (
+      conversation.id === conversationId
+        ? { ...conversation, lastMessage, lastMessageAt: "agora", unread: 0 }
+        : conversation
+    )));
+  };
+
   const openConversation = (conversationId: string) => {
     setActiveConversationId(conversationId);
     setMobileConversationOpen(isMobileViewport);
     setProfilePanelOpen(false);
     setRenameModalOpen(false);
+    setAttachmentMenuOpen(false);
+  };
+
+  const handleSend = async () => {
+    const content = draft.trim();
+    if (!content || !activeConversation || activeConversation.isBlocked) return;
+
+    const optimisticId = `local-${Date.now()}`;
+    const optimisticMessage: Message = {
+      id: optimisticId,
+      conversationId: activeConversation.id,
+      senderId: "current-user",
+      senderRole: "cliente",
+      senderDisplayName: currentDisplayName,
+      from: "me",
+      content,
+      messageType: "text",
+      status: "sending",
+      sentAt: "agora",
+      deliveredAt: null,
+      editedAt: null,
+      deletedAt: null,
+    };
+
+    setLocalMessages((previous) => [...previous, optimisticMessage]);
+    syncConversationPreview(activeConversation.id, content);
+    setLastSentMessageId(optimisticId);
+    setDraft("");
+
+    try {
+      const confirmed = await sendTextMessage(activeConversation.id, content, currentDisplayName);
+      setLocalMessages((previous) => previous.map((message) => (
+        message.id === optimisticId ? confirmed : message
+      )));
+      setLastSentMessageId(confirmed.id);
+    } catch {
+      setLocalMessages((previous) => previous.map((message) => (
+        message.id === optimisticId ? { ...message, status: "failed" } : message
+      )));
+    }
+  };
+
+  const handleSendViewOnceMedia = async () => {
+    if (!activeConversation || activeConversation.isBlocked) return;
+
+    const optimisticId = `local-media-${Date.now()}`;
+    const optimisticMessage: Message = {
+      id: optimisticId,
+      conversationId: activeConversation.id,
+      senderId: "current-user",
+      senderRole: "cliente",
+      senderDisplayName: currentDisplayName,
+      from: "me",
+      messageType: "media",
+      status: "sending",
+      media: {
+        id: `local-asset-${Date.now()}`,
+        kind: "image",
+        name: "Mídia temporária",
+        isViewOnce: true,
+        openedAt: null,
+      },
+      sentAt: "agora",
+      deliveredAt: null,
+      editedAt: null,
+      deletedAt: null,
+    };
+
+    setLocalMessages((previous) => [...previous, optimisticMessage]);
+    syncConversationPreview(activeConversation.id, "Mídia temporária");
+    setLastSentMessageId(optimisticId);
+    setViewOnceModalOpen(false);
+    setAttachmentMenuOpen(false);
+
+    try {
+      const confirmed = await sendViewOnceMediaMessage(activeConversation.id, currentDisplayName);
+      setLocalMessages((previous) => previous.map((message) => (
+        message.id === optimisticId ? confirmed : message
+      )));
+      setLastSentMessageId(confirmed.id);
+      showToast({ title: "Mídia temporária enviada", message: "Ela aparecerá como visualização única na conversa.", type: "success" });
+    } catch {
+      setLocalMessages((previous) => previous.map((message) => (
+        message.id === optimisticId ? { ...message, status: "failed" } : message
+      )));
+    }
   };
 
   const openRenameModal = () => {
     if (!activeConversation) return;
 
-    setRenameDraft(conversationParticipantAliases[activeConversation.id] ?? "");
+    setRenameDraft(activeConversation.currentUserAlias ?? "");
     setRenameModalOpen(true);
     setProfilePanelOpen(false);
   };
 
-  const saveParticipantAlias = () => {
+  const saveParticipantAlias = async () => {
     if (!activeConversation) return;
 
     const sanitized = renameDraft.trim();
-    setConversationParticipantAliases((prev) => {
-      const next = { ...prev };
-
-      if (!sanitized) {
-        delete next[activeConversation.id];
-        return next;
-      }
-
-      next[activeConversation.id] = sanitized;
-      return next;
-    });
-
+    // Optimistic update
+    setLocalConversations((previous) => previous.map((conversation) => (
+      conversation.id === activeConversation.id
+        ? { ...conversation, currentUserAlias: sanitized || undefined }
+        : conversation
+    )));
     setRenameModalOpen(false);
+    showToast({ title: "Apelido atualizado", message: sanitized ? "Este apelido será usado nesta conversa." : "A conversa voltou a usar seu apelido geral.", type: "success" });
+
+    // Persist via service (no-op em mock, chamada real quando backend estiver pronto)
+    try {
+      await apiUpdateParticipantAlias(activeConversation.id, sanitized || null);
+    } catch {
+      // Silencia no modo mock; em produção, considerar reverter o estado ou logar o erro
+    }
   };
 
-  const handleDeleteConversation = () => {
+  const saveGlobalAlias = () => {
+    const sanitized = globalAliasDraft.trim() || "Cliente reservado";
+    setGlobalAlias(sanitized);
+    setGlobalAliasDraft(sanitized);
+    setGlobalAliasModalOpen(false);
+    showToast({ title: "Apelido geral atualizado", message: "Novas conversas usarão esse nome de exibição.", type: "success" });
+  };
+
+  const handleDeleteFromInbox = async () => {
     if (!activeConversation) return;
-    if (!window.confirm(`Deseja excluir a conversa com ${displayContactName}?`)) return;
 
     const conversationId = activeConversation.id;
-    setLocalConversations((prev) => prev.filter((conversation) => conversation.id !== conversationId));
-    setLocalMessages((prev) => prev.filter((message) => message.conversationId !== conversationId));
-    setConversationParticipantAliases((prev) => {
-      const next = { ...prev };
-      delete next[conversationId];
-      return next;
-    });
+    const now = new Date().toISOString();
+    // Optimistic update
+    setLocalConversations((previous) => previous.map((conversation) => (
+      conversation.id === conversationId ? { ...conversation, deletedFromInboxAt: now } : conversation
+    )));
     setProfilePanelOpen(false);
-    setRenameModalOpen(false);
+    setDeleteModalOpen(false);
     setMobileConversationOpen(false);
+    showToast({ title: "Conversa removida", message: "Ela saiu da sua caixa de entrada.", type: "success" });
+
+    try {
+      await apiDeleteConversationFromInbox(conversationId);
+    } catch {
+      // Silencia no modo mock; em produção, considerar reverter o estado
+    }
   };
 
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Ola ${activeConversation?.contactName ?? ""}, vim pelo Sigillus.`)}`;
+  const handleBlockUser = async () => {
+    if (!activeConversation) return;
+
+    // Optimistic update
+    setLocalConversations((previous) => previous.map((conversation) => (
+      conversation.id === activeConversation.id ? { ...conversation, isBlocked: true } : conversation
+    )));
+    setProfilePanelOpen(false);
+    setBlockModalOpen(false);
+    showToast({ title: "Usuário bloqueado", message: "Novas mensagens ficam desativadas nesta conversa.", type: "success" });
+
+    try {
+      await apiSetConversationBlocked(activeConversation.id, true);
+    } catch {
+      // Silencia no modo mock
+    }
+  };
+
+  const handleUnblockUser = async () => {
+    if (!activeConversation) return;
+
+    // Optimistic update
+    setLocalConversations((previous) => previous.map((conversation) => (
+      conversation.id === activeConversation.id ? { ...conversation, isBlocked: false } : conversation
+    )));
+    setProfilePanelOpen(false);
+    setBlockModalOpen(false);
+    showToast({ title: "Usuário desbloqueado", message: "O envio de mensagens foi reativado nesta conversa.", type: "success" });
+
+    try {
+      await apiSetConversationBlocked(activeConversation.id, false);
+    } catch {
+      // Silencia no modo mock
+    }
+  };
+
+  const handleReportConversation = async () => {
+    if (!activeConversation) return;
+
+    const reason = reportReason.trim();
+    setReportModalOpen(false);
+    setProfilePanelOpen(false);
+    setReportReason("");
+    showToast({ title: "Denúncia registrada", message: "A denúncia foi enviada para análise pela equipe.", type: "success" });
+
+    try {
+      await apiReportConversation(activeConversation.id, reason);
+    } catch {
+      // Silencia no modo mock
+    }
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    handleSend();
+  };
+
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Olá ${activeConversation?.contactName ?? ""}, vim pelo Sigillus.`)}`;
+
+  if (!isLoggedIn) {
+    return (
+      <AppShell>
+        <div className="flex min-h-120 items-center justify-center rounded-3xl border border-zinc-200 bg-white p-6 text-center shadow-sm">
+          <div className="max-w-md">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-wine-50 text-wine-700">
+              <Shield size={22} />
+            </div>
+            <h1 className="mt-4 text-2xl font-semibold text-zinc-900">Chat privado</h1>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-600">Entre na sua conta para acessar conversas, apelidos e recursos de segurança da plataforma.</p>
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
+              <Link href="/auth/login">
+                <Button>Entrar</Button>
+              </Link>
+              <Link href="/auth/cadastro">
+                <Button variant="secondary">Criar conta</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell hideMobileBottomNav={isMobileViewport && mobileConversationOpen}>
+      <div className="fixed right-4 top-4 z-240 w-[min(22rem,calc(100vw-2rem))] space-y-2">
+        {toast ? <Toast title={toast.title} message={toast.message} type={toast.type} /> : null}
+      </div>
+
       <div className={cn(
         "relative flex w-full min-h-0 flex-col overflow-hidden bg-white md:grid md:grid-cols-[340px_minmax(0,1fr)] md:rounded-[28px] md:border md:border-zinc-200/80 md:shadow-[0_20px_60px_rgba(15,23,42,0.08)]",
         "min-h-88 h-[calc(100svh-10.5rem)] md:min-h-128 md:h-[calc(100dvh-12.5rem)]"
       )}>
-
-        {/* LISTA DE CONVERSAS (Sidebar) */}
         <aside className={cn(
           "flex h-full min-h-0 w-full flex-col border-b border-zinc-200 bg-zinc-50/80 md:border-b-0 md:border-r md:shrink-0",
           isMobileViewport && mobileConversationOpen ? "hidden md:flex" : "flex"
@@ -207,194 +455,308 @@ export function ChatScreen() {
           <div className="border-b border-zinc-200 bg-white/80 p-5 backdrop-blur-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h1 className="text-xl font-bold text-zinc-900 tracking-tight">Conversas</h1>
+                <h1 className="text-xl font-bold tracking-tight text-zinc-900">Conversas</h1>
+                <p className="mt-1 text-xs font-medium text-zinc-500">Você aparece como {globalAlias}</p>
               </div>
-              <span className="rounded-full bg-wine-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-wine-700">
-                {localConversations.length} conversas
-              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setGlobalAliasDraft(globalAlias);
+                  setGlobalAliasModalOpen(true);
+                }}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 transition hover:bg-zinc-50"
+                aria-label="Alterar apelido geral"
+              >
+                <UserRound size={16} />
+              </button>
+            </div>
+            <div className="mt-4 flex items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
+              <div>
+                <p className="text-sm font-semibold text-zinc-800">Aparecer online</p>
+                <p className="text-xs text-zinc-500">{presenceVisible ? "Seu status aparece online." : "Seu status aparece offline."}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPresenceVisible((current) => !current)}
+                className={cn(
+                  "relative h-7 w-12 rounded-full transition",
+                  presenceVisible ? "bg-emerald-500" : "bg-zinc-300"
+                )}
+                aria-pressed={presenceVisible}
+                aria-label="Alternar status online"
+              >
+                <span className={cn(
+                  "absolute top-1 h-5 w-5 rounded-full bg-white shadow transition",
+                  presenceVisible ? "left-6" : "left-1"
+                )} />
+              </button>
             </div>
           </div>
-          <ul className="flex-1 space-y-2 overflow-y-auto p-3">
-            {localConversations.map((c) => (
-              <li key={c.id}>
-                <button
-                  onClick={() => openConversation(c.id)}
-                  className={cn(
-                    "group w-full flex items-center gap-3 rounded-2xl border p-3 text-left transition-all duration-200",
-                    activeConversationId === c.id
-                      ? "border-wine-200 bg-white shadow-[0_10px_25px_rgba(15,23,42,0.06)] ring-1 ring-wine-500/10"
-                      : "border-transparent bg-transparent hover:border-zinc-200 hover:bg-white/80 hover:shadow-sm"
-                  )}
-                >
-                  <div className="relative h-12 w-12 shrink-0">
-                    <Image src={conversationAvatars[c.id] || "/placeholder.png"} alt={c.contactName} fill className="rounded-full object-cover border border-zinc-100" />
-                    <span className={cn("absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white", getStatusColor(c.contactStatus))} />
+
+          {isLoading ? (
+            <div className="space-y-3 p-3">
+              {[0, 1, 2].map((item) => (
+                <div key={item} className="flex items-center gap-3 rounded-2xl border border-zinc-100 bg-white p-3">
+                  <div className="h-12 w-12 animate-pulse rounded-full bg-zinc-200" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-28 animate-pulse rounded bg-zinc-200" />
+                    <div className="h-3 w-44 animate-pulse rounded bg-zinc-100" />
                   </div>
-                  <div className="flex-1 min-w-0 text-left">
-                    <div className="flex justify-between items-baseline">
-                      <p className="font-bold text-zinc-900 truncate group-hover:text-wine-800">{c.contactName}</p>
-                      <span className="text-[10px] text-zinc-400 font-medium">{c.lastMessageAt}</span>
+                </div>
+              ))}
+            </div>
+          ) : loadError ? (
+            <div className="flex flex-1 items-center justify-center p-6 text-center">
+              <div>
+                <WifiOff className="mx-auto text-zinc-400" size={28} />
+                <p className="mt-3 text-sm font-semibold text-zinc-800">{loadError}</p>
+                <Button className="mt-4" variant="secondary" size="sm" onClick={loadChat}>
+                  <RefreshCcw size={15} />
+                  Tentar novamente
+                </Button>
+              </div>
+            </div>
+          ) : visibleConversations.length === 0 ? (
+            <div className="flex flex-1 items-center justify-center p-6 text-center">
+              <div>
+                <p className="text-sm font-semibold text-zinc-800">Nenhuma conversa na caixa</p>
+                <p className="mt-1 text-xs text-zinc-500">Quando uma conversa for iniciada, ela aparecerá aqui.</p>
+              </div>
+            </div>
+          ) : (
+            <ul className="flex-1 space-y-2 overflow-y-auto p-3">
+              {visibleConversations.map((conversation) => (
+                <li key={conversation.id}>
+                  <button
+                    onClick={() => openConversation(conversation.id)}
+                    className={cn(
+                      "group flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-all duration-200",
+                      activeConversationId === conversation.id
+                        ? "border-wine-200 bg-white shadow-[0_10px_25px_rgba(15,23,42,0.06)] ring-1 ring-wine-500/10"
+                        : "border-transparent bg-transparent hover:border-zinc-200 hover:bg-white/80 hover:shadow-sm"
+                    )}
+                  >
+                    <div className="relative h-12 w-12 shrink-0">
+                      <Image src={conversationAvatars[conversation.id] || "/placeholder.png"} alt={conversation.contactName} fill className="rounded-full border border-zinc-100 object-cover" />
+                      <span className={cn("absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white", getStatusColor(conversation.contactStatus))} />
                     </div>
-                    <p className="text-xs text-zinc-500 truncate">{c.lastMessage}</p>
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
+                    <div className="min-w-0 flex-1 text-left">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <p className="truncate font-bold text-zinc-900 group-hover:text-wine-800">{conversation.contactName}</p>
+                        <span className="text-[10px] font-medium text-zinc-400">{conversation.lastMessageAt}</span>
+                      </div>
+                      <p className="truncate text-xs text-zinc-500">{conversation.lastMessage}</p>
+                    </div>
+                    {conversation.unread > 0 ? (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-wine-700 px-1.5 text-[10px] font-bold text-white">{conversation.unread}</span>
+                    ) : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </aside>
 
-        {/* ÁREA DO CHAT (Mobile Fullscreen ou Desktop Main) */}
         <section className={cn(
           "flex min-h-0 flex-1 flex-col overflow-hidden bg-zinc-100/50 overscroll-none",
           isMobileViewport && mobileConversationOpen ? "fixed inset-0 md:relative md:z-auto md:h-auto md:min-h-0 md:flex" : "hidden md:flex"
         )}
           style={isMobileViewport && mobileConversationOpen ? { zIndex: 120, height: "100dvh", minHeight: "100dvh" } : undefined}
         >
-          {/* HEADER DO CHAT */}
-          <header className="flex items-center gap-3 border-b border-zinc-200 bg-white/90 p-4 shadow-sm backdrop-blur-sm md:p-5">
-            {/* Lógica do botão de voltar customizada */}
-            <div className="md:hidden">
-              <button onClick={() => { setMobileConversationOpen(false); setProfilePanelOpen(false); }} className="p-2 -ml-2 text-zinc-600 hover:bg-zinc-100 rounded-full">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-              </button>
+          {!activeConversation ? (
+            <div className="flex flex-1 items-center justify-center p-6 text-center">
+              <div>
+                <p className="text-sm font-semibold text-zinc-800">Selecione uma conversa</p>
+                <p className="mt-1 text-xs text-zinc-500">As mensagens aparecerão aqui.</p>
+              </div>
             </div>
+          ) : (
+            <>
+              <header className="flex items-center gap-3 border-b border-zinc-200 bg-white/90 p-4 shadow-sm backdrop-blur-sm md:p-5">
+                <div className="md:hidden">
+                  <button onClick={() => { setMobileConversationOpen(false); setProfilePanelOpen(false); }} className="-ml-2 rounded-full p-2 text-zinc-600 hover:bg-zinc-100" aria-label="Voltar">
+                    <ArrowLeft size={24} strokeWidth={2.5} />
+                  </button>
+                </div>
 
-            <button type="button" className="flex flex-1 items-center gap-3 cursor-pointer group text-left" onClick={() => setProfilePanelOpen(true)}>
-              <div className="relative h-10 w-10">
-                <Image src={conversationAvatars[activeConversationId] || "/placeholder.png"} alt="Avatar" fill className="rounded-full object-cover" />
-                <span className={cn("absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white", getStatusColor(activeConversation?.contactStatus || ""))} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-zinc-900 truncate leading-none">{displayContactName}</p>
-                <p className="text-[11px] font-medium text-zinc-500 mt-1 uppercase tracking-wider">{activeConversation?.contactStatus}</p>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setProfilePanelOpen(true)}
-              className="p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-full"
-              aria-label="Abrir opcoes do contato"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="1" />
-                <circle cx="19" cy="12" r="1" />
-                <circle cx="5" cy="12" r="1" />
-              </svg>
-            </button>
-          </header>
-
-          <div
-            className={cn(
-              "absolute inset-0 z-20 bg-zinc-900/30 px-3 transition-opacity duration-200 md:px-5",
-              profilePanelOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-            )}
-            onClick={() => setProfilePanelOpen(false)}
-          >
-            <div
-              className={cn(
-                "mt-20 rounded-2xl border border-zinc-200 bg-white p-3 shadow-xl transition-all duration-250 ease-out md:ml-auto md:mr-4 md:mt-6 md:w-90",
-                profilePanelOpen ? "translate-y-0 scale-100 opacity-100" : "-translate-y-4 scale-[0.98] opacity-0"
-              )}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="px-2 pb-2">
-                <p className="text-sm font-bold text-zinc-900 truncate">{displayContactName}</p>
-                <p className="text-xs uppercase tracking-wider text-zinc-400 mt-1">Acoes da conversa</p>
-              </div>
-
-              <div className="space-y-1">
-                <button
-                  type="button"
-                  onClick={openRenameModal}
-                  className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-                >
-                  Alterar apelido para essa conversa
+                <button type="button" className="group flex flex-1 cursor-pointer items-center gap-3 text-left" onClick={() => setProfilePanelOpen(true)}>
+                  <div className="relative h-10 w-10">
+                    <Image src={conversationAvatars[activeConversationId] || "/placeholder.png"} alt="Avatar" fill className="rounded-full object-cover" />
+                    <span className={cn("absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white", getStatusColor(activeConversation.contactStatus))} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-bold leading-none text-zinc-900">{displayContactName}</p>
+                    <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-zinc-500">{getStatusLabel(activeConversation.contactStatus)}</p>
+                  </div>
                 </button>
 
-                {activeAd ? (
-                  <Link
-                    href={`/anuncio/${activeAd.slug}`}
-                    onClick={() => setProfilePanelOpen(false)}
-                    className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-                  >
-                    Ver anuncio publico
-                  </Link>
-                ) : (
+                <button
+                  type="button"
+                  onClick={() => setProfilePanelOpen(true)}
+                  className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+                  aria-label="Abrir opções do contato"
+                >
+                  <MoreHorizontal size={18} />
+                </button>
+              </header>
+
+              {activeConversation.isBlocked ? (
+                <div className="border-b border-wine-100 bg-wine-50 px-4 py-3 text-sm font-medium text-wine-800">
+                  Usuário bloqueado. O envio de novas mensagens está desativado nesta conversa.
+                </div>
+              ) : null}
+
+              <div
+                className={cn(
+                  "absolute inset-0 z-20 bg-zinc-900/30 px-3 transition-opacity duration-200 md:px-5",
+                  profilePanelOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+                )}
+                onClick={() => setProfilePanelOpen(false)}
+              >
+                <div
+                  className={cn(
+                    "mt-20 rounded-2xl border border-zinc-200 bg-white p-3 shadow-xl transition-all duration-250 ease-out md:ml-auto md:mr-4 md:mt-6 md:w-90",
+                    profilePanelOpen ? "translate-y-0 scale-100 opacity-100" : "-translate-y-4 scale-[0.98] opacity-0"
+                  )}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <div className="px-2 pb-2">
+                    <p className="truncate text-sm font-bold text-zinc-900">{displayContactName}</p>
+                    <p className="mt-1 text-xs uppercase tracking-wider text-zinc-400">Ações da conversa</p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <button type="button" onClick={openRenameModal} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+                      <UserRound size={16} />
+                      Alterar apelido para essa conversa
+                    </button>
+
+                    {activeAd ? (
+                      <Link href={`/anuncio/${activeAd.slug}`} onClick={() => setProfilePanelOpen(false)} className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+                        Ver anúncio público
+                      </Link>
+                    ) : (
+                      <button type="button" disabled className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-400">
+                        Ver anúncio público
+                      </button>
+                    )}
+
+                    <a href={whatsappUrl} target="_blank" rel="noreferrer" className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+                      Ir para WhatsApp
+                    </a>
+
+                    <button type="button" onClick={() => setBlockModalOpen(true)} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50">
+                      <Ban size={16} />
+                      {activeConversation.isBlocked ? "Desbloquear usuário" : "Bloquear usuário"}
+                    </button>
+
+                    <button type="button" onClick={() => setReportModalOpen(true)} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50">
+                      <Flag size={16} />
+                      Denunciar conversa
+                    </button>
+
+                    <button type="button" onClick={() => setDeleteModalOpen(true)} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-wine-700 transition hover:bg-wine-50">
+                      <Trash2 size={16} />
+                      Excluir da minha caixa
+                    </button>
+                  </div>
+
+                  <div className="mt-2 border-t border-zinc-100 px-2 pt-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">Seu apelido para esse contato</p>
+                    <p className="mt-1 text-sm font-semibold text-zinc-700">{participantAlias || globalAlias}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 space-y-4 overflow-y-auto bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.8),rgba(248,250,252,0.92)_38%,rgba(244,244,245,1)_100%)] p-4 md:p-6">
+                {currentMessages.length === 0 ? (
+                  <div className="flex h-full items-center justify-center text-center">
+                    <div>
+                      <p className="text-sm font-semibold text-zinc-800">Nenhuma mensagem ainda</p>
+                      <p className="mt-1 text-xs text-zinc-500">Envie a primeira mensagem para iniciar a conversa.</p>
+                    </div>
+                  </div>
+                ) : currentMessages.map((message) => {
+                  const status = getMessageStatus(message);
+                  const StatusIcon = status?.icon;
+
+                  return (
+                    <div key={message.id} className={cn(
+                      "flex max-w-[85%] flex-col md:max-w-[68%]",
+                      message.from === "me" ? "ml-auto items-end" : "mr-auto items-start",
+                      message.from === "me" && message.id === lastSentMessageId ? "message-sent-pop" : ""
+                    )}>
+                      <div className={cn(
+                        "px-4 py-2.5 text-sm shadow-sm",
+                        message.from === "me" ? "rounded-2xl rounded-tr-sm bg-wine-700 text-white shadow-[0_10px_22px_rgba(182,0,49,0.18)]" : "rounded-2xl rounded-tl-sm border border-zinc-200/60 bg-white text-zinc-800"
+                      )}>
+                        {message.messageType === "media" ? (
+                          <div className="flex items-center gap-3">
+                            <span className={cn("flex h-10 w-10 items-center justify-center rounded-full", message.from === "me" ? "bg-white/15" : "bg-zinc-100")}>
+                              <ImageIcon size={18} />
+                            </span>
+                            <div>
+                              <p className="font-semibold">{message.media?.name ?? "Mídia"}</p>
+                              <p className={cn("text-xs", message.from === "me" ? "text-white/75" : "text-zinc-500")}>
+                                {message.media?.openedAt ? "Aberta" : "Visualização única"}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="leading-relaxed">{message.content}</p>
+                        )}
+                      </div>
+                      <span className="mt-1 flex items-center gap-1 px-1 text-[10px] font-medium uppercase text-zinc-400">
+                        {message.sentAt}
+                        {StatusIcon ? (
+                          <>
+                            <StatusIcon size={12} className={status.className} />
+                            <span className={cn("normal-case", status.className)}>{status.label}</span>
+                          </>
+                        ) : null}
+                      </span>
+                    </div>
+                  );
+                })}
+                <div ref={scrollRef} />
+              </div>
+
+              <form className="border-t border-zinc-200 bg-white/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm" onSubmit={handleSubmit}>
+                <div className="relative mx-auto flex max-w-5xl items-center gap-3">
                   <button
                     type="button"
-                    disabled
-                    className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-400"
+                    onClick={() => setAttachmentMenuOpen((current) => !current)}
+                    disabled={activeConversation.isBlocked}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label="Abrir anexos"
                   >
-                    Ver anuncio publico
+                    <Plus size={20} />
                   </button>
-                )}
 
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-                >
-                  Ir para whatsapp
-                </a>
+                  {attachmentMenuOpen ? (
+                    <div className="absolute bottom-14 left-0 z-30 w-64 rounded-2xl border border-zinc-200 bg-white p-2 shadow-xl">
+                      <button type="button" onClick={() => setViewOnceModalOpen(true)} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+                        <ImageIcon size={17} />
+                        Enviar mídia temporária
+                      </button>
+                    </div>
+                  ) : null}
 
-                <button
-                  type="button"
-                  onClick={handleDeleteConversation}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M3 6h18" />
-                    <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                    <path d="M10 11v6" />
-                    <path d="M14 11v6" />
-                  </svg>
-                  Excluir conversa
-                </button>
-              </div>
-
-              <div className="mt-2 border-t border-zinc-100 px-2 pt-2">
-                <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">Seu apelido para esse contato</p>
-                <p className="mt-1 text-sm font-semibold text-zinc-700">{participantAlias || "Nao definido"}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* MENSAGENS */}
-          <div className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.8),rgba(248,250,252,0.92)_38%,rgba(244,244,245,1)_100%)] p-4 md:p-6 space-y-4">
-            {currentMessages.map((m) => (
-              <div key={m.id} className={cn(
-                "flex flex-col max-w-[85%] md:max-w-[68%]",
-                m.from === "me" ? "ml-auto items-end" : "mr-auto items-start",
-                m.from === "me" && m.id === lastSentMessageId ? "message-sent-pop" : ""
-              )}>
-                <div className={cn(
-                  "px-4 py-2.5 text-sm shadow-sm",
-                  m.from === "me" ? "bg-wine-700 text-white rounded-2xl rounded-tr-sm shadow-[0_10px_22px_rgba(182,0,49,0.18)]" : "bg-white text-zinc-800 border border-zinc-200/60 rounded-2xl rounded-tl-sm"
-                )}>
-                  <p className="leading-relaxed">{m.content}</p>
+                  <input
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                    placeholder={activeConversation.isBlocked ? "Usuário bloqueado" : "Mensagem..."}
+                    disabled={activeConversation.isBlocked}
+                    className="h-11 flex-1 rounded-full border border-zinc-200 bg-zinc-50 px-5 text-sm shadow-sm transition-all focus:border-wine-500 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+                  <Button type="submit" className="h-11 rounded-full px-4 font-bold sm:px-6 gap-2" disabled={!draft.trim() || activeConversation.isBlocked}>
+                    <Send size={17} />
+                    <span className="hidden sm:inline">Enviar</span>
+                  </Button>
                 </div>
-                <span className="mt-1 text-[10px] text-zinc-400 font-medium px-1 uppercase">{m.sentAt}</span>
-              </div>
-            ))}
-            <div ref={scrollRef} />
-          </div>
-
-          {/* INPUT FORM */}
-          <form className="border-t border-zinc-200 bg-white/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm" onSubmit={(e) => { e.preventDefault(); handleSend(); }}>
-            <div className="flex items-center gap-3 max-w-5xl mx-auto">
-              <button type="button" className="h-10 w-10 rounded-full bg-zinc-100 text-zinc-500 flex items-center justify-center font-bold text-xl hover:bg-zinc-200 transition-colors">+</button>
-              <input
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder="Mensagem..."
-                className="flex-1 h-11 bg-zinc-50 border border-zinc-200 rounded-full px-5 text-sm focus:outline-none focus:border-wine-500 focus:bg-white transition-all shadow-sm"
-              />
-              <Button type="submit" className="h-11 px-6 rounded-full font-bold">Enviar</Button>
-            </div>
-          </form>
+              </form>
+            </>
+          )}
         </section>
       </div>
 
@@ -404,12 +766,8 @@ export function ChatScreen() {
         title="Seu apelido para essa conversa"
         actions={
           <>
-            <Button variant="secondary" fullWidth onClick={() => setRenameModalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button fullWidth onClick={saveParticipantAlias}>
-              Salvar
-            </Button>
+            <Button variant="secondary" fullWidth onClick={() => setRenameModalOpen(false)}>Cancelar</Button>
+            <Button fullWidth onClick={saveParticipantAlias}>Salvar</Button>
           </>
         }
       >
@@ -419,13 +777,121 @@ export function ChatScreen() {
             id="conversation-alias"
             value={renameDraft}
             onChange={(event) => setRenameDraft(event.target.value)}
-            placeholder="Ex: Cliente VIP"
+            placeholder="Ex: Cliente reservado"
             className="h-11 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 text-sm text-zinc-800 outline-none transition focus:border-wine-500 focus:bg-white"
             maxLength={40}
             autoFocus
           />
-          <p className="text-xs text-zinc-500">Deixe vazio para remover o apelido.</p>
+          <p className="text-xs text-zinc-500">Deixe vazio para usar seu apelido geral.</p>
         </div>
+      </Modal>
+
+      <Modal
+        open={globalAliasModalOpen}
+        onClose={() => setGlobalAliasModalOpen(false)}
+        title="Apelido geral"
+        description="Esse nome será usado quando uma conversa não tiver apelido próprio."
+        actions={
+          <>
+            <Button variant="secondary" fullWidth onClick={() => setGlobalAliasModalOpen(false)}>Cancelar</Button>
+            <Button fullWidth onClick={saveGlobalAlias}>Salvar</Button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <label htmlFor="global-alias" className="text-sm font-semibold text-zinc-800">Apelido</label>
+          <input
+            id="global-alias"
+            value={globalAliasDraft}
+            onChange={(event) => setGlobalAliasDraft(event.target.value)}
+            placeholder="Ex: Cliente reservado"
+            className="h-11 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 text-sm text-zinc-800 outline-none transition focus:border-wine-500 focus:bg-white"
+            maxLength={40}
+            autoFocus
+          />
+        </div>
+      </Modal>
+
+      <Modal
+        open={viewOnceModalOpen}
+        onClose={() => setViewOnceModalOpen(false)}
+        title="Mídia temporária"
+        description="No backend real, o arquivo será enviado para storage privado e exibido uma única vez."
+        actions={
+          <>
+            <Button variant="secondary" fullWidth onClick={() => setViewOnceModalOpen(false)}>Cancelar</Button>
+            <Button fullWidth onClick={handleSendViewOnceMedia}>Simular envio</Button>
+          </>
+        }
+      >
+        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-wine-700">
+              <ImageIcon size={18} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-zinc-900">Visualização única</p>
+              <p className="mt-1 text-sm leading-relaxed text-zinc-600">A mídia aparece como aberta depois da primeira visualização e não deve ficar acessível novamente para o usuário.</p>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Excluir da minha caixa"
+        description={`Remover a conversa com ${displayContactName} da sua lista?`}
+        actions={
+          <>
+            <Button variant="secondary" fullWidth onClick={() => setDeleteModalOpen(false)}>Cancelar</Button>
+            <Button variant="danger" fullWidth onClick={handleDeleteFromInbox}>Excluir da minha caixa</Button>
+          </>
+        }
+      >
+        <p className="rounded-2xl bg-zinc-50 p-3 text-sm leading-relaxed text-zinc-600">
+          Essa ação remove a conversa da sua visualização no app. A política de retenção e auditoria fica a cargo do backend.
+        </p>
+      </Modal>
+
+      <Modal
+        open={blockModalOpen}
+        onClose={() => setBlockModalOpen(false)}
+        title={activeConversation?.isBlocked ? "Desbloquear usuário" : "Bloquear usuário"}
+        description={activeConversation?.isBlocked ? `Desbloquear ${displayContactName}?` : `Bloquear ${displayContactName}?`}
+        actions={
+          <>
+            <Button variant="secondary" fullWidth onClick={() => setBlockModalOpen(false)}>Cancelar</Button>
+            <Button variant="danger" fullWidth onClick={activeConversation?.isBlocked ? handleUnblockUser : handleBlockUser}>
+              {activeConversation?.isBlocked ? "Desbloquear" : "Bloquear"}
+            </Button>
+          </>
+        }
+      >
+        <p className="rounded-2xl bg-wine-50 p-3 text-sm leading-relaxed text-wine-800">
+          {activeConversation?.isBlocked ? "O envio de mensagens será reativado nesta conversa." : "O envio de novas mensagens será desativado nesta conversa."}
+        </p>
+      </Modal>
+
+      <Modal
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        title="Denunciar conversa"
+        description={`Descreva o problema com ${displayContactName}.`}
+        actions={
+          <>
+            <Button variant="secondary" fullWidth onClick={() => setReportModalOpen(false)}>Cancelar</Button>
+            <Button variant="danger" fullWidth onClick={handleReportConversation} disabled={!reportReason.trim()}>Enviar denúncia</Button>
+          </>
+        }
+      >
+        <textarea
+          value={reportReason}
+          onChange={(event) => setReportReason(event.target.value)}
+          placeholder="Conte o que aconteceu..."
+          className="min-h-32 w-full resize-none rounded-2xl border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-800 outline-none transition focus:border-wine-500 focus:bg-white"
+          maxLength={600}
+        />
       </Modal>
     </AppShell>
   );
