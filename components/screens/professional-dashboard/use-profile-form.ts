@@ -45,6 +45,19 @@ function toCurrencyMaskDigits(value: number | string) {
   return String(Math.round(numericValue * 100));
 }
 
+function isHairSelectionComplete(value: string) {
+  if (!value.trim() || value === "Selecionar") {
+    return false;
+  }
+
+  if (value.includes("::")) {
+    const [type = "Selecionar", color = "Selecionar"] = value.split("::");
+    return type.trim() !== "Selecionar" && color.trim() !== "Selecionar" && type.trim().length > 0 && color.trim().length > 0;
+  }
+
+  return value.trim().length > 0 && value !== "Selecionar";
+}
+
 const defaultCharacteristics: ProfileCharacteristics = {
   gender: "Selecionar",
   genitalia: "",
@@ -161,6 +174,7 @@ function buildInitialState(ad: AdPreview): ProfileFormState {
   return {
     images: ad.images.length > 0 ? ad.images : [],
     coverIndex: 0,
+    coverPreviews: ad.images.length > 0 ? ad.images.map(() => "") : [],
     shortDescription: ad.shortDescription ?? "",
     description: ad.description ?? "",
     characteristics: {
@@ -193,9 +207,8 @@ function calculateProfileScore(state: ProfileFormState): ProfileScore {
     state.characteristics.ethnicity,
     state.characteristics.height,
     state.characteristics.weight,
-    state.characteristics.hairColor,
     state.characteristics.smoker,
-  ].every((value) => value.trim().length > 0 && value !== "Selecionar");
+  ].every((value) => value.trim().length > 0 && value !== "Selecionar") && isHairSelectionComplete(state.characteristics.hairColor);
   const characteristicsScore = hasCharacteristics ? 20 : 0;
 
   // Pricing (0-20): at least one active price defined = 20, none = 0

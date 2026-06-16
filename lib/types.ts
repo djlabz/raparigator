@@ -52,8 +52,12 @@ export interface ProfessionalAd {
   description: string;
   serviceDescription: string;
   startingPrice: number;
+  age: number;
   heightCm: number;
+  weightKg: number;
   ethnicity: string;
+  eyeColor: string;
+  hairType: string;
   hairColor: string;
   services: string[];
   serviceOptions: string[];
