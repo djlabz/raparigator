@@ -79,7 +79,7 @@ export function OnboardingScreen() {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/hero/homepage-main.png"
+            src="/images/hero/homepage-main-ultrawide.png"
             alt="Sigillus Premium Background"
             fill
             className={`object-cover ${styles.heroImage}`}
