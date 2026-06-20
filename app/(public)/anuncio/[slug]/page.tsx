@@ -1,5 +1,5 @@
-﻿import type { Metadata } from "next";
-import { AdDetailsScreen } from "@/components/screens/ad-details-screen";
+import type { Metadata } from "next";
+import { AdDetailsScreen } from "@/components/screens/ad-details";
 import { ads } from "@/lib/mock-data";
 
 type Props = { params: Promise<{ slug: string }> };
