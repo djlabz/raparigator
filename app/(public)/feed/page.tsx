@@ -1,5 +1,5 @@
-﻿import type { Metadata } from "next";
-import { FeedScreen } from "@/components/screens/feed-screen";
+import type { Metadata } from "next";
+import { FeedScreen } from "@/components/screens/feed-screen/feed-screen";
 
 export const metadata: Metadata = {
   title: "Feed de anuncios | Sigillus",
