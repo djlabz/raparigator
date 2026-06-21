@@ -31,6 +31,7 @@ const nextConfig: NextConfig = {
   },
   output: 'standalone',
   transpilePackages: ['motion'],
+  allowedDevOrigins: ['*.trycloudflare.com'],
   turbopack: {},
   webpack: (config: any, {dev}: {dev: boolean}) => {
     // HMR is disabled in AI Studio via DISABLE_HMR env var.
