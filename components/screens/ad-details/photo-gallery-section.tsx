@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Award, Expand, ShieldCheck, Sparkles } from "lucide-react";
+import { Award, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ProfessionalAd } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -136,10 +136,10 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                 referrerPolicy="no-referrer"
               />
 
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                <div className="rounded-full border border-white/20 bg-white/10 p-2.5 backdrop-blur-md transition-all hover:scale-110 active:scale-90">
-                  <Expand className="h-5 w-5 text-white" />
-                </div>
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <svg className="w-8 h-8 text-white relative z-10 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
               </div>
             </div>
           ))}
@@ -249,10 +249,10 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
 
                 <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-60 transition-opacity group-hover:opacity-80" />
 
-                <div className="absolute inset-0 flex items-center justify-center bg-black/25 opacity-0 transition-opacity group-hover:opacity-100">
-                  <span className="rounded-full bg-wine-700 p-2 text-white shadow-md transition-all duration-200 hover:scale-110 active:scale-95 sm:p-2.5">
-                    <Expand className="h-4 w-4" />
-                  </span>
+                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <svg className="w-8 h-8 text-white relative z-10 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  </svg>
                 </div>
               </div>
             );
