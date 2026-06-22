@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { MapPin, ShieldCheck } from "lucide-react";
+import { MapPin, ShieldCheck, Share, Heart } from "lucide-react";
 import type { ProfessionalAd } from "@/lib/types";
 
 interface PremiumHeroSectionProps {
@@ -28,6 +28,21 @@ export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
           <span className="bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-xs font-extrabold tracking-[0.2em] text-transparent uppercase drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
             Premium
           </span>
+        </div>
+
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <button className="flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] p-2 sm:px-3 sm:py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md transition-transform hover:scale-105 active:scale-95 cursor-pointer">
+            <Share className="h-4 w-4 text-[#FFEA00] drop-shadow-[0_0_6px_rgba(255,234,0,1)]" strokeWidth={2.5} />
+            <span className="hidden sm:inline-block bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-xs font-bold tracking-wider text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
+              Compartilhar
+            </span>
+          </button>
+          <button className="flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] p-2 sm:px-3 sm:py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md transition-transform hover:scale-105 active:scale-95 cursor-pointer">
+            <Heart className="h-4 w-4 text-[#FFEA00] drop-shadow-[0_0_6px_rgba(255,234,0,1)]" strokeWidth={2.5} />
+            <span className="hidden sm:inline-block bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-xs font-bold tracking-wider text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
+              Salvar
+            </span>
+          </button>
         </div>
 
         <div className="absolute inset-x-0 bottom-0 z-10 h-40 bg-linear-to-t from-[#121212] via-[#121212]/70 to-transparent" />
@@ -92,7 +107,7 @@ export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
             {premiumAttributes.map((attribute) => (
               <div
                 key={attribute.label}
-                className="flex min-h-20 items-center gap-2 rounded-2xl border border-white/8 bg-[#0c0c0c]/90 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-sm transition-transform duration-300 hover:scale-[1.02] sm:min-h-24 sm:gap-3 sm:px-4 sm:py-4"
+                className="flex min-h-20 cursor-pointer items-center gap-2 rounded-2xl border border-white/8 bg-[#0c0c0c]/90 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-sm transition-transform duration-300 hover:scale-[1.02] sm:min-h-24 sm:gap-3 sm:px-4 sm:py-4"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-black/55 sm:h-12 sm:w-12">
                   <Image src={attribute.icon} alt={attribute.label} width={34} height={34} className="h-7 w-7 object-contain sm:h-8 sm:w-8" referrerPolicy="no-referrer" />
