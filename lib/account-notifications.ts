@@ -56,14 +56,7 @@ function defaultNotifications(role: Exclude<AuthRole, "visitor">): AccountNotifi
 
 function readState(role: Exclude<AuthRole, "visitor">): AccountNotificationState {
   if (typeof window === "undefined") {
-    const cachedServerState = roleServerSnapshotCache.get(role);
-    if (cachedServerState) {
-      return cachedServerState;
-    }
-
-    const serverState = { items: defaultNotifications(role), bannerClosed: false };
-    roleServerSnapshotCache.set(role, serverState);
-    return serverState;
+    return getServerSnapshot(role);
   }
 
   const rawItems = window.localStorage.getItem(notificationsKey(role));
@@ -100,7 +93,14 @@ function getSnapshot(role: Exclude<AuthRole, "visitor">): AccountNotificationSta
 }
 
 function getServerSnapshot(role: Exclude<AuthRole, "visitor">): AccountNotificationState {
-  return readState(role);
+  const cachedServerState = roleServerSnapshotCache.get(role);
+  if (cachedServerState) {
+    return cachedServerState;
+  }
+
+  const serverState = { items: defaultNotifications(role), bannerClosed: false };
+  roleServerSnapshotCache.set(role, serverState);
+  return serverState;
 }
 
 function writeState(role: Exclude<AuthRole, "visitor">, state: AccountNotificationState) {
