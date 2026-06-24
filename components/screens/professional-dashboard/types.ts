@@ -107,6 +107,7 @@ export type ProfileFormState = {
   services: ServiceOption[];
   // Preços
   pricing: PricingItem[];
+  paymentMethods: string[];
   // Localização
   venues: LocationVenue[];
   acceptsTravel: boolean;

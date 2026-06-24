@@ -6,7 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
-import { BadgeDollarSign, Clock3, Edit, Image as ImageIcon, Lock } from "lucide-react";
+import { BadgeDollarSign, Clock3, Edit, Image as ImageIcon, Lock, CreditCard } from "lucide-react";
+import { PixIcon } from "@/components/ui/pix-icon";
+import { CashIcon } from "@/components/ui/cash-icon";
 import type { AdPreview, AdStatus, AvailabilityDay, LocationAddress, PricingItem, ProfileCharacteristics, ProfileFormState, ServiceOption } from "./types";
 import { useProfileForm } from "./use-profile-form";
 import { ImageCropperModal, type Area } from "@/components/ui/image-cropper-modal";
@@ -343,7 +345,7 @@ function sanitizeTimeInput(value: string) {
 function buildSectionSnapshots(form: ProfileFormState) {
   return {
     characteristics: JSON.stringify(form.characteristics),
-    pricing: JSON.stringify(form.pricing),
+    pricing: JSON.stringify({ pricing: form.pricing, paymentMethods: form.paymentMethods }),
     location: JSON.stringify({ locationState: form.locationState, locationCity: form.locationCity, acceptsTravel: form.acceptsTravel, locationAddresses: form.locationAddresses }),
     description: JSON.stringify({ shortDescription: form.shortDescription, description: form.description }),
     services: JSON.stringify(form.services),
@@ -363,9 +365,11 @@ function getPublishValidationErrors(form: ProfileFormState) {
   ].some(Boolean);
   const hasPricing = form.pricing.some((item) => !item.disabled && item.price.trim().length > 0);
   const hasLocation = form.locationState.trim().length > 0 && form.locationCity.trim().length > 0;
+  const hasPaymentMethods = (form.paymentMethods || []).length > 0;
 
   if (!hasCharacteristics) errors.push("Preencha os campos obrigatórios em Características físicas.");
   if (!hasPricing) errors.push("Defina ao menos um preço ativo na Tabela de preços.");
+  if (!hasPaymentMethods) errors.push("Selecione ao menos uma forma de pagamento aceita na Tabela de preços.");
   if (!hasLocation) errors.push("Preencha Estado e Cidade na seção Localização.");
 
   return errors;
@@ -592,8 +596,10 @@ export function AnnouncementTab({
   const [isGallerySectionOpen, setIsGallerySectionOpen] = useState(true);
   const [isTipsModalOpen, setIsTipsModalOpen] = useState(false);
   const [characteristicsError, setCharacteristicsError] = useState<string | null>(null);
+  const [pricingError, setPricingError] = useState<string | null>(null);
   const [characteristicsInvalidFields, setCharacteristicsInvalidFields] = useState<Array<keyof ProfileCharacteristics>>([]);
   const [isCharacteristicsShaking, setIsCharacteristicsShaking] = useState(false);
+  const [isPricingShaking, setIsPricingShaking] = useState(false);
   const [isLocationSectionOpen, setIsLocationSectionOpen] = useState(false);
   const [highlightedLocationId, setHighlightedLocationId] = useState<string | null>(null);
   const [isLocationDecisionOpen, setIsLocationDecisionOpen] = useState(false);
@@ -1197,8 +1203,14 @@ export function AnnouncementTab({
     }
 
     if (section === "pricing") {
-      const savedPricing = JSON.parse(savedSectionSnapshots.pricing) as PricingItem[];
-      updateField("pricing", savedPricing, { autoSave: false });
+      const parsed = JSON.parse(savedSectionSnapshots.pricing);
+      const isLegacy = Array.isArray(parsed);
+      updateForm((current) => ({
+        ...current,
+        pricing: isLegacy ? parsed : parsed.pricing,
+        paymentMethods: isLegacy || !parsed.paymentMethods || parsed.paymentMethods.length === 0 ? ["dinheiro"] : parsed.paymentMethods,
+      }), { autoSave: false });
+      setPricingError(null);
     }
 
     if (section === "location") {
@@ -1273,10 +1285,24 @@ export function AnnouncementTab({
       setCharacteristicsError(null);
     }
 
+    if (section === "pricing") {
+      const hasPaymentMethods = (form.paymentMethods || []).length > 0;
+      if (!hasPaymentMethods) {
+        setPricingError("Ao menos uma modalidade de pagamento deve ser selecionada.");
+        setIsPricingShaking(true);
+        setTimeout(() => setIsPricingShaking(false), 420);
+        return;
+      }
+      setPricingError(null);
+    }
+
     const saveResult = await manualSave();
     if (saveResult !== "error" && saveResult !== "busy") {
       setSavedSectionSnapshots(buildSectionSnapshots(form));
       setPublishError(null);
+      if (section === "pricing") {
+        setPricingError(null);
+      }
     }
   };
 
@@ -1707,6 +1733,9 @@ export function AnnouncementTab({
           <SectionCard sectionRef={(node) => { sectionRefs.current.pricing = node; }} title="Tabela de preços" requiredAsterisk dirty={sectionDirtyState.pricing} showSaveAction onSaveAction={() => saveSection("pricing")} onCancelAction={() => cancelSectionChanges("pricing")} saveDisabled={saveStatus === "saving"} open={isPricingSectionOpen} onOpenChange={setIsPricingSectionOpen} highlighted={highlightedSection === "pricing"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
             <PricingSection
               pricing={form.pricing}
+              paymentMethods={form.paymentMethods || []}
+              errorMessage={pricingError}
+              isShaking={isPricingShaking}
               onUpdate={(idx: number, field: string, value: string | number) => {
                 const next = form.pricing.map((p, i) => i === idx ? { ...p, [field]: field === "price" ? String(value).replace(/\D/g, "") : value } : p);
                 updateField("pricing", next, { autoSave: false });
@@ -1714,6 +1743,20 @@ export function AnnouncementTab({
               onToggleDisabled={(idx: number) => {
                 const next = form.pricing.map((p, i) => i === idx ? { ...p, disabled: !p.disabled } : p);
                 updateField("pricing", next, { autoSave: false });
+              }}
+              onToggleMethod={(methodId: string) => {
+                const currentMethods = form.paymentMethods || [];
+                if (currentMethods.includes(methodId) && currentMethods.length === 1) {
+                  setPricingError("Ao menos uma modalidade de pagamento deve ser selecionada.");
+                  setIsPricingShaking(true);
+                  setTimeout(() => setIsPricingShaking(false), 420);
+                  return;
+                }
+                const next = currentMethods.includes(methodId)
+                  ? form.paymentMethods.filter((id) => id !== methodId)
+                  : [...form.paymentMethods, methodId];
+                updateField("paymentMethods", next, { autoSave: false });
+                setPricingError(null);
               }}
             />
           </SectionCard>
@@ -2611,7 +2654,30 @@ function CharacteristicsSection({ characteristics: c, onUpdate, invalidFields, e
   )
 }
 
-function PricingSection({ pricing, onUpdate, onToggleDisabled }: { pricing: Array<PricingItem & { isCustom?: boolean }>; onUpdate: (idx: number, field: string, value: string | number) => void; onToggleDisabled: (idx: number) => void }) {
+function PricingSection({
+  pricing,
+  paymentMethods = [],
+  onUpdate,
+  onToggleDisabled,
+  onToggleMethod,
+  errorMessage,
+  isShaking,
+}: {
+  pricing: Array<PricingItem & { isCustom?: boolean }>;
+  paymentMethods?: string[];
+  onUpdate: (idx: number, field: string, value: string | number) => void;
+  onToggleDisabled: (idx: number) => void;
+  onToggleMethod: (methodId: string) => void;
+  errorMessage?: string | null;
+  isShaking?: boolean;
+}) {
+  const paymentOptions = [
+    { id: 'pix', label: 'Pix', icon: PixIcon },
+    { id: 'dinheiro', label: 'Dinheiro', icon: CashIcon },
+    { id: 'debito', label: 'Débito', icon: CreditCard },
+    { id: 'credito', label: 'Crédito', icon: CreditCard },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="space-y-4">
@@ -2666,6 +2732,55 @@ function PricingSection({ pricing, onUpdate, onToggleDisabled }: { pricing: Arra
           );
         })}
       </div>
+
+      <div className="mt-8 pt-6 border-t border-zinc-100">
+        <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-3">Formas de pagamento aceita:</p>
+        <div
+          className={cn(
+            "bg-zinc-50/50 rounded-2xl p-4 grid grid-cols-2 gap-3 border transition-all",
+            errorMessage ? "border-red-300 bg-red-50/30" : "border-transparent"
+          )}
+          style={isShaking ? { animation: "pricing-shake 420ms ease-in-out" } : undefined}
+        >
+          {paymentOptions.map((option) => {
+            const isSelected = paymentMethods.includes(option.id);
+            const Icon = option.icon;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => onToggleMethod(option.id)}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-2 w-full px-3 py-3 rounded-xl border transition-all cursor-pointer",
+                  isSelected
+                    ? "bg-wine-50 border-wine-500 text-wine-700 shadow-sm"
+                    : "bg-white border-zinc-200 text-zinc-500 hover:border-zinc-300 hover:bg-zinc-50"
+                )}
+              >
+                <div className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-sm border",
+                  isSelected ? "border-wine-200 text-wine-600" : "border-zinc-100 text-zinc-400"
+                )}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold tracking-wide">{option.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        {errorMessage && <p className="text-sm font-semibold text-red-700 mt-2">{errorMessage}</p>}
+      </div>
+
+      <style jsx>{`
+        @keyframes pricing-shake {
+          0% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-6px); }
+          80% { transform: translateX(6px); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
     </div>
   );
 }

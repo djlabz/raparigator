@@ -187,6 +187,7 @@ function buildInitialState(ad: AdPreview): ProfileFormState {
     },
     services,
     pricing,
+    paymentMethods: ["dinheiro"],
     venues: defaultVenues,
     acceptsTravel: false,
     locationAddresses: [initialLocationAddress],
