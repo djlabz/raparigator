@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
-import { BadgeDollarSign, Clock3, Edit, Image as ImageIcon, Lock, CreditCard } from "lucide-react";
+import { BadgeDollarSign, Clock3, Edit, Image as ImageIcon, Lock, CreditCard, Undo, Redo } from "lucide-react";
 import { PixIcon } from "@/components/ui/pix-icon";
 import { CashIcon } from "@/components/ui/cash-icon";
 import type { AdPreview, AdStatus, AvailabilityDay, LocationAddress, PricingItem, ProfileCharacteristics, ProfileFormState, ServiceOption } from "./types";
@@ -3183,6 +3183,9 @@ function DescriptionSection({ shortDescription, description, onShortDescChange, 
   };
 
   const applyFormat = (command: string, value: string | undefined = undefined) => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+    }
     document.execCommand(command, false, value);
     if (editorRef.current) {
       onDescChange(editorRef.current.innerHTML);
@@ -3246,6 +3249,23 @@ function DescriptionSection({ shortDescription, description, onShortDescChange, 
           >
             1. Lista
           </button>
+          <div className="mx-1 h-4 w-px bg-zinc-300" />
+          <button
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); applyFormat("undo"); }}
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 hover:border-wine-300 hover:text-wine-700 focus:ring-2 focus:ring-wine-200"
+            title="Desfazer"
+          >
+            <Undo className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); applyFormat("redo"); }}
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 hover:border-wine-300 hover:text-wine-700 focus:ring-2 focus:ring-wine-200"
+            title="Avançar"
+          >
+            <Redo className="h-3.5 w-3.5" />
+          </button>
         </div>
         <div
           ref={editorRef}
@@ -3254,7 +3274,7 @@ function DescriptionSection({ shortDescription, description, onShortDescChange, 
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={cn(
-            "w-full min-h-40 rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm outline-none transition-all prose prose-sm max-w-none",
+            "w-full min-h-40 rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm outline-none transition-all prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_li]:my-0.5",
             isFocused && "border-wine-700 ring-2 ring-wine-700 bg-white"
           )}
           style={{ wordBreak: 'break-word' }}
@@ -3266,7 +3286,7 @@ function DescriptionSection({ shortDescription, description, onShortDescChange, 
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 function ServicesSection({ services, onToggle }: { services: ServiceOption[]; onToggle: (idx: number) => void }) {
