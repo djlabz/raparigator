@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Lock, MessageSquare, Zap } from "lucide-react";
+import { Check, Lock, MessageSquare, DollarSign, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { TelegramIcon, WhatsAppIcon } from "@/components/ui/contact-icons";
 import type { ProfessionalAd } from "@/lib/types";
@@ -38,11 +38,8 @@ export function SchedulingSimulator({
         <div className="flex items-start justify-between">
           <div className="space-y-1.5 pr-2">
             <h3 className="flex items-center gap-2.5 font-display text-lg sm:text-xl font-bold tracking-tight text-zinc-900">
-              <Zap className="h-5 w-5 shrink-0 text-[#96001e]" /> Simulador de Agendamento
+              <Zap className="h-5 w-5 shrink-0 text-[#96001e]" /> Simulador de Encontro
             </h3>
-            <p className="max-w-[320px] text-xs text-zinc-500 sm:text-sm">
-              Configure a duração do seu agendamento e adicione preferências instantaneamente.
-            </p>
           </div>
           <div className="mt-0.5 shrink-0">
             <span className="ml-2 flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-1.5 text-xs font-bold tracking-widest text-emerald-800 uppercase sm:text-xs">
@@ -97,7 +94,7 @@ export function SchedulingSimulator({
       </div>
 
       <div className="space-y-3 border-t border-zinc-100 pt-5">
-        <p className="text-xs font-bold tracking-widest text-zinc-400 uppercase sm:text-xs">Deseja incluir algum adicional?</p>
+        <p className="text-xs font-bold tracking-widest text-zinc-900 uppercase sm:text-xs">Deseja incluir algum adicional?</p>
         <div className="grid gap-2 sm:grid-cols-2">
           {ad.services.map((svc) => {
             const hasExtra = selectedExtras.includes(svc);
@@ -154,8 +151,8 @@ export function SchedulingSimulator({
           )}
           <div className="mt-2 flex items-center justify-between border-t border-dashed border-zinc-800 pt-3 text-sm">
             <span className="flex items-center gap-1.5 font-bold text-zinc-100">
-              <Lock className="h-4 w-4 text-emerald-400" />
-              Valor Total Protegido
+              <DollarSign className="h-4 w-4 text-emerald-400" />
+              Valor Total:
             </span>
             <span className="font-mono text-lg font-black text-amber-300">{currency(totalCalculatedValue)}</span>
           </div>

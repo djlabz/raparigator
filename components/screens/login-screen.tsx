@@ -50,7 +50,7 @@ export function LoginScreen() {
             <div className="mt-6 flex items-center gap-3">
               <div className="h-px flex-1 bg-wine-200" />
               <span className="text-[10px] font-black uppercase tracking-[0.25em] text-wine-700">
-                Secure Access
+                Acesso Seguro
               </span>
               <div className="h-px flex-1 bg-wine-200" />
             </div>
