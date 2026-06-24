@@ -2678,6 +2678,32 @@ function PricingSection({
     { id: 'credito', label: 'Crédito', icon: CreditCard },
   ];
 
+  const getSelectedPaymentStyles = (methodId: string) => {
+    if (methodId === 'dinheiro') {
+      return {
+        button: 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm',
+        icon: 'border-emerald-200 text-emerald-600',
+      };
+    }
+    if (methodId === 'pix') {
+      return {
+        button: 'bg-teal-50 border-teal-500 text-teal-700 shadow-sm',
+        icon: 'border-teal-200 text-teal-600',
+      };
+    }
+    if (methodId === 'credito' || methodId === 'debito') {
+      return {
+        button: 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm',
+        icon: 'border-indigo-200 text-indigo-600',
+      };
+    }
+
+    return {
+      button: 'bg-wine-50 border-wine-500 text-wine-700 shadow-sm',
+      icon: 'border-wine-200 text-wine-600',
+    };
+  };
+
   return (
     <div className="space-y-4">
       <div className="space-y-4">
@@ -2745,6 +2771,7 @@ function PricingSection({
           {paymentOptions.map((option) => {
             const isSelected = paymentMethods.includes(option.id);
             const Icon = option.icon;
+            const selectedStyles = getSelectedPaymentStyles(option.id);
             return (
               <button
                 key={option.id}
@@ -2753,13 +2780,13 @@ function PricingSection({
                 className={cn(
                   "flex flex-col items-center justify-center gap-2 w-full px-3 py-3 rounded-xl border transition-all cursor-pointer",
                   isSelected
-                    ? "bg-wine-50 border-wine-500 text-wine-700 shadow-sm"
+                    ? selectedStyles.button
                     : "bg-white border-zinc-200 text-zinc-500 hover:border-zinc-300 hover:bg-zinc-50"
                 )}
               >
                 <div className={cn(
                   "w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-sm border",
-                  isSelected ? "border-wine-200 text-wine-600" : "border-zinc-100 text-zinc-400"
+                  isSelected ? selectedStyles.icon : "border-zinc-100 text-zinc-400"
                 )}>
                   <Icon className="w-5 h-5" />
                 </div>
