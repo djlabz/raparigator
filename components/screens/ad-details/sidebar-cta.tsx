@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Crown, Lock, MessageSquare, Phone, Send, Sparkles, Star } from "lucide-react";
+import { Crown, Lock, MessageSquare, Sparkles, Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { TelegramIcon, WhatsAppIcon } from "@/components/ui/contact-icons";
 
 interface SidebarCtaProps {
   role: string;
@@ -72,13 +73,13 @@ export function SidebarCta({ role, setRiskTarget }: SidebarCtaProps) {
             onClick={() => setRiskTarget("WhatsApp")}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#121212] font-bold text-[#25D366] shadow-sm transition-all duration-300 hover:scale-[1.02] hover:bg-[#18181b] active:scale-[0.98] h-12 px-2 text-sm focus-visible:outline-none"
           >
-            <Phone className="h-4 w-4" /> WhatsApp
+            <WhatsAppIcon className="h-4.5 w-4.5" /> WhatsApp
           </button>
           <button
             onClick={() => setRiskTarget("Telegram")}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#121212] font-bold text-[#229ED9] shadow-sm transition-all duration-300 hover:scale-[1.02] hover:bg-[#18181b] active:scale-[0.98] h-12 px-2 text-sm focus-visible:outline-none"
           >
-            <Send className="h-4 w-4" /> Telegram
+            <TelegramIcon className="h-4.5 w-4.5" /> Telegram
           </button>
         </div>
       </div>

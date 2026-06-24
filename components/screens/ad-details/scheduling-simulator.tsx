@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Lock, MessageSquare, Phone, Send, Zap } from "lucide-react";
+import { Check, Lock, MessageSquare, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { TelegramIcon, WhatsAppIcon } from "@/components/ui/contact-icons";
 import type { ProfessionalAd } from "@/lib/types";
 import { cn, currency } from "@/lib/utils";
 
@@ -181,13 +182,13 @@ export function SchedulingSimulator({
               onClick={() => setRiskTarget("WhatsApp")}
               className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-800 font-bold text-[#25D366] shadow-sm ring-1 ring-white/5 transition-all duration-300 hover:scale-[1.02] hover:bg-zinc-700 active:scale-[0.98] h-11 px-2 text-sm focus-visible:outline-none"
             >
-              <Phone className="h-4 w-4" /> WhatsApp
+              <WhatsAppIcon className="h-4.5 w-4.5" /> WhatsApp
             </button>
             <button
               onClick={() => setRiskTarget("Telegram")}
               className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-800 font-bold text-[#229ED9] shadow-sm ring-1 ring-white/5 transition-all duration-300 hover:scale-[1.02] hover:bg-zinc-700 active:scale-[0.98] h-11 px-2 text-sm focus-visible:outline-none"
             >
-              <Send className="h-4 w-4" /> Telegram
+              <TelegramIcon className="h-4.5 w-4.5" /> Telegram
             </button>
           </div>
         </div>

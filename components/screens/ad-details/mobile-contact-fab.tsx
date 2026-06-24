@@ -4,9 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { animate, AnimatePresence, motion, useMotionValue, useMotionValueEvent, useScroll } from "motion/react";
-import { MessageSquare, Phone, Send, X } from "lucide-react";
+import { MessageSquare, X } from "lucide-react";
 import type { ProfessionalAd } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { TelegramIcon, WhatsAppIcon } from "@/components/ui/contact-icons";
 
 interface MobileContactFabProps {
   ad: ProfessionalAd;
@@ -121,7 +122,7 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
                         onClick={() => setRiskTarget("WhatsApp")}
                         className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg"
                       >
-                        <Phone className="h-4 w-4" />
+                        <WhatsAppIcon className="h-5.5 w-5.5" />
                       </button>
                     </motion.div>
 
@@ -136,7 +137,7 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
                         onClick={() => setRiskTarget("Telegram")}
                         className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500 text-white shadow-lg"
                       >
-                        <Send className="h-4 w-4" />
+                        <TelegramIcon className="h-5.5 w-5.5" />
                       </button>
                     </motion.div>
                   </>
