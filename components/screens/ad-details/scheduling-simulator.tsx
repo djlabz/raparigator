@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Lock, MessageSquare, DollarSign, Zap } from "lucide-react";
+import { Check, Lock, MessageSquare, DollarSign, Zap, CreditCard } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { PixIcon } from "@/components/ui/pix-icon";
+import { CashIcon } from "@/components/ui/cash-icon";
 import { TelegramIcon, WhatsAppIcon } from "@/components/ui/contact-icons";
 import type { ProfessionalAd } from "@/lib/types";
 import { cn, currency } from "@/lib/utils";
@@ -40,6 +42,39 @@ export function SchedulingSimulator({
             <h3 className="flex items-center gap-2.5 font-display text-lg sm:text-xl font-bold tracking-tight text-zinc-900">
               <Zap className="h-5 w-5 shrink-0 text-[#96001e]" /> Simulador de Encontro
             </h3>
+            {ad.paymentMethods && ad.paymentMethods.length > 0 && (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] font-medium text-zinc-500">
+                <span className="uppercase tracking-widest font-black text-zinc-400">Aceita:</span>
+                {ad.paymentMethods.includes("pix") && (
+                  <span className="flex items-center gap-1.5" title="Pix">
+                    <PixIcon className="h-3.5 w-3.5 text-teal-500" /> Pix
+                  </span>
+                )}
+                {ad.paymentMethods.includes("dinheiro") && (
+                  <span className="flex items-center gap-1.5" title="Dinheiro">
+                    <CashIcon className="h-3.5 w-3.5 text-emerald-600" /> Dinheiro
+                  </span>
+                )}
+                {(ad.paymentMethods.includes("credito") && ad.paymentMethods.includes("debito")) ? (
+                  <span className="flex items-center gap-1.5" title="Crédito e Débito">
+                    <CreditCard className="h-3.5 w-3.5 text-indigo-500" /> Crédito e Débito
+                  </span>
+                ) : (
+                  <>
+                    {ad.paymentMethods.includes("credito") && (
+                      <span className="flex items-center gap-1.5" title="Crédito">
+                        <CreditCard className="h-3.5 w-3.5 text-indigo-500" /> Crédito
+                      </span>
+                    )}
+                    {ad.paymentMethods.includes("debito") && (
+                      <span className="flex items-center gap-1.5" title="Débito">
+                        <CreditCard className="h-3.5 w-3.5 text-indigo-500" /> Débito
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
           <div className="mt-0.5 shrink-0">
             <span className="ml-2 flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-1.5 text-xs font-bold tracking-widest text-emerald-800 uppercase sm:text-xs">

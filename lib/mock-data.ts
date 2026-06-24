@@ -47,6 +47,7 @@ export const ads: ProfessionalAd[] = [
       { label: "2 horas", price: 800 },
       { label: "Pernoite", price: 1900 },
     ],
+    paymentMethods: ["pix", "credito", "debito"],
     status: "livre",
     adTier: "premium",
     images: [
@@ -89,6 +90,7 @@ export const ads: ProfessionalAd[] = [
       { label: "2 horas", price: 690 },
       { label: "4 horas", price: 1250 },
     ],
+    paymentMethods: ["pix", "dinheiro"],
     status: "em_atendimento",
     adTier: "normal",
     images: [
@@ -130,6 +132,7 @@ export const ads: ProfessionalAd[] = [
       { label: "2 horas", price: 760 },
       { label: "Pernoite", price: 1800 },
     ],
+    paymentMethods: ["credito", "debito"],
     status: "indisponivel",
     adTier: "premium",
     images: [
