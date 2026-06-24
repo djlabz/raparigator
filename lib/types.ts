@@ -64,6 +64,7 @@ export interface ProfessionalAd {
   fetishOptions: string[];
   fetishCustom: string;
   pricingTable: Array<{ label: string; price: number }>;
+  paymentMethods?: string[];
   status: AvailabilityStatus;
   adTier: AdCategory;
   images: string[];
