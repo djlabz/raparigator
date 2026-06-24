@@ -1,13 +1,51 @@
 "use client";
 
+import type { ComponentType } from "react";
 import Link from "next/link";
 import { Check, Lock, MessageSquare, DollarSign, Zap, CreditCard } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { PixIcon } from "@/components/ui/pix-icon";
 import { CashIcon } from "@/components/ui/cash-icon";
+import { VerifiedCheckIcon } from "@/components/ui/verified-check-icon";
 import { TelegramIcon, WhatsAppIcon } from "@/components/ui/contact-icons";
 import type { ProfessionalAd } from "@/lib/types";
 import { cn, currency } from "@/lib/utils";
+
+const PAYMENT_METHOD_OPTIONS = [
+  { id: "pix", label: "Pix", Icon: PixIcon, iconClassName: "text-teal-500" },
+  {
+    id: "dinheiro",
+    label: "Dinheiro",
+    Icon: CashIcon,
+    iconClassName: "text-emerald-600",
+    iconSlotClassName: "w-5",
+  },
+] as const;
+
+function PaymentMethodBadge({
+  label,
+  Icon,
+  iconClassName,
+  iconSlotClassName,
+}: {
+  label: string;
+  Icon: ComponentType<{ className?: string }>;
+  iconClassName: string;
+  iconSlotClassName?: string;
+}) {
+  const icon = <Icon className={cn("h-4 w-4 shrink-0", iconClassName)} />;
+
+  return (
+    <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs font-medium text-zinc-500" title={label}>
+      {iconSlotClassName ? (
+        <span className={cn("inline-flex shrink-0 items-center justify-center", iconSlotClassName)}>{icon}</span>
+      ) : (
+        icon
+      )}
+      {label}
+    </span>
+  );
+}
 
 interface SchedulingSimulatorProps {
   ad: ProfessionalAd;
@@ -37,51 +75,59 @@ export function SchedulingSimulator({
   return (
     <Card className="relative space-y-5 overflow-hidden rounded-2xl border-y-zinc-200/80 border-r-zinc-200/80 border-l-4 border-l-[#96001e] bg-linear-to-br from-white to-zinc-50/40 p-5 shadow-md sm:p-6">
       <div className="flex flex-col gap-3">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1.5 pr-2">
-            <h3 className="flex items-center gap-2.5 font-display text-lg sm:text-xl font-bold tracking-tight text-zinc-900">
-              <Zap className="h-5 w-5 shrink-0 text-[#96001e]" /> Simulador de Encontro
-            </h3>
-            {ad.paymentMethods && ad.paymentMethods.length > 0 && (
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] font-medium text-zinc-500">
-                <span className="uppercase tracking-widest font-black text-zinc-400">Aceita:</span>
-                {ad.paymentMethods.includes("pix") && (
-                  <span className="flex items-center gap-1.5" title="Pix">
-                    <PixIcon className="h-3.5 w-3.5 text-teal-500" /> Pix
-                  </span>
-                )}
-                {ad.paymentMethods.includes("dinheiro") && (
-                  <span className="flex items-center gap-1.5" title="Dinheiro">
-                    <CashIcon className="h-3.5 w-3.5 text-emerald-600" /> Dinheiro
-                  </span>
-                )}
-                {(ad.paymentMethods.includes("credito") && ad.paymentMethods.includes("debito")) ? (
-                  <span className="flex items-center gap-1.5" title="Crédito e Débito">
-                    <CreditCard className="h-3.5 w-3.5 text-indigo-500" /> Crédito e Débito
-                  </span>
-                ) : (
-                  <>
-                    {ad.paymentMethods.includes("credito") && (
-                      <span className="flex items-center gap-1.5" title="Crédito">
-                        <CreditCard className="h-3.5 w-3.5 text-indigo-500" /> Crédito
-                      </span>
-                    )}
-                    {ad.paymentMethods.includes("debito") && (
-                      <span className="flex items-center gap-1.5" title="Débito">
-                        <CreditCard className="h-3.5 w-3.5 text-indigo-500" /> Débito
-                      </span>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="flex min-w-0 items-center gap-2.5 font-display text-lg font-bold tracking-tight text-zinc-900 sm:text-xl">
+            <Zap className="h-5 w-5 shrink-0 text-[#96001e]" /> Simulador de Encontro
+          </h3>
           <div className="mt-0.5 shrink-0">
-            <span className="ml-2 flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-1.5 text-xs font-bold tracking-widest text-emerald-800 uppercase sm:text-xs">
-              <Lock className="h-2.5 w-2.5 shrink-0 text-emerald-600" /> <span className="hidden sm:inline">Serviço</span> Seguro
+            <span className="flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-1.5 text-xs font-bold tracking-widest text-emerald-800 uppercase sm:text-xs">
+              <VerifiedCheckIcon className="h-3.5 w-3.5 shrink-0 text-emerald-600" /> <span className="hidden sm:inline">Serviço</span> Seguro
             </span>
           </div>
         </div>
+        {ad.paymentMethods && ad.paymentMethods.length > 0 && (
+          <div className="flex flex-nowrap items-center gap-x-2.5 overflow-x-auto sm:gap-x-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <span className="shrink-0 text-[11px] font-black uppercase tracking-widest text-zinc-900">Aceita:</span>
+            {PAYMENT_METHOD_OPTIONS.map(({ id, label, Icon, iconClassName, iconSlotClassName }) =>
+              ad.paymentMethods?.includes(id) ? (
+                <PaymentMethodBadge
+                  key={id}
+                  label={label}
+                  Icon={Icon}
+                  iconClassName={iconClassName}
+                  iconSlotClassName={iconSlotClassName}
+                />
+              ) : null,
+            )}
+            {(ad.paymentMethods.includes("credito") && ad.paymentMethods.includes("debito")) ? (
+              <PaymentMethodBadge
+                key="credito-debito"
+                label="Crédito e Débito"
+                Icon={CreditCard}
+                iconClassName="text-indigo-500"
+              />
+            ) : (
+              <>
+                {ad.paymentMethods.includes("credito") && (
+                  <PaymentMethodBadge
+                    key="credito"
+                    label="Crédito"
+                    Icon={CreditCard}
+                    iconClassName="text-indigo-500"
+                  />
+                )}
+                {ad.paymentMethods.includes("debito") && (
+                  <PaymentMethodBadge
+                    key="debito"
+                    label="Débito"
+                    Icon={CreditCard}
+                    iconClassName="text-indigo-500"
+                  />
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-2.5">
