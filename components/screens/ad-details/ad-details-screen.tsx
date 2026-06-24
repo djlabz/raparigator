@@ -95,6 +95,7 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
         onClose={() => setSelectedPhotoIndex(null)}
         onNext={nextPhoto}
         onPrev={prevPhoto}
+        onSelect={setSelectedPhotoIndex}
       />
 
       <MobileContactFab ad={ad} setRiskTarget={setRiskTarget} />
