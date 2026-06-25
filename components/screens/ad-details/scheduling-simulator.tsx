@@ -36,7 +36,10 @@ function PaymentMethodBadge({
   const icon = <Icon className={cn("h-4 w-4 shrink-0", iconClassName)} />;
 
   return (
-    <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs font-medium text-zinc-500" title={label}>
+    <span
+      className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs font-medium text-zinc-500 select-none"
+      title={label}
+    >
       {iconSlotClassName ? (
         <span className={cn("inline-flex shrink-0 items-center justify-center", iconSlotClassName)}>{icon}</span>
       ) : (
@@ -75,8 +78,8 @@ export function SchedulingSimulator({
   return (
     <Card className="relative space-y-5 overflow-hidden rounded-2xl border-y-zinc-200/80 border-r-zinc-200/80 border-l-4 border-l-[#96001e] bg-linear-to-br from-white to-zinc-50/40 p-5 shadow-md sm:p-6">
       <div className="flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="flex min-w-0 items-center gap-2.5 font-display text-lg font-bold tracking-tight text-zinc-900 sm:text-xl">
+        <div className="flex flex-nowrap items-center justify-between gap-2">
+          <h3 className="flex min-w-0 shrink items-center gap-2.5 font-display text-lg font-bold tracking-tight whitespace-nowrap text-zinc-900 sm:text-xl">
             <Zap className="h-5 w-5 shrink-0 text-[#96001e]" /> Simulador de Encontro
           </h3>
           <div className="mt-0.5 shrink-0">
@@ -86,16 +89,16 @@ export function SchedulingSimulator({
           </div>
         </div>
         {ad.paymentMethods && ad.paymentMethods.length > 0 && (
-          <div className="flex flex-nowrap items-center gap-x-2.5 overflow-x-auto sm:gap-x-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="pointer-events-none -mx-1 flex flex-nowrap items-center gap-x-2.5 overflow-x-auto px-1 touch-none select-none [scrollbar-width:none] sm:gap-x-3 [&::-webkit-scrollbar]:hidden">
             <span className="shrink-0 text-[11px] font-black uppercase tracking-widest text-zinc-900">Aceita:</span>
-            {PAYMENT_METHOD_OPTIONS.map(({ id, label, Icon, iconClassName, iconSlotClassName }) =>
-              ad.paymentMethods?.includes(id) ? (
+            {PAYMENT_METHOD_OPTIONS.map((option) =>
+              ad.paymentMethods?.includes(option.id) ? (
                 <PaymentMethodBadge
-                  key={id}
-                  label={label}
-                  Icon={Icon}
-                  iconClassName={iconClassName}
-                  iconSlotClassName={iconSlotClassName}
+                  key={option.id}
+                  label={option.label}
+                  Icon={option.Icon}
+                  iconClassName={option.iconClassName}
+                  iconSlotClassName={"iconSlotClassName" in option ? option.iconSlotClassName : undefined}
                 />
               ) : null,
             )}
@@ -139,21 +142,21 @@ export function SchedulingSimulator({
               type="button"
               onClick={() => setSelectedDuration(plan.label)}
               className={cn(
-                "group relative flex min-h-15.5 cursor-pointer items-center justify-between rounded-2xl border px-4 py-3 text-left transition-all sm:min-h-16.5 sm:px-5 sm:py-3.5",
+                "group relative flex min-h-15.5 cursor-pointer flex-nowrap items-center justify-between rounded-2xl border px-4 py-3 text-left transition-all sm:min-h-16.5 sm:px-5 sm:py-3.5",
                 isSelected
                   ? "border-[#96001e] bg-red-50/40 ring-1 ring-[#96001e]/30 shadow-sm"
                   : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50/50",
               )}
             >
-              <div className="flex flex-col pr-2">
-                <span className="text-xs font-black tracking-widest text-zinc-400 uppercase sm:text-xs">Duração</span>
-                <span className={cn("mt-0.5 truncate text-sm font-semibold sm:text-base", isSelected ? "font-bold text-[#96001e]" : "text-zinc-700")}>
+              <div className="flex min-w-0 shrink flex-col pr-2">
+                <span className="text-xs font-black tracking-widest whitespace-nowrap text-zinc-400 uppercase sm:text-xs">Duração</span>
+                <span className={cn("mt-0.5 truncate text-sm font-semibold whitespace-nowrap sm:text-base", isSelected ? "font-bold text-[#96001e]" : "text-zinc-700")}>
                   {plan.label}
                 </span>
               </div>
 
-              <div className="flex shrink-0 items-center gap-3">
-                {isSelected && <span className="mr-1 animate-fade-in text-sm font-bold text-zinc-900 sm:text-base">{currency(plan.price)}</span>}
+              <div className="flex shrink-0 flex-nowrap items-center gap-3">
+                {isSelected && <span className="mr-1 animate-fade-in text-sm font-bold whitespace-nowrap text-zinc-900 sm:text-base">{currency(plan.price)}</span>}
                 <div
                   className={cn(
                     "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all",
