@@ -284,6 +284,7 @@ className={cn(
 - Para layout/navigation, consultar `useAuthSession` e `getNavigationItems`.
 - Para `components/screens/professional-dashboard/**`, ler `types.ts` e `use-profile-form.ts` antes de alterar fluxo de anuncio.
 - Executar `npm run lint` antes de concluir mudancas de codigo quando Node/npm estiverem disponiveis; executar `npm run build` para mudancas em rotas, metadata, config, tipos globais ou comportamento compartilhado.
+- É estritamente proibido utilizar fonte/texto preto (ou escuro) em botões e elementos com fundo escuro (como `bg-wine-700` ou `bg-zinc-900`). O texto e os ícones nestes elementos devem SEMPRE ser brancos (`!text-white`), garantindo contraste e boa visualização, assim como no botão "Falar Agora".
 
 ## Anti-Patterns
 
