@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useId, useSyncExternalStore } from "react";
+import { motion } from "framer-motion";
 import type { NavigationItem } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { getChatSnapshot, getChatUnreadCount, subscribeChatUnread } from "@/lib/chat-service";
@@ -98,6 +99,14 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
 
 export function BottomNav({ items }: BottomNavProps) {
   const pathname = usePathname();
+  const id = useId();
+  const [activeTab, setActiveTab] = useState(pathname);
+
+  // Mantém a aba ativa em sincronia com a URL real
+  useEffect(() => {
+    setActiveTab(pathname);
+  }, [pathname]);
+
   const hasChat = items.some((item) => item.label === "Chat" || item.href === "/chat");
   const unreadCount = useSyncExternalStore(subscribeChatUnread, getChatUnreadCount, () => 0);
 
@@ -117,26 +126,39 @@ export function BottomNav({ items }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-2 left-1/2 z-50 w-[calc(100%-1.5rem)] max-w-70 -translate-x-1/2 rounded-full border border-white/25 bg-white/40 shadow-2xl backdrop-blur-3xl backdrop-saturate-150 supports-backdrop-filter:bg-white/30 md:hidden"
+      className="fixed bottom-6 left-1/2 z-50 w-max -translate-x-1/2 rounded-full border border-white/40 bg-white/30 shadow-[0_12px_32px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,0.7)] backdrop-blur-3xl backdrop-saturate-200 supports-backdrop-filter:bg-white/20 md:hidden"
       aria-label="Navegação principal"
     >
-      <div className="pointer-events-none absolute inset-0 rounded-full bg-linear-to-b from-white/35 via-white/12 to-white/5" />
-      <ul className="relative flex items-center justify-around gap-0.5 px-2 py-2">
+      <div className="pointer-events-none absolute inset-0 rounded-full bg-linear-to-b from-white/50 via-white/10 to-transparent mix-blend-overlay" />
+      <ul className="relative flex items-center justify-center gap-2 px-2 py-2">
         {items.map((item) => {
-          const active = pathname.startsWith(item.href);
+          const active = activeTab.startsWith(item.href);
           return (
-            <li key={item.href} className="flex-1">
+            <li key={item.href} className="relative flex h-12 w-14 items-center justify-center">
+              {active && (
+                <motion.div
+                  layoutId={`active-nav-pill-${id}`}
+                  className="absolute inset-0 rounded-full bg-wine-700/90 shadow-[0_4px_20px_rgba(159,18,57,0.5),inset_0_1px_1px_rgba(255,255,255,0.4)]"
+                  initial={false}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 30,
+                    mass: 0.8
+                  }}
+                />
+              )}
               <Link
                 href={item.href}
                 aria-label={item.label}
                 title={item.label}
+                onClick={() => setActiveTab(item.href)}
                 className={cn(
-                  "flex h-9 w-full items-center justify-center rounded-full transition-all duration-300",
+                  "relative z-10 flex h-full w-full items-center justify-center rounded-full transition-colors duration-200",
                   active
-                    ? "bg-wine-700 text-white shadow-md scale-105"
-                    : "text-zinc-600 hover:bg-zinc-100/50"
+                    ? "text-white"
+                    : "text-zinc-600 active:bg-white/30 active:scale-95"
                 )}
-                style={active ? { color: "#fff" } : undefined}
               >
                 {getNavIcon(item.label, item.href, active, unreadCount)}
               </Link>
