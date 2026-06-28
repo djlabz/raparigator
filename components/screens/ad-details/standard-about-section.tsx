@@ -17,7 +17,7 @@ export function StandardAboutSection({ ad }: StandardAboutSectionProps) {
 
       <div className="space-y-3">
         <div className="flex items-center gap-1.5">
-          <span className="rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-bold tracking-[0.2em] text-zinc-600 uppercase">
+          <span className="rounded-full bg-zinc-900 border border-zinc-950 px-3 py-1 text-xs font-bold tracking-[0.2em] text-white uppercase">
             Sobre a Profissional
           </span>
           <div className="hidden h-1 rounded-full bg-zinc-100 sm:block lg:grow" />
@@ -41,8 +41,8 @@ export function StandardAboutSection({ ad }: StandardAboutSectionProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="rounded-full border border-zinc-200 bg-zinc-100 p-1.5 text-zinc-700">
-            <Star className="h-3.5 w-3.5 fill-zinc-400 text-zinc-500" />
+          <div className="rounded-full border border-amber-100 bg-amber-50 p-1.5 text-amber-500">
+            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
           </div>
           <div>
             <p className="leading-none font-extrabold text-zinc-900">Avaliações Positivas</p>
