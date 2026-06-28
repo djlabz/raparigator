@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Sparkles, Star } from "lucide-react";
+import { Check, Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { ProfessionalAd } from "@/lib/types";
 
@@ -10,11 +10,7 @@ interface StandardAboutSectionProps {
 
 export function StandardAboutSection({ ad }: StandardAboutSectionProps) {
   return (
-    <Card className="relative space-y-5 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm">
-      <div className="pointer-events-none absolute top-0 right-0 p-5 opacity-[0.03]">
-        <Sparkles className="h-28 w-28 text-wine-700" />
-      </div>
-
+    <Card className="space-y-5 rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm">
       <div className="space-y-3">
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-zinc-900 border border-zinc-950 px-3 py-1 text-xs font-bold tracking-[0.2em] text-white uppercase">

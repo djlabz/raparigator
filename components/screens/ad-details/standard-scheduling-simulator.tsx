@@ -235,7 +235,7 @@ export function StandardSchedulingSimulator({
               <DollarSign className="h-4 w-4 text-emerald-600" />
               Valor Total:
             </span>
-            <span className="font-mono text-lg font-black text-wine-700">{currency(totalCalculatedValue)}</span>
+            <span className="font-mono text-lg font-black text-zinc-900">{currency(totalCalculatedValue)}</span>
           </div>
         </div>
 
