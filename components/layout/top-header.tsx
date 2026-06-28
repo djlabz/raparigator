@@ -6,7 +6,6 @@ import type { AuthRole, MockUser } from "@/lib/types";
 import { AccountMenu } from "./account-menu";
 
 interface TopHeaderProps {
-  location: string;
   role: AuthRole;
   user: MockUser | null;
   isLoggedIn: boolean;
@@ -14,7 +13,7 @@ interface TopHeaderProps {
   onBack?: () => void;
 }
 
-export function TopHeader({ location, role, user, isLoggedIn, onLogout, onBack }: TopHeaderProps) {
+export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeaderProps) {
   return (
     <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:max-w-430 lg:px-8">

@@ -1,4 +1,4 @@
-﻿import {
+import {
   ChangeEvent,
   KeyboardEvent,
   ReactNode,
@@ -55,6 +55,7 @@ export function Select({ id, label, options, className, leadingIcon, premium = f
     }
 
     const selectedIndex = Math.max(0, visibleOptions.findIndex((option) => option.value === currentValue));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveIndex(selectedIndex);
   }, [currentValue, isOpen, visibleOptions]);
 
@@ -86,6 +87,7 @@ export function Select({ id, label, options, className, leadingIcon, premium = f
 
   useLayoutEffect(() => {
     if (!isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFloatingStyle(null);
       return;
     }
