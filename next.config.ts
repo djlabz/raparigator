@@ -33,6 +33,7 @@ const nextConfig: NextConfig = {
   transpilePackages: ['motion'],
   allowedDevOrigins: ['*.trycloudflare.com'],
   turbopack: {},
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   webpack: (config: any, {dev}: {dev: boolean}) => {
     // HMR is disabled in AI Studio via DISABLE_HMR env var.
     // Do not modifyâ€”file watching is disabled to prevent flickering during agent edits.

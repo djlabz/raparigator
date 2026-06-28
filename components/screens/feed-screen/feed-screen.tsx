@@ -7,8 +7,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ads, cities } from "@/lib/mock-data";
-import type { ProfessionalAd } from "@/lib/types";
-import { cn } from "@/lib/utils";
 import { FeedAdCard } from "./feed-ad-card";
 import { FeedFiltersContent } from "./feed-filters-content";
 import { FeedLocationModal } from "./feed-location-modal";
@@ -151,6 +149,7 @@ export function FeedScreen() {
   }, [activeQuickFilters, maxPrice, selectedCity, selectedGender, selectedAdTypes, selectedEthnicities, selectedHairs, selectedServices]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisibleCount(6);
   }, [activeQuickFilters, maxPrice, selectedCity, selectedGender, selectedAdTypes, selectedEthnicities, selectedHairs, selectedServices]);
 

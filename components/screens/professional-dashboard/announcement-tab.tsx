@@ -2055,6 +2055,7 @@ function BentoPhotoGallery({
     let isMounted = true;
 
     if (mediaSources.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMediaAspectRatios({});
       return () => {
         isMounted = false;
@@ -2396,6 +2397,7 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
                 Capa do Perfil
               </div>
             )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={images[activeIndex]}
               alt="Fullscreen"

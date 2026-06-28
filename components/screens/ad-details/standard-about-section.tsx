@@ -1,23 +1,19 @@
 "use client";
 
-import { Check, Sparkles, Star } from "lucide-react";
+import { Check, Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { ProfessionalAd } from "@/lib/types";
 
-interface AboutSectionProps {
+interface StandardAboutSectionProps {
   ad: ProfessionalAd;
 }
 
-export function AboutSection({ ad }: AboutSectionProps) {
+export function StandardAboutSection({ ad }: StandardAboutSectionProps) {
   return (
-    <Card className="relative space-y-5 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm">
-      <div className="pointer-events-none absolute top-0 right-0 p-5">
-        <Sparkles className="h-28 w-28 text-[#DAA520]/10" strokeWidth={2} />
-      </div>
-
+    <Card className="space-y-5 rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm">
       <div className="space-y-3">
         <div className="flex items-center gap-1.5">
-          <span className="rounded-md border border-red-100/60 bg-red-50 px-2.5 py-1 text-xs font-bold tracking-[0.2em] text-[#96001e] uppercase">
+          <span className="rounded-full bg-zinc-900 border border-zinc-950 px-3 py-1 text-xs font-bold tracking-[0.2em] text-white uppercase">
             Sobre a Profissional
           </span>
           <div className="hidden h-1 rounded-full bg-zinc-100 sm:block lg:grow" />
@@ -25,7 +21,7 @@ export function AboutSection({ ad }: AboutSectionProps) {
 
         <h3 className="font-display text-xl font-bold tracking-tight text-zinc-900">Atendimento Premium com discrição absoluta</h3>
 
-        <blockquote className="border-l-4 border-[#96001e] py-1 pl-4 font-serif text-sm leading-relaxed text-zinc-600 italic sm:text-base">
+        <blockquote className="border-l-4 border-wine-700 py-1 pl-4 font-serif text-sm leading-relaxed text-zinc-600 italic sm:text-base">
           &ldquo;{ad.shortDescription}&rdquo;
         </blockquote>
       </div>
@@ -41,7 +37,7 @@ export function AboutSection({ ad }: AboutSectionProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="rounded-full border border-amber-100 bg-amber-50 p-1.5 text-amber-600">
+          <div className="rounded-full border border-amber-100 bg-amber-50 p-1.5 text-amber-500">
             <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
           </div>
           <div>

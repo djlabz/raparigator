@@ -49,6 +49,70 @@ export interface ChatSnapshot {
   messages: Message[];
 }
 
+let cachedSnapshot: ChatSnapshot | null = null;
+const unreadListeners = new Set<() => void>();
+
+function cloneSnapshot(snapshot: ChatSnapshot): ChatSnapshot {
+  return {
+    conversations: snapshot.conversations.map(cloneConversation),
+    messages: snapshot.messages.map(cloneMessage),
+  };
+}
+
+function buildMockSnapshot(): ChatSnapshot {
+  return {
+    conversations: conversations.map(cloneConversation).filter((conversation) => !conversation.deletedFromInboxAt),
+    messages: messages.map(cloneMessage).filter((message) => !message.deletedAt),
+  };
+}
+
+function setCachedSnapshot(snapshot: ChatSnapshot, notify = true) {
+  cachedSnapshot = snapshot;
+  if (!notify) {
+    return;
+  }
+
+  queueMicrotask(() => {
+    unreadListeners.forEach((listener) => listener());
+  });
+}
+
+function ensureMockSnapshotCached() {
+  if (USE_MOCK && !cachedSnapshot) {
+    setCachedSnapshot(buildMockSnapshot(), false);
+  }
+}
+
+if (typeof window !== "undefined") {
+  ensureMockSnapshotCached();
+}
+
+export function getChatUnreadCount(): number {
+  ensureMockSnapshotCached();
+  const snapshot = cachedSnapshot ?? buildMockSnapshot();
+  return snapshot.conversations.reduce((total, conversation) => total + (conversation.unread || 0), 0);
+}
+
+export function subscribeChatUnread(listener: () => void) {
+  unreadListeners.add(listener);
+  return () => unreadListeners.delete(listener);
+}
+
+export function getCachedChatSnapshot(): ChatSnapshot | null {
+  if (!cachedSnapshot) {
+    return null;
+  }
+
+  return cloneSnapshot(cachedSnapshot);
+}
+
+export function publishChatSnapshot(nextConversations: Conversation[], nextMessages: Message[]) {
+  setCachedSnapshot({
+    conversations: nextConversations.map(cloneConversation),
+    messages: nextMessages.map(cloneMessage),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // getChatSnapshot
 // ---------------------------------------------------------------------------
@@ -75,11 +139,8 @@ export interface ChatSnapshot {
 
 export async function getChatSnapshot(): Promise<ChatSnapshot> {
   if (USE_MOCK) {
-    await delay();
-    return {
-      conversations: conversations.map(cloneConversation).filter((c) => !c.deletedFromInboxAt),
-      messages: messages.map(cloneMessage).filter((m) => !m.deletedAt),
-    };
+    ensureMockSnapshotCached();
+    return cloneSnapshot(cachedSnapshot!);
   }
 
   // TODO: remover bloco mock acima e descomentar abaixo quando a API estiver pronta

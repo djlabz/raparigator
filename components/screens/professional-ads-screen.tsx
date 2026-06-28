@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ads } from "@/lib/mock-data";
 import type { ProfessionalAd } from "@/lib/types";
-import { cn } from "@/lib/utils";
 import { currency } from "@/lib/utils";
 
 export function ProfessionalAdsScreen() {
