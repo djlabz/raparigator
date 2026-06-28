@@ -184,7 +184,7 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                     </div>
 
                     <div className="space-y-1.5">
-                      <h4 className="text-left font-display text-xs font-bold tracking-widest text-[#96001e] uppercase">Selo Anti-Edição</h4>
+                      <h4 className="whitespace-nowrap text-left font-display text-sm font-bold tracking-[0.1em] text-[#96001e] uppercase lg:text-base">Selo Anti-Edição</h4>
                       <p className="text-left text-xs leading-relaxed text-zinc-600">
                         Nossas profissionais são fotografadas em ensaios auditados. Proteção garantida contra o uso de fotos falsas (fake profiles).
                       </p>
@@ -296,7 +296,7 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
               </div>
 
               <div className="space-y-2">
-                <h4 className="text-left font-display text-sm font-bold tracking-[0.22em] text-[#96001e] uppercase">Selo Anti-Edição</h4>
+                <h4 className="whitespace-nowrap text-left font-display text-base font-bold tracking-[0.12em] text-[#96001e] uppercase sm:text-lg">Selo Anti-Edição</h4>
                 <p className="text-left text-base leading-relaxed text-zinc-600">
                   Nossas profissionais são fotografadas em ensaios auditados. Proteção garantida contra o uso de fotos falsas (fake profiles).
                 </p>
