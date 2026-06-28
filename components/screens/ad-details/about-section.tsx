@@ -11,8 +11,8 @@ interface AboutSectionProps {
 export function AboutSection({ ad }: AboutSectionProps) {
   return (
     <Card className="relative space-y-5 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm">
-      <div className="pointer-events-none absolute top-0 right-0 p-5 opacity-[0.03]">
-        <Sparkles className="h-28 w-28 text-[#96001e]" />
+      <div className="pointer-events-none absolute top-0 right-0 p-5">
+        <Sparkles className="h-28 w-28 text-[#DAA520]/10" strokeWidth={2} />
       </div>
 
       <div className="space-y-3">

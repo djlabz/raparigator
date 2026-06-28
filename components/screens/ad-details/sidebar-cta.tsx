@@ -15,7 +15,7 @@ export function SidebarCta({ role, setRiskTarget }: SidebarCtaProps) {
     <Card className="order-last lg:order-first p-5 sm:p-6 border-0 bg-linear-to-br from-[#121212] via-[#1a1a1a] to-[#0a0a0a] shadow-xl rounded-2xl text-center space-y-6 relative overflow-hidden">
       {/* Premium Background Elements */}
       <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none rotate-12">
-        <Sparkles className="h-32 w-32 text-amber-300" />
+        <Sparkles className="h-32 w-32 text-amber-300" strokeWidth={2.5} />
       </div>
       <div className="absolute -left-10 -bottom-10 h-32 w-32 overflow-hidden rounded-full bg-linear-to-tr from-amber-500/20 to-transparent blur-2xl" />
 
