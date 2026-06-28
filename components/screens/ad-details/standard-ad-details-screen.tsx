@@ -3,7 +3,6 @@
 import { useAdDetails } from "./use-ad-details";
 import { StandardProfileHeader } from "./standard-profile-header";
 import { PhotoGallerySection } from "./photo-gallery-section";
-import { StandardCharacteristics } from "./standard-characteristics";
 import { StandardAboutSection } from "./standard-about-section";
 import { SpecialtiesSection } from "./specialties-section";
 import { StandardReviewsSection } from "./standard-reviews-section";
@@ -62,8 +61,6 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
           isPremium={false}
           setSelectedPhotoIndex={setSelectedPhotoIndex}
         />
-        <StandardCharacteristics ad={ad} />
-
         <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-6">
             <StandardAboutSection ad={ad} />
