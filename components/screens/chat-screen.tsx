@@ -10,6 +10,7 @@ import {
   Flag,
   Image as ImageIcon,
   MoreHorizontal,
+  Pencil,
   Plus,
   RefreshCcw,
   Send,
@@ -27,7 +28,9 @@ import { Modal } from "@/components/ui/modal";
 import { Toast } from "@/components/ui/toast";
 import {
   deleteConversationFromInbox as apiDeleteConversationFromInbox,
+  getCachedChatSnapshot,
   getChatSnapshot,
+  publishChatSnapshot,
   reportConversation as apiReportConversation,
   sendTextMessage,
   sendViewOnceMediaMessage,
@@ -57,8 +60,9 @@ type ToastState = { title: string; message: string; type?: "success" | "error" |
 
 export function ChatScreen() {
   const { isLoggedIn, user } = useAuthSession();
-  const [localConversations, setLocalConversations] = useState<Conversation[]>([]);
-  const [localMessages, setLocalMessages] = useState<Message[]>([]);
+  const initialSnapshot = getCachedChatSnapshot();
+  const [localConversations, setLocalConversations] = useState<Conversation[]>(() => initialSnapshot?.conversations ?? []);
+  const [localMessages, setLocalMessages] = useState<Message[]>(() => initialSnapshot?.messages ?? []);
   const [activeConversationId, setActiveConversationId] = useState("");
   const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
@@ -67,7 +71,7 @@ export function ChatScreen() {
   const [renameDraft, setRenameDraft] = useState("");
   const [draft, setDraft] = useState("");
   const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => !initialSnapshot);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState>(null);
   const [globalAlias, setGlobalAlias] = useState(user?.alias ?? "Cliente reservado");
@@ -115,8 +119,13 @@ export function ChatScreen() {
     window.setTimeout(() => setToast(null), 3600);
   };
 
-  const loadChat = async () => {
-    setIsLoading(true);
+  const loadChat = async (options?: { showLoading?: boolean }) => {
+    const showLoading = options?.showLoading ?? !getCachedChatSnapshot();
+
+    if (showLoading) {
+      setIsLoading(true);
+    }
+
     setLoadError(null);
 
     try {
@@ -185,6 +194,7 @@ export function ChatScreen() {
   }, [isMobileViewport]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [currentMessages, mobileConversationOpen]);
@@ -196,6 +206,27 @@ export function ChatScreen() {
     return () => window.clearTimeout(timeout);
   }, [lastSentMessageId]);
 
+  useEffect(() => {
+    if (localConversations.length === 0 && localMessages.length === 0) {
+      return;
+    }
+
+    publishChatSnapshot(localConversations, localMessages);
+  }, [localConversations, localMessages]);
+
+  const markConversationAsRead = (conversationId: string) => {
+    setLocalConversations((previous) => {
+      const conversation = previous.find((item) => item.id === conversationId);
+      if (!conversation || conversation.unread === 0) {
+        return previous;
+      }
+
+      return previous.map((item) => (
+        item.id === conversationId ? { ...item, unread: 0 } : item
+      ));
+    });
+  };
+
   const syncConversationPreview = (conversationId: string, lastMessage: string) => {
     setLocalConversations((previous) => previous.map((conversation) => (
       conversation.id === conversationId
@@ -205,6 +236,7 @@ export function ChatScreen() {
   };
 
   const openConversation = (conversationId: string) => {
+    markConversationAsRead(conversationId);
     setActiveConversationId(conversationId);
     setMobileConversationOpen(isMobileViewport);
     setProfilePanelOpen(false);
@@ -456,7 +488,7 @@ export function ChatScreen() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h1 className="text-xl font-bold tracking-tight text-zinc-900">Conversas</h1>
-                <p className="mt-1 text-xs font-medium text-zinc-500">Você aparece como {globalAlias}</p>
+                <p className="mt-1 text-xs font-medium text-zinc-500">Você aparece como {globalAlias} para os outros</p>
               </div>
               <button
                 type="button"
@@ -464,10 +496,13 @@ export function ChatScreen() {
                   setGlobalAliasDraft(globalAlias);
                   setGlobalAliasModalOpen(true);
                 }}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 transition hover:bg-zinc-50"
+                className="group relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-sm transition hover:bg-zinc-50 hover:border-zinc-300"
                 aria-label="Alterar apelido geral"
               >
-                <UserRound size={16} />
+                <UserRound size={18} />
+                <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-[1.5px] border-white bg-wine-700 text-white shadow-sm transition-transform group-hover:scale-110">
+                  <Pencil size={10} strokeWidth={2.5} />
+                </div>
               </button>
             </div>
             <div className="mt-4 flex items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-3">

@@ -2,12 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { animate, AnimatePresence, motion, useMotionValue, useMotionValueEvent, useScroll } from "motion/react";
 import { MessageSquare, X } from "lucide-react";
 import type { ProfessionalAd } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { TelegramIcon, WhatsAppIcon } from "@/components/ui/contact-icons";
+import {
+  getMobileContactFabTooltipSide,
+  getMobileContactFabX,
+  readMobileContactFabSide,
+  resolveMobileContactFabSideFromX,
+  saveMobileContactFabSide,
+  type MobileContactFabSide,
+} from "@/lib/mobile-contact-fab-position";
 
 interface MobileContactFabProps {
   ad: ProfessionalAd;
@@ -18,6 +26,8 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
+  const [fabSide, setFabSide] = useState<MobileContactFabSide>(() => readMobileContactFabSide());
+  const tooltipSide = getMobileContactFabTooltipSide(fabSide);
   const constraintsRef = useRef<HTMLDivElement>(null);
 
   const { scrollY } = useScroll();
@@ -33,6 +43,14 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
+  useEffect(() => {
+    if (!constraintsRef.current) return;
+    const rect = constraintsRef.current.getBoundingClientRect();
+    const fabSize = 56;
+    const side = fabSide;
+    x.set(getMobileContactFabX(side, rect.width, fabSize));
+  }, [fabSide, isVisible, x]);
+
   const toggleOpen = () => {
     setIsOpen(!isOpen);
     if (showTooltip) setShowTooltip(false);
@@ -45,13 +63,12 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
     const currentY = y.get();
 
     const fabSize = 56;
-    const midPoint = (rect.width - fabSize) / 2;
+    const nextSide = resolveMobileContactFabSideFromX(currentX, rect.width, fabSize);
+    const targetX = getMobileContactFabX(nextSide, rect.width, fabSize);
 
-    if (currentX > midPoint) {
-      animate(x, rect.width - fabSize, { type: "spring", bounce: 0.2, duration: 0.5 });
-    } else {
-      animate(x, 0, { type: "spring", bounce: 0.2, duration: 0.5 });
-    }
+    animate(x, targetX, { type: "spring", bounce: 0.2, duration: 0.5 });
+    setFabSide(nextSide);
+    saveMobileContactFabSide(nextSide);
 
     if (currentY > 0) {
       animate(y, 0, { type: "spring", bounce: 0.4, duration: 0.5 });
@@ -60,7 +77,7 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
 
   return (
     <div
-      className="fixed left-4 right-4 top-4 bottom-4 z-[60] pointer-events-none md:hidden"
+      className="fixed left-4 right-4 top-4 bottom-4 z-60 pointer-events-none md:hidden"
       ref={constraintsRef}
     >
       <AnimatePresence>
@@ -82,12 +99,22 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
               <AnimatePresence>
                 {showTooltip && !isOpen && (
                   <motion.div
-                    initial={{ opacity: 0, x: -10, scale: 0.9 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    initial={{ opacity: 0, scale: 0.9, x: tooltipSide === "right" ? -10 : 10 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
                     exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                    className="absolute left-17 z-10 w-max max-w-35 rounded-xl border border-dashed border-stone-400/70 bg-[#f5f4ef]/85 px-3 py-1.5 text-xs font-medium leading-tight text-zinc-700 shadow-[0_4px_16px_rgba(0,0,0,0.1)] backdrop-blur-sm"
+                    className={cn(
+                      "absolute z-10 w-max max-w-35 rounded-xl border border-dashed border-stone-400/70 bg-[#f5f4ef]/85 px-3 py-1.5 text-xs font-medium leading-tight text-zinc-700 shadow-[0_4px_16px_rgba(0,0,0,0.1)] backdrop-blur-sm",
+                      tooltipSide === "right" ? "left-17" : "right-17"
+                    )}
                   >
-                    <div className="absolute top-1/2 -left-1.5 h-0 w-0 -translate-y-1/2 border-y-4 border-y-transparent border-r-[6px] border-r-[#f5f4ef]/85" />
+                    <div
+                      className={cn(
+                        "absolute top-1/2 h-0 w-0 -translate-y-1/2 border-y-4 border-y-transparent",
+                        tooltipSide === "right"
+                          ? "-left-1.5 border-r-[6px] border-r-[#f5f4ef]/85"
+                          : "-right-1.5 border-l-[6px] border-l-[#f5f4ef]/85"
+                      )}
+                    />
                     Clique para entrar em contato.
                   </motion.div>
                 )}
