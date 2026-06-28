@@ -46,10 +46,21 @@ export function StandardMobileContactFab({ ad, setRiskTarget, role }: StandardMo
 
   useEffect(() => {
     if (!constraintsRef.current) return;
-    const rect = constraintsRef.current.getBoundingClientRect();
-    const fabSize = 56;
-    const side = fabSide;
-    x.set(getMobileContactFabX(side, rect.width, fabSize));
+    
+    const updatePosition = () => {
+      if (!constraintsRef.current) return;
+      const rect = constraintsRef.current.getBoundingClientRect();
+      const fabSize = 56;
+      const side = fabSide;
+      x.set(getMobileContactFabX(side, rect.width, fabSize));
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+    };
   }, [fabSide, isVisible, x]);
 
   const toggleOpen = () => {
