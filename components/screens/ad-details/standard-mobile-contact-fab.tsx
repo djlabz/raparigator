@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState, useEffect } from "react";
 import { animate, AnimatePresence, motion, useMotionValue, useMotionValueEvent, useScroll } from "motion/react";
-import { MessageSquare, X } from "lucide-react";
+import { MessageSquare, X, Lock } from "lucide-react";
 import type { ProfessionalAd } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { TelegramIcon, WhatsAppIcon } from "@/components/ui/contact-icons";
@@ -17,12 +17,13 @@ import {
   type MobileContactFabSide,
 } from "@/lib/mobile-contact-fab-position";
 
-interface MobileContactFabProps {
+interface StandardMobileContactFabProps {
   ad: ProfessionalAd;
   setRiskTarget: (target: "WhatsApp" | "Telegram") => void;
+  role: "visitor" | "client" | "professional";
 }
 
-export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
+export function StandardMobileContactFab({ ad, setRiskTarget, role }: StandardMobileContactFabProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
@@ -103,7 +104,7 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
                     animate={{ opacity: 1, scale: 1, x: 0 }}
                     exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
                     className={cn(
-                      "absolute z-10 w-max max-w-35 rounded-xl border border-dashed border-stone-400/70 bg-[#f5f4ef]/85 px-3 py-1.5 text-xs font-medium leading-tight text-zinc-700 shadow-[0_4px_16px_rgba(0,0,0,0.1)] backdrop-blur-sm",
+                      "absolute z-10 w-max max-w-35 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold leading-tight text-zinc-700 shadow-md backdrop-blur-sm",
                       tooltipSide === "right" ? "left-17" : "right-17"
                     )}
                   >
@@ -111,11 +112,11 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
                       className={cn(
                         "absolute top-1/2 h-0 w-0 -translate-y-1/2 border-y-4 border-y-transparent",
                         tooltipSide === "right"
-                          ? "-left-1.5 border-r-[6px] border-r-[#f5f4ef]/85"
-                          : "-right-1.5 border-l-[6px] border-l-[#f5f4ef]/85"
+                          ? "-left-1.5 border-r-[6px] border-r-white"
+                          : "-right-1.5 border-l-[6px] border-l-white"
                       )}
                     />
-                    Clique para entrar em contato.
+                    Falar agora.
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -131,10 +132,14 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
                       className="absolute"
                     >
                       <Link
-                        href="/chat"
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-[#96001e] text-white shadow-lg ring-1 ring-white/20"
+                        href={role === "visitor" ? "/auth/login" : "/chat"}
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-wine-700 text-white shadow-lg ring-1 ring-white/20"
                       >
-                        <MessageSquare className="h-4 w-4 fill-white text-white" />
+                        {role === "visitor" ? (
+                          <Lock className="h-4.5 w-4.5 text-white" />
+                        ) : (
+                          <MessageSquare className="h-4.5 w-4.5 fill-white text-white" />
+                        )}
                       </Link>
                     </motion.div>
 
@@ -147,7 +152,7 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
                     >
                       <button
                         onClick={() => setRiskTarget("WhatsApp")}
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg cursor-pointer"
                       >
                         <WhatsAppIcon className="h-5.5 w-5.5" />
                       </button>
@@ -162,7 +167,7 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
                     >
                       <button
                         onClick={() => setRiskTarget("Telegram")}
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500 text-white shadow-lg"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500 text-white shadow-lg cursor-pointer"
                       >
                         <TelegramIcon className="h-5.5 w-5.5" />
                       </button>
@@ -174,21 +179,22 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
               <button
                 onClick={toggleOpen}
                 className={cn(
-                  "relative z-20 h-14 w-14 shrink-0 cursor-pointer rounded-full bg-linear-to-tr from-amber-300 via-amber-400 to-amber-200 p-0.5 shadow-xl transition-transform active:scale-95",
-                  isOpen && "shadow-[0_0_20px_rgba(251,191,36,0.4)]",
+                  "relative z-20 h-14 w-14 shrink-0 cursor-pointer rounded-full bg-wine-700 p-0.5 shadow-xl transition-transform active:scale-95",
+                  isOpen && "shadow-[0_0_20px_rgba(150,0,30,0.3)]",
                 )}
               >
-                <div className="relative h-full w-full overflow-hidden rounded-full border border-black/40 bg-zinc-900">
+                <div className="relative h-full w-full overflow-hidden rounded-full border border-black/25 bg-zinc-900">
                   <Image
                     src={ad.images[0]}
                     alt={ad.artisticName}
                     fill
-                    className="object-cover"
+                    className="object-cover pointer-events-none select-none"
                     sizes="56px"
                     referrerPolicy="no-referrer"
+                    draggable={false}
                   />
                 </div>
-                <div className="absolute right-[14.6%] bottom-[14.6%] z-20 flex h-6 w-6 translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full bg-[#96001e] ring-2 ring-white">
+                <div className="absolute right-[14.6%] bottom-[14.6%] z-20 flex h-6 w-6 translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full bg-zinc-900 border border-white/20">
                   {isOpen ? <X className="h-3.5 w-3.5 text-white" /> : <MessageSquare className="h-3.5 w-3.5 fill-white text-white" />}
                 </div>
               </button>

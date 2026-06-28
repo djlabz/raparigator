@@ -6,10 +6,12 @@ import {
   Ban,
   Check,
   CheckCheck,
+  ChevronDown,
   Clock,
   Flag,
   Image as ImageIcon,
   MoreHorizontal,
+  Pencil,
   Plus,
   RefreshCcw,
   Send,
@@ -21,13 +23,15 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { AppShell } from "@/components/layout/app-shell";
+import { AppShell } from "../layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Toast } from "@/components/ui/toast";
 import {
   deleteConversationFromInbox as apiDeleteConversationFromInbox,
+  getCachedChatSnapshot,
   getChatSnapshot,
+  publishChatSnapshot,
   reportConversation as apiReportConversation,
   sendTextMessage,
   sendViewOnceMediaMessage,
@@ -35,7 +39,7 @@ import {
   updateParticipantAlias as apiUpdateParticipantAlias,
 } from "@/lib/chat-service";
 import { ads } from "@/lib/mock-data";
-import type { Conversation, Message } from "@/lib/types";
+import type { AvailabilityStatus, Conversation, Message } from "@/lib/types";
 import { useAuthSession } from "@/lib/auth-session";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +47,80 @@ const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").re
 
 const getStatusColor = (status: Conversation["contactStatus"]) => status === "online" ? "bg-emerald-500" : "bg-zinc-400";
 const getStatusLabel = (status: Conversation["contactStatus"]) => status === "online" ? "Online" : "Offline";
+
+const PROFESSIONAL_AVAILABILITY_STORAGE_KEY = "sigillus-professional-chat-availability";
+const PROFESSIONAL_AVAILABILITY_PANEL_STORAGE_KEY = "sigillus-professional-availability-panel-open";
+
+const professionalAvailabilityOptions: {
+  value: AvailabilityStatus;
+  label: string;
+  description: string;
+  dotClass: string;
+  activeClass: string;
+}[] = [
+    {
+      value: "livre",
+      label: "Disponível",
+      description: "Seu status aparece disponível para novos contatos.",
+      dotClass: "bg-emerald-500",
+      activeClass: "ring-emerald-200 bg-emerald-50 text-emerald-800",
+    },
+    {
+      value: "em_atendimento",
+      label: "Ocupado",
+      description: "Seu status aparece como em atendimento.",
+      dotClass: "bg-amber-500",
+      activeClass: "ring-amber-200 bg-amber-50 text-amber-800",
+    },
+    {
+      value: "indisponivel",
+      label: "Indisponível",
+      description: "Seu status aparece como indisponível.",
+      dotClass: "bg-zinc-400",
+      activeClass: "ring-zinc-300 bg-zinc-100 text-zinc-700",
+    },
+  ];
+
+function readProfessionalAvailability(): AvailabilityStatus {
+  if (typeof window === "undefined") {
+    return "livre";
+  }
+
+  const stored = window.localStorage.getItem(PROFESSIONAL_AVAILABILITY_STORAGE_KEY);
+  if (stored === "livre" || stored === "em_atendimento" || stored === "indisponivel") {
+    return stored;
+  }
+
+  return "livre";
+}
+
+function saveProfessionalAvailability(status: AvailabilityStatus) {
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(PROFESSIONAL_AVAILABILITY_STORAGE_KEY, status);
+  }
+}
+
+function getProfessionalAvailabilityOption(status: AvailabilityStatus) {
+  return professionalAvailabilityOptions.find((item) => item.value === status) ?? professionalAvailabilityOptions[0];
+}
+
+function getProfessionalAvailabilityDescription(status: AvailabilityStatus) {
+  return getProfessionalAvailabilityOption(status).description;
+}
+
+function readAvailabilityPanelOpen(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.localStorage.getItem(PROFESSIONAL_AVAILABILITY_PANEL_STORAGE_KEY) === "true";
+}
+
+function saveAvailabilityPanelOpen(open: boolean) {
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(PROFESSIONAL_AVAILABILITY_PANEL_STORAGE_KEY, open ? "true" : "false");
+  }
+}
 
 const getMessageStatus = (message: Message) => {
   if (message.from !== "me") return null;
@@ -56,9 +134,10 @@ const getMessageStatus = (message: Message) => {
 type ToastState = { title: string; message: string; type?: "success" | "error" | "info" } | null;
 
 export function ChatScreen() {
-  const { isLoggedIn, user } = useAuthSession();
-  const [localConversations, setLocalConversations] = useState<Conversation[]>([]);
-  const [localMessages, setLocalMessages] = useState<Message[]>([]);
+  const { isLoggedIn, user, role } = useAuthSession();
+  const initialSnapshot = getCachedChatSnapshot();
+  const [localConversations, setLocalConversations] = useState<Conversation[]>(() => initialSnapshot?.conversations ?? []);
+  const [localMessages, setLocalMessages] = useState<Message[]>(() => initialSnapshot?.messages ?? []);
   const [activeConversationId, setActiveConversationId] = useState("");
   const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
@@ -67,19 +146,23 @@ export function ChatScreen() {
   const [renameDraft, setRenameDraft] = useState("");
   const [draft, setDraft] = useState("");
   const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => !initialSnapshot);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState>(null);
   const [globalAlias, setGlobalAlias] = useState(user?.alias ?? "Cliente reservado");
   const [globalAliasDraft, setGlobalAliasDraft] = useState(globalAlias);
   const [globalAliasModalOpen, setGlobalAliasModalOpen] = useState(false);
   const [presenceVisible, setPresenceVisible] = useState(true);
+  const [professionalAvailability, setProfessionalAvailability] = useState<AvailabilityStatus>(() => readProfessionalAvailability());
+  const [availabilityPanelOpen, setAvailabilityPanelOpen] = useState(() => readAvailabilityPanelOpen());
   const [attachmentMenuOpen, setAttachmentMenuOpen] = useState(false);
   const [viewOnceModalOpen, setViewOnceModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [blockModalOpen, setBlockModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
+
+  const activeAvailabilityOption = getProfessionalAvailabilityOption(professionalAvailability);
 
   const activeConversation = localConversations.find((conversation) => conversation.id === activeConversationId) ?? localConversations[0];
   const displayContactName = activeConversation?.contactName ?? "";
@@ -115,8 +198,13 @@ export function ChatScreen() {
     window.setTimeout(() => setToast(null), 3600);
   };
 
-  const loadChat = async () => {
-    setIsLoading(true);
+  const loadChat = async (options?: { showLoading?: boolean }) => {
+    const showLoading = options?.showLoading ?? !getCachedChatSnapshot();
+
+    if (showLoading) {
+      setIsLoading(true);
+    }
+
     setLoadError(null);
 
     try {
@@ -185,6 +273,7 @@ export function ChatScreen() {
   }, [isMobileViewport]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [currentMessages, mobileConversationOpen]);
@@ -196,6 +285,27 @@ export function ChatScreen() {
     return () => window.clearTimeout(timeout);
   }, [lastSentMessageId]);
 
+  useEffect(() => {
+    if (localConversations.length === 0 && localMessages.length === 0) {
+      return;
+    }
+
+    publishChatSnapshot(localConversations, localMessages);
+  }, [localConversations, localMessages]);
+
+  const markConversationAsRead = (conversationId: string) => {
+    setLocalConversations((previous) => {
+      const conversation = previous.find((item) => item.id === conversationId);
+      if (!conversation || conversation.unread === 0) {
+        return previous;
+      }
+
+      return previous.map((item) => (
+        item.id === conversationId ? { ...item, unread: 0 } : item
+      ));
+    });
+  };
+
   const syncConversationPreview = (conversationId: string, lastMessage: string) => {
     setLocalConversations((previous) => previous.map((conversation) => (
       conversation.id === conversationId
@@ -205,6 +315,7 @@ export function ChatScreen() {
   };
 
   const openConversation = (conversationId: string) => {
+    markConversationAsRead(conversationId);
     setActiveConversationId(conversationId);
     setMobileConversationOpen(isMobileViewport);
     setProfilePanelOpen(false);
@@ -439,24 +550,24 @@ export function ChatScreen() {
   }
 
   return (
-    <AppShell hideMobileBottomNav={isMobileViewport && mobileConversationOpen}>
+    <AppShell hideMobileBottomNav={isMobileViewport && mobileConversationOpen} mainClassName="pt-0 md:pt-1">
       <div className="fixed right-4 top-4 z-240 w-[min(22rem,calc(100vw-2rem))] space-y-2">
         {toast ? <Toast title={toast.title} message={toast.message} type={toast.type} /> : null}
       </div>
 
       <div className={cn(
         "relative flex w-full min-h-0 flex-col overflow-hidden bg-white md:grid md:grid-cols-[340px_minmax(0,1fr)] md:rounded-[28px] md:border md:border-zinc-200/80 md:shadow-[0_20px_60px_rgba(15,23,42,0.08)]",
-        "min-h-88 h-[calc(100svh-10.5rem)] md:min-h-128 md:h-[calc(100dvh-12.5rem)]"
+        "min-h-88 h-[calc(100svh-9.5rem)] md:min-h-128 md:h-[calc(100dvh-12.5rem)]"
       )}>
         <aside className={cn(
           "flex h-full min-h-0 w-full flex-col border-b border-zinc-200 bg-zinc-50/80 md:border-b-0 md:border-r md:shrink-0",
           isMobileViewport && mobileConversationOpen ? "hidden md:flex" : "flex"
         )}>
-          <div className="border-b border-zinc-200 bg-white/80 p-5 backdrop-blur-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h1 className="text-xl font-bold tracking-tight text-zinc-900">Conversas</h1>
-                <p className="mt-1 text-xs font-medium text-zinc-500">Você aparece como {globalAlias}</p>
+          <div className="border-b border-zinc-200 bg-white/80 px-4 py-1.5 backdrop-blur-sm">
+            <div className="flex items-center justify-between gap-2.5">
+              <div className="min-w-0">
+                <h1 className="text-lg font-bold tracking-tight text-zinc-900">Conversas</h1>
+                <p className="mt-0.5 truncate text-[11px] font-medium text-zinc-500">Você aparece como {globalAlias} para os outros</p>
               </div>
               <button
                 type="button"
@@ -464,37 +575,104 @@ export function ChatScreen() {
                   setGlobalAliasDraft(globalAlias);
                   setGlobalAliasModalOpen(true);
                 }}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 transition hover:bg-zinc-50"
+                className="group relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-sm transition hover:bg-zinc-50 hover:border-zinc-300"
                 aria-label="Alterar apelido geral"
               >
-                <UserRound size={16} />
+                <UserRound size={18} />
+                <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-[1.5px] border-white bg-wine-700 text-white shadow-sm transition-transform group-hover:scale-110">
+                  <Pencil size={10} strokeWidth={2.5} />
+                </div>
               </button>
             </div>
-            <div className="mt-4 flex items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
-              <div>
-                <p className="text-sm font-semibold text-zinc-800">Aparecer online</p>
-                <p className="text-xs text-zinc-500">{presenceVisible ? "Seu status aparece online." : "Seu status aparece offline."}</p>
+            {role === "profissional" ? (
+              <div className="mt-2.5 rounded-2xl border border-zinc-200 bg-zinc-50">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAvailabilityPanelOpen((current) => {
+                      const next = !current;
+                      saveAvailabilityPanelOpen(next);
+                      return next;
+                    });
+                  }}
+                  aria-expanded={availabilityPanelOpen}
+                  className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <p className="shrink-0 text-sm font-semibold text-zinc-800">Disponibilidade</p>
+                    <span className={cn("h-2 w-2 shrink-0 rounded-full", activeAvailabilityOption.dotClass)} />
+                    <span className="truncate text-xs font-semibold text-zinc-600">{activeAvailabilityOption.label}</span>
+                  </div>
+                  <ChevronDown
+                    className={cn("h-4 w-4 shrink-0 text-zinc-400 transition-transform duration-200", availabilityPanelOpen && "rotate-180")}
+                  />
+                </button>
+
+                {availabilityPanelOpen ? (
+                  <div className="border-t border-zinc-200 px-3 pb-3 pt-2">
+                    <p className="min-h-8 text-xs leading-4 text-zinc-500">
+                      {getProfessionalAvailabilityDescription(professionalAvailability)}
+                    </p>
+                    <div className="mt-2 grid grid-cols-3 gap-1.5" role="group" aria-label="Disponibilidade">
+                      {professionalAvailabilityOptions.map((option) => {
+                        const isActive = professionalAvailability === option.value;
+
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              setProfessionalAvailability(option.value);
+                              saveProfessionalAvailability(option.value);
+                            }}
+                            aria-pressed={isActive}
+                            className={cn(
+                              "flex flex-col items-center gap-1 rounded-xl border px-1.5 py-2 text-center transition",
+                              isActive
+                                ? cn("border-transparent ring-1 shadow-sm", option.activeClass)
+                                : "border-transparent bg-white/70 text-zinc-500 hover:bg-white hover:text-zinc-700",
+                            )}
+                          >
+                            <span className={cn("h-2 w-2 rounded-full", option.dotClass)} />
+                            <span className="text-[10px] font-bold leading-none">{option.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
               </div>
-              <button
-                type="button"
-                onClick={() => setPresenceVisible((current) => !current)}
-                className={cn(
-                  "relative h-7 w-12 rounded-full transition",
-                  presenceVisible ? "bg-emerald-500" : "bg-zinc-300"
-                )}
-                aria-pressed={presenceVisible}
-                aria-label="Alternar status online"
-              >
-                <span className={cn(
-                  "absolute top-1 h-5 w-5 rounded-full bg-white shadow transition",
-                  presenceVisible ? "left-6" : "left-1"
-                )} />
-              </button>
-            </div>
+            ) : (
+              <div className="mt-2.5 flex items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
+                <div className="min-w-0 pr-3">
+                  <p className="text-sm font-semibold text-zinc-800">Aparecer online</p>
+                  <p className="min-h-4 text-xs leading-4 text-zinc-500">
+                    {presenceVisible ? "Seu status aparece online." : "Seu status aparece offline."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPresenceVisible((current) => !current)}
+                  className={cn(
+                    "relative h-7 w-12 rounded-full transition",
+                    presenceVisible ? "bg-emerald-500" : "bg-zinc-300",
+                  )}
+                  aria-pressed={presenceVisible}
+                  aria-label="Alternar status online"
+                >
+                  <span
+                    className={cn(
+                      "absolute top-1 h-5 w-5 rounded-full bg-white shadow transition",
+                      presenceVisible ? "left-6" : "left-1",
+                    )}
+                  />
+                </button>
+              </div>
+            )}
           </div>
 
           {isLoading ? (
-            <div className="space-y-3 p-3">
+            <div className="space-y-2 p-2.5">
               {[0, 1, 2].map((item) => (
                 <div key={item} className="flex items-center gap-3 rounded-2xl border border-zinc-100 bg-white p-3">
                   <div className="h-12 w-12 animate-pulse rounded-full bg-zinc-200" />
@@ -510,7 +688,7 @@ export function ChatScreen() {
               <div>
                 <WifiOff className="mx-auto text-zinc-400" size={28} />
                 <p className="mt-3 text-sm font-semibold text-zinc-800">{loadError}</p>
-                <Button className="mt-4" variant="secondary" size="sm" onClick={loadChat}>
+                <Button className="mt-4" variant="secondary" size="sm" onClick={() => void loadChat()}>
                   <RefreshCcw size={15} />
                   Tentar novamente
                 </Button>
@@ -524,7 +702,7 @@ export function ChatScreen() {
               </div>
             </div>
           ) : (
-            <ul className="flex-1 space-y-2 overflow-y-auto p-3">
+            <ul className="flex-1 space-y-1.5 overflow-y-auto p-2.5">
               {visibleConversations.map((conversation) => (
                 <li key={conversation.id}>
                   <button

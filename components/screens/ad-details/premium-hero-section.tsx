@@ -11,19 +11,28 @@ interface PremiumHeroSectionProps {
 export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
   const premiumAttributes = [
     { label: "Altura", value: `${ad.heightCm} cm`, icon: "/icons/attributes/size-woman.svg" },
-    { label: "Tipo e cor de cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: "/icons/attributes/hair-woman.svg" },
+    { label: "Cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: "/icons/attributes/hair-woman.svg" },
     { label: "Etnia", value: ad.ethnicity, icon: "/icons/attributes/person.svg" },
-    { label: "Cor dos olhos", value: ad.eyeColor, icon: "/icons/attributes/eye.svg" },
+    { label: "Olhos", value: ad.eyeColor, icon: "/icons/attributes/eye.svg" },
     { label: "Fumante?", value: "Não", icon: "/icons/attributes/smoking.svg" },
     { label: "Peso", value: `${ad.weightKg} kg`, icon: "/icons/attributes/weight.svg" },
   ];
 
   return (
-    <section className="relative isolate overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#121212] shadow-xl">
+    <section className="relative isolate overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#121212] shadow-xl select-none">
       <div className="relative h-48 w-full overflow-hidden bg-zinc-900 sm:h-64 md:h-72">
-        <Image src={ad.images[0]} alt="Foto de capa premium" fill className="object-cover" priority sizes="100vw" referrerPolicy="no-referrer" />
+        <Image
+          src={ad.images[0]}
+          alt="Foto de capa premium"
+          fill
+          className="object-cover select-none pointer-events-none"
+          priority
+          sizes="100vw"
+          referrerPolicy="no-referrer"
+          draggable={false}
+        />
 
-        <div className="absolute top-4 left-4 flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] px-3 py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md">
+        <div className="absolute top-4 left-4 flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] px-3 py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md select-none cursor-default transition-all duration-300 hover:scale-105 hover:shadow-[0_0_12px_rgba(251,191,36,0.45)]">
           <span className="text-xs text-[#FFDF00] drop-shadow-[0_0_4px_rgba(255,223,0,0.9)]">★</span>
           <span className="bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-xs font-extrabold tracking-[0.2em] text-transparent uppercase drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
             Premium
@@ -62,13 +71,14 @@ export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
                       src={ad.images[1] || ad.images[0]}
                       alt={ad.artisticName}
                       fill
-                      className="object-cover"
+                      className="object-cover pointer-events-none select-none"
                       sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, 144px"
                       referrerPolicy="no-referrer"
+                      draggable={false}
                     />
                   </div>
                 </div>
-                <div className="absolute right-[14.6%] bottom-[14.6%] z-20 translate-x-1/2 translate-y-1/2">
+                <div className="absolute right-[14.6%] bottom-[14.6%] z-10 translate-x-1/2 translate-y-1/2">
                   <span className="relative flex h-3 w-3 items-center justify-center sm:h-4 sm:w-4">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#10b981] opacity-65"></span>
                     <span className="relative inline-flex h-full w-full rounded-full bg-[#10b981] ring-2 ring-[#121212]"></span>
@@ -90,7 +100,7 @@ export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
                   </span>
 
                   <span className="flex items-center gap-1.5 font-medium leading-none">
-                    <Image src="/icons/attributes/age.svg" alt="Idade" width={16} height={16} className="h-3.5 w-3.5 object-contain sm:h-4 sm:w-4" referrerPolicy="no-referrer" />
+                    <Image src="/icons/attributes/age.svg" alt="Idade" width={16} height={16} className="h-3.5 w-3.5 object-contain sm:h-4 sm:w-4 pointer-events-none select-none" referrerPolicy="no-referrer" draggable={false} />
                     {ad.age} anos
                   </span>
 
@@ -110,7 +120,7 @@ export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
                 className="flex min-h-20 cursor-pointer items-center gap-2 rounded-2xl border border-white/8 bg-[#0c0c0c]/90 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-sm transition-transform duration-300 hover:scale-[1.02] sm:min-h-24 sm:gap-3 sm:px-4 sm:py-4"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-black/55 sm:h-12 sm:w-12">
-                  <Image src={attribute.icon} alt={attribute.label} width={34} height={34} className="h-7 w-7 object-contain sm:h-8 sm:w-8" referrerPolicy="no-referrer" />
+                  <Image src={attribute.icon} alt={attribute.label} width={34} height={34} className="h-7 w-7 object-contain sm:h-8 sm:w-8 pointer-events-none select-none" referrerPolicy="no-referrer" draggable={false} />
                 </div>
 
                 <div className="min-w-0 space-y-1">

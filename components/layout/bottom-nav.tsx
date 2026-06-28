@@ -1,15 +1,17 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useSyncExternalStore } from "react";
 import type { NavigationItem } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
+import { getChatSnapshot, getChatUnreadCount, subscribeChatUnread } from "@/lib/chat-service";
 
 interface BottomNavProps {
   items: NavigationItem[];
 }
 
-function getNavIcon(label: string, href: string, active: boolean) {
+function getNavIcon(label: string, href: string, active: boolean, unreadCount: number = 0) {
   const iconClassName = active ? "text-white" : "text-zinc-700";
 
   if (label === "Feed" || href === "/feed") {
@@ -35,9 +37,16 @@ function getNavIcon(label: string, href: string, active: boolean) {
 
   if (label === "Chat" || href === "/chat") {
     return (
-      <svg className={iconClassName} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      </svg>
+      <div className="relative flex items-center justify-center">
+        <svg className={iconClassName} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        {unreadCount > 0 && (
+          <span className="absolute -top-1.5 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-sm ring-1 ring-white">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+      </div>
     );
   }
 
@@ -89,6 +98,18 @@ function getNavIcon(label: string, href: string, active: boolean) {
 
 export function BottomNav({ items }: BottomNavProps) {
   const pathname = usePathname();
+  const hasChat = items.some((item) => item.label === "Chat" || item.href === "/chat");
+  const unreadCount = useSyncExternalStore(subscribeChatUnread, getChatUnreadCount, () => 0);
+
+  useEffect(() => {
+    if (!hasChat) {
+      return;
+    }
+
+    getChatSnapshot().catch(() => {
+      // ignora erro silenciosamente no componente visual
+    });
+  }, [hasChat, pathname]);
 
   if (items.length === 0) {
     return null;
@@ -117,7 +138,7 @@ export function BottomNav({ items }: BottomNavProps) {
                 )}
                 style={active ? { color: "#fff" } : undefined}
               >
-                {getNavIcon(item.label, item.href, active)}
+                {getNavIcon(item.label, item.href, active, unreadCount)}
               </Link>
             </li>
           );

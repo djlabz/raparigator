@@ -146,6 +146,7 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose, aspect, c
           keepSelection
           ruleOfThirds
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             ref={imageRef}
             src={imageSrc}

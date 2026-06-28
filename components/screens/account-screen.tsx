@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ChangeEvent } from "react";
-import { useRouter } from "next/navigation";
+
 import { Modal } from "../ui/modal";
 import { AppShell } from "../layout/app-shell";
 import { Button } from "../ui/button";
@@ -32,13 +32,6 @@ const SAVE_CONFIRMATION_AUTO_DISMISS_MS = 3200;
 
 type ProfileFieldErrors = Partial<Record<keyof ProfileFormState, string>>;
 
-function readStorageFlag(key: string) {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  return window.localStorage.getItem(key) === "true";
-}
 
 function initialFormState(user: MockUser | null): ProfileFormState {
   return {
@@ -91,23 +84,6 @@ function formatCpf(value: string) {
   return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
 }
 
-type PasswordStrength = {
-  level: 1 | 2 | 3;
-  label: "Fraca" | "Moderada" | "Forte";
-};
-
-function getPasswordStrength(password: string): PasswordStrength {
-  let score = 0;
-
-  if (password.length >= 8) score += 1;
-  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1;
-  if (/\d/.test(password)) score += 1;
-  if (/[^A-Za-z0-9]/.test(password)) score += 1;
-
-  if (score <= 1) return { level: 1, label: "Fraca" };
-  if (score <= 3) return { level: 2, label: "Moderada" };
-  return { level: 3, label: "Forte" };
-}
 
 export function AccountScreen() {
   const { role, user } = useAuthSession();
@@ -135,12 +111,6 @@ export function AccountScreen() {
 }
 
 function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; user: MockUser }) {
-  const router = useRouter();
-
-  const handleLogout = () => {
-    router.push("/feed");
-  };
-
   const { unreadCount, bannerClosed, setBannerClosed, markAllAsRead } = useAccountNotifications(role);
   const [profileCompleted, setProfileCompleted] = useState<boolean>(() => isProfileFormComplete(role, readStoredForm(profileFormKey(role, user.email), user)));
   const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
@@ -204,28 +174,6 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
-        const handlePasswordChange = () => {
-          setPasswordModalError(null);
-
-          if (newPassword.trim().length < 8) {
-            setPasswordModalError("A senha deve ter ao menos 8 caracteres.");
-            return;
-          }
-
-          if (newPassword !== confirmNewPassword) {
-            setPasswordModalError("As senhas não coincidem.");
-            return;
-          }
-
-          setPasswordModalSuccess(true);
-          setTimeout(() => {
-            setShowPasswordModal(false);
-            setNewPassword("");
-            setConfirmNewPassword("");
-            setPasswordModalSuccess(false);
-            setSaveMessage("Senha alterada com sucesso.");
-          }, 1500);
-        };
     }
 
     window.localStorage.setItem(profileCompleteKey(role), String(profileCompleted));
