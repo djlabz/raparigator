@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { ReactNode, useEffect } from "react";
 import { Button } from "./button";
@@ -83,21 +83,20 @@ export function Modal({ open, title, description, onClose, children, actions, he
             </button>
           </div>
         </div>
-        <div className="modal-scroll min-h-0 flex-1 overflow-y-auto px-0.5 pr-1 overscroll-contain touch-pan-y sm:px-1" style={{ paddingBottom: 28 }}>
+        <div className="modal-scroll min-h-0 flex-1 overflow-y-auto px-0.5 pr-1 overscroll-contain touch-pan-y pb-4 sm:px-1">
           {children}
-
-          {resolvedActions ? (
-            <div
-              className={cn(
-                "sticky bottom-0 flex shrink-0 gap-2 border-t border-zinc-100 bg-white py-3",
-                mobileCentered ? "flex-col sm:flex-row" : "flex-col sm:flex-row"
-              )}
-              style={{ zIndex: 20 }}
-            >
-              {resolvedActions}
-            </div>
-          ) : null}
         </div>
+
+        {resolvedActions ? (
+          <div
+            className={cn(
+              "flex shrink-0 gap-2 border-t border-zinc-100 bg-white pt-4 mt-2",
+              mobileCentered ? "flex-col sm:flex-row" : "flex-col sm:flex-row"
+            )}
+          >
+            {resolvedActions}
+          </div>
+        ) : null}
       </div>
       <button aria-label="Fechar modal" className="absolute inset-0 -z-10" onClick={onClose} />
       <style jsx>{`
