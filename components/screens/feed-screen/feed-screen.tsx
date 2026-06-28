@@ -105,7 +105,7 @@ export function FeedScreen() {
       if (selectedAdTypes.includes("Premium") || activeQuickFilters.includes("Premium")) {
         selectedAdTiers.add("premium");
       }
-      if (selectedAdTypes.includes("Standard")) {
+      if (selectedAdTypes.includes("Comum")) {
         selectedAdTiers.add("normal");
       }
       const adTypeMatch = selectedAdTiers.size === 0 || selectedAdTiers.has(ad.adTier);
