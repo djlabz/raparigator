@@ -11,9 +11,9 @@ interface PremiumHeroSectionProps {
 export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
   const premiumAttributes = [
     { label: "Altura", value: `${ad.heightCm} cm`, icon: "/icons/attributes/size-woman.svg" },
-    { label: "Tipo e cor de cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: "/icons/attributes/hair-woman.svg" },
+    { label: "Cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: "/icons/attributes/hair-woman.svg" },
     { label: "Etnia", value: ad.ethnicity, icon: "/icons/attributes/person.svg" },
-    { label: "Cor dos olhos", value: ad.eyeColor, icon: "/icons/attributes/eye.svg" },
+    { label: "Olhos", value: ad.eyeColor, icon: "/icons/attributes/eye.svg" },
     { label: "Fumante?", value: "Não", icon: "/icons/attributes/smoking.svg" },
     { label: "Peso", value: `${ad.weightKg} kg`, icon: "/icons/attributes/weight.svg" },
   ];
