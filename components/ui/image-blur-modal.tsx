@@ -239,6 +239,7 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
             ruleOfThirds
             className="max-w-full max-h-full inline-block"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               ref={imageRef}
               src={imageSrc}
@@ -251,6 +252,7 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
           </ReactCrop>
         ) : (
           <div className="relative max-w-full max-h-full inline-block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               ref={imageRef}
               src={imageSrc}
