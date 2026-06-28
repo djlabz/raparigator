@@ -51,7 +51,7 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
 
   return (
     <AppShell location={`${ad.city}, ${ad.state}`}>
-      <div className="mx-auto max-w-7xl px-4 py-8 space-y-8 pb-24 md:pb-12">
+      <div className="mx-auto max-w-6xl space-y-7 pb-24 md:pb-12 xl:max-w-7xl">
         <StandardProfileHeader ad={ad} />
         <PhotoGallerySection
           ad={ad}
@@ -61,7 +61,7 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
           isPremium={false}
           setSelectedPhotoIndex={setSelectedPhotoIndex}
         />
-        <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <section className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-6">
             <StandardAboutSection ad={ad} />
             <SpecialtiesSection ad={ad} />

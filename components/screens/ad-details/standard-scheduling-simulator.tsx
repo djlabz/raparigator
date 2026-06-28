@@ -243,14 +243,14 @@ export function StandardSchedulingSimulator({
           {role === "visitor" ? (
             <Link
               href="/auth/login"
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 font-bold !text-white shadow-sm ring-1 ring-zinc-950/5 transition-all hover:bg-zinc-800 active:scale-[0.98]"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 font-bold text-white! shadow-sm ring-1 ring-zinc-950/5 transition-all hover:bg-zinc-800 active:scale-[0.98]"
             >
               <Lock className="h-4 w-4" /> Entrar para Interagir
             </Link>
           ) : (
             <Link
               href="/chat"
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-wine-700 font-bold !text-white shadow-sm transition-all hover:bg-wine-800 active:scale-[0.98]"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-wine-700 font-bold text-white! shadow-sm transition-all hover:bg-wine-800 active:scale-[0.98]"
             >
               <MessageSquare className="h-4 w-4" /> Chat Direto
             </Link>

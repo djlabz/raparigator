@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ShieldCheck, MapPin, Share, Heart, Ruler, Scale, Eye, User, Cigarette, Sparkles } from "lucide-react";
+import { ShieldCheck, MapPin, Share, Heart, Ruler, Weight, Eye, User, Cigarette, Scissors } from "lucide-react";
 import type { ProfessionalAd } from "@/lib/types";
 
 interface StandardProfileHeaderProps {
@@ -11,11 +11,11 @@ interface StandardProfileHeaderProps {
 export function StandardProfileHeader({ ad }: StandardProfileHeaderProps) {
   const attributes = [
     { label: "Altura", value: `${ad.heightCm} cm`, icon: Ruler },
-    { label: "Cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: Sparkles },
+    { label: "Cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: Scissors },
     { label: "Etnia", value: ad.ethnicity, icon: User },
     { label: "Olhos", value: ad.eyeColor, icon: Eye },
     { label: "Fumante?", value: "Não", icon: Cigarette },
-    { label: "Peso", value: `${ad.weightKg} kg`, icon: Scale },
+    { label: "Peso", value: `${ad.weightKg} kg`, icon: Weight },
   ];
 
   return (
@@ -124,7 +124,7 @@ export function StandardProfileHeader({ ad }: StandardProfileHeaderProps) {
                   </div>
                   <div className="min-w-0 space-y-1">
                     <p className="text-[10px] font-bold tracking-wider text-zinc-400 uppercase sm:text-xs">{attr.label}</p>
-                    <p className="wrap-break-word text-xs font-semibold text-zinc-800 sm:text-base">{attr.value}</p>
+                    <p className="truncate text-xs font-semibold text-zinc-800 sm:text-base">{attr.value}</p>
                   </div>
                 </div>
               );

@@ -18,7 +18,7 @@ export function StandardSidebarCta({ role, setRiskTarget }: StandardSidebarCtaPr
             <Star className="h-6 w-6" />
           </div>
 
-          <h3 className="mb-2 font-display text-sm font-extrabold tracking-[0.1em] text-wine-700 uppercase">
+          <h3 className="mb-2 font-display text-sm font-extrabold tracking-widest text-wine-700 uppercase">
             Atendimento Exclusivo
           </h3>
           
@@ -34,14 +34,14 @@ export function StandardSidebarCta({ role, setRiskTarget }: StandardSidebarCtaPr
             {role === "visitor" ? (
               <Link
                 href="/auth/login"
-                className="group/btn relative flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 font-bold !text-white shadow-sm transition-all hover:bg-zinc-800"
+                className="group/btn relative flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 font-bold text-white! shadow-sm transition-all hover:bg-zinc-800"
               >
                 <Lock className="h-4 w-4" /> Entrar para Interagir
               </Link>
             ) : (
               <Link
                 href="/chat"
-                className="group/btn relative flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-wine-700 font-bold !text-white shadow-sm transition-all hover:bg-wine-800"
+                className="group/btn relative flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-wine-700 font-bold text-white! shadow-sm transition-all hover:bg-wine-800"
               >
                 <MessageSquare className="h-4 w-4" /> Iniciar Chat Direto
               </Link>

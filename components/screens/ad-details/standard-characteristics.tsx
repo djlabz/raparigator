@@ -1,6 +1,6 @@
 "use client";
 
-import { Ruler, Scale, Eye, User, Cigarette, Sparkles } from "lucide-react";
+import { Ruler, Weight, Eye, User, Cigarette, Scissors } from "lucide-react";
 import type { ProfessionalAd } from "@/lib/types";
 
 interface StandardCharacteristicsProps {
@@ -17,7 +17,7 @@ export function StandardCharacteristics({ ad }: StandardCharacteristicsProps) {
     {
       label: "Cabelo",
       value: `${ad.hairType} • ${ad.hairColor}`,
-      icon: Sparkles,
+      icon: Scissors,
     },
     {
       label: "Etnia",
@@ -37,7 +37,7 @@ export function StandardCharacteristics({ ad }: StandardCharacteristicsProps) {
     {
       label: "Peso",
       value: `${ad.weightKg} kg`,
-      icon: Scale,
+      icon: Weight,
     },
   ];
 
