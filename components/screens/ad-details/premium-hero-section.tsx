@@ -68,7 +68,7 @@ export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
                     />
                   </div>
                 </div>
-                <div className="absolute right-[14.6%] bottom-[14.6%] z-20 translate-x-1/2 translate-y-1/2">
+                <div className="absolute right-[14.6%] bottom-[14.6%] z-10 translate-x-1/2 translate-y-1/2">
                   <span className="relative flex h-3 w-3 items-center justify-center sm:h-4 sm:w-4">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#10b981] opacity-65"></span>
                     <span className="relative inline-flex h-full w-full rounded-full bg-[#10b981] ring-2 ring-[#121212]"></span>

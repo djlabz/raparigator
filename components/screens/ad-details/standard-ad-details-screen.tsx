@@ -2,7 +2,8 @@
 
 import { useAdDetails } from "./use-ad-details";
 import { StandardProfileHeader } from "./standard-profile-header";
-import { StandardPhotoGallery } from "./standard-photo-gallery";
+import { PhotoGallerySection } from "./photo-gallery-section";
+import { StandardCharacteristics } from "./standard-characteristics";
 import { StandardAboutSection } from "./standard-about-section";
 import { SpecialtiesSection } from "./specialties-section";
 import { StandardReviewsSection } from "./standard-reviews-section";
@@ -27,6 +28,9 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
     setRiskTarget,
     selectedPhotoIndex,
     setSelectedPhotoIndex,
+    galleryMode,
+    setGalleryMode,
+    bentoItems,
     selectedDuration,
     setSelectedDuration,
     selectedExtras,
@@ -50,7 +54,15 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
     <AppShell location={`${ad.city}, ${ad.state}`}>
       <div className="mx-auto max-w-7xl px-4 py-8 space-y-8 pb-24 md:pb-12">
         <StandardProfileHeader ad={ad} />
-        <StandardPhotoGallery ad={ad} setSelectedPhotoIndex={setSelectedPhotoIndex} />
+        <PhotoGallerySection
+          ad={ad}
+          galleryMode={galleryMode}
+          setGalleryMode={setGalleryMode}
+          bentoItems={bentoItems}
+          isPremium={false}
+          setSelectedPhotoIndex={setSelectedPhotoIndex}
+        />
+        <StandardCharacteristics ad={ad} />
 
         <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-6">
@@ -70,7 +82,7 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
             />
             <StandardReviewsSection ad={ad} reviews={adReviews} />
           </div>
-          
+
           <aside className="hidden lg:block">
             <StandardSidebarCta role={role} setRiskTarget={setRiskTarget} />
           </aside>
@@ -86,7 +98,17 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
         onSelect={setSelectedPhotoIndex}
       />
 
-      <StandardMobileContactFab ad={ad} setRiskTarget={setRiskTarget} role={role} />
+      <StandardMobileContactFab
+        ad={ad}
+        setRiskTarget={setRiskTarget}
+        role={
+          role === "cliente"
+            ? "client"
+            : role === "profissional"
+              ? "professional"
+              : role
+        }
+      />
 
       <RiskWarningModal
         open={Boolean(riskTarget)}

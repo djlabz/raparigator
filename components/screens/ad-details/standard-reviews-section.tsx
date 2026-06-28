@@ -17,10 +17,10 @@ export function StandardReviewsSection({ ad, reviews }: StandardReviewsSectionPr
           <h3 className="font-display text-lg sm:text-xl font-bold tracking-tight text-zinc-900">Avaliações dos Clientes ({ad.reviewsCount})</h3>
           <p className="text-xs text-zinc-500 sm:text-sm">Comentários autênticos gerados após transações com custódia resolvida</p>
         </div>
-        <div className="self-start rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 sm:self-center">
+        <div className="self-start rounded-full border border-amber-100 bg-amber-50 px-3 py-1 sm:self-center">
           <div className="flex items-center gap-1.5">
-            <Star className="h-4 w-4 fill-zinc-400 text-zinc-500" />
-            <span className="text-xs font-black text-zinc-800">{ad.rating.toFixed(1)} / 5</span>
+            <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
+            <span className="text-xs font-black text-amber-700">{ad.rating.toFixed(1)} / 5</span>
           </div>
         </div>
       </div>
@@ -41,9 +41,9 @@ export function StandardReviewsSection({ ad, reviews }: StandardReviewsSectionPr
                     <span className="mt-0.5 block text-xs leading-none font-semibold text-zinc-400">Membro Verificado • Há poucos dias</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 rounded-md border border-zinc-200 bg-zinc-100 px-2 py-0.5">
-                  <Star className="h-3.5 w-3.5 fill-zinc-400 text-zinc-500" />
-                  <span className="text-xs font-bold text-zinc-800">{review.score.toFixed(1)}</span>
+                <div className="flex items-center gap-1 rounded-md border border-amber-100 bg-amber-50 px-2 py-0.5">
+                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                  <span className="text-xs font-bold text-amber-700">{review.score.toFixed(1)}</span>
                 </div>
               </div>
 

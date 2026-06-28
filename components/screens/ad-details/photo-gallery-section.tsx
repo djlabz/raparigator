@@ -155,7 +155,7 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
             if (idx === 0) {
               spanClass = "col-span-2 row-span-2";
             } else if (item.type === "info") {
-              spanClass = "col-span-2 row-span-2 lg:col-span-1";
+              spanClass = "col-span-2 row-span-2 lg:col-span-1 lg:col-start-5";
             } else if (idx === 6) {
               spanClass = "row-span-1 col-span-2 sm:col-span-1";
             }
