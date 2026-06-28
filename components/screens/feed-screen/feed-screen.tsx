@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ads, cities } from "@/lib/mock-data";
 import { FeedAdCard } from "./feed-ad-card";
+import { FeedSectionDivider } from "./feed-section-divider";
 import { FeedFiltersContent } from "./feed-filters-content";
 import { FeedLocationModal } from "./feed-location-modal";
 import { categoryByGender, defaultGender, defaultLocationLabel, defaultMaxPrice, normalizeText } from "./constants";
@@ -153,7 +154,9 @@ export function FeedScreen() {
     setVisibleCount(6);
   }, [activeQuickFilters, maxPrice, selectedCity, selectedGender, selectedAdTypes, selectedEthnicities, selectedHairs, selectedServices]);
 
-  const visibleAds = filteredAds.slice(0, visibleCount);
+  const premiumAds = useMemo(() => filteredAds.filter((ad) => ad.adTier === "premium"), [filteredAds]);
+  const standardAds = useMemo(() => filteredAds.filter((ad) => ad.adTier === "normal"), [filteredAds]);
+  const visibleStandardAds = standardAds.slice(0, visibleCount);
   const selectedLocation = selectedCity === "all" ? defaultLocationLabel : `SP, ${selectedCity}`;
 
   const applySelectedLocation = (city: string) => {
@@ -181,7 +184,7 @@ export function FeedScreen() {
 
   return (
     <AppShell location={selectedLocation}>
-      <div className="space-y-6">
+      <div className="space-y-6 select-none">
         <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <aside className="hidden min-w-70 shrink-0 flex-col lg:flex">
             <div className="sticky top-24 flex max-h-[calc(100vh-120px)] flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
@@ -257,23 +260,41 @@ export function FeedScreen() {
               <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="mx-auto h-120 w-full max-w-[320px] lg:max-w-none" />)}
               </div>
-            ) : visibleAds.length === 0 ? (
+            ) : filteredAds.length === 0 ? (
               <EmptyState title="Nenhum anuncio encontrado" description="Ajuste os filtros para encontrar perfis compativeis com sua busca." actionLabel="Resetar filtros" onAction={clearFilters} />
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                {visibleAds.map((ad) => (
-                  <FeedAdCard key={ad.id} ad={ad} />
-                ))}
-              </div>
-            )}
+              <>
+                {premiumAds.length > 0 && (
+                  <>
+                    <FeedSectionDivider variant="premium" />
+                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                      {premiumAds.map((ad) => (
+                        <FeedAdCard key={ad.id} ad={ad} />
+                      ))}
+                    </div>
+                  </>
+                )}
 
-            {visibleCount < filteredAds.length ? (
-              <div className="flex justify-center pt-6">
-                <Button onClick={() => { setLoadingMore(true); setTimeout(() => { setVisibleCount((value) => value + 3); setLoadingMore(false); }, 900); }}>
-                  Carregar mais anúncios
-                </Button>
-              </div>
-            ) : null}
+                {visibleStandardAds.length > 0 && (
+                  <>
+                    <FeedSectionDivider variant="standard" />
+                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                      {visibleStandardAds.map((ad) => (
+                        <FeedAdCard key={ad.id} ad={ad} />
+                      ))}
+                    </div>
+
+                    {visibleCount < standardAds.length ? (
+                      <div className="flex justify-center pt-6">
+                        <Button onClick={() => { setLoadingMore(true); setTimeout(() => { setVisibleCount((value) => value + 6); setLoadingMore(false); }, 900); }}>
+                          Carregar mais anúncios
+                        </Button>
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </>
+            )}
           </div>
         </section>
       </div>
