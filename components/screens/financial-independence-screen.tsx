@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Select } from "@/components/ui/select";
 import { currency } from "@/lib/utils";
 
 // --- Constantes e Configurações ---
@@ -20,46 +21,44 @@ const DREAMS = [
 ];
 
 // --- Ícones SVG Inline ---
-function IconRocket(props: any) {
+function IconRocket(props: React.SVGProps<SVGSVGElement>) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.1 4-1 4-1" /><path d="M12 15v5s3.03-.55 4-2c1.1-1.62 1-4 1-4" /></svg>;
 }
-function IconTurtle(props: any) {
+function IconTurtle(props: React.SVGProps<SVGSVGElement>) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m19 7-7 5-7-5" /><path d="M12 22a10 10 0 0 1-10-10" /><path d="M22 12a10 10 0 0 1-10 10" /><circle cx="12" cy="12" r="3" /></svg>;
 }
-function IconCalendar(props: any) {
+function IconCalendar(props: React.SVGProps<SVGSVGElement>) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>;
 }
-function IconMoto(props: any) {
+function IconMoto(props: React.SVGProps<SVGSVGElement>) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="5.5" cy="17.5" r="3.5" /><circle cx="18.5" cy="17.5" r="3.5" /><path d="M15 6h-5a1 1 0 0 0-1 1v4h-3v-3h2l1-4h3l2 2Z" /><path d="M12 11h7v3h-3" /></svg>;
 }
-function IconCar(props: any) {
+function IconCar(props: React.SVGProps<SVGSVGElement>) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" /><circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" /><path d="M14 14h6" /></svg>;
 }
-function IconHome(props: any) {
+function IconHome(props: React.SVGProps<SVGSVGElement>) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>;
 }
-function IconTrophy(props: any) {
+function IconTrophy(props: React.SVGProps<SVGSVGElement>) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" /></svg>;
 }
-function IconRefresh(props: any) {
+function IconRefresh(props: React.SVGProps<SVGSVGElement>) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>;
 }
-function IconMinus(props: any) {
+function IconMinus(props: React.SVGProps<SVGSVGElement>) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="0.5" y="0.5" width="23" height="23" rx="11.5" stroke="currentColor" strokeWidth="1" /><path d="M17.3334 12H6.66669" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>;
 }
-function IconPlus(props: any) {
+function IconPlus(props: React.SVGProps<SVGSVGElement>) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="0.5" y="0.5" width="23" height="23" rx="11.5" stroke="currentColor" strokeWidth="1" /><path fillRule="evenodd" clipRule="evenodd" d="M11.3334 11.3333V7.33332C11.3334 6.96666 11.6334 6.66666 12 6.66666C12.3667 6.66666 12.6667 6.96666 12.6667 7.33332V11.3333H16.6667C17.0334 11.3333 17.3334 11.6333 17.3334 12C17.3334 12.3667 17.0334 12.6667 16.6667 12.6667H12.6667V16.6667C12.6667 17.0333 12.3667 17.3333 12 17.3333C11.6334 17.3333 11.3334 17.0333 11.3334 16.6667V12.6667H7.33335C6.96669 12.6667 6.66669 12.3667 6.66669 12C6.66669 11.6333 6.96669 11.3333 7.33335 11.3333H11.3334Z" fill="currentColor" /></svg>;
 }
-function IconUsers(props: any) {
+function IconUsers(props: React.SVGProps<SVGSVGElement>) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
 }
-function IconTarget(props: any) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="9" /></svg>;
-}
-function IconDollarSign(props: any) {
+
+function IconDollarSign(props: React.SVGProps<SVGSVGElement>) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="1" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>;
 }
-function IconClock(props: any) {
+function IconClock(props: React.SVGProps<SVGSVGElement>) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;
 }
 
@@ -91,8 +90,8 @@ function Counter({ label, value, onChange, step = 1, min = 0, max = 9999, prefix
         {label}
       </label>
       <div className={`flex h-11 items-center justify-between rounded-xl border px-3 transition-all ${highlighted
-          ? 'border-wine-300 bg-wine-50/30 shadow-sm'
-          : 'border-zinc-200 bg-white'
+        ? 'border-wine-300 bg-wine-50/30 shadow-sm'
+        : 'border-zinc-200 bg-white'
         }`}>
         <button
           type="button"
@@ -109,7 +108,7 @@ function Counter({ label, value, onChange, step = 1, min = 0, max = 9999, prefix
             value={value}
             onChange={(e) => {
               const num = e.target.value.replace(/\D/g, "");
-              if (num) onChange(num);
+              onChange(num);
             }}
             className="w-12 text-center text-sm rounded-none border-none bg-transparent font-semibold text-zinc-900 focus:outline-none"
             inputMode="numeric"
@@ -274,23 +273,17 @@ export function FinancialIndependenceScreen() {
                     />
                   </div>
                   <div className="w-32">
-                    <div className="space-y-1.5">
-                      <label htmlFor="unidade-tempo" className={`text-sm font-medium transition-colors ${hasProjection ? 'text-wine-700' : 'text-zinc-700'}`}>
-                        Unidade
-                      </label>
-                      <div className="relative">
-                        <select
-                          id="unidade-tempo"
-                          value={projectionUnit}
-                          onChange={(e) => setProjectionUnit(e.target.value)}
-                          className={`h-11 w-full appearance-none rounded-xl border px-3 pr-10 text-sm font-medium transition-all focus:outline-none focus:ring-2 ${hasProjection ? 'border-wine-300 bg-wine-50/30 text-wine-900 focus:border-wine-600 focus:ring-wine-200' : 'border-zinc-200 bg-white text-zinc-900 focus:border-wine-600 focus:ring-wine-200'}`}
-                        >
-                          <option value="months">Meses</option>
-                          <option value="years">Anos</option>
-                        </select>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 ${hasProjection ? 'text-wine-600' : 'text-zinc-500'}`}><path d="m6 9 6 6 6-6" /></svg>
-                      </div>
-                    </div>
+                    <Select
+                      id="unidade-tempo"
+                      label="Unidade"
+                      value={projectionUnit}
+                      onChange={(e) => setProjectionUnit(e.target.value)}
+                      options={[
+                        { value: "months", label: "Meses" },
+                        { value: "years", label: "Anos" },
+                      ]}
+                      className={hasProjection ? "border-wine-300 bg-wine-50/30 text-wine-900" : "border-zinc-200 bg-white text-zinc-900"}
+                    />
                   </div>
                 </div>
               </div>
