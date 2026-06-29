@@ -79,6 +79,10 @@ export interface ProfessionalAd {
   rejectionReason?: string;
   /** Suspensão administrativa */
   isSuspended?: boolean;
+  /** Número WhatsApp no formato internacional (ex: "5511999998888") */
+  whatsappNumber?: string;
+  /** Username do Telegram (sem @) */
+  telegramUsername?: string;
 }
 
 export interface MockClient {

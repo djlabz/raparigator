@@ -84,6 +84,8 @@ export const ads: ProfessionalAd[] = [
     profileViews: 21450,
     verificationStatus: 'published',
     submittedAt: '2026-01-10T10:00:00.000Z',
+    whatsappNumber: '5511999990001',
+    telegramUsername: 'lunavelvet',
   },
   {
     id: '2',
@@ -133,6 +135,8 @@ export const ads: ProfessionalAd[] = [
     profileViews: 18670,
     verificationStatus: 'published',
     submittedAt: '2026-01-12T10:00:00.000Z',
+    whatsappNumber: '5519999990002',
+    telegramUsername: 'valentinanoir',
   },
   {
     id: '3',
@@ -178,6 +182,8 @@ export const ads: ProfessionalAd[] = [
     profileViews: 17420,
     verificationStatus: 'published',
     submittedAt: '2026-01-15T10:00:00.000Z',
+    whatsappNumber: '5521999990003',
+    telegramUsername: 'alexrivera',
   },
   {
     id: '4',
@@ -227,6 +233,8 @@ export const ads: ProfessionalAd[] = [
     profileViews: 23990,
     verificationStatus: 'published',
     submittedAt: '2026-01-20T10:00:00.000Z',
+    whatsappNumber: '5541999990004',
+    telegramUsername: 'mayaaurora',
   },
   {
     id: '5',
@@ -274,6 +282,8 @@ export const ads: ProfessionalAd[] = [
     profileViews: 13240,
     verificationStatus: 'published',
     submittedAt: '2026-02-01T10:00:00.000Z',
+    whatsappNumber: '5513999990005',
+    telegramUsername: 'sophialisboa',
   },
   {
     id: '6',
@@ -318,6 +328,8 @@ export const ads: ProfessionalAd[] = [
     profileViews: 10980,
     verificationStatus: 'published',
     submittedAt: '2026-02-05T10:00:00.000Z',
+    whatsappNumber: '5531999990006',
+    telegramUsername: 'kiarasantini',
   },
   // ── Perfis em análise (pending_review) — visíveis apenas no painel admin ──
   {
