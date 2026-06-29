@@ -1,5 +1,3 @@
-melhorar a qualidade de todas as imagens no flow
+Melhorar pagina de cliente
 
-ver a questao da ativaçao do anuncio para as profissionais, o perfil tem que passar por aprovaçao para ser ativado
-
-ver questao da validação da rapariga
+Criar componente para rapariga virar premium e gatilhos nas outras paginas para mostrar o componente de virar premium
