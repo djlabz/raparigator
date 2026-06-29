@@ -21,10 +21,10 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
       <div className="flex w-full flex-col gap-1.5">
         <div className={cn("hidden w-full items-center gap-3 md:grid", ad.images.length > 5 ? "grid-cols-5" : "grid-cols-4")}>
           <div className={cn("flex h-9 items-center gap-2", ad.images.length > 5 ? "col-span-4" : "col-span-3")}>
-            <h2 className="shrink-0 font-display text-lg font-bold text-zinc-900 md:text-xl">Ensaio Fotográfico</h2>
+            <h2 className="shrink-0 font-display text-xl font-bold text-zinc-900 md:text-2xl">Ensaio Fotográfico</h2>
             <div className="ml-2 mr-3 h-0.75 grow rounded-full bg-zinc-200/80" />
 
-            <div className="flex shrink-0 rounded-lg bg-zinc-100 p-1">
+            <div className="flex shrink-0 rounded-lg bg-zinc-100 p-1.5">
               <button
                 type="button"
                 onClick={(e) => {
@@ -33,12 +33,12 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                   setGalleryMode("alternative");
                 }}
                 className={cn(
-                  "cursor-pointer rounded-md p-1.5 transition-all duration-200 hover:scale-105 active:scale-95",
+                  "cursor-pointer rounded-md p-2 transition-all duration-200 hover:scale-105 active:scale-95",
                   galleryMode === "alternative" ? "bg-white text-wine-700 shadow-xs" : "text-zinc-400 hover:text-zinc-700",
                 )}
                 title="Destaque / Alternativo"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h10v10H4zM16 4h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h10v4H10z" />
                 </svg>
               </button>
@@ -50,12 +50,12 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                   setGalleryMode("grid");
                 }}
                 className={cn(
-                  "cursor-pointer rounded-md p-1.5 transition-all duration-200 hover:scale-105 active:scale-95",
+                  "cursor-pointer rounded-md p-2 transition-all duration-200 hover:scale-105 active:scale-95",
                   galleryMode === "grid" ? "bg-white text-wine-700 shadow-xs" : "text-zinc-400 hover:text-zinc-700",
                 )}
                 title="Grade"
               >
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
                   <path fillRule="evenodd" d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" clipRule="evenodd" />
                 </svg>
               </button>
@@ -70,12 +70,12 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
 
         <div className="flex w-full flex-row items-center justify-between gap-2 md:hidden">
           <div className="flex flex-col gap-0.5">
-            <h2 className="shrink-0 font-display text-base font-bold text-zinc-900 sm:text-lg">Ensaio Fotográfico</h2>
-            <p className="text-xs text-zinc-500 sm:text-xs">Sessão exclusiva Sigillus</p>
+            <h2 className="shrink-0 font-display text-lg font-bold text-zinc-900 sm:text-xl">Ensaio Fotográfico</h2>
+            <p className="max-w-45 text-xs leading-snug text-zinc-500 sm:max-w-none sm:text-sm">Toque nas fotos para expandir e ver mais detalhes</p>
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <div className="flex rounded-lg bg-zinc-100 p-0.5 sm:p-1">
+            <div className="flex rounded-lg bg-zinc-100 p-1 sm:p-1.5">
               <button
                 type="button"
                 onClick={(e) => {
@@ -84,12 +84,12 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                   setGalleryMode("alternative");
                 }}
                 className={cn(
-                  "cursor-pointer rounded-md p-1 transition-all duration-200 hover:scale-105 active:scale-[0.93] sm:p-1.5",
+                  "cursor-pointer rounded-md p-1.5 transition-all duration-200 hover:scale-105 active:scale-[0.93] sm:p-2",
                   galleryMode === "alternative" ? "bg-white text-wine-700 shadow-xs" : "text-zinc-400 hover:text-zinc-700",
                 )}
                 title="Destaque / Alternativo"
               >
-                <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h10v10H4zM16 4h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h10v4H10z" />
                 </svg>
               </button>
@@ -101,12 +101,12 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                   setGalleryMode("grid");
                 }}
                 className={cn(
-                  "cursor-pointer rounded-md p-1 transition-all duration-200 hover:scale-105 active:scale-[0.93] sm:p-1.5",
+                  "cursor-pointer rounded-md p-1.5 transition-all duration-200 hover:scale-105 active:scale-[0.93] sm:p-2",
                   galleryMode === "grid" ? "bg-white text-wine-700 shadow-xs" : "text-zinc-400 hover:text-zinc-700",
                 )}
                 title="Grade"
               >
-                <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="currentColor" viewBox="0 0 24 24">
                   <path fillRule="evenodd" d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" clipRule="evenodd" />
                 </svg>
               </button>
@@ -116,7 +116,7 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
           </div>
         </div>
 
-        <p className="mt-0.5 hidden px-1 text-xs text-zinc-500 md:block">Sessão exclusiva autenticada pessoalmente pela Sigillus</p>
+        <p className="mt-0.5 hidden px-1 text-sm text-zinc-500 md:block">Toque nas fotos para expandir e ver mais detalhes</p>
       </div>
 
       {galleryMode === "grid" && (
@@ -147,7 +147,7 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
       )}
 
       {galleryMode === "alternative" && (
-        <div className="grid grid-flow-dense grid-cols-2 auto-rows-[150px] gap-3 animate-fade-in sm:grid-cols-3 sm:auto-rows-[190px] lg:grid-cols-5 lg:auto-rows-[210px]">
+        <div className="grid grid-flow-dense grid-cols-2 auto-rows-[175px] gap-3 animate-fade-in sm:grid-cols-3 sm:auto-rows-[215px] lg:grid-cols-5 lg:auto-rows-[235px]">
           {bentoItems.map((item, idx) => {
             const isImage = item.type === "image";
 
