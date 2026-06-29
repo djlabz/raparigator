@@ -51,13 +51,15 @@ export function Modal({ open, title, description, onClose, children, actions, he
   return (
     <div className={cn(
       "fixed inset-0 z-220 flex bg-zinc-900/50 px-3 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] touch-none sm:px-4 sm:items-center sm:justify-center",
-      mobileCentered ? "items-center" : "items-end"
+      mobileCentered ? "items-center" : "items-end",
+      "animate-[modal-overlay-in_200ms_ease-out_forwards]"
     )} role="dialog" aria-modal="true">
       <div
         className={cn(
           "flex w-full flex-col overflow-hidden rounded-3xl bg-white p-4 shadow-xl sm:rounded-2xl sm:p-5",
           mobileCentered ? "max-h-[min(92dvh,48rem)]" : "max-h-[min(94dvh,48rem)]",
-          size === "md" ? "sm:max-w-2xl" : "sm:max-w-md"
+          size === "md" ? "sm:max-w-2xl" : "sm:max-w-md",
+          "animate-[modal-content-in_300ms_ease-out_forwards]"
         )}
         style={{
           maxHeight: mobileCentered ? "calc(92dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))" : "calc(94dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))",
@@ -100,6 +102,15 @@ export function Modal({ open, title, description, onClose, children, actions, he
       </div>
       <button aria-label="Fechar modal" className="absolute inset-0 -z-10" onClick={onClose} />
       <style jsx>{`
+        @keyframes modal-overlay-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes modal-content-in {
+          from { opacity: 0; transform: translateY(1rem); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
         .modal-scroll {
           scrollbar-width: none;
           -ms-overflow-style: none;

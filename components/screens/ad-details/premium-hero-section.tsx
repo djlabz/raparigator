@@ -1,14 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
-import { MapPin, ShieldCheck, Share, Heart } from "lucide-react";
+import { MapPin, ShieldCheck, Share, Heart, Upload } from "lucide-react";
 import type { ProfessionalAd } from "@/lib/types";
+import { ShareProfileModal } from "@/components/ui/share-profile-modal";
+import { motion } from "motion/react";
 
 interface PremiumHeroSectionProps {
   ad: ProfessionalAd;
+  onExternalLink?: (target: "WhatsApp" | "Telegram", url: string) => void;
 }
 
-export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
+export function PremiumHeroSection({ ad, onExternalLink }: PremiumHeroSectionProps) {
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const premiumAttributes = [
     { label: "Altura", value: `${ad.heightCm} cm`, icon: "/icons/attributes/size-woman.svg" },
     { label: "Cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: "/icons/attributes/hair-woman.svg" },
@@ -32,29 +37,38 @@ export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
           draggable={false}
         />
 
-        <div className="absolute top-4 left-4 flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] px-3 py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md select-none cursor-default transition-all duration-300 hover:scale-105 hover:shadow-[0_0_12px_rgba(251,191,36,0.45)]">
+        <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] px-3 py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md select-none cursor-default transition-all duration-300 hover:scale-105 hover:shadow-[0_0_12px_rgba(251,191,36,0.45)]">
           <span className="text-xs text-[#FFDF00] drop-shadow-[0_0_4px_rgba(255,223,0,0.9)]">★</span>
           <span className="bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-xs font-extrabold tracking-[0.2em] text-transparent uppercase drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
             Premium
           </span>
         </div>
 
-        <div className="absolute top-4 right-4 flex items-center gap-2">
-          <button className="flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] p-2 sm:px-3 sm:py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md transition-transform hover:scale-105 active:scale-95 cursor-pointer">
-            <Share className="h-4 w-4 text-[#FFEA00] drop-shadow-[0_0_6px_rgba(255,234,0,1)]" strokeWidth={2.5} />
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.85 }}
+            onClick={() => setShareModalOpen(true)} 
+            className="flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] p-2 sm:px-3 sm:py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md cursor-pointer"
+          >
+            <Upload className="h-4 w-4 text-[#FFEA00] drop-shadow-[0_0_6px_rgba(255,234,0,1)]" strokeWidth={2.5} />
             <span className="hidden sm:inline-block bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-xs font-bold tracking-wider text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
               Compartilhar
             </span>
-          </button>
-          <button className="flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] p-2 sm:px-3 sm:py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md transition-transform hover:scale-105 active:scale-95 cursor-pointer">
+          </motion.button>
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.85 }}
+            className="flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] p-2 sm:px-3 sm:py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md cursor-pointer"
+          >
             <Heart className="h-4 w-4 text-[#FFEA00] drop-shadow-[0_0_6px_rgba(255,234,0,1)]" strokeWidth={2.5} />
             <span className="hidden sm:inline-block bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-xs font-bold tracking-wider text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
               Salvar
             </span>
-          </button>
+          </motion.button>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 z-10 h-40 bg-linear-to-t from-[#121212] via-[#121212]/70 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 z-10 h-40 pointer-events-none bg-linear-to-t from-[#121212] via-[#121212]/70 to-transparent" />
       </div>
 
       <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-black/20 via-black/40 to-transparent" />
@@ -132,6 +146,17 @@ export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
           </div>
         </div>
       </div>
+
+      <ShareProfileModal
+        open={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        ad={ad}
+        isPremium={true}
+        onExternalLink={(target, url) => {
+          setShareModalOpen(false);
+          onExternalLink?.(target, url);
+        }}
+      />
     </section>
   );
 }

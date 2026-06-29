@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 :root {
   --background: #ffffff;
@@ -127,4 +127,16 @@ a {
 
 .premium-gold-glow:hover {
   box-shadow: 0 16px 44px rgba(184, 134, 11, 0.2), 0 0 0 1px rgba(255, 223, 0, 0.38);
+}
+
+.share-modal-premium-enter {
+  opacity: 0;
+  clip-path: circle(0% at 50% 50%);
+  transform: scale(0.95);
+}
+
+.share-modal-premium-open {
+  opacity: 1;
+  clip-path: circle(150% at 50% 50%);
+  transform: scale(1);
 }
