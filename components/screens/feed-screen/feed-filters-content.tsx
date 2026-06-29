@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { cn, currency } from "@/lib/utils";
 import { quickFilters } from "./constants";
 
@@ -130,11 +129,11 @@ export function FeedFiltersContent({
       </section>
 
       <section>
-        <label className="mb-3 block text-sm font-bold text-zinc-900">Tipo de Anúncio</label>
+        <label className="mb-3 block text-sm font-bold text-zinc-900">Modelos</label>
         <div className="space-y-2">
           {[
             "Premium",
-            "Standard",
+            "Comum",
           ].map((type) => (
             <label key={type} className="group flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors hover:bg-wine-50/50">
               <input
@@ -144,8 +143,16 @@ export function FeedFiltersContent({
                 className="h-4 w-4 cursor-pointer rounded border-zinc-300 accent-wine-700 focus:ring-wine-700"
               />
               <span className="flex items-center gap-2 text-sm font-medium text-zinc-700">
-                {type === "Premium" && <span className="text-sm text-wine-700">★</span>}
-                {type}
+                {type === "Premium" ? (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] px-2.5 py-0.5 shadow-sm">
+                    <span className="text-[9px] text-[#FFDF00] drop-shadow-[0_0_3px_rgba(255,223,0,0.8)]">★</span>
+                    <span className="bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-[9px] font-extrabold uppercase tracking-widest text-transparent drop-shadow-[0_0.5px_0.5px_rgba(0,0,0,0.8)]">
+                      Premium
+                    </span>
+                  </span>
+                ) : (
+                  type
+                )}
               </span>
             </label>
           ))}
@@ -154,13 +161,14 @@ export function FeedFiltersContent({
 
       <section className="space-y-5">
         <div>
-          <label className="mb-2 block text-sm font-bold text-zinc-900">Etnia</label>
+          <label className="mb-2 block text-sm font-bold text-zinc-900">Tipo</label>
           <div className="flex flex-wrap gap-2">
             {[
               "Caucasiana",
               "Negra",
               "Asiática",
               "Latina",
+              "Indígena"
             ].map((eth) => (
               <button
                 key={eth}

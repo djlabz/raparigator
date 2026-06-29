@@ -1,0 +1,20 @@
+import type { SVGProps } from "react";
+
+export function VerifiedCheckIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" {...props}>
+      <path
+        fill="currentColor"
+        d="M23,12 l-2.44-2.78 l0.34-3.68 l-3.61-0.82 l-1.89-3.18 L12,3 L8.6,1.54 L6.71,4.72 L3.1,5.54 L3.44,9.22 L1,12 l2.44,2.78 l-0.34,3.68 l3.61,0.82 l1.89,3.18 L12,21 l3.4,1.46 l1.89-3.18 l3.61-0.82 l-0.34-3.68 L23,12 z"
+      />
+      <path
+        fill="none"
+        stroke="#FFFFFF"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7.5 12.5 L10.5 15.5 L17 9"
+      />
+    </svg>
+  );
+}

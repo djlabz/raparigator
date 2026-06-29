@@ -52,6 +52,7 @@ export type PricingItem = {
   label: string;
   price: string;
   disabled: boolean;
+  billingType?: "hourly" | "fixed";
 };
 
 export type LocationVenue = {
@@ -96,6 +97,7 @@ export type ProfileFormState = {
   // Fotos
   images: string[];
   coverIndex: number;
+  coverPreviews: string[];
   // Descrição
   shortDescription: string;
   description: string;
@@ -105,6 +107,7 @@ export type ProfileFormState = {
   services: ServiceOption[];
   // Preços
   pricing: PricingItem[];
+  paymentMethods: string[];
   // Localização
   venues: LocationVenue[];
   acceptsTravel: boolean;

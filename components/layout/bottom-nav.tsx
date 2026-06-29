@@ -1,15 +1,18 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState, useId, useSyncExternalStore } from "react";
+import { motion } from "framer-motion";
 import type { NavigationItem } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
+import { getChatSnapshot, getChatUnreadCount, subscribeChatUnread } from "@/lib/chat-service";
 
 interface BottomNavProps {
   items: NavigationItem[];
 }
 
-function getNavIcon(label: string, href: string, active: boolean) {
+function getNavIcon(label: string, href: string, active: boolean, unreadCount: number = 0) {
   const iconClassName = active ? "text-white" : "text-zinc-700";
 
   if (label === "Feed" || href === "/feed") {
@@ -35,9 +38,16 @@ function getNavIcon(label: string, href: string, active: boolean) {
 
   if (label === "Chat" || href === "/chat") {
     return (
-      <svg className={iconClassName} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      </svg>
+      <div className="relative flex items-center justify-center">
+        <svg className={iconClassName} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        {unreadCount > 0 && (
+          <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-sm ring-1 ring-white">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+      </div>
     );
   }
 
@@ -89,26 +99,68 @@ function getNavIcon(label: string, href: string, active: boolean) {
 
 export function BottomNav({ items }: BottomNavProps) {
   const pathname = usePathname();
+  const id = useId();
+  const [activeTab, setActiveTab] = useState(pathname);
+
+  // Mantém a aba ativa em sincronia com a URL real
+  useEffect(() => {
+    setActiveTab(pathname);
+  }, [pathname]);
+
+  const hasChat = items.some((item) => item.label === "Chat" || item.href === "/chat");
+  const unreadCount = useSyncExternalStore(subscribeChatUnread, getChatUnreadCount, () => 0);
+
+  useEffect(() => {
+    if (!hasChat) {
+      return;
+    }
+
+    getChatSnapshot().catch(() => {
+      // ignora erro silenciosamente no componente visual
+    });
+  }, [hasChat, pathname]);
 
   if (items.length === 0) {
     return null;
   }
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 w-full border-t border-zinc-200 bg-white/95 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden" aria-label="Navegação principal">
-      <ul className="grid gap-1" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+    <nav
+      className="fixed bottom-3 left-1/2 z-50 w-max -translate-x-1/2 rounded-full border border-white/40 bg-white/30 shadow-[0_12px_32px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,0.7)] backdrop-blur-3xl backdrop-saturate-200 supports-backdrop-filter:bg-white/20 md:hidden"
+      aria-label="Navegação principal"
+    >
+      <div className="pointer-events-none absolute inset-0 rounded-full bg-linear-to-b from-white/50 via-white/10 to-transparent mix-blend-overlay" />
+      <ul className="relative flex items-center justify-center gap-2 px-2 py-2">
         {items.map((item) => {
-          const active = pathname.startsWith(item.href);
+          const active = activeTab.startsWith(item.href);
           return (
-            <li key={item.href}>
+            <li key={item.href} className="relative flex h-12 w-14 items-center justify-center">
+              {active && (
+                <motion.div
+                  layoutId={`active-nav-pill-${id}`}
+                  className="absolute inset-0 rounded-full bg-wine-700/90 shadow-[0_4px_20px_rgba(159,18,57,0.5),inset_0_1px_1px_rgba(255,255,255,0.4)]"
+                  initial={false}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 30,
+                    mass: 0.8
+                  }}
+                />
+              )}
               <Link
                 href={item.href}
                 aria-label={item.label}
                 title={item.label}
-                className={cn("flex h-12 min-w-0 items-center justify-center rounded-xl px-2 transition-colors", active ? "bg-wine-700 text-white shadow-sm" : "text-zinc-700 hover:bg-zinc-100")}
-                style={active ? { color: "#fff" } : undefined}
+                onClick={() => setActiveTab(item.href)}
+                className={cn(
+                  "relative z-10 flex h-full w-full items-center justify-center rounded-full transition-colors duration-200",
+                  active
+                    ? "text-white"
+                    : "text-zinc-600 active:bg-white/30 active:scale-95"
+                )}
               >
-                {getNavIcon(item.label, item.href, active)}
+                {getNavIcon(item.label, item.href, active, unreadCount)}
               </Link>
             </li>
           );

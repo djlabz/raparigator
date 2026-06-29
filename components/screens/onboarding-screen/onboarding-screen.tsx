@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -79,11 +79,12 @@ export function OnboardingScreen() {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/home_page2_.png"
+            src="/images/hero/homepage-main-ultrawide.png"
             alt="Sigillus Premium Background"
             fill
             className={`object-cover ${styles.heroImage}`}
             priority
+            unoptimized
             quality={100}
           />
           <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/40 to-black/60"></div>
@@ -101,7 +102,7 @@ export function OnboardingScreen() {
               <Link href="/auth/login" className="text-sm font-bold text-white! visited:text-white! hover:opacity-80 transition-opacity">
                 Entrar
               </Link>
-              <Link href="/auth/cadastro/cliente" className="bg-white text-[#800020] px-8 py-2.5 rounded-full text-sm font-extrabold tracking-tight hover:bg-gray-100 active:scale-95 transition-all">
+              <Link href="/auth/cadastro" className="bg-white text-[#800020] px-8 py-2.5 rounded-full text-sm font-extrabold tracking-tight hover:bg-gray-100 active:scale-95 transition-all">
                 Cadastrar
               </Link>
             </div>

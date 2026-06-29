@@ -11,7 +11,6 @@ export const navigationByRole: Record<AuthRole, NavigationItem[]> = {
     { label: "Feed", href: "/feed" },
     { label: "Chat", href: "/chat" },
     { label: "Acompanhamento", href: "/acompanhamento" },
-    { label: "Conta", href: "/conta" },
   ],
   profissional: [
     { label: "Feed", href: "/feed" },
