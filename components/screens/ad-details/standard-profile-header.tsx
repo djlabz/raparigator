@@ -59,7 +59,7 @@ export function StandardProfileHeader({ ad, onExternalLink }: StandardProfileHea
           </motion.button>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 z-10 h-40 pointer-events-none bg-linear-to-t from-white via-white/70 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 z-10 h-16 pointer-events-none bg-linear-to-t from-white to-transparent" />
       </div>
 
       <div className="relative z-10 w-full px-4 pb-4 sm:px-8 sm:pb-6 md:px-12 md:pb-8">
@@ -95,7 +95,7 @@ export function StandardProfileHeader({ ad, onExternalLink }: StandardProfileHea
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-zinc-500 sm:gap-x-5 sm:text-sm">
                   <span className="flex items-center gap-1.5 font-medium leading-none">
-                    <MapPin className="h-3.5 w-3.5 shrink-0 text-wine-700 sm:h-4 sm:w-4" />
+                    <MapPin className="h-3.5 w-3.5 shrink-0 text-red-500 sm:h-4 sm:w-4" />
                     {ad.neighborhood}, {ad.city}
                   </span>
 
@@ -134,7 +134,7 @@ export function StandardProfileHeader({ ad, onExternalLink }: StandardProfileHea
                   </div>
                   <div className="min-w-0 space-y-1">
                     <p className="text-[10px] font-bold tracking-wider text-zinc-400 uppercase sm:text-xs">{attr.label}</p>
-                    <p className="truncate text-xs font-semibold text-zinc-800 sm:text-base">{attr.value}</p>
+                    <p className="break-words text-xs font-semibold text-zinc-800 sm:text-base">{attr.value}</p>
                   </div>
                 </div>
               );

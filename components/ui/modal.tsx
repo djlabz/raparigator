@@ -1,11 +1,10 @@
 "use client";
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { useModalLock } from "@/lib/modal-lock";
 import { Button } from "./button";
 import { cn } from "@/lib/utils";
-
-let bodyScrollLockCount = 0;
-let previousBodyOverflow: string | null = null;
 
 interface ModalProps {
   open: boolean;
@@ -20,25 +19,7 @@ interface ModalProps {
 }
 
 export function Modal({ open, title, description, onClose, children, actions, headerActions, size = "sm", mobileCentered = false }: ModalProps) {
-  useEffect(() => {
-    if (!open) return;
-
-    if (bodyScrollLockCount === 0) {
-      previousBodyOverflow = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-    }
-
-    bodyScrollLockCount += 1;
-
-    return () => {
-      bodyScrollLockCount = Math.max(0, bodyScrollLockCount - 1);
-
-      if (bodyScrollLockCount === 0 && previousBodyOverflow !== null) {
-        document.body.style.overflow = previousBodyOverflow;
-        previousBodyOverflow = null;
-      }
-    };
-  }, [open]);
+  useModalLock(open);
 
   if (!open) return null;
 
@@ -48,7 +29,7 @@ export function Modal({ open, title, description, onClose, children, actions, he
     </Button>
   ) : actions;
 
-  return (
+  return createPortal(
     <div className={cn(
       "fixed inset-0 z-220 flex bg-zinc-900/50 px-3 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] touch-none sm:px-4 sm:items-center sm:justify-center",
       mobileCentered ? "items-center" : "items-end",
@@ -133,6 +114,7 @@ export function Modal({ open, title, description, onClose, children, actions, he
           }
         }
       `}</style>
-    </div>
+    </div>,
+    document.body,
   );
 }
