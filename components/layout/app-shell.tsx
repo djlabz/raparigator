@@ -20,7 +20,7 @@ export function AppShell({ children, hideMobileBottomNav = false, onBack, mainCl
   const navigationItems = getNavigationItems(role);
 
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div className="min-h-screen bg-zinc-50" data-app-shell>
       <TopHeader role={role} user={user} isLoggedIn={isLoggedIn} onLogout={logout} onBack={onBack} />
       <DesktopNav items={navigationItems} />
       <main className={cn("mx-auto w-full max-w-7xl px-4 pb-20 sm:px-6 lg:max-w-430 lg:px-8 md:pb-10", mainClassName ?? "pt-6")}>{children}</main>
