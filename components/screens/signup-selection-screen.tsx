@@ -11,12 +11,12 @@ export function SignupSelectionScreen() {
       <section className="hidden h-screen bg-black md:sticky md:top-0 md:block">
         <div className="relative h-full w-full overflow-hidden">
           <Image
-            src="/home_page2_.png"
+            src="/images/personas/persona3/persona3 (27).png"
             alt="Modelo Sigillus"
             fill
             priority
             quality={100}
-            className="object-cover object-center opacity-80"
+            className="object-cover opacity-80 [object-position:center_30%]"
             sizes="(max-width: 768px) 100vw, 50vw"
           />
           <div className="absolute inset-0 bg-linear-to-br from-black/55 via-black/25 to-transparent" />

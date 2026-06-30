@@ -24,7 +24,7 @@ const stackedCards = [
     alt: "Modelo em destaque com composição premium e contraste dramático",
   },
   {
-    src: "/images/professional-signup/stacked-cards-3.png",
+    src: "/images/personas/persona2/persona2 (18).png",
     alt: "Modelo em destaque com pose elegante e acabamento refinado",
   },
 ];
@@ -277,10 +277,10 @@ export function ProfessionalSignupScreen() {
               })}
 
               <div className={styles.heroCopy}>
-                <p className={styles.heroEyebrow}>Executive profile</p>
-                <h2 className={styles.heroTitle}>Curadoria de Elite</h2>
+                <p className={styles.heroEyebrow}>Independent &amp; Verified</p>
+                <h2 className={styles.heroTitle}>Você decide quanto ganha.</h2>
                 <p className={styles.heroDescription}>
-                  Um mosaico de presença premium que destaca cada modelo com profundidade, contraste e troca automática de cartas.
+                  Controle total da sua agenda, preços e privacidade — tudo em um lugar.
                 </p>
               </div>
             </div>
