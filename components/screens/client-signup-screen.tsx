@@ -14,9 +14,9 @@ import { Stepper, StepItem } from "@/components/ui/stepper";
 import { useAuthSession } from "@/lib/auth-session";
 
 const clientImages = [
-  "/modelo_criar_conta_cliente_1.png",
-  "/mulher_1.png",
-  "/home_page2_.png"
+  "/images/personas/persona2/persona2 (10).png",
+  "/images/personas/persona3/persona3 (5).png",
+  "/images/personas/persona4/persona4 (4).png"
 ];
 
 // Função auxiliar para aplicar a máscara de CPF (Formata: 000.000.000-00)
