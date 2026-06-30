@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Link, X, MapPin } from "lucide-react";
 import { Modal } from "./modal";
 import { WhatsAppIcon, TelegramIcon } from "./contact-icons";
 import { ProfessionalAd } from "@/lib/types";
+import { useModalLock } from "@/lib/modal-lock";
 import {
   copyToClipboard,
   getShareCopyText,
@@ -31,6 +33,13 @@ export function ShareProfileModal({
   onExternalLink,
 }: ShareProfileModalProps) {
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
+ 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useModalLock(open && isPremium);
 
   if (!open && !isPremium) return null;
 
@@ -70,16 +79,18 @@ export function ShareProfileModal({
   const adProfile = ad.images[1] || ad.images[0];
 
   if (isPremium) {
-    return (
-      <>
-        {/* Overlay do Premium - sempre renderizado para a transição funcionar, mas escondido visualmente se !open */}
-        <div
-          className={cn(
-            "fixed inset-0 z-220 flex items-center justify-center bg-black/80 px-4 transition-opacity duration-300",
-            open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-          )}
-          aria-hidden={!open}
-        >
+    if (!mounted) return null;
+ 
+    return createPortal(
+      <div
+        className={cn(
+          "fixed inset-0 z-220 flex items-center justify-center bg-black/80 px-4 transition-opacity duration-300 touch-none",
+          open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
+        )}
+        role="dialog"
+        aria-modal={open}
+        aria-hidden={!open}
+      >
           <div
             className={cn(
               "relative w-full max-w-sm overflow-hidden rounded-3xl border border-[#DAA520]/50 bg-[#121212] p-1 shadow-2xl transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)]",
@@ -102,60 +113,60 @@ export function ShareProfileModal({
             </div>
 
             {/* Premium Preview */}
-            <div className="relative mb-5 flex flex-col items-center px-5">
-              <div className="relative h-28 w-full overflow-hidden rounded-xl">
-                <Image
-                  src={adCover}
-                  alt="Capa"
-                  fill
-                  className="object-cover opacity-60"
-                  sizes="(max-width: 768px) 100vw, 400px"
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-[#121212] via-transparent to-transparent" />
-              </div>
+            <div className="relative mx-5 mb-5 overflow-hidden rounded-2xl">
+              <Image src={adCover} alt="Capa" fill className="object-cover" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
+              
+              <div className="relative z-10 flex flex-col items-center py-6">
+                <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-[#DAA520] shadow-[0_0_15px_rgba(218,165,32,0.2)]">
+                  <Image src={adProfile} alt={ad.artisticName} fill className="object-cover" />
+                </div>
 
-              <div className="relative -mt-10 h-20 w-20 overflow-hidden rounded-full border-2 border-[#DAA520] shadow-[0_0_15px_rgba(218,165,32,0.2)]">
-                <Image src={adProfile} alt={ad.artisticName} fill className="object-cover" />
-              </div>
-
-              <div className="mt-3 text-center">
-                <h3 className="font-display text-2xl font-bold text-[#DAA520]">
-                  {ad.artisticName}
-                </h3>
-                <p className="mt-1 flex items-center justify-center gap-1.5 text-[13px] text-zinc-400">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {ad.neighborhood}, {ad.city}
-                </p>
+                <div className="mt-3 text-center">
+                  <h3 className="font-display text-2xl font-bold text-[#FFDF00] drop-shadow-md">
+                    {ad.artisticName}
+                  </h3>
+                  <p className="mt-1 flex items-center justify-center gap-1.5 text-[13px] text-zinc-200 drop-shadow-md">
+                    <MapPin className="h-3.5 w-3.5 text-red-500" />
+                    {ad.neighborhood}, {ad.city}
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* Premium Actions */}
-            <div className="grid grid-cols-3 gap-3 px-5 pb-6">
-              <button
-                onClick={handleCopy}
-                className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/50 py-4 transition-all hover:border-[#DAA520]/50 hover:bg-zinc-800"
-              >
-                <Link className="h-5 w-5 text-[#FFDF00]" />
-                <span className="text-xs font-medium text-zinc-200">
-                  {copied ? <span className="text-[#10b981]">Copiado!</span> : "Copiar Link"}
+            <div className="mt-2 flex justify-center gap-6 px-5 pb-6">
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  onClick={handleCopy}
+                  className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/50 text-[#FFDF00] transition-all hover:border-[#DAA520]/50 hover:bg-zinc-800 active:scale-95"
+                >
+                  <Link className="h-6 w-6" />
+                </button>
+                <span className="text-[11px] font-semibold text-zinc-300 text-center w-16 leading-tight">
+                  {copied ? <span className="text-[#10b981] font-bold">Copiado!</span> : "Copiar Link"}
                 </span>
-              </button>
+              </div>
 
-              <button
-                onClick={handleWhatsApp}
-                className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/50 py-4 transition-all hover:border-[#25D366]/50 hover:bg-zinc-800"
-              >
-                <WhatsAppIcon className="h-5 w-5 text-[#25D366]" />
-                <span className="text-xs font-medium text-zinc-200">WhatsApp</span>
-              </button>
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  onClick={handleWhatsApp}
+                  className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/50 text-[#25D366] transition-all hover:border-[#25D366]/50 hover:bg-zinc-800 active:scale-95"
+                >
+                  <WhatsAppIcon className="h-6 w-6 fill-current" />
+                </button>
+                <span className="text-[11px] font-semibold text-zinc-300 text-center w-16 leading-tight">WhatsApp</span>
+              </div>
 
-              <button
-                onClick={handleTelegram}
-                className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/50 py-4 transition-all hover:border-[#229ED9]/50 hover:bg-zinc-800"
-              >
-                <TelegramIcon className="h-5 w-5 text-[#229ED9]" />
-                <span className="text-xs font-medium text-zinc-200">Telegram</span>
-              </button>
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  onClick={handleTelegram}
+                  className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/50 text-[#229ED9] transition-all hover:border-[#229ED9]/50 hover:bg-zinc-800 active:scale-95"
+                >
+                  <TelegramIcon className="h-6 w-6 fill-current" />
+                </button>
+                <span className="text-[11px] font-semibold text-zinc-300 text-center w-16 leading-tight">Telegram</span>
+              </div>
             </div>
             
             {/* Inline Toast Premium */}
@@ -170,8 +181,8 @@ export function ShareProfileModal({
           </div>
           
           <button aria-label="Fechar modal" className="absolute inset-0 -z-10" onClick={onClose} />
-        </div>
-      </>
+      </div>,
+      document.body,
     );
   }
 
@@ -182,50 +193,59 @@ export function ShareProfileModal({
       onClose={onClose}
       title="Compartilhar Perfil"
       actions={null} // Sem ações padrão na base
+      mobileCentered={true}
     >
-      <div className="relative -mx-4 -mt-4 mb-6 sm:-mx-5 sm:-mt-5">
-        <div className="relative h-24 w-full bg-zinc-100">
-          <Image src={adCover} alt="Capa" fill className="object-cover opacity-70" />
-          <div className="absolute inset-0 bg-linear-to-t from-white to-transparent" />
-        </div>
-        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 rounded-full border-4 border-white bg-zinc-100 shadow-sm">
-          <div className="relative h-20 w-20 overflow-hidden rounded-full">
+      <div className="relative mb-6 overflow-hidden rounded-2xl">
+        <Image src={adCover} alt="Capa" fill className="object-cover" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
+        
+        <div className="relative z-10 flex flex-col items-center py-6">
+          <div className="relative h-20 w-20 overflow-hidden rounded-full border-4 border-white shadow-sm">
             <Image src={adProfile} alt={ad.artisticName} fill className="object-cover" />
+          </div>
+          
+          <div className="mt-4 text-center">
+            <h3 className="text-xl font-bold text-white drop-shadow-md">{ad.artisticName}</h3>
+            <p className="mt-1 flex items-center justify-center gap-1 text-sm text-zinc-200 drop-shadow-md">
+              <MapPin className="h-3.5 w-3.5 text-red-500" />
+              {ad.neighborhood}, {ad.city}
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="mt-10 text-center">
-        <h3 className="text-xl font-bold text-zinc-900">{ad.artisticName}</h3>
-        <p className="text-sm text-zinc-500">
-          {ad.neighborhood}, {ad.city}
-        </p>
-      </div>
+      <div className="mt-8 flex justify-center gap-6 pb-2">
+        <div className="flex flex-col items-center gap-2">
+          <button
+            onClick={handleCopy}
+            className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-zinc-100 text-zinc-700 shadow-sm transition-transform hover:scale-105 active:scale-95"
+          >
+            <Link className="h-6 w-6" />
+          </button>
+          <span className="text-[11px] font-semibold text-zinc-500 text-center w-16 leading-tight">
+            {copied ? <span className="text-emerald-600 font-bold">Copiado!</span> : "Copiar Link"}
+          </span>
+        </div>
 
-      <div className="mt-6 flex flex-col gap-3">
-        <button
-          onClick={handleCopy}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white py-3.5 font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50"
-        >
-          <Link className="h-5 w-5 text-zinc-400" />
-          {copied ? <span className="text-emerald-600">Copiado!</span> : <span>Copiar Link</span>}
-        </button>
+        <div className="flex flex-col items-center gap-2">
+          <button
+            onClick={handleWhatsApp}
+            className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-[#25D366] text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
+          >
+            <WhatsAppIcon className="h-6 w-6 fill-current" />
+          </button>
+          <span className="text-[11px] font-semibold text-zinc-500 text-center w-16 leading-tight">WhatsApp</span>
+        </div>
 
-        <button
-          onClick={handleWhatsApp}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-50 text-emerald-700 py-3.5 font-medium transition-colors hover:bg-emerald-100"
-        >
-          <WhatsAppIcon className="h-5 w-5" />
-          WhatsApp
-        </button>
-
-        <button
-          onClick={handleTelegram}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-50 text-sky-700 py-3.5 font-medium transition-colors hover:bg-sky-100"
-        >
-          <TelegramIcon className="h-5 w-5" />
-          Telegram
-        </button>
+        <div className="flex flex-col items-center gap-2">
+          <button
+            onClick={handleTelegram}
+            className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-[#229ED9] text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
+          >
+            <TelegramIcon className="h-6 w-6 fill-current" />
+          </button>
+          <span className="text-[11px] font-semibold text-zinc-500 text-center w-16 leading-tight">Telegram</span>
+        </div>
       </div>
       
       {/* Inline Toast Standard */}

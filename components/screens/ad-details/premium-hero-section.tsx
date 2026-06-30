@@ -109,7 +109,7 @@ export function PremiumHeroSection({ ad, onExternalLink }: PremiumHeroSectionPro
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-zinc-300 sm:gap-x-5 sm:text-sm">
                   <span className="flex items-center gap-1.5 font-medium leading-none">
-                    <MapPin className="h-3.5 w-3.5 shrink-0 text-[#96001e] sm:h-4 sm:w-4" />
+                    <MapPin className="h-3.5 w-3.5 shrink-0 text-red-500 sm:h-4 sm:w-4" />
                     {ad.neighborhood}, {ad.city}
                   </span>
 
