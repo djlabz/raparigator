@@ -31,6 +31,12 @@
       "skillPath": "skills/karpathy-guidelines/SKILL.md",
       "computedHash": "41e8ca055bbde13d240776a14a076a59614057200340c243130a76ba4e64cac8"
     },
+    "mcp-builder": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/mcp-builder/SKILL.md",
+      "computedHash": "826e46adf81e1372282e205c34e1a2ee876e72148007726e4a2512599d2fef7b"
+    },
     "skill-creator": {
       "source": "anthropics/skills",
       "sourceType": "github",
