@@ -15,6 +15,9 @@ import { ImageCropperModal, type Area } from "@/components/ui/image-cropper-moda
 import { ImageBlurModal, type ImageBlurResult } from "@/components/ui/image-blur-modal";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { ShinyButton } from "@/components/ui/shiny-button";
+import { PremiumUpsellModal } from "@/components/ui/premium-upsell-modal";
+import { usePremiumPlan } from "@/lib/premium-plan";
 import { getCroppedImg } from "@/lib/cropImage";
 
 // ─── Options para selects ─────────────────────────────────────────
@@ -583,6 +586,8 @@ export function AnnouncementTab({
 }) {
   const formHook = useProfileForm(ad);
   const { form, saveStatus, hasUnsavedChanges, lastSavedAt, score, tips, updateField, updateNestedField, updateForm, manualSave } = formHook;
+  const { isPremium, photoLimit, videoLimit } = usePremiumPlan();
+  const [portfolioUpsellOpen, setPortfolioUpsellOpen] = useState(false);
 
   // Estado para Modal de Fotos
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
@@ -1476,11 +1481,18 @@ export function AnnouncementTab({
 
               let currentVideos = form.images.filter(img => img.startsWith('data:video')).length;
               let currentPhotos = form.images.length - currentVideos;
+              let blockedByLimit = false;
 
               files.forEach(file => {
                 const isVid = file.type.startsWith('video/');
-                if (isVid && currentVideos >= 5) return;
-                if (!isVid && currentPhotos >= 15) return;
+                if (isVid && currentVideos >= videoLimit) {
+                  blockedByLimit = true;
+                  return;
+                }
+                if (!isVid && currentPhotos >= photoLimit) {
+                  blockedByLimit = true;
+                  return;
+                }
 
                 if (isVid) currentVideos++;
                 else currentPhotos++;
@@ -1496,11 +1508,17 @@ export function AnnouncementTab({
                 };
                 reader.readAsDataURL(file);
               });
+
+              if (blockedByLimit && !isPremium) {
+                setPortfolioUpsellOpen(true);
+              }
             };
             input.click();
           }}
         />
       )}
+
+      <PremiumUpsellModal open={portfolioUpsellOpen} onClose={() => setPortfolioUpsellOpen(false)} highlight="portfolio" />
 
       {isLocationDecisionOpen && detectedLocation && (
         <LocationDecisionModal
@@ -1649,6 +1667,10 @@ export function AnnouncementTab({
               coverIndex={resolvedCoverIndex}
               coverPreview={coverPreviewSrc}
               coverPreviews={form.coverPreviews}
+              photoLimit={photoLimit}
+              videoLimit={videoLimit}
+              isPremium={isPremium}
+              onUpgradeClick={() => setPortfolioUpsellOpen(true)}
               onPhotoClick={(idx) => setActivePhotoIndex(idx)}
               onDeletePhoto={(idx) => deleteMediaAtIndex(idx)}
               onAddPhoto={() => {
@@ -1662,11 +1684,18 @@ export function AnnouncementTab({
 
                   let currentVideos = form.images.filter(img => img.startsWith('data:video')).length;
                   let currentPhotos = form.images.length - currentVideos;
+                  let blockedByLimit = false;
 
                   files.forEach(file => {
                     const isVid = file.type.startsWith('video/');
-                    if (isVid && currentVideos >= 5) return;
-                    if (!isVid && currentPhotos >= 15) return;
+                    if (isVid && currentVideos >= videoLimit) {
+                      blockedByLimit = true;
+                      return;
+                    }
+                    if (!isVid && currentPhotos >= photoLimit) {
+                      blockedByLimit = true;
+                      return;
+                    }
 
                     if (isVid) currentVideos++;
                     else currentPhotos++;
@@ -1682,6 +1711,10 @@ export function AnnouncementTab({
                     };
                     reader.readAsDataURL(file);
                   });
+
+                  if (blockedByLimit && !isPremium) {
+                    setPortfolioUpsellOpen(true);
+                  }
                 };
                 input.click();
               }}
@@ -2024,6 +2057,10 @@ function BentoPhotoGallery({
   onPhotoClick,
   onDeletePhoto,
   onAddPhoto,
+  photoLimit,
+  videoLimit,
+  isPremium,
+  onUpgradeClick,
 }: {
   images: string[];
   coverIndex: number;
@@ -2032,6 +2069,10 @@ function BentoPhotoGallery({
   onPhotoClick: (idx: number) => void;
   onDeletePhoto: (idx: number) => void;
   onAddPhoto: () => void;
+  photoLimit: number;
+  videoLimit: number;
+  isPremium: boolean;
+  onUpgradeClick: () => void;
 }) {
   const [viewMode, setViewMode] = useState<"bento" | "grid">("bento");
 
@@ -2045,7 +2086,10 @@ function BentoPhotoGallery({
 
   const videosCount = images.filter(img => img.startsWith('data:video')).length;
   const photosCount = images.length - videosCount;
-  const canAddMore = photosCount < 15 || videosCount < 5;
+  const canAddMore = photosCount < photoLimit || videosCount < videoLimit;
+  const mediaCapacity = photoLimit + videoLimit;
+  const atStandardLimit = !isPremium && !canAddMore;
+  const lockedSlots = atStandardLimit ? 2 : 0;
   const resolvedCoverIndex = resolveCoverIndex(coverIndex, images.length);
   const resolvedCoverSrc = coverPreview || images[resolvedCoverIndex] || "";
   const mediaSources = useMemo(() => images.map((src, idx) => coverPreviews[idx] || src), [coverPreviews, images]);
@@ -2116,7 +2160,7 @@ function BentoPhotoGallery({
       <div className="flex items-center justify-between">
         <p className="text-sm text-zinc-500">
           Clique nas fotos para interagir
-          <span className="block sm:inline sm:ml-2">({images.length}/20 mídias)</span>
+          <span className="block sm:inline sm:ml-2">({images.length}/{mediaCapacity} mídias)</span>
         </p>
         <div className="flex bg-zinc-100 rounded-lg p-1 w-fit">
           <button
@@ -2229,7 +2273,31 @@ function BentoPhotoGallery({
                 </div>
               </div>
             )}
+
+            {Array.from({ length: lockedSlots }).map((_, idx) => (
+              <div key={`locked-${idx}`} className="mb-2 sm:mb-3 break-inside-avoid">
+                <div
+                  onClick={onUpgradeClick}
+                  className="relative aspect-square rounded-2xl border-2 border-dashed border-[#DAA520]/40 bg-zinc-50/60 opacity-70 flex flex-col items-center justify-center gap-1.5 cursor-pointer text-zinc-400 transition-all hover:opacity-100 hover:border-[#DAA520]"
+                >
+                  <Lock className="w-6 h-6 text-[#DAA520]" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#DAA520]">Premium</span>
+                </div>
+              </div>
+            ))}
           </div>
+
+          {atStandardLimit && (
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#DAA520]/40 bg-[#121212] p-5 text-center sm:flex-row sm:justify-between sm:text-left">
+              <div>
+                <p className="text-sm font-bold text-[#FFDF00]">Seu portfólio está pronto para crescer</p>
+                <p className="mt-1 text-xs text-zinc-300">Você usou seus {photoLimit} espaços de foto. Ganhe liberdade criativa com até 15 fotos e 5 vídeos.</p>
+              </div>
+              <ShinyButton size="sm" onClick={onUpgradeClick}>
+                Desbloquear o Portfólio Ilimitado
+              </ShinyButton>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -2285,7 +2353,30 @@ function BentoPhotoGallery({
                 <svg className="w-6 h-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
               </div>
             )}
+
+            {Array.from({ length: lockedSlots }).map((_, idx) => (
+              <div
+                key={`locked-${idx}`}
+                onClick={onUpgradeClick}
+                className="relative aspect-square rounded-xl border border-dashed border-[#DAA520]/40 bg-zinc-50/60 opacity-70 flex flex-col items-center justify-center gap-1 cursor-pointer text-zinc-400 transition-all hover:opacity-100 hover:border-[#DAA520]"
+              >
+                <Lock className="w-5 h-5 text-[#DAA520]" />
+                <span className="text-[9px] font-bold uppercase tracking-wider text-[#DAA520]">Premium</span>
+              </div>
+            ))}
           </div>
+
+          {atStandardLimit && (
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#DAA520]/40 bg-[#121212] p-5 text-center sm:flex-row sm:justify-between sm:text-left">
+              <div>
+                <p className="text-sm font-bold text-[#FFDF00]">Seu portfólio está pronto para crescer</p>
+                <p className="mt-1 text-xs text-zinc-300">Você usou seus {photoLimit} espaços de foto. Ganhe liberdade criativa com até 15 fotos e 5 vídeos.</p>
+              </div>
+              <ShinyButton size="sm" onClick={onUpgradeClick}>
+                Desbloquear o Portfólio Ilimitado
+              </ShinyButton>
+            </div>
+          )}
         </div>
       )}
     </div>
