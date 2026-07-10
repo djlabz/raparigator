@@ -140,3 +140,43 @@ a {
   clip-path: circle(150% at 50% 50%);
   transform: scale(1);
 }
+
+@property --shine-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes shiny-border-rotate {
+  to {
+    --shine-angle: 360deg;
+  }
+}
+
+.shiny-button-border {
+  background: conic-gradient(from var(--shine-angle),
+      rgba(218, 165, 32, 0.15) 0%,
+      rgba(255, 223, 0, 0.95) 12%,
+      rgba(218, 165, 32, 0.15) 26%,
+      rgba(182, 0, 49, 0.35) 50%,
+      rgba(218, 165, 32, 0.15) 74%,
+      rgba(255, 223, 0, 0.95) 88%,
+      rgba(218, 165, 32, 0.15) 100%);
+  animation: shiny-border-rotate 3.2s linear infinite;
+}
+
+@keyframes premium-glow-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(255, 223, 0, 0.35), 0 0 20px rgba(218, 165, 32, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 16px rgba(255, 223, 0, 0.6), 0 0 34px rgba(218, 165, 32, 0.35);
+  }
+}
+
+.premium-glow-pulse {
+  animation: premium-glow-pulse 2.4s ease-in-out infinite;
+}

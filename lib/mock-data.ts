@@ -724,6 +724,26 @@ export const dashboardSummary = {
   conversionRate: 18.2,
 };
 
+export const trafficDiscovery = {
+  searchPosition: 14,
+  premiumSearchPosition: 1,
+  weeklyImpressions: [
+    { label: "Seg", value: 132 },
+    { label: "Ter", value: 168 },
+    { label: "Qua", value: 145 },
+    { label: "Qui", value: 210 },
+    { label: "Sex", value: 286 },
+    { label: "Sáb", value: 342 },
+    { label: "Dom", value: 298 },
+  ],
+  sources: [
+    { label: "Busca no feed", value: 46 },
+    { label: "Filtros da cidade", value: 27 },
+    { label: "Destaques Premium", value: 17 },
+    { label: "Link compartilhado", value: 10 },
+  ],
+};
+
 export const popularSections = [
   {
     label: 'Independencia Financeira',

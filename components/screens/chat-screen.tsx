@@ -26,6 +26,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "../layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { PremiumUpsellModal } from "@/components/ui/premium-upsell-modal";
 import { Toast } from "@/components/ui/toast";
 import {
   deleteConversationFromInbox as apiDeleteConversationFromInbox,
@@ -41,6 +42,7 @@ import {
 import { ads } from "@/lib/mock-data";
 import type { AvailabilityStatus, Conversation, Message } from "@/lib/types";
 import { useAuthSession } from "@/lib/auth-session";
+import { usePremiumPlan, VIEW_ONCE_FREE_LIMIT } from "@/lib/premium-plan";
 import { cn } from "@/lib/utils";
 
 const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -135,6 +137,7 @@ type ToastState = { title: string; message: string; type?: "success" | "error" |
 
 export function ChatScreen() {
   const { isLoggedIn, user, role } = useAuthSession();
+  const { isPremium, canSendViewOnce, viewOnceRemaining, registerViewOnceSend } = usePremiumPlan();
   const initialSnapshot = getCachedChatSnapshot();
   const [localConversations, setLocalConversations] = useState<Conversation[]>(() => initialSnapshot?.conversations ?? []);
   const [localMessages, setLocalMessages] = useState<Message[]>(() => initialSnapshot?.messages ?? []);
@@ -157,6 +160,7 @@ export function ChatScreen() {
   const [availabilityPanelOpen, setAvailabilityPanelOpen] = useState(() => readAvailabilityPanelOpen());
   const [attachmentMenuOpen, setAttachmentMenuOpen] = useState(false);
   const [viewOnceModalOpen, setViewOnceModalOpen] = useState(false);
+  const [premiumUpsellOpen, setPremiumUpsellOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [blockModalOpen, setBlockModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -362,8 +366,28 @@ export function ChatScreen() {
     }
   };
 
+  const handleOpenViewOnceModal = () => {
+    if (!canSendViewOnce) {
+      setAttachmentMenuOpen(false);
+      setPremiumUpsellOpen(true);
+      return;
+    }
+
+    setViewOnceModalOpen(true);
+  };
+
   const handleSendViewOnceMedia = async () => {
     if (!activeConversation || activeConversation.isBlocked) return;
+
+    if (!canSendViewOnce) {
+      setViewOnceModalOpen(false);
+      setPremiumUpsellOpen(true);
+      return;
+    }
+
+    if (!isPremium) {
+      registerViewOnceSend();
+    }
 
     const optimisticId = `local-media-${Date.now()}`;
     const optimisticMessage: Message = {
@@ -913,7 +937,7 @@ export function ChatScreen() {
 
                   {attachmentMenuOpen ? (
                     <div className="absolute bottom-14 left-0 z-30 w-64 rounded-2xl border border-zinc-200 bg-white p-2 shadow-xl">
-                      <button type="button" onClick={() => setViewOnceModalOpen(true)} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+                      <button type="button" onClick={handleOpenViewOnceModal} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
                         <ImageIcon size={17} />
                         Enviar mídia temporária
                       </button>
@@ -1013,7 +1037,14 @@ export function ChatScreen() {
             </div>
           </div>
         </div>
+        {!isPremium ? (
+          <p className="mt-3 text-center text-xs text-zinc-500">
+            {VIEW_ONCE_FREE_LIMIT - viewOnceRemaining + 1} de {VIEW_ONCE_FREE_LIMIT} envios gratuitos
+          </p>
+        ) : null}
       </Modal>
+
+      <PremiumUpsellModal open={premiumUpsellOpen} onClose={() => setPremiumUpsellOpen(false)} highlight="media" />
 
       <Modal
         open={deleteModalOpen}

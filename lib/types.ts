@@ -2,6 +2,8 @@ export type AvailabilityStatus = "livre" | "em_atendimento" | "indisponivel";
 
 export type AdCategory = "premium" | "normal";
 
+export type PlanTier = "standard" | "premium";
+
 export type AuthRole = "visitor" | "cliente" | "profissional";
 
 /** Status de moderação do perfil profissional */
@@ -38,6 +40,7 @@ export interface MockUser {
   cpf?: string;
   alias?: string;
   city?: string;
+  plan?: PlanTier;
 }
 export interface ProfessionalAd {
   id: string;
