@@ -585,7 +585,7 @@ export function AnnouncementTab({
   onToggleStatus: () => void;
 }) {
   const formHook = useProfileForm(ad);
-  const { form, saveStatus, hasUnsavedChanges, score, tips, updateField, updateNestedField, updateForm, manualSave } = formHook;
+  const { form, saveStatus, hasUnsavedChanges, lastSavedAt, score, tips, updateField, updateNestedField, updateForm, manualSave } = formHook;
   const { isPremium, photoLimit, videoLimit } = usePremiumPlan();
   const [portfolioUpsellOpen, setPortfolioUpsellOpen] = useState(false);
 
@@ -1145,7 +1145,7 @@ export function AnnouncementTab({
       .filter((section) => sectionDirtyState[section])
       .map((section) => ({ kind: "unsaved" as const, section, label: SECTION_LABELS[section] }));
 
-    if (validationErrors.length > 0 || dirtySections.length > 0 || hasUnsavedChanges) {
+    if (validationErrors.length > 0 || dirtySections.length > 0) {
       const requiredItems: PublishWarningItem[] = [];
 
       validationErrors.forEach((message) => {
@@ -1172,11 +1172,7 @@ export function AnnouncementTab({
       const blockingItems = [...requiredItems, ...dirtySections];
 
       setPublishErrorItems(blockingItems);
-      setPublishError(
-        blockingItems.length > 0
-          ? "Há pendências nos grupos abaixo."
-          : "Salve as alterações pendentes antes de publicar.",
-      );
+      setPublishError("Há pendências nos grupos abaixo.");
       return;
     }
 
@@ -1359,12 +1355,7 @@ export function AnnouncementTab({
               disabled={saveStatus === "saving" || isPublishing}
               className="px-3 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base rounded-lg bg-wine-700 text-white font-bold shadow-md hover:bg-wine-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
-              <PublishIndicator
-                status={saveStatus}
-                isPublishing={isPublishing}
-                isPublished={status === "Ativo"}
-                hasUnsavedChanges={hasUnsavedChanges}
-              />
+              <PublishIndicator status={saveStatus} lastSavedAt={lastSavedAt} isPublishing={isPublishing} />
             </button>
           </div>
         </div>
@@ -3474,20 +3465,11 @@ function AvailabilitySection({ showAvailability, availability, onToggleShow, onD
   )
 }
 
-function PublishIndicator({
-  status,
-  isPublishing,
-  isPublished,
-  hasUnsavedChanges,
-}: {
-  status: "idle" | "saving" | "saved" | "error";
-  isPublishing: boolean;
-  isPublished: boolean;
-  hasUnsavedChanges: boolean;
-}) {
+function PublishIndicator({ status, lastSavedAt, isPublishing }: { status: "idle" | "saving" | "saved" | "error"; lastSavedAt: Date | null; isPublishing: boolean }) {
   if (isPublishing || status === "saving") return <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Publicando</>;
+  if (status === "saved") return <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Publicado</>;
   if (status === "error") return <span>Publicar</span>;
-  if (isPublished && !hasUnsavedChanges) return <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Publicado</>;
+  if (!lastSavedAt) return <span>Publicar</span>;
   return <span>Publicar</span>;
 }
 

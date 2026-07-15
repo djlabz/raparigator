@@ -4,6 +4,8 @@ export type AdCategory = "premium" | "normal";
 
 export type PlanTier = "standard" | "premium";
 
+export type PremiumBillingCycle = "monthly" | "yearly";
+
 export type AuthRole = "visitor" | "cliente" | "profissional";
 
 /** Status de moderação do perfil profissional */

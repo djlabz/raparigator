@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Link, X, MapPin } from "lucide-react";
@@ -33,11 +33,6 @@ export function ShareProfileModal({
   onExternalLink,
 }: ShareProfileModalProps) {
   const [copied, setCopied] = useState(false);
-  const [mounted, setMounted] = useState(false);
- 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useModalLock(open && isPremium);
 
@@ -79,8 +74,8 @@ export function ShareProfileModal({
   const adProfile = ad.images[1] || ad.images[0];
 
   if (isPremium) {
-    if (!mounted) return null;
- 
+    if (typeof document === "undefined") return null;
+
     return createPortal(
       <div
         className={cn(

@@ -10,7 +10,7 @@ interface RiskWarningModalProps {
   targetLabel: string;
 }
 
-export function RiskWarningModal({ open, onClose, onConfirm, targetLabel }: RiskWarningModalProps) {
+export function RiskWarningModal({ open, onClose, onConfirm }: RiskWarningModalProps) {
   return (
     <Modal
       open={open}
