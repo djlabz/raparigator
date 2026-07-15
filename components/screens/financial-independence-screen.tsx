@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Select } from "@/components/ui/select";
 import { ShinyButton } from "@/components/ui/shiny-button";
-import { PremiumUpsellModal } from "@/components/ui/premium-upsell-modal";
+import { PremiumConversionModal } from "@/components/ui/premium-conversion-modal";
 import { usePremiumPlan, PREMIUM_VISIBILITY_MULTIPLIER } from "@/lib/premium-plan";
 import { currency } from "@/lib/utils";
 
@@ -507,7 +507,12 @@ export function FinancialIndependenceScreen() {
           </div>
         ) : null}
 
-        <PremiumUpsellModal open={upsellOpen} onClose={() => setUpsellOpen(false)} highlight="topSearch" />
+        <PremiumConversionModal
+          open={upsellOpen}
+          onClose={() => setUpsellOpen(false)}
+          highlight="topSearch"
+          from="topSearch"
+        />
 
         {/* Empty State para erros */}
         {submitted && !parsed && (

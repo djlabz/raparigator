@@ -4,7 +4,7 @@ export type AdCategory = "premium" | "normal";
 
 export type PlanTier = "standard" | "premium";
 
-export type PremiumBillingCycle = "monthly" | "yearly";
+export type PremiumBillingCycle = "monthly" | "semiannual";
 
 export type AuthRole = "visitor" | "cliente" | "profissional";
 

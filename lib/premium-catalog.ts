@@ -13,53 +13,76 @@ export interface PremiumImmediateGain {
   label: string;
   from: string;
   to: string;
+  exclusive?: boolean;
 }
 
 export const PREMIUM_PLAN_OPTIONS: PremiumPlanOption[] = [
   {
     cycle: "monthly",
     label: "Mensal",
-    price: 89.9,
-    monthlyEquivalent: 89.9,
+    price: 10,
+    monthlyEquivalent: 10,
   },
   {
-    cycle: "yearly",
-    label: "Anual",
-    price: 718.8,
-    monthlyEquivalent: 59.9,
-    badge: "Mais vantajoso",
+    cycle: "semiannual",
+    label: "Semestral",
+    price: 30,
+    monthlyEquivalent: 5,
+    badge: "50% off",
   },
 ];
+
+export const PREMIUM_EXCLUSIVE_FEATURES = [
+  "Visualização única",
+  "Apelido por cliente/conversa",
+] as const;
 
 export function getPlanOption(cycle: PremiumBillingCycle): PremiumPlanOption {
   return PREMIUM_PLAN_OPTIONS.find((option) => option.cycle === cycle) ?? PREMIUM_PLAN_OPTIONS[0];
 }
 
-export function getImmediateGains(): PremiumImmediateGain[] {
+export function getSharedGains(): PremiumImmediateGain[] {
   return [
     {
-      id: "photos",
-      label: "Fotos no portfólio",
-      from: "6",
-      to: "15",
+      id: "visibility",
+      label: "Perfil em destaque",
+      from: "Listagem padrão",
+      to: "Mais views e conversões + selo e card Premium",
     },
     {
-      id: "videos",
-      label: "Vídeos no portfólio",
-      from: "1",
-      to: "5",
-    },
-    {
-      id: "view-once",
-      label: "Mídias de visualização única",
-      from: "5/mês",
+      id: "portfolio",
+      label: "Mídia no portfólio",
+      from: "10 fotos e 3 vídeos",
       to: "Ilimitado",
     },
+  ];
+}
+
+export function getImmediateGains(): PremiumImmediateGain[] {
+  return [
+    ...getSharedGains(),
     {
-      id: "visibility",
-      label: "Visibilidade nas buscas",
-      from: "Padrão",
-      to: "Topo + selo Premium",
+      id: "view-once",
+      label: "Visualização única",
+      from: "Não incluso",
+      to: "Exclusivo Premium",
+      exclusive: true,
+    },
+    {
+      id: "alias",
+      label: "Apelido por cliente/conversa",
+      from: "Não incluso",
+      to: "Exclusivo Premium",
+      exclusive: true,
     },
   ];
+}
+
+export function getBillingSavingsPercent(): number {
+  const monthly = getPlanOption("monthly").monthlyEquivalent;
+  const semiannual = getPlanOption("semiannual").monthlyEquivalent;
+  if (monthly <= 0) {
+    return 0;
+  }
+  return Math.round(((monthly - semiannual) / monthly) * 100);
 }

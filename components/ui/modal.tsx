@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface ModalProps {
   open: boolean;
-  title: string;
+  title: ReactNode;
   description?: string;
   onClose: () => void;
   children?: ReactNode;
@@ -16,9 +16,10 @@ interface ModalProps {
   headerActions?: ReactNode;
   size?: "sm" | "md";
   mobileCentered?: boolean;
+  titleClassName?: string;
 }
 
-export function Modal({ open, title, description, onClose, children, actions, headerActions, size = "sm", mobileCentered = false }: ModalProps) {
+export function Modal({ open, title, description, onClose, children, actions, headerActions, size = "sm", mobileCentered = false, titleClassName }: ModalProps) {
   useModalLock(open);
 
   if (!open) return null;
@@ -47,8 +48,8 @@ export function Modal({ open, title, description, onClose, children, actions, he
         }}
       >
         <div className="mb-4 flex items-start justify-between gap-3 sm:gap-4">
-          <div className="space-y-1">
-            <h3 className="text-lg font-semibold leading-tight text-zinc-900 sm:text-lg">{title}</h3>
+          <div className="min-w-0 space-y-1">
+            <h3 className={cn("font-semibold leading-tight", titleClassName ?? "text-lg text-zinc-900 sm:text-lg")}>{title}</h3>
             {description ? <p className="text-sm leading-snug text-zinc-600">{description}</p> : null}
           </div>
           <div className="flex items-center gap-2">

@@ -16,8 +16,11 @@ import { ImageBlurModal, type ImageBlurResult } from "@/components/ui/image-blur
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ShinyButton } from "@/components/ui/shiny-button";
-import { PremiumUpsellModal } from "@/components/ui/premium-upsell-modal";
-import { usePremiumPlan } from "@/lib/premium-plan";
+import { Toast } from "@/components/ui/toast";
+import { PremiumConversionModal } from "@/components/ui/premium-conversion-modal";
+import { PremiumEntryBanner } from "@/components/ui/premium-entry-banner";
+import { PremiumEntryButton } from "@/components/ui/premium-entry-button";
+import { PREMIUM_UPLOAD_ERROR_MESSAGE, usePremiumPlan } from "@/lib/premium-plan";
 import { getCroppedImg } from "@/lib/cropImage";
 
 // ─── Options para selects ─────────────────────────────────────────
@@ -587,7 +590,21 @@ export function AnnouncementTab({
   const formHook = useProfileForm(ad);
   const { form, saveStatus, hasUnsavedChanges, lastSavedAt, score, tips, updateField, updateNestedField, updateForm, manualSave } = formHook;
   const { isPremium, photoLimit, videoLimit } = usePremiumPlan();
-  const [portfolioUpsellOpen, setPortfolioUpsellOpen] = useState(false);
+  const [conversionOpen, setConversionOpen] = useState(false);
+  const [conversionHighlight, setConversionHighlight] = useState<"portfolio" | undefined>(undefined);
+  const [conversionFrom, setConversionFrom] = useState<string | undefined>(undefined);
+  const [uploadToast, setUploadToast] = useState<{ title: string; message: string } | null>(null);
+
+  const openConversion = (from: string, highlight?: "portfolio") => {
+    setConversionFrom(from);
+    setConversionHighlight(highlight);
+    setConversionOpen(true);
+  };
+
+  const showUploadError = () => {
+    setUploadToast({ title: "Upload", message: PREMIUM_UPLOAD_ERROR_MESSAGE });
+    window.setTimeout(() => setUploadToast(null), 3200);
+  };
 
   // Estado para Modal de Fotos
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
@@ -1509,8 +1526,12 @@ export function AnnouncementTab({
                 reader.readAsDataURL(file);
               });
 
-              if (blockedByLimit && !isPremium) {
-                setPortfolioUpsellOpen(true);
+              if (blockedByLimit) {
+                if (isPremium) {
+                  showUploadError();
+                } else {
+                  openConversion("portfolio", "portfolio");
+                }
               }
             };
             input.click();
@@ -1518,7 +1539,14 @@ export function AnnouncementTab({
         />
       )}
 
-      <PremiumUpsellModal open={portfolioUpsellOpen} onClose={() => setPortfolioUpsellOpen(false)} highlight="portfolio" />
+      <PremiumConversionModal
+        open={conversionOpen}
+        onClose={() => setConversionOpen(false)}
+        highlight={conversionHighlight}
+        from={conversionFrom}
+      />
+
+      {uploadToast ? <Toast title={uploadToast.title} message={uploadToast.message} type="error" /> : null}
 
       {isLocationDecisionOpen && detectedLocation && (
         <LocationDecisionModal
@@ -1643,6 +1671,20 @@ export function AnnouncementTab({
               <button onClick={() => setIsTipsModalOpen(true)} className="text-xs font-black uppercase tracking-widest text-amber-400 hover:text-white transition-colors">Ver todas</button>
             </div>
           )}
+
+          {!isPremium ? (
+            <>
+              <PremiumEntryBanner
+                variant="sidebar"
+                className="hidden lg:block"
+                onClick={() => openConversion("announcement-sidebar")}
+              />
+              <PremiumEntryButton
+                className="lg:hidden"
+                onClick={() => openConversion("announcement-sidebar")}
+              />
+            </>
+          ) : null}
         </div>
 
         {/* Coluna Principal (Esquerda no Desktop, Baixo no Mobile) */}
@@ -1670,7 +1712,7 @@ export function AnnouncementTab({
               photoLimit={photoLimit}
               videoLimit={videoLimit}
               isPremium={isPremium}
-              onUpgradeClick={() => setPortfolioUpsellOpen(true)}
+              onUpgradeClick={() => openConversion("portfolio", "portfolio")}
               onPhotoClick={(idx) => setActivePhotoIndex(idx)}
               onDeletePhoto={(idx) => deleteMediaAtIndex(idx)}
               onAddPhoto={() => {
@@ -1712,8 +1754,12 @@ export function AnnouncementTab({
                     reader.readAsDataURL(file);
                   });
 
-                  if (blockedByLimit && !isPremium) {
-                    setPortfolioUpsellOpen(true);
+                  if (blockedByLimit) {
+                    if (isPremium) {
+                      showUploadError();
+                    } else {
+                      openConversion("portfolio", "portfolio");
+                    }
                   }
                 };
                 input.click();
@@ -1860,6 +1906,13 @@ export function AnnouncementTab({
               }}
             />
           </SectionCard>
+
+          {!isPremium ? (
+            <PremiumEntryBanner
+              variant="availability"
+              onClick={() => openConversion("announcement-availability")}
+            />
+          ) : null}
 
         </div>
       </div>
@@ -2291,7 +2344,7 @@ function BentoPhotoGallery({
             <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#DAA520]/40 bg-[#121212] p-5 text-center sm:flex-row sm:justify-between sm:text-left">
               <div>
                 <p className="text-sm font-bold text-[#FFDF00]">Seu portfólio está pronto para crescer</p>
-                <p className="mt-1 text-xs text-zinc-300">Você usou seus {photoLimit} espaços de foto. Ganhe liberdade criativa com até 15 fotos e 5 vídeos.</p>
+                <p className="mt-1 text-xs text-zinc-300">Você usou o limite de 10 fotos e 3 vídeos do Standard. No Premium, a mídia do portfólio fica ilimitada.</p>
               </div>
               <ShinyButton size="sm" onClick={onUpgradeClick}>
                 Desbloquear o Portfólio Ilimitado
@@ -2370,7 +2423,7 @@ function BentoPhotoGallery({
             <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#DAA520]/40 bg-[#121212] p-5 text-center sm:flex-row sm:justify-between sm:text-left">
               <div>
                 <p className="text-sm font-bold text-[#FFDF00]">Seu portfólio está pronto para crescer</p>
-                <p className="mt-1 text-xs text-zinc-300">Você usou seus {photoLimit} espaços de foto. Ganhe liberdade criativa com até 15 fotos e 5 vídeos.</p>
+                <p className="mt-1 text-xs text-zinc-300">Você usou o limite de 10 fotos e 3 vídeos do Standard. No Premium, a mídia do portfólio fica ilimitada.</p>
               </div>
               <ShinyButton size="sm" onClick={onUpgradeClick}>
                 Desbloquear o Portfólio Ilimitado
