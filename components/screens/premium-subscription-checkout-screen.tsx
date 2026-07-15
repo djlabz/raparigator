@@ -16,7 +16,7 @@ import type { PremiumBillingCycle } from "@/lib/types";
 import { currency, cn } from "@/lib/utils";
 
 function isBillingCycle(value: string | null): value is PremiumBillingCycle {
-  return value === "monthly" || value === "yearly";
+  return value === "monthly" || value === "semiannual";
 }
 
 export function PremiumSubscriptionCheckoutScreen() {
@@ -25,7 +25,7 @@ export function PremiumSubscriptionCheckoutScreen() {
   const { isPremium, activatePremium } = usePremiumPlan();
 
   const billingParam = searchParams.get("billing");
-  const initialBilling: PremiumBillingCycle = isBillingCycle(billingParam) ? billingParam : "yearly";
+  const initialBilling: PremiumBillingCycle = isBillingCycle(billingParam) ? billingParam : "semiannual";
   const [billingCycle, setBillingCycle] = useState<PremiumBillingCycle>(initialBilling);
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [isPaying, setIsPaying] = useState(false);
@@ -152,7 +152,7 @@ export function PremiumSubscriptionCheckoutScreen() {
                 <span>Plano {selectedPlan.label}</span>
                 <strong className="text-[#FFDF00]">{currency(selectedPlan.price)}</strong>
               </div>
-              {selectedPlan.cycle === "yearly" ? (
+              {selectedPlan.cycle === "semiannual" ? (
                 <p className="text-xs text-zinc-400">Equivale a {currency(selectedPlan.monthlyEquivalent)}/mês</p>
               ) : null}
               <div className="border-t border-white/10 pt-2 text-base">

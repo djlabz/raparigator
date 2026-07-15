@@ -4,7 +4,7 @@ import { useState } from "react";
 import { BarChart3, Lock, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ShinyButton } from "@/components/ui/shiny-button";
-import { PremiumUpsellModal } from "@/components/ui/premium-upsell-modal";
+import { PremiumConversionModal } from "@/components/ui/premium-conversion-modal";
 import { trafficDiscovery } from "@/lib/mock-data";
 import { usePremiumPlan } from "@/lib/premium-plan";
 import { cn } from "@/lib/utils";
@@ -100,7 +100,12 @@ export function TrafficDiscoveryCard() {
         </div>
       ) : null}
 
-      <PremiumUpsellModal open={upsellOpen} onClose={() => setUpsellOpen(false)} highlight="traffic" />
+      <PremiumConversionModal
+        open={upsellOpen}
+        onClose={() => setUpsellOpen(false)}
+        highlight="traffic"
+        from="traffic"
+      />
     </Card>
   );
 }

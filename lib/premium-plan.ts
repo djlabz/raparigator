@@ -6,12 +6,12 @@ import type { PlanTier } from "@/lib/types";
 const PLAN_STORAGE_KEY = "sigillus-premium-plan";
 const VIEW_ONCE_COUNT_KEY = "sigillus-view-once-count";
 
-export const VIEW_ONCE_FREE_LIMIT = 5;
-export const STANDARD_PHOTO_LIMIT = 6;
-export const STANDARD_VIDEO_LIMIT = 1;
-export const PREMIUM_PHOTO_LIMIT = 15;
-export const PREMIUM_VIDEO_LIMIT = 5;
+export const STANDARD_PHOTO_LIMIT = 10;
+export const STANDARD_VIDEO_LIMIT = 3;
+export const PREMIUM_PHOTO_LIMIT = 100;
+export const PREMIUM_VIDEO_LIMIT = 50;
 export const PREMIUM_VISIBILITY_MULTIPLIER = 1.6;
+export const PREMIUM_UPLOAD_ERROR_MESSAGE = "Houve um erro ao fazer o upload";
 
 const listeners = new Set<() => void>();
 
@@ -73,8 +73,7 @@ export function usePremiumPlan() {
     isPremium,
     activatePremium,
     viewOnceUsed,
-    viewOnceRemaining: Math.max(VIEW_ONCE_FREE_LIMIT - viewOnceUsed, 0),
-    canSendViewOnce: isPremium || viewOnceUsed < VIEW_ONCE_FREE_LIMIT,
+    canSendViewOnce: isPremium,
     registerViewOnceSend,
     photoLimit: isPremium ? PREMIUM_PHOTO_LIMIT : STANDARD_PHOTO_LIMIT,
     videoLimit: isPremium ? PREMIUM_VIDEO_LIMIT : STANDARD_VIDEO_LIMIT,

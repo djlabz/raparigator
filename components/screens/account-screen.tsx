@@ -367,7 +367,6 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
                 placeholder={role === "cliente" ? "Como deseja ser chamado(a)" : "Como deseja ser vista(o)"}
                 value={form.alias}
                 onChange={updateField("alias")}
-                
               />
             </div>
 
