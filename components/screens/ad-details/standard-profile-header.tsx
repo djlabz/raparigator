@@ -134,7 +134,7 @@ export function StandardProfileHeader({ ad, onExternalLink }: StandardProfileHea
                   </div>
                   <div className="min-w-0 space-y-1">
                     <p className="text-[10px] font-bold tracking-wider text-zinc-400 uppercase sm:text-xs">{attr.label}</p>
-                    <p className="break-words text-xs font-semibold text-zinc-800 sm:text-base">{attr.value}</p>
+                    <p className="wrap-break-word text-xs font-semibold text-zinc-800 sm:text-base">{attr.value}</p>
                   </div>
                 </div>
               );
