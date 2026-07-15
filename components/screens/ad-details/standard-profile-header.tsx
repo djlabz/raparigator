@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ShieldCheck, MapPin, Share, Heart, Ruler, Weight, Eye, User, Cigarette, Scissors, Upload } from "lucide-react";
+import { ShieldCheck, MapPin, Heart, Ruler, Weight, Eye, User, Cigarette, Scissors, Upload } from "lucide-react";
 import type { ProfessionalAd } from "@/lib/types";
 import { ShareProfileModal } from "@/components/ui/share-profile-modal";
 import { motion } from "motion/react";

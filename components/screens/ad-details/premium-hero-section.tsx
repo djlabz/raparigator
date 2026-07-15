@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { MapPin, ShieldCheck, Share, Heart, Upload } from "lucide-react";
+import { MapPin, ShieldCheck, Heart, Upload } from "lucide-react";
 import type { ProfessionalAd } from "@/lib/types";
 import { ShareProfileModal } from "@/components/ui/share-profile-modal";
 import { motion } from "motion/react";

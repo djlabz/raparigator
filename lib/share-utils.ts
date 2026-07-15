@@ -44,7 +44,7 @@ export function vibrate(ms: number = 50): void {
   if (typeof navigator !== "undefined" && navigator.vibrate) {
     try {
       navigator.vibrate(ms);
-    } catch (e) {
+    } catch {
       // Ignore
     }
   }
