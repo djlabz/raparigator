@@ -181,6 +181,20 @@ a {
   animation: premium-glow-pulse 2.4s ease-in-out infinite;
 }
 
+.premium-panel-shell {
+  border: 1px solid rgba(218, 165, 32, 0.35);
+  background: linear-gradient(145deg, #121212 0%, #1a1a1a 55%, #121212 100%);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.premium-sheen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 223, 0, 0.06) 0%, transparent 42%, rgba(218, 165, 32, 0.08) 100%);
+}
+
 .premium-modal-title {
   font-family: var(--font-display), ui-serif, Georgia, serif;
   font-size: 1.875rem;

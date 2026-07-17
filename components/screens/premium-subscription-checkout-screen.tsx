@@ -3,9 +3,10 @@
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, Crown, CreditCard, QrCode } from "lucide-react";
+import { Check, Crown, CreditCard } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
+import { PixIcon } from "@/components/ui/pix-icon";
 import { ShinyButton } from "@/components/ui/shiny-button";
 import { Toast } from "@/components/ui/toast";
 import { getImmediateGains, getPlanOption, PREMIUM_PLAN_OPTIONS } from "@/lib/premium-catalog";
@@ -147,7 +148,12 @@ export function PremiumSubscriptionCheckoutScreen() {
                         <p className={cn("text-sm font-semibold", selected ? "text-[#FFDF00]" : "text-zinc-300")}>
                           {option.label}
                         </p>
-                        <p className={cn("mt-2 font-display text-3xl font-semibold", selected ? "text-[#FFDF00]" : "text-white")}>
+                        <p
+                          className={cn(
+                            "mt-2 font-sans text-3xl font-semibold tabular-nums tracking-tight",
+                            selected ? "text-[#FFDF00]" : "text-white",
+                          )}
+                        >
                           {currency(option.price)}
                         </p>
                         {option.cycle === "semiannual" ? (
@@ -174,7 +180,7 @@ export function PremiumSubscriptionCheckoutScreen() {
                         : "border-white/10 text-zinc-400 hover:border-[#DAA520]/40 hover:text-zinc-200",
                     )}
                   >
-                    <QrCode className="h-4 w-4" aria-hidden="true" />
+                    <PixIcon className="h-4 w-4" aria-hidden="true" />
                     Pix
                   </button>
                   <button
@@ -284,7 +290,7 @@ export function PremiumSubscriptionCheckoutScreen() {
                 </AnimatePresence>
               </div>
 
-              <ShinyButton fullWidth onClick={handleConfirm}>
+              <ShinyButton fullWidth onClick={handleConfirm} className="tabular-nums tracking-tight">
                 {isPaying ? "Processando..." : `Confirmar · ${currency(selectedPlan.price)}`}
               </ShinyButton>
 
@@ -305,14 +311,18 @@ export function PremiumSubscriptionCheckoutScreen() {
               <div className="mt-4 space-y-3 text-sm">
                 <div className="flex items-center justify-between gap-3 text-zinc-300">
                   <span>Plano {selectedPlan.label}</span>
-                  <strong className="shrink-0 text-[#FFDF00]">{currency(selectedPlan.price)}</strong>
+                  <strong className="shrink-0 font-sans tabular-nums tracking-tight text-[#FFDF00]">
+                    {currency(selectedPlan.price)}
+                  </strong>
                 </div>
                 {selectedPlan.cycle === "semiannual" ? (
                   <p className="text-xs text-zinc-500">Equivale a {currency(selectedPlan.monthlyEquivalent)}/mês</p>
                 ) : null}
                 <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-3 text-base text-white">
                   <span>Total</span>
-                  <strong className="font-display text-2xl text-[#FFDF00]">{currency(selectedPlan.price)}</strong>
+                  <strong className="font-sans text-2xl font-semibold tabular-nums tracking-tight text-[#FFDF00]">
+                    {currency(selectedPlan.price)}
+                  </strong>
                 </div>
               </div>
             </div>
@@ -323,7 +333,7 @@ export function PremiumSubscriptionCheckoutScreen() {
                 {gains.map((gain) => (
                   <li key={gain.id} className="flex items-start gap-3 text-sm leading-snug">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#FFDF00]" aria-hidden="true" />
-                    <span className="min-w-0 break-words">
+                    <span className="min-w-0 wrap-break-word">
                       <span className="block font-medium text-white">{gain.label}</span>
                       <span className="mt-1 block text-xs leading-relaxed text-[#E8C547]">{gain.to}</span>
                     </span>
