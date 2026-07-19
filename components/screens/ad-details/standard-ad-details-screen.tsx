@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useAdDetails } from "./use-ad-details";
 import { StandardProfileHeader } from "./standard-profile-header";
 import { PhotoGallerySection } from "./photo-gallery-section";
@@ -41,6 +42,8 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
     prevPhoto,
   } = useAdDetails(slug);
 
+  const [externalTargetUrl, setExternalTargetUrl] = useState<string | null>(null);
+
   if (!ad) {
     return (
       <AppShell>
@@ -52,7 +55,13 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
   return (
     <AppShell location={`${ad.city}, ${ad.state}`}>
       <div className="mx-auto max-w-6xl space-y-7 pb-24 md:pb-12 xl:max-w-7xl">
-        <StandardProfileHeader ad={ad} />
+        <StandardProfileHeader 
+          ad={ad} 
+          onExternalLink={(target, url) => {
+            setRiskTarget(target);
+            setExternalTargetUrl(url);
+          }} 
+        />
         <PhotoGallerySection
           ad={ad}
           galleryMode={galleryMode}
@@ -109,13 +118,20 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
 
       <RiskWarningModal
         open={Boolean(riskTarget)}
-        onClose={() => setRiskTarget(null)}
+        onClose={() => {
+          setRiskTarget(null);
+          setExternalTargetUrl(null);
+        }}
         targetLabel={riskTarget ?? "canal externo"}
         onConfirm={() => {
           setRiskTarget(null);
-          if (typeof window !== "undefined") {
-            window.open(riskTarget === "WhatsApp" ? "https://web.whatsapp.com" : "https://telegram.org", "_blank", "noopener,noreferrer");
+          if (typeof window !== "undefined" && externalTargetUrl) {
+            window.open(externalTargetUrl, "_blank", "noopener,noreferrer");
+          } else if (typeof window !== "undefined") {
+             // Fallback para clicks do simulador
+             window.open(riskTarget === "WhatsApp" ? "https://wa.me/" : "https://t.me/", "_blank", "noopener,noreferrer");
           }
+          setExternalTargetUrl(null);
         }}
       />
     </AppShell>

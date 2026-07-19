@@ -285,6 +285,7 @@ export function useProfileForm(ad: AdPreview) {
   const [form, setForm] = useState<ProfileFormState>(() => buildInitialState(ad));
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [savedEpoch, setSavedEpoch] = useState(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idleStatusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSavingRef = useRef(false);
@@ -295,20 +296,16 @@ export function useProfileForm(ad: AdPreview) {
     formRef.current = form;
   }, [form]);
 
-  // Profile score
   const score = calculateProfileScore(form);
-
-  // Smart tips
   const tips = generateSmartTips(form);
 
-  // Debounced auto-save
   const triggerSave = useCallback((source: "auto" | "manual" = "auto"): Promise<SaveResult> => {
     const hasChanges = serializeProfileForm(formRef.current) !== lastSavedSnapshotRef.current;
 
     if (!hasChanges) {
-      // Feedback visual de clique sem regravar no backend
       if (source === "manual") {
         setSaveStatus("saved");
+        setSavedEpoch((current) => current + 1);
         if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
         idleStatusTimeoutRef.current = setTimeout(() => setSaveStatus("idle"), 1200);
       }
@@ -320,14 +317,12 @@ export function useProfileForm(ad: AdPreview) {
     isSavingRef.current = true;
     setSaveStatus("saving");
 
-    // Simula chamada API (PATCH incremental)
     return new Promise((resolve) => {
       setTimeout(() => {
         try {
-          // TODO: substituir por chamada real à API
-          // await patchProfile(slug, changedFields)
           const savedAt = new Date();
           lastSavedSnapshotRef.current = serializeProfileForm(formRef.current);
+          setSavedEpoch((current) => current + 1);
           setSaveStatus("saved");
           setLastSavedAt(savedAt);
           if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
@@ -403,7 +398,7 @@ export function useProfileForm(ad: AdPreview) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   useEffect(() => {
     setHasUnsavedChanges(serializeProfileForm(form) !== lastSavedSnapshotRef.current);
-  }, [form]);
+  }, [form, savedEpoch]);
 
   return {
     form,

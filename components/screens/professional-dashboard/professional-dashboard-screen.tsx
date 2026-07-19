@@ -57,7 +57,7 @@ export function ProfessionalDashboardScreen() {
   return (
     <AppShell>
       <div className={cn(
-        "grid gap-4 overflow-x-hidden lg:gap-8 lg:items-start transition-all duration-300",
+        "grid min-w-0 gap-4 lg:gap-8 lg:items-start transition-all duration-300",
         isSidebarCollapsed ? "lg:grid-cols-[80px_1fr]" : "lg:grid-cols-[256px_1fr]"
       )}>
 
@@ -101,7 +101,7 @@ export function ProfessionalDashboardScreen() {
           </nav>
         </aside>
 
-        <div className="space-y-4 overflow-x-hidden lg:space-y-6">
+        <div className="min-w-0 space-y-2 lg:space-y-6">
           {!bannerClosed && (
             <InfoBanner 
               title="Configure seu anúncio" 
@@ -111,23 +111,31 @@ export function ProfessionalDashboardScreen() {
             />
           )}
 
-          {/* Menu Superior Mobile */}
-          <div className="flex gap-2 overflow-auto lg:hidden hide-scrollbar pb-2">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold transition-colors",
-                  activeTab === tab.id ? "bg-wine-700 text-white" : "bg-zinc-100 text-zinc-600"
-                )}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  {tab.icon}
-                </svg>
-                {tab.id}
-              </button>
-            ))}
+          <div className="lg:hidden">
+            <div
+              className={cn(
+                "-mx-1 flex gap-2 overflow-x-auto overscroll-x-contain touch-pan-x px-1 py-2",
+                "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              )}
+            >
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-bold shadow-[0_2px_10px_rgba(15,23,42,0.08)] transition-colors",
+                    activeTab === tab.id
+                      ? "border-wine-700 bg-wine-700 text-white"
+                      : "border-zinc-200/80 bg-white text-zinc-600"
+                  )}
+                >
+                  <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    {tab.icon}
+                  </svg>
+                  {tab.id}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* CONTEÚDO DAS ABAS */}

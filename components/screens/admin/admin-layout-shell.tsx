@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Users, Flag, LogOut, ShieldCheck, ChevronRight, LayoutDashboard, User, ClipboardCheck } from "lucide-react";
 import { useAdminSession } from "@/lib/admin-session";
+import { chromeGlassDark, chromePillDark } from "@/lib/chrome-styles";
+import { cn } from "@/lib/utils";
 import { AdminSearch } from "./admin-search";
 
 interface AdminLayoutShellProps {
@@ -140,35 +142,31 @@ export function AdminLayoutShell({ children, breadcrumb }: AdminLayoutShellProps
         </div>
       </aside>
 
-      {/* ── Main ─────────────────────────────────────────────── */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Header */}
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-zinc-800/60 bg-zinc-900/50 px-6">
-          <div className="flex items-center gap-2 text-sm text-zinc-500">
+      <div className="relative min-h-screen min-w-0 flex-1 overflow-y-auto">
+        <header className={cn(chromeGlassDark, "flex min-h-16 items-center justify-between gap-3 px-4 py-3 sm:px-6")}>
+          <div className={cn(chromePillDark, "inline-flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-300")}>
             <span className="text-zinc-400">Admin</span>
-            {breadcrumb && (
+            {breadcrumb ? (
               <>
                 <ChevronRight className="h-3.5 w-3.5" />
-                <span className="text-zinc-200">{breadcrumb}</span>
+                <span className="text-zinc-100">{breadcrumb}</span>
               </>
-            )}
+            ) : null}
           </div>
-          {/* Busca global */}
           <AdminSearch />
           <button
             onClick={logout}
-            className="flex items-center gap-1.5 rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-500 transition-all hover:border-red-900/60 hover:text-red-400 md:hidden"
+            className={cn(chromePillDark, "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-zinc-400 hover:border-red-900/60 hover:text-red-400 md:hidden")}
           >
             <LogOut className="h-3 w-3" />
             Sair
           </button>
-          <p className="hidden text-xs text-zinc-600 md:block">
+          <p className={cn(chromePillDark, "hidden px-3 py-1.5 text-xs text-zinc-400 md:block")}>
             {admin?.email}
           </p>
         </header>
 
-        {/* Content */}
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <main className="p-6">{children}</main>
       </div>
     </div>
   );

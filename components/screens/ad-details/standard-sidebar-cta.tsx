@@ -11,7 +11,7 @@ interface StandardSidebarCtaProps {
 
 export function StandardSidebarCta({ role, setRiskTarget }: StandardSidebarCtaProps) {
   return (
-    <div className="sticky top-24 flex w-full flex-col gap-4">
+    <div className="sticky top-20 flex w-full flex-col gap-4">
       <div className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="relative z-10 flex flex-col items-center text-center">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-wine-100 bg-red-50 text-wine-700">

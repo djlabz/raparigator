@@ -39,9 +39,9 @@ export function FeedFiltersContent({
   onOpenLocationToolsModal,
 }: FeedFiltersContentProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <section>
-        <label className="mb-3 block text-sm font-bold text-zinc-900">Filtros rápidos</label>
+        <label className="mb-2.5 block text-sm font-bold text-zinc-900">Filtros rápidos</label>
         <div className="flex flex-wrap gap-2">
           {quickFilters.map((filter) => {
             const active = activeQuickFilters.includes(filter);
@@ -64,7 +64,7 @@ export function FeedFiltersContent({
       </section>
 
       <section>
-        <label className="mb-3 flex items-center gap-2 text-sm font-bold text-zinc-900">
+        <label className="mb-2.5 flex items-center gap-2 text-sm font-bold text-zinc-900">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-wine-700" aria-hidden="true">
             <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
             <circle cx="12" cy="10" r="3" />
@@ -83,7 +83,7 @@ export function FeedFiltersContent({
       </section>
 
       <section>
-        <label className="mb-3 block text-sm font-bold text-zinc-900">Gênero & Categoria</label>
+        <label className="mb-2.5 block text-sm font-bold text-zinc-900">Gênero & Categoria</label>
         <div className="grid grid-cols-2 gap-2">
           {[
             "Todas",
@@ -109,7 +109,7 @@ export function FeedFiltersContent({
       </section>
 
       <section>
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-2.5 flex items-center justify-between">
           <label className="text-sm font-bold text-zinc-900">Investimento (h)</label>
           <span className="text-xs font-bold text-wine-700">Até {currency(maxPrice)}</span>
         </div>
@@ -129,7 +129,7 @@ export function FeedFiltersContent({
       </section>
 
       <section>
-        <label className="mb-3 block text-sm font-bold text-zinc-900">Modelos</label>
+        <label className="mb-2.5 block text-sm font-bold text-zinc-900">Modelos</label>
         <div className="space-y-2">
           {[
             "Premium",
@@ -207,7 +207,7 @@ export function FeedFiltersContent({
       </section>
 
       <section>
-        <label className="mb-3 block text-sm font-bold text-zinc-900">Serviços</label>
+        <label className="mb-2.5 block text-sm font-bold text-zinc-900">Serviços</label>
         <div className="space-y-2">
           {[
             "Viagem / Tour",

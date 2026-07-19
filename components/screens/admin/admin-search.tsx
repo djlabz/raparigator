@@ -89,7 +89,7 @@ export function AdminSearch() {
       {/* Trigger button */}
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-sm text-zinc-500 transition-all hover:border-zinc-700 hover:text-zinc-300"
+        className="flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-900/80 px-3 py-1.5 text-sm text-zinc-500 shadow-sm transition-all hover:border-zinc-600 hover:bg-zinc-900 hover:text-zinc-300"
       >
         <Search className="h-3.5 w-3.5" />
         <span className="hidden sm:inline">Buscar…</span>

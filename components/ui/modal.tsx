@@ -1,15 +1,14 @@
 "use client";
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { useModalLock } from "@/lib/modal-lock";
 import { Button } from "./button";
 import { cn } from "@/lib/utils";
 
-let bodyScrollLockCount = 0;
-let previousBodyOverflow: string | null = null;
-
 interface ModalProps {
   open: boolean;
-  title: string;
+  title: ReactNode;
   description?: string;
   onClose: () => void;
   children?: ReactNode;
@@ -17,28 +16,11 @@ interface ModalProps {
   headerActions?: ReactNode;
   size?: "sm" | "md";
   mobileCentered?: boolean;
+  titleClassName?: string;
 }
 
-export function Modal({ open, title, description, onClose, children, actions, headerActions, size = "sm", mobileCentered = false }: ModalProps) {
-  useEffect(() => {
-    if (!open) return;
-
-    if (bodyScrollLockCount === 0) {
-      previousBodyOverflow = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-    }
-
-    bodyScrollLockCount += 1;
-
-    return () => {
-      bodyScrollLockCount = Math.max(0, bodyScrollLockCount - 1);
-
-      if (bodyScrollLockCount === 0 && previousBodyOverflow !== null) {
-        document.body.style.overflow = previousBodyOverflow;
-        previousBodyOverflow = null;
-      }
-    };
-  }, [open]);
+export function Modal({ open, title, description, onClose, children, actions, headerActions, size = "sm", mobileCentered = false, titleClassName }: ModalProps) {
+  useModalLock(open);
 
   if (!open) return null;
 
@@ -48,24 +30,29 @@ export function Modal({ open, title, description, onClose, children, actions, he
     </Button>
   ) : actions;
 
-  return (
+  return createPortal(
     <div className={cn(
       "fixed inset-0 z-220 flex bg-zinc-900/50 px-3 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] touch-none sm:px-4 sm:items-center sm:justify-center",
-      mobileCentered ? "items-center" : "items-end"
+      mobileCentered ? "items-center" : "items-end",
+      "animate-[modal-overlay-in_200ms_ease-out_forwards]"
     )} role="dialog" aria-modal="true">
       <div
         className={cn(
           "flex w-full flex-col overflow-hidden rounded-3xl bg-white p-4 shadow-xl sm:rounded-2xl sm:p-5",
           mobileCentered ? "max-h-[min(92dvh,48rem)]" : "max-h-[min(94dvh,48rem)]",
-          size === "md" ? "sm:max-w-2xl" : "sm:max-w-md"
+          size === "md" ? "sm:max-w-2xl" : "sm:max-w-md",
+          "animate-[modal-content-in_300ms_ease-out_forwards]"
         )}
         style={{
           maxHeight: mobileCentered ? "calc(92dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))" : "calc(94dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))",
         }}
       >
-        <div className="mb-4 flex items-start justify-between gap-3 sm:gap-4">
-          <div className="space-y-1">
-            <h3 className="text-lg font-semibold leading-tight text-zinc-900 sm:text-lg">{title}</h3>
+        <div className={cn(
+          "flex justify-between gap-3 sm:gap-4",
+          description ? "mb-4 items-start" : "mb-3 items-center"
+        )}>
+          <div className={cn("min-w-0", description && "space-y-1")}>
+            <h3 className={cn("font-semibold leading-tight", titleClassName ?? "text-lg text-zinc-900 sm:text-lg")}>{title}</h3>
             {description ? <p className="text-sm leading-snug text-zinc-600">{description}</p> : null}
           </div>
           <div className="flex items-center gap-2">
@@ -100,6 +87,15 @@ export function Modal({ open, title, description, onClose, children, actions, he
       </div>
       <button aria-label="Fechar modal" className="absolute inset-0 -z-10" onClick={onClose} />
       <style jsx>{`
+        @keyframes modal-overlay-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes modal-content-in {
+          from { opacity: 0; transform: translateY(1rem); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
         .modal-scroll {
           scrollbar-width: none;
           -ms-overflow-style: none;
@@ -122,6 +118,7 @@ export function Modal({ open, title, description, onClose, children, actions, he
           }
         }
       `}</style>
-    </div>
+    </div>,
+    document.body,
   );
 }
