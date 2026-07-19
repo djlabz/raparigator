@@ -12,6 +12,8 @@ import {
 import { cn } from "@/lib/utils";
 import { AccountMenu } from "./account-menu";
 import { ChromeScrim } from "./chrome-scrim";
+import { FeedHeaderDesktopTitle, FeedHeaderTitleSlot } from "./feed-header-title-slot";
+import { useFeedHeaderTitleFlags } from "@/components/screens/feed-screen/feed-header-title-context";
 
 interface TopHeaderProps {
   role: AuthRole;
@@ -22,6 +24,9 @@ interface TopHeaderProps {
 }
 
 export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeaderProps) {
+  const { enabled, mode } = useFeedHeaderTitleFlags();
+  const feedDesktop = enabled && mode === "desktop";
+
   return (
     <header className={cn(chromeGlassFixed, "pointer-events-none")}>
       <ChromeScrim />
@@ -30,22 +35,19 @@ export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeade
         className={cn(
           chromeControlsRow,
           chromeSafeTop,
-          "mx-auto flex w-full max-w-7xl items-center gap-3 px-4 pb-3 sm:gap-4 sm:px-6 md:pb-4 lg:max-w-430 lg:px-8"
+          "relative mx-auto flex w-full max-w-7xl items-center gap-3 px-4 pb-3 sm:gap-4 sm:px-6 md:pb-4 lg:max-w-430 lg:px-8"
         )}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-3 md:gap-5">
-          <div className="flex shrink-0 items-center gap-2 md:gap-3">
+        {feedDesktop ? <FeedHeaderDesktopTitle /> : null}
+
+        <div className="relative z-20 flex min-w-0 flex-1 items-center gap-3 md:gap-5">
+          <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
             <BackButton onBack={onBack} />
-            <Link
-              href="/"
-              className="font-display text-xl tracking-wide text-wine-800 md:text-2xl"
-            >
-              Sigillus
-            </Link>
+            <FeedHeaderTitleSlot />
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="relative z-20 flex shrink-0 items-center gap-2">
           {isLoggedIn ? (
             <AccountMenu role={role} user={user} onLogout={onLogout} />
           ) : (

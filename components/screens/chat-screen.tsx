@@ -24,7 +24,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, type RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AppShell } from "../layout/app-shell";
+import { useSetShellChrome } from "@/components/layout/shell-chrome";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { PremiumConversionModal, type PremiumHighlight } from "@/components/ui/premium-conversion-modal";
@@ -563,10 +563,17 @@ export function ChatScreen() {
   };
 
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Olá ${activeConversation?.contactName ?? ""}, vim pelo Sigillus.`)}`;
+  const conversationOpenMobile =
+    isLoggedIn && isMobileViewport && mobileConversationOpen && Boolean(activeConversation);
+
+  useSetShellChrome({
+    hideMobileBottomNav: conversationOpenMobile,
+    hideTopHeader: conversationOpenMobile,
+    mainClassName: conversationOpenMobile ? "px-0 pb-0 pt-0 sm:px-0" : undefined,
+  });
 
   if (!isLoggedIn) {
     return (
-      <AppShell>
         <div className="flex min-h-120 items-center justify-center rounded-3xl border border-zinc-200 bg-white p-6 text-center shadow-sm">
           <div className="max-w-md">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-wine-50 text-wine-700">
@@ -584,18 +591,11 @@ export function ChatScreen() {
             </div>
           </div>
         </div>
-      </AppShell>
     );
   }
 
-  const conversationOpenMobile = isMobileViewport && mobileConversationOpen && Boolean(activeConversation);
-
   return (
-    <AppShell
-      hideMobileBottomNav={conversationOpenMobile}
-      hideTopHeader={conversationOpenMobile}
-      mainClassName={conversationOpenMobile ? "px-0 pb-0 pt-0 sm:px-0" : undefined}
-    >
+    <>
       <div className="fixed right-4 top-4 z-240 w-[min(22rem,calc(100vw-2rem))] space-y-2">
         {toast ? <Toast title={toast.title} message={toast.message} type={toast.type} /> : null}
       </div>
@@ -992,7 +992,7 @@ export function ChatScreen() {
           maxLength={600}
         />
       </Modal>
-    </AppShell>
+    </>
   );
 }
 

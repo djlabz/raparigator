@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import type { NavigationItem } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +13,13 @@ interface DesktopNavProps {
 
 export function DesktopNav({ items, className }: DesktopNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    items.forEach((item) => {
+      router.prefetch(item.href);
+    });
+  }, [items, router]);
 
   if (items.length === 0) {
     return null;
@@ -33,6 +41,7 @@ export function DesktopNav({ items, className }: DesktopNavProps) {
           <Link
             key={item.href}
             href={item.href}
+            prefetch
             className={cn(
               "inline-flex h-full min-w-0 items-center justify-center rounded-full px-2.5 text-[0.9375rem] font-semibold tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-500 focus-visible:ring-offset-2",
               active

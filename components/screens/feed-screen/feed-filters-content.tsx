@@ -6,6 +6,7 @@ import { quickFilters } from "./constants";
 type SelectionField = "ethnicities" | "hairs" | "services";
 
 interface FeedFiltersContentProps {
+  resultCount: number;
   selectedLocation: string;
   activeQuickFilters: string[];
   selectedGender: string;
@@ -23,6 +24,7 @@ interface FeedFiltersContentProps {
 }
 
 export function FeedFiltersContent({
+  resultCount,
   selectedLocation,
   activeQuickFilters,
   selectedGender,
@@ -40,6 +42,10 @@ export function FeedFiltersContent({
 }: FeedFiltersContentProps) {
   return (
     <div className="space-y-5">
+      <p className="text-sm whitespace-nowrap text-zinc-500">
+        {resultCount} perfis encontrados
+      </p>
+
       <section>
         <label className="mb-2.5 block text-sm font-bold text-zinc-900">Filtros rápidos</label>
         <div className="flex flex-wrap gap-2">

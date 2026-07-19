@@ -16,11 +16,13 @@ Frontend de uma plataforma de anúncios de acompanhantes com feed, chat, checkou
 - Build de produção: `npm run build` · servir build: `npm run start`
 - Não existe suite de testes; a verificação é lint + build + checagem visual
 - Logins de teste estão em `credenciais_mock.txt`
+- PWA / tela cheia: em aba normal do navegador a barra de endereço não pode ser escondida de forma permanente. Para experiência tipo app nativo, instale via “Adicionar à Tela de Início” / “Instalar app” (`display: standalone` em `app/manifest.ts`). Valide nesse modo, não só no tunnel Cloudflare.
 
 ## Estrutura
 
-- `app/(public)` → rotas abertas (feed, auth, anúncio, checkout, acompanhamento)
-- `app/(private)` → rotas logadas (chat, conta, painel do profissional)
+- `app/(tabs)` → abas principais com shell persistente (feed, chat, acompanhamento, painel)
+- `app/(public)` → rotas abertas (auth, anúncio, checkout, popular)
+- `app/(private)` → rotas logadas fora das abas (conta, financeiro, anúncios)
 - `app/(admin)` → backoffice de administradores
 - `components/ui` → primitivos genéricos · `components/layout` → navbar/footer/sidebar · `components/screens` → blocos grandes de página
 - `lib/` → tipos (`types.ts` é a fonte de verdade), mocks e serviços (auth-session, chat-service, admin-service etc.)

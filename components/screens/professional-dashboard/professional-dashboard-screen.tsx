@@ -1,10 +1,11 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/lib/auth-session";
 import { useAccountNotifications } from "@/lib/account-notifications";
 import type { AuthRole } from "@/lib/types";
@@ -12,10 +13,32 @@ import { ads } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { InfoBanner } from "@/components/ui/info-banner";
 import { SummaryTab } from "./summary-tab";
-import { AnnouncementTab } from "./announcement-tab";
-import { HistoryTab } from "./history-tab";
 import type { AdStatus } from "./types";
 import { confirmVerificationCode, getVerificationState, sendVerificationCode, type VerificationChannel, type VerificationState } from "@/lib/verification";
+
+function DashboardTabSkeleton() {
+  return (
+    <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-40 w-full" />
+      <Skeleton className="h-24 w-full" />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+      </div>
+    </div>
+  );
+}
+
+const AnnouncementTab = dynamic(
+  () => import("./announcement-tab").then((mod) => mod.AnnouncementTab),
+  { loading: () => <DashboardTabSkeleton /> }
+);
+
+const HistoryTab = dynamic(
+  () => import("./history-tab").then((mod) => mod.HistoryTab),
+  { loading: () => <DashboardTabSkeleton /> }
+);
 
 const TABS = [
   { id: "Resumo", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /> },
@@ -55,7 +78,6 @@ export function ProfessionalDashboardScreen() {
   const adSlug = currentAd.slug;
 
   return (
-    <AppShell>
       <div className={cn(
         "grid min-w-0 gap-4 lg:gap-8 lg:items-start transition-all duration-300",
         isSidebarCollapsed ? "lg:grid-cols-[80px_1fr]" : "lg:grid-cols-[256px_1fr]"
@@ -153,7 +175,6 @@ export function ProfessionalDashboardScreen() {
           {activeTab === "Verificação" && <VerificationTab />}
         </div>
       </div>
-    </AppShell>
   );
 }
 

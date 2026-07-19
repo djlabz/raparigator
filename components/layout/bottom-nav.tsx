@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -121,6 +121,7 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
 
 export function BottomNav({ items }: BottomNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState(pathname);
   const listRef = useRef<HTMLUListElement>(null);
   const itemRefs = useRef(new Map<string, HTMLLIElement>());
@@ -129,6 +130,12 @@ export function BottomNav({ items }: BottomNavProps) {
   useEffect(() => {
     setActiveTab(pathname);
   }, [pathname]);
+
+  useEffect(() => {
+    items.forEach((item) => {
+      router.prefetch(item.href);
+    });
+  }, [items, router]);
 
   const updateIndicator = useCallback(() => {
     const list = listRef.current;
