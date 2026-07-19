@@ -2,10 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
+import { DesktopNav } from "@/components/layout/desktop-nav";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthSession } from "@/lib/auth-session";
+import { getNavigationItems } from "@/lib/navigation";
 import { ads, cities } from "@/lib/mock-data";
 import { FeedAdCard } from "./feed-ad-card";
 import { FeedSectionDivider } from "./feed-section-divider";
@@ -14,6 +17,8 @@ import { FeedLocationModal } from "./feed-location-modal";
 import { categoryByGender, defaultGender, defaultLocationLabel, defaultMaxPrice, normalizeText } from "./constants";
 
 export function FeedScreen() {
+  const { role } = useAuthSession();
+  const navigationItems = getNavigationItems(role);
   const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const initialLocation = searchParams.get("location") || "";
   const initialCity = initialLocation ? initialLocation.split(", ")[1] || "all" : "all";
@@ -183,55 +188,65 @@ export function FeedScreen() {
   };
 
   return (
-    <AppShell location={selectedLocation}>
+    <AppShell location={selectedLocation} hideDesktopNav>
       <div className="space-y-6 select-none">
         <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <aside className="hidden min-w-70 shrink-0 flex-col lg:flex">
-            <div className="sticky top-20 flex max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-              <div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50 p-5">
-                <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-900">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
-                    <line x1="21" x2="14" y1="4" y2="4" />
-                    <line x1="10" x2="3" y1="4" y2="4" />
-                    <line x1="21" x2="12" y1="12" y2="12" />
-                    <line x1="8" x2="3" y1="12" y2="12" />
-                    <line x1="21" x2="16" y1="20" y2="20" />
-                    <line x1="12" x2="3" y1="20" y2="20" />
-                    <line x1="14" x2="14" y1="2" y2="6" />
-                    <line x1="8" x2="8" y1="10" y2="14" />
-                    <line x1="16" x2="16" y1="18" y2="22" />
-                  </svg>
-                  Filtros
-                </h3>
-                <button onClick={clearFilters} className="text-xs font-bold uppercase tracking-wider text-wine-700 hover:underline">Limpar</button>
-              </div>
+            <div className="sticky top-20 flex max-h-[calc(100vh-6rem)] flex-col gap-3">
+              {navigationItems.length > 0 ? (
+                <DesktopNav items={navigationItems} />
+              ) : null}
 
-              <div className="custom-scrollbar flex-1 overflow-y-auto bg-white p-5">
-                <FeedFiltersContent
-                  selectedLocation={selectedLocation}
-                  activeQuickFilters={activeQuickFilters}
-                  selectedGender={selectedGender}
-                  maxPrice={maxPrice}
-                  selectedAdTypes={selectedAdTypes}
-                  selectedEthnicities={selectedEthnicities}
-                  selectedHairs={selectedHairs}
-                  selectedServices={selectedServices}
-                  onToggleQuickFilter={toggleQuickFilter}
-                  onSelectGender={setSelectedGender}
-                  onSetMaxPrice={setMaxPrice}
-                  onToggleAdTypeFilter={toggleAdTypeFilter}
-                  onToggleSelection={(field, value) => {
-                    if (field === "ethnicities") toggleSelection(setSelectedEthnicities, value);
-                    if (field === "hairs") toggleSelection(setSelectedHairs, value);
-                    if (field === "services") toggleSelection(setSelectedServices, value);
-                  }}
-                  onOpenLocationToolsModal={openLocationToolsModal}
-                />
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+                <div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50 p-5">
+                  <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-900">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
+                      <line x1="21" x2="14" y1="4" y2="4" />
+                      <line x1="10" x2="3" y1="4" y2="4" />
+                      <line x1="21" x2="12" y1="12" y2="12" />
+                      <line x1="8" x2="3" y1="12" y2="12" />
+                      <line x1="21" x2="16" y1="20" y2="20" />
+                      <line x1="12" x2="3" y1="20" y2="20" />
+                      <line x1="14" x2="14" y1="2" y2="6" />
+                      <line x1="8" x2="8" y1="10" y2="14" />
+                      <line x1="16" x2="16" y1="18" y2="22" />
+                    </svg>
+                    Filtros
+                  </h3>
+                  <button onClick={clearFilters} className="text-xs font-bold uppercase tracking-wider text-wine-700 hover:underline">Limpar</button>
+                </div>
+
+                <div className="custom-scrollbar flex-1 overflow-y-auto bg-white p-5">
+                  <FeedFiltersContent
+                    selectedLocation={selectedLocation}
+                    activeQuickFilters={activeQuickFilters}
+                    selectedGender={selectedGender}
+                    maxPrice={maxPrice}
+                    selectedAdTypes={selectedAdTypes}
+                    selectedEthnicities={selectedEthnicities}
+                    selectedHairs={selectedHairs}
+                    selectedServices={selectedServices}
+                    onToggleQuickFilter={toggleQuickFilter}
+                    onSelectGender={setSelectedGender}
+                    onSetMaxPrice={setMaxPrice}
+                    onToggleAdTypeFilter={toggleAdTypeFilter}
+                    onToggleSelection={(field, value) => {
+                      if (field === "ethnicities") toggleSelection(setSelectedEthnicities, value);
+                      if (field === "hairs") toggleSelection(setSelectedHairs, value);
+                      if (field === "services") toggleSelection(setSelectedServices, value);
+                    }}
+                    onOpenLocationToolsModal={openLocationToolsModal}
+                  />
+                </div>
               </div>
             </div>
           </aside>
 
           <div className="space-y-4">
+            {navigationItems.length > 0 ? (
+              <DesktopNav items={navigationItems} className="mb-1 hidden md:grid lg:hidden" />
+            ) : null}
+
             <div className="mb-4 flex items-end justify-between gap-3">
               <div>
                 <h1 className="text-2xl font-extrabold text-zinc-900">Acompanhantes</h1>
