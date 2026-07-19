@@ -1,6 +1,11 @@
-# CLAUDE.md
+# Raparigator — Claude Code
 
-Leia `AGENTS.md` como contrato canonico deste repositorio.
+Todas as instruções do projeto (stack, comandos, estrutura, convenções e proibições) estão em um único lugar. Leia e siga:
 
-Este arquivo e apenas um adapter para Claude Code. Nao duplique regras aqui.
-Se houver conflito entre este arquivo e `AGENTS.md`, siga `AGENTS.md` e atualize este adapter.
+@AGENTS.md
+
+Regras específicas para o Claude Code:
+
+- Rode `npm run lint` antes de encerrar qualquer tarefa
+- Nunca rode `npm run share` sem o usuário pedir (expõe o localhost publicamente)
+- Em caso de conflito entre este arquivo e o AGENTS.md, o AGENTS.md prevalece

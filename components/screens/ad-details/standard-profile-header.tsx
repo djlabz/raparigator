@@ -1,14 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
-import { ShieldCheck, MapPin, Share, Heart, Ruler, Weight, Eye, User, Cigarette, Scissors } from "lucide-react";
+import { ShieldCheck, MapPin, Heart, Ruler, Weight, Eye, User, Cigarette, Scissors, Upload } from "lucide-react";
 import type { ProfessionalAd } from "@/lib/types";
+import { ShareProfileModal } from "@/components/ui/share-profile-modal";
+import { motion } from "motion/react";
 
 interface StandardProfileHeaderProps {
   ad: ProfessionalAd;
+  onExternalLink?: (target: "WhatsApp" | "Telegram", url: string) => void;
 }
 
-export function StandardProfileHeader({ ad }: StandardProfileHeaderProps) {
+export function StandardProfileHeader({ ad, onExternalLink }: StandardProfileHeaderProps) {
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const attributes = [
     { label: "Altura", value: `${ad.heightCm} cm`, icon: Ruler },
     { label: "Cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: Scissors },
@@ -32,24 +37,29 @@ export function StandardProfileHeader({ ad }: StandardProfileHeaderProps) {
           draggable={false}
         />
 
-        <div className="absolute top-4 right-4 flex items-center gap-2">
-          <button
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.85 }}
             type="button"
-            className="flex cursor-pointer items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white/90 p-2 shadow-sm backdrop-blur-md transition-transform hover:scale-105 active:scale-95 sm:px-3 sm:py-1.5"
+            onClick={() => setShareModalOpen(true)}
+            className="flex cursor-pointer items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white/90 p-2 shadow-sm backdrop-blur-md sm:px-3 sm:py-1.5"
           >
-            <Share className="h-4 w-4 text-zinc-600" strokeWidth={2.5} />
+            <Upload className="h-4 w-4 text-zinc-600" strokeWidth={2.5} />
             <span className="hidden text-xs font-semibold text-zinc-700 sm:inline-block">Compartilhar</span>
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.85 }}
             type="button"
-            className="flex cursor-pointer items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white/90 p-2 shadow-sm backdrop-blur-md transition-transform hover:scale-105 active:scale-95 sm:px-3 sm:py-1.5"
+            className="flex cursor-pointer items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white/90 p-2 shadow-sm backdrop-blur-md sm:px-3 sm:py-1.5"
           >
             <Heart className="h-4 w-4 text-zinc-600" strokeWidth={2.5} />
             <span className="hidden text-xs font-semibold text-zinc-700 sm:inline-block">Salvar</span>
-          </button>
+          </motion.button>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 z-10 h-40 bg-linear-to-t from-white via-white/70 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 z-10 h-16 pointer-events-none bg-linear-to-t from-white to-transparent" />
       </div>
 
       <div className="relative z-10 w-full px-4 pb-4 sm:px-8 sm:pb-6 md:px-12 md:pb-8">
@@ -85,7 +95,7 @@ export function StandardProfileHeader({ ad }: StandardProfileHeaderProps) {
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-zinc-500 sm:gap-x-5 sm:text-sm">
                   <span className="flex items-center gap-1.5 font-medium leading-none">
-                    <MapPin className="h-3.5 w-3.5 shrink-0 text-wine-700 sm:h-4 sm:w-4" />
+                    <MapPin className="h-3.5 w-3.5 shrink-0 text-red-500 sm:h-4 sm:w-4" />
                     {ad.neighborhood}, {ad.city}
                   </span>
 
@@ -124,7 +134,7 @@ export function StandardProfileHeader({ ad }: StandardProfileHeaderProps) {
                   </div>
                   <div className="min-w-0 space-y-1">
                     <p className="text-[10px] font-bold tracking-wider text-zinc-400 uppercase sm:text-xs">{attr.label}</p>
-                    <p className="truncate text-xs font-semibold text-zinc-800 sm:text-base">{attr.value}</p>
+                    <p className="wrap-break-word text-xs font-semibold text-zinc-800 sm:text-base">{attr.value}</p>
                   </div>
                 </div>
               );
@@ -132,6 +142,17 @@ export function StandardProfileHeader({ ad }: StandardProfileHeaderProps) {
           </div>
         </div>
       </div>
+
+      <ShareProfileModal
+        open={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        ad={ad}
+        isPremium={false}
+        onExternalLink={(target, url) => {
+          setShareModalOpen(false);
+          onExternalLink?.(target, url);
+        }}
+      />
     </section>
   );
 }

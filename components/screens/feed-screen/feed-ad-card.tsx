@@ -7,7 +7,7 @@ import type { ProfessionalAd } from "@/lib/types";
 import { cn, currency } from "@/lib/utils";
 import { FEED_CARD_SIZE_CLASS } from "./constants";
 
-export function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
+export function FeedAdCard({ ad, priority = false }: { ad: ProfessionalAd; priority?: boolean }) {
   const [imageIndex, setImageIndex] = useState(0);
   const isPremium = ad.adTier === "premium";
 
@@ -76,6 +76,7 @@ export function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
                 src={premiumImage}
                 alt={`${ad.artisticName} premium`}
                 fill
+                priority={priority}
                 className="object-cover opacity-90 transition-transform duration-700 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, 33vw"
               />
@@ -135,6 +136,7 @@ export function FeedAdCard({ ad }: { ad: ProfessionalAd }) {
               src={currentImage}
               alt={`${ad.artisticName} em ${ad.city}`}
               fill
+              priority={priority}
               className="object-cover object-center opacity-90 transition-transform duration-700 transform-[translateZ(0)] group-hover:scale-105"
               sizes="(max-width: 640px) 100vw, 320px"
             />

@@ -1,5 +1,6 @@
-﻿import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
+import { MobileNavHost } from "@/components/layout/mobile-nav-host";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -13,6 +14,14 @@ const cormorant = Cormorant_Garamond({
   weight: ["500", "600", "700"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#fafafa",
+  colorScheme: "light",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://sigillus.app"),
   title: {
@@ -24,6 +33,14 @@ export const metadata: Metadata = {
   applicationName: "Sigillus",
   keywords: ["sigillus", "plataforma", "anuncios verificados", "seguranca", "discricao"],
   manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Sigillus",
+    statusBarStyle: "black-translucent",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
@@ -33,7 +50,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${manrope.variable} ${cormorant.variable} antialiased`}>{children}</body>
+      <body className={`${manrope.variable} ${cormorant.variable} antialiased`}>
+        {children}
+        <MobileNavHost />
+      </body>
     </html>
   );
 }
