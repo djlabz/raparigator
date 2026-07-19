@@ -1,5 +1,6 @@
-﻿import type { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
+import { MobileNavHost } from "@/components/layout/mobile-nav-host";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -49,7 +50,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${manrope.variable} ${cormorant.variable} antialiased`}>{children}</body>
+      <body className={`${manrope.variable} ${cormorant.variable} antialiased`}>
+        {children}
+        <MobileNavHost />
+      </body>
     </html>
   );
 }

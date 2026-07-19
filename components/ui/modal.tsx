@@ -47,8 +47,11 @@ export function Modal({ open, title, description, onClose, children, actions, he
           maxHeight: mobileCentered ? "calc(92dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))" : "calc(94dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))",
         }}
       >
-        <div className="mb-4 flex items-start justify-between gap-3 sm:gap-4">
-          <div className="min-w-0 space-y-1">
+        <div className={cn(
+          "flex justify-between gap-3 sm:gap-4",
+          description ? "mb-4 items-start" : "mb-3 items-center"
+        )}>
+          <div className={cn("min-w-0", description && "space-y-1")}>
             <h3 className={cn("font-semibold leading-tight", titleClassName ?? "text-lg text-zinc-900 sm:text-lg")}>{title}</h3>
             {description ? <p className="text-sm leading-snug text-zinc-600">{description}</p> : null}
           </div>

@@ -2,9 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, useId, useSyncExternalStore } from "react";
-import { motion } from "framer-motion";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import { motion } from "motion/react";
 import type { NavigationItem } from "@/lib/navigation";
+import {
+  getDirectionBetweenTabs,
+  saveCurrentTabScroll,
+  setTabDirection,
+} from "@/lib/tab-navigation";
 import { cn } from "@/lib/utils";
 import { getChatSnapshot, getChatUnreadCount, subscribeChatUnread } from "@/lib/chat-service";
 
@@ -12,8 +24,18 @@ interface BottomNavProps {
   items: NavigationItem[];
 }
 
+const pillTransition = {
+  type: "spring" as const,
+  stiffness: 420,
+  damping: 32,
+  mass: 0.75,
+};
+
 function getNavIcon(label: string, href: string, active: boolean, unreadCount: number = 0) {
-  const iconClassName = active ? "text-white" : "text-zinc-700";
+  const iconClassName = cn(
+    "transition-colors duration-200",
+    active ? "text-white" : "text-zinc-700"
+  );
 
   if (label === "Feed" || href === "/feed") {
     return (
@@ -99,12 +121,47 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
 
 export function BottomNav({ items }: BottomNavProps) {
   const pathname = usePathname();
-  const id = useId();
   const [activeTab, setActiveTab] = useState(pathname);
+  const listRef = useRef<HTMLUListElement>(null);
+  const itemRefs = useRef(new Map<string, HTMLLIElement>());
+  const [indicator, setIndicator] = useState({ x: 0, width: 0, ready: false });
 
   useEffect(() => {
     setActiveTab(pathname);
   }, [pathname]);
+
+  const updateIndicator = useCallback(() => {
+    const list = listRef.current;
+    const activeItem = items.find((item) => activeTab.startsWith(item.href));
+    const itemEl = activeItem ? itemRefs.current.get(activeItem.href) : null;
+
+    if (!list || !itemEl) {
+      return;
+    }
+
+    setIndicator({
+      x: itemEl.offsetLeft,
+      width: itemEl.offsetWidth,
+      ready: true,
+    });
+  }, [activeTab, items]);
+
+  useLayoutEffect(() => {
+    updateIndicator();
+  }, [updateIndicator]);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      updateIndicator();
+    });
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [updateIndicator]);
 
   const hasChat = items.some((item) => item.label === "Chat" || item.href === "/chat");
   const unreadCount = useSyncExternalStore(subscribeChatUnread, getChatUnreadCount, () => 0);
@@ -127,40 +184,63 @@ export function BottomNav({ items }: BottomNavProps) {
       className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-2 md:hidden"
       aria-label="Navegação principal"
     >
-      <div className="pointer-events-auto relative w-max rounded-full border border-white/40 bg-white/30 shadow-[0_12px_32px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,0.7)] backdrop-blur-3xl backdrop-saturate-200 supports-backdrop-filter:bg-white/20">
+      <div className="pointer-events-auto relative w-max overflow-hidden rounded-full border border-white/40 bg-white/30 shadow-[0_12px_32px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,0.7)] backdrop-blur-3xl backdrop-saturate-200 supports-backdrop-filter:bg-white/20">
         <div className="pointer-events-none absolute inset-0 rounded-full bg-linear-to-b from-white/50 via-white/10 to-transparent mix-blend-overlay" />
-        <ul className="relative flex items-center justify-center gap-2 px-2 py-2">
+        <ul ref={listRef} className="relative flex items-center justify-center gap-2 px-2 py-2">
+          <motion.div
+            aria-hidden="true"
+            className="pointer-events-none absolute top-2 h-12 rounded-full bg-wine-700/90 shadow-[0_4px_20px_rgba(159,18,57,0.5),inset_0_1px_1px_rgba(255,255,255,0.4)]"
+            initial={false}
+            animate={{
+              x: indicator.x,
+              width: indicator.width || 56,
+              opacity: indicator.ready ? 1 : 0,
+            }}
+            transition={pillTransition}
+            style={{ left: 0 }}
+          />
           {items.map((item) => {
             const active = activeTab.startsWith(item.href);
             return (
-              <li key={item.href} className="relative flex h-12 w-14 items-center justify-center">
-                {active && (
-                  <motion.div
-                    layoutId={`active-nav-pill-${id}`}
-                    className="absolute inset-0 rounded-full bg-wine-700/90 shadow-[0_4px_20px_rgba(159,18,57,0.5),inset_0_1px_1px_rgba(255,255,255,0.4)]"
-                    initial={false}
-                    transition={{
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 30,
-                      mass: 0.8
-                    }}
-                  />
-                )}
-                <Link
-                  href={item.href}
-                  aria-label={item.label}
-                  title={item.label}
-                  onClick={() => setActiveTab(item.href)}
-                  className={cn(
-                    "relative z-10 flex h-full w-full items-center justify-center rounded-full transition-colors duration-200",
-                    active
-                      ? "text-white"
-                      : "text-zinc-600 active:bg-white/30 active:scale-95"
-                  )}
+              <li
+                key={item.href}
+                ref={(node) => {
+                  if (node) {
+                    itemRefs.current.set(item.href, node);
+                  } else {
+                    itemRefs.current.delete(item.href);
+                  }
+                }}
+                className="relative flex h-12 w-14 items-center justify-center"
+              >
+                <motion.div
+                  className="relative z-10 h-full w-full"
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 28 }}
                 >
-                  {getNavIcon(item.label, item.href, active, unreadCount)}
-                </Link>
+                  <Link
+                    href={item.href}
+                    prefetch
+                    aria-label={item.label}
+                    title={item.label}
+                    onClick={() => {
+                      if (activeTab.startsWith(item.href)) {
+                        return;
+                      }
+
+                      saveCurrentTabScroll(pathname, items);
+                      const direction = getDirectionBetweenTabs(pathname, item.href, items);
+                      setTabDirection(direction);
+                      setActiveTab(item.href);
+                    }}
+                    className={cn(
+                      "flex h-full w-full items-center justify-center rounded-full",
+                      active ? "text-white" : "text-zinc-600"
+                    )}
+                  >
+                    {getNavIcon(item.label, item.href, active, unreadCount)}
+                  </Link>
+                </motion.div>
               </li>
             );
           })}
