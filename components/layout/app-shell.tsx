@@ -7,16 +7,25 @@ import { chromeHeaderOffset } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
 import { TopHeader } from "./top-header";
 import { BottomNav } from "./bottom-nav";
+import { DesktopNav } from "./desktop-nav";
 
 interface AppShellProps extends PropsWithChildren {
   location?: string;
   hideMobileBottomNav?: boolean;
   hideTopHeader?: boolean;
+  hideDesktopNav?: boolean;
   onBack?: () => void;
   mainClassName?: string;
 }
 
-export function AppShell({ children, hideMobileBottomNav = false, hideTopHeader = false, onBack, mainClassName }: AppShellProps) {
+export function AppShell({
+  children,
+  hideMobileBottomNav = false,
+  hideTopHeader = false,
+  hideDesktopNav = false,
+  onBack,
+  mainClassName,
+}: AppShellProps) {
   const { role, user, isLoggedIn, logout } = useAuthSession();
   const navigationItems = getNavigationItems(role);
 
@@ -29,7 +38,6 @@ export function AppShell({ children, hideMobileBottomNav = false, hideTopHeader 
           isLoggedIn={isLoggedIn}
           onLogout={logout}
           onBack={onBack}
-          navigationItems={navigationItems}
         />
       )}
       <main
@@ -40,6 +48,9 @@ export function AppShell({ children, hideMobileBottomNav = false, hideTopHeader 
           mainClassName
         )}
       >
+        {!hideDesktopNav && navigationItems.length > 0 ? (
+          <DesktopNav items={navigationItems} className="mb-4 hidden md:grid" />
+        ) : null}
         {children}
       </main>
       {hideMobileBottomNav ? null : <BottomNav items={navigationItems} />}
