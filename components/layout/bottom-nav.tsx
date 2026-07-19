@@ -14,6 +14,7 @@ import { motion } from "motion/react";
 import type { NavigationItem } from "@/lib/navigation";
 import {
   getDirectionBetweenTabs,
+  getTabHrefForPathname,
   saveCurrentTabScroll,
   setTabDirection,
 } from "@/lib/tab-navigation";
@@ -26,9 +27,9 @@ interface BottomNavProps {
 
 const pillTransition = {
   type: "spring" as const,
-  stiffness: 420,
-  damping: 32,
-  mass: 0.75,
+  stiffness: 380,
+  damping: 36,
+  mass: 0.7,
 };
 
 function getNavIcon(label: string, href: string, active: boolean, unreadCount: number = 0) {
@@ -36,10 +37,11 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
     "transition-colors duration-200",
     active ? "text-white" : "text-zinc-700"
   );
+  const iconStyle = active ? { color: "#fff" } : undefined;
 
   if (label === "Feed" || href === "/feed") {
     return (
-      <svg className={iconClassName} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg className={iconClassName} style={iconStyle} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M3 11.5 12 4l9 7.5" />
         <path d="M5 10.5V20h14v-9.5" />
         <path d="M9 20v-6h6v6" />
@@ -49,7 +51,7 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
 
   if (label === "Painel" || href.includes("dashboard")) {
     return (
-      <svg className={iconClassName} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg className={iconClassName} style={iconStyle} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M4 4h7v7H4z" />
         <path d="M13 4h7v4h-7z" />
         <path d="M13 10h7v10h-7z" />
@@ -61,7 +63,7 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
   if (label === "Chat" || href === "/chat") {
     return (
       <div className="relative flex items-center justify-center">
-        <svg className={iconClassName} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg className={iconClassName} style={iconStyle} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
         {unreadCount > 0 && (
@@ -75,7 +77,7 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
 
   if (label === "Financeiro" || href.includes("financeiro")) {
     return (
-      <svg className={iconClassName} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg className={iconClassName} style={iconStyle} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M4 19V5" />
         <path d="M4 19h16" />
         <path d="M8 15V11" />
@@ -87,7 +89,7 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
 
   if (label === "Anúncios" || href.includes("anuncios")) {
     return (
-      <svg className={iconClassName} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg className={iconClassName} style={iconStyle} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M4 11.5v1a2 2 0 0 0 2 2h2l5 4v-4h3a2 2 0 0 0 2-2v-1a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2Z" />
         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
       </svg>
@@ -96,7 +98,7 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
 
   if (label === "Acompanhamento" || href.includes("acompanhamento")) {
     return (
-      <svg className={iconClassName} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg className={iconClassName} style={iconStyle} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="9" />
         <path d="M12 7v5l3 3" />
       </svg>
@@ -105,7 +107,7 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
 
   if (label === "Conta" || href === "/conta") {
     return (
-      <svg className={iconClassName} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg className={iconClassName} style={iconStyle} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M20 21a8 8 0 0 0-16 0" />
         <circle cx="12" cy="7" r="4" />
       </svg>
@@ -113,7 +115,7 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
   }
 
   return (
-    <svg className={iconClassName} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className={iconClassName} style={iconStyle} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="8" />
     </svg>
   );
@@ -137,10 +139,11 @@ export function BottomNav({ items }: BottomNavProps) {
     });
   }, [items, router]);
 
+  const activeHref = getTabHrefForPathname(activeTab, items);
+
   const updateIndicator = useCallback(() => {
     const list = listRef.current;
-    const activeItem = items.find((item) => activeTab.startsWith(item.href));
-    const itemEl = activeItem ? itemRefs.current.get(activeItem.href) : null;
+    const itemEl = activeHref ? itemRefs.current.get(activeHref) : null;
 
     if (!list || !itemEl) {
       return;
@@ -151,7 +154,7 @@ export function BottomNav({ items }: BottomNavProps) {
       width: itemEl.offsetWidth,
       ready: true,
     });
-  }, [activeTab, items]);
+  }, [activeHref]);
 
   useLayoutEffect(() => {
     updateIndicator();
@@ -201,13 +204,15 @@ export function BottomNav({ items }: BottomNavProps) {
             animate={{
               x: indicator.x,
               width: indicator.width || 56,
-              opacity: indicator.ready ? 1 : 0,
             }}
-            transition={pillTransition}
-            style={{ left: 0 }}
+            transition={indicator.ready ? pillTransition : { duration: 0 }}
+            style={{
+              left: 0,
+              visibility: indicator.ready ? "visible" : "hidden",
+            }}
           />
           {items.map((item) => {
-            const active = activeTab.startsWith(item.href);
+            const active = activeHref === item.href;
             return (
               <li
                 key={item.href}
@@ -231,7 +236,7 @@ export function BottomNav({ items }: BottomNavProps) {
                     aria-label={item.label}
                     title={item.label}
                     onClick={() => {
-                      if (activeTab.startsWith(item.href)) {
+                      if (activeHref === item.href) {
                         return;
                       }
 
@@ -244,6 +249,8 @@ export function BottomNav({ items }: BottomNavProps) {
                       "flex h-full w-full items-center justify-center rounded-full",
                       active ? "text-white" : "text-zinc-600"
                     )}
+                    style={active ? { color: "#fff" } : undefined}
+                    aria-current={active ? "page" : undefined}
                   >
                     {getNavIcon(item.label, item.href, active, unreadCount)}
                   </Link>

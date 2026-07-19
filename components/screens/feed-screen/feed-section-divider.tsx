@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useMotionValue } from "motion/react";
+import { useIsTabActive } from "@/components/layout/tab-activity";
 import { cn } from "@/lib/utils";
 import { useOptionalFeedHeaderTitleMotion } from "./feed-header-title-context";
 import { FeedSectionTitle, type FeedSectionTitleVariant } from "./feed-section-title";
@@ -11,20 +12,33 @@ interface FeedSectionDividerProps {
 }
 
 export function FeedSectionDivider({ variant, className }: FeedSectionDividerProps) {
+  const isTabActive = useIsTabActive();
   const motionValues = useOptionalFeedHeaderTitleMotion();
   const fallbackOpacity = useMotionValue(1);
   const opacity = motionValues?.standardDividerOpacity ?? fallbackOpacity;
 
   if (variant === "premium") {
-    return null;
+    if (isTabActive) {
+      return null;
+    }
+
+    return (
+      <div className={cn("mb-4 hidden items-center gap-3 py-2 select-none lg:flex", className)}>
+        <div className="min-w-0 max-w-[min(100%,20rem)] sm:max-w-[min(100%,24rem)]">
+          <FeedSectionTitle variant="premium" fit />
+        </div>
+      </div>
+    );
   }
 
   return (
     <motion.div
-      style={{ opacity }}
+      style={{ opacity: isTabActive ? opacity : 1 }}
       className={cn("mt-6 flex items-center gap-3 py-4 select-none", className)}
     >
-      <FeedSectionTitle variant="standard" />
+      <div className="min-w-0 max-w-[min(100%,20rem)] sm:max-w-[min(100%,24rem)]">
+        <FeedSectionTitle variant="standard" fit />
+      </div>
       <span
         className="h-px min-w-0 flex-1 rounded-full"
         style={{

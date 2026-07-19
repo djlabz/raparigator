@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Link, X, MapPin } from "lucide-react";
@@ -25,6 +25,14 @@ interface ShareProfileModalProps {
   onExternalLink: (target: "WhatsApp" | "Telegram", url: string) => void;
 }
 
+function useIsClient() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+}
+
 export function ShareProfileModal({
   open,
   onClose,
@@ -33,6 +41,7 @@ export function ShareProfileModal({
   onExternalLink,
 }: ShareProfileModalProps) {
   const [copied, setCopied] = useState(false);
+  const isClient = useIsClient();
 
   useModalLock(open && isPremium);
 
@@ -74,7 +83,7 @@ export function ShareProfileModal({
   const adProfile = ad.images[1] || ad.images[0];
 
   if (isPremium) {
-    if (typeof document === "undefined") return null;
+    if (!isClient) return null;
 
     return createPortal(
       <div

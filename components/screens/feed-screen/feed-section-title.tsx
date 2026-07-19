@@ -10,24 +10,74 @@ interface FeedSectionTitleProps {
   variant: FeedSectionTitleVariant;
   size?: "md" | "sm" | "lg";
   className?: string;
-  adaptiveIcon?: boolean;
+  fit?: boolean;
 }
 
 const PREMIUM_LABEL = "Modelos Premium";
 const STANDARD_LABEL = "Outras modelos";
-const ICON_SLOT_PX = 26;
+const FIT_MIN_PX = 18;
+const FIT_MAX_PX = 30;
+
+function applyProbe(
+  label: HTMLElement,
+  icon: HTMLElement | null,
+  fontPx: number,
+  showIcon: boolean
+) {
+  label.style.fontSize = `${fontPx}px`;
+  if (!icon) {
+    return;
+  }
+
+  if (showIcon) {
+    const iconSize = Math.max(16, Math.round(fontPx * 0.95));
+    icon.style.display = "block";
+    icon.style.width = `${iconSize}px`;
+    icon.style.height = `${iconSize}px`;
+  } else {
+    icon.style.display = "none";
+  }
+}
+
+function largestFit(
+  root: HTMLElement,
+  label: HTMLElement,
+  icon: HTMLElement | null,
+  available: number,
+  withIcon: boolean
+) {
+  let low = FIT_MIN_PX;
+  let high = FIT_MAX_PX;
+  let best = FIT_MIN_PX;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    applyProbe(label, icon, mid, withIcon);
+
+    if (root.scrollWidth <= available + 0.5) {
+      best = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  applyProbe(label, icon, best, withIcon);
+  return best;
+}
 
 export function FeedSectionTitle({
   variant,
   size = "md",
   className,
-  adaptiveIcon = false,
+  fit = false,
 }: FeedSectionTitleProps) {
   const rootRef = useRef<HTMLSpanElement>(null);
+  const [fitPx, setFitPx] = useState(22);
   const [showIcon, setShowIcon] = useState(true);
 
   useLayoutEffect(() => {
-    if (!adaptiveIcon) {
+    if (!fit) {
       return;
     }
 
@@ -40,17 +90,18 @@ export function FeedSectionTitle({
 
     const measure = () => {
       const label = root.querySelector("[data-title-label]") as HTMLElement | null;
-      if (!label) {
-        return;
-      }
-
+      const icon = root.querySelector("[data-title-icon]") as HTMLElement | null;
       const available = root.clientWidth;
-      if (available <= 0) {
+      if (!label || available <= 0) {
         return;
       }
 
-      const next = label.scrollWidth + ICON_SLOT_PX <= available;
-      setShowIcon((prev) => (prev === next ? prev : next));
+      applyProbe(label, icon, FIT_MIN_PX, true);
+      const withIcon = root.scrollWidth <= available + 0.5;
+      const best = largestFit(root, label, icon, available, withIcon);
+
+      setShowIcon((prev) => (prev === withIcon ? prev : withIcon));
+      setFitPx((prev) => (prev === best ? prev : best));
     };
 
     const schedule = () => {
@@ -66,14 +117,42 @@ export function FeedSectionTitle({
       cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, [adaptiveIcon, variant, size]);
+  }, [fit, variant]);
 
-  const iconVisible = !adaptiveIcon || showIcon;
-  const iconSize = size === "lg" ? 26 : size === "sm" ? 20 : 22;
-  const premiumTextClass =
-    size === "lg" ? "text-2xl md:text-3xl" : size === "sm" ? "text-xl" : "text-2xl";
-  const standardTextClass =
-    size === "lg" ? "text-xl md:text-2xl" : size === "sm" ? "text-xl" : "text-xl";
+  const iconSize = fit
+    ? Math.max(16, Math.round(fitPx * 0.95))
+    : size === "lg"
+      ? 26
+      : 22;
+
+  const premiumTextClass = fit
+    ? "leading-none"
+    : size === "lg"
+      ? "text-2xl md:text-3xl"
+      : size === "sm"
+        ? "text-[1.375rem] leading-none"
+        : "text-2xl";
+
+  const standardTextClass = fit
+    ? "leading-none"
+    : size === "lg"
+      ? "text-xl md:text-2xl"
+      : size === "sm"
+        ? "text-[1.375rem] leading-none"
+        : "text-xl";
+
+  const labelStyle = fit ? { fontSize: fitPx } : undefined;
+  const iconStyle = fit
+    ? {
+        display: showIcon ? "block" : "none",
+        width: iconSize,
+        height: iconSize,
+      }
+    : undefined;
+
+  const ambientStyle = {
+    filter: "drop-shadow(0 1px 1px rgba(15,23,42,0.28)) drop-shadow(0 2px 6px rgba(15,23,42,0.16))",
+  };
 
   if (variant === "premium") {
     return (
@@ -81,18 +160,24 @@ export function FeedSectionTitle({
         ref={rootRef}
         className={cn(
           "inline-flex max-w-full min-w-0 items-center gap-1.5 select-none",
+          fit && "w-full",
           className
         )}
+        style={ambientStyle}
       >
-        {iconVisible ? (
-          <Star size={iconSize} className="shrink-0 fill-[#C9A227] text-[#C9A227]" />
-        ) : null}
+        <Star
+          data-title-icon
+          size={iconSize}
+          className="shrink-0 fill-[#A67C12] text-[#A67C12]"
+          style={iconStyle}
+        />
         <span
           data-title-label
           className={cn(
-            "whitespace-nowrap font-display font-semibold tracking-wide text-[#8B6914]",
+            "whitespace-nowrap font-display font-semibold tracking-wide text-[#5C4310]",
             premiumTextClass
           )}
+          style={labelStyle}
         >
           {PREMIUM_LABEL}
         </span>
@@ -105,15 +190,21 @@ export function FeedSectionTitle({
       ref={rootRef}
       className={cn(
         "inline-flex max-w-full min-w-0 items-center gap-1.5 select-none",
+        fit && "w-full",
         className
       )}
+      style={ambientStyle}
     >
-      {iconVisible ? (
-        <Flame size={size === "lg" ? 22 : iconSize} className="shrink-0 text-wine-800" />
-      ) : null}
+      <Flame
+        data-title-icon
+        size={fit ? iconSize : size === "lg" ? 22 : iconSize}
+        className="shrink-0 text-wine-700"
+        style={iconStyle}
+      />
       <span
         data-title-label
-        className={cn("whitespace-nowrap font-semibold text-wine-800", standardTextClass)}
+        className={cn("whitespace-nowrap font-semibold text-wine-700", standardTextClass)}
+        style={labelStyle}
       >
         {STANDARD_LABEL}
       </span>

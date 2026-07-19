@@ -9,6 +9,7 @@ import {
   useState,
   type PropsWithChildren,
 } from "react";
+import { useIsTabActive } from "./tab-activity";
 
 export type ShellChromeState = {
   hideMobileBottomNav: boolean;
@@ -68,6 +69,7 @@ export function useShellChrome(): ShellChromeState {
 
 export function useSetShellChrome(chrome: Partial<ShellChromeState>): void {
   const context = useContext(ShellChromeContext);
+  const isTabActive = useIsTabActive();
   const setChrome = context?.setChrome;
   const resetChrome = context?.resetChrome;
   const hideMobileBottomNav = chrome.hideMobileBottomNav ?? false;
@@ -78,6 +80,10 @@ export function useSetShellChrome(chrome: Partial<ShellChromeState>): void {
 
   useLayoutEffect(() => {
     if (!setChrome || !resetChrome) {
+      return;
+    }
+
+    if (!isTabActive) {
       return;
     }
 
@@ -95,6 +101,7 @@ export function useSetShellChrome(chrome: Partial<ShellChromeState>): void {
   }, [
     setChrome,
     resetChrome,
+    isTabActive,
     hideMobileBottomNav,
     hideTopHeader,
     hideDesktopNav,

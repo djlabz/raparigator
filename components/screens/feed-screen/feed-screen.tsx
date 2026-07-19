@@ -1,14 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DesktopNav } from "@/components/layout/desktop-nav";
-import { useSetShellChrome } from "@/components/layout/shell-chrome";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuthSession } from "@/lib/auth-session";
-import { getNavigationItems } from "@/lib/navigation";
 import { ads, cities } from "@/lib/mock-data";
 import { FeedAdCard } from "./feed-ad-card";
 import { FeedSectionDivider } from "./feed-section-divider";
@@ -16,13 +12,11 @@ import { FeedFiltersContent } from "./feed-filters-content";
 import { FeedLocationModal } from "./feed-location-modal";
 import { FeedHeaderTitleProvider } from "./feed-header-title-context";
 import { FeedMobileHeadingRow } from "./feed-mobile-heading-row";
+import { FeedMobileTitleFlight } from "./feed-mobile-title-flight";
 import { useFeedSectionTitleScroll } from "./use-feed-section-title-scroll";
 import { categoryByGender, defaultGender, defaultLocationLabel, defaultMaxPrice, normalizeText } from "./constants";
 
 export function FeedScreen() {
-  const { role } = useAuthSession();
-  const navigationItems = getNavigationItems(role);
-  useSetShellChrome({ hideDesktopNav: true });
   const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const initialLocation = searchParams.get("location") || "";
   const initialCity = initialLocation ? initialLocation.split(", ")[1] || "all" : "all";
@@ -225,14 +219,11 @@ export function FeedScreen() {
 
   return (
     <FeedHeaderTitleProvider flags={headerTitleFlags}>
+      <FeedMobileTitleFlight />
       <div className="relative space-y-6 select-none">
         <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <aside className="hidden min-w-70 shrink-0 flex-col lg:flex">
             <div className="sticky top-20 flex max-h-[calc(100vh-6rem)] flex-col gap-3">
-              {navigationItems.length > 0 ? (
-                <DesktopNav items={navigationItems} />
-              ) : null}
-
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
                 <div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50 p-5">
                   <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-900">
@@ -260,10 +251,6 @@ export function FeedScreen() {
           </aside>
 
           <div className="relative space-y-4">
-            {navigationItems.length > 0 ? (
-              <DesktopNav items={navigationItems} className="mb-1 hidden md:grid lg:hidden" />
-            ) : null}
-
             <FeedMobileHeadingRow
               headingRef={mobileHeadingRef}
               onOpenFilters={() => setShowFilters(true)}

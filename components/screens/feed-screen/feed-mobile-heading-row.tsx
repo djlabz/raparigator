@@ -3,6 +3,7 @@
 import type { RefObject } from "react";
 import { motion, useMotionValue, useTransform } from "motion/react";
 import { Button } from "@/components/ui/button";
+import { useIsTabActive } from "@/components/layout/tab-activity";
 import {
   useFeedHeaderTitleFlags,
   useOptionalFeedHeaderTitleMotion,
@@ -18,33 +19,47 @@ export function FeedMobileHeadingRow({
   headingRef,
   onOpenFilters,
 }: FeedMobileHeadingRowProps) {
+  const isTabActive = useIsTabActive();
   const { enabled, hasPremium, hasStandard } = useFeedHeaderTitleFlags();
   const motionValues = useOptionalFeedHeaderTitleMotion();
-  const fallbackOpacity = useMotionValue(1);
-  const fallbackMaxHeight = useMotionValue(56);
-  const inPageTitleOpacity = motionValues?.inPageTitleOpacity ?? fallbackOpacity;
+  const fallbackMaxHeight = useMotionValue(40);
+  const fallbackReady = useMotionValue(0);
   const inPageTitleMaxHeight = motionValues?.inPageTitleMaxHeight ?? fallbackMaxHeight;
-  const pointerEvents = useTransform(inPageTitleOpacity, (value) =>
-    value < 0.08 ? "none" : "auto"
-  );
+  const titleFlightReady = motionValues?.titleFlightReady ?? fallbackReady;
+  const restTitleOpacity = useTransform(titleFlightReady, (value) => (value > 0.5 ? 0 : 1));
+  const titleVariant = hasPremium ? "premium" : hasStandard ? "standard" : null;
 
   return (
-    <div ref={headingRef} className="relative mb-3 flex items-start gap-3 lg:hidden">
-      {enabled ? (
-        <motion.div
-          style={{
-            opacity: inPageTitleOpacity,
-            maxHeight: inPageTitleMaxHeight,
-            pointerEvents,
-          }}
-          className="min-w-0 flex-1 overflow-hidden"
-        >
-          {hasPremium ? (
-            <FeedSectionTitle variant="premium" size="sm" adaptiveIcon className="w-full" />
-          ) : hasStandard ? (
-            <FeedSectionTitle variant="standard" size="sm" adaptiveIcon className="w-full" />
-          ) : null}
-        </motion.div>
+    <div ref={headingRef} className="relative mb-3 flex items-center gap-3 lg:hidden">
+      {enabled && titleVariant ? (
+        <div className="relative min-w-0 flex-1">
+          {isTabActive ? (
+            <>
+              <motion.div
+                style={{ height: inPageTitleMaxHeight }}
+                className="overflow-hidden"
+                aria-hidden
+              />
+              <div
+                data-feed-title-source
+                className="pointer-events-none invisible absolute inset-x-0 top-1/2 h-10 w-full -translate-y-1/2"
+                aria-hidden
+              >
+                <FeedSectionTitle variant={titleVariant} size="sm" className="w-full" />
+              </div>
+              <motion.div
+                style={{ opacity: restTitleOpacity }}
+                className="pointer-events-none absolute inset-x-0 top-1/2 flex h-10 w-full -translate-y-1/2 items-center"
+              >
+                <FeedSectionTitle variant={titleVariant} size="sm" className="w-full" />
+              </motion.div>
+            </>
+          ) : (
+            <div className="flex h-10 w-full items-center">
+              <FeedSectionTitle variant={titleVariant} size="sm" className="w-full" />
+            </div>
+          )}
+        </div>
       ) : (
         <div className="min-w-0 flex-1" />
       )}
