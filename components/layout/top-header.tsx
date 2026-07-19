@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BackButton } from "@/components/ui/back-button";
 import type { AuthRole, MockUser } from "@/lib/types";
 import {
@@ -23,9 +24,15 @@ interface TopHeaderProps {
   onBack?: () => void;
 }
 
+function isFeedPath(pathname: string) {
+  return pathname === "/feed" || pathname.startsWith("/feed/");
+}
+
 export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeaderProps) {
+  const pathname = usePathname();
   const { enabled, mode } = useFeedHeaderTitleFlags();
-  const feedDesktop = enabled && mode === "desktop";
+  const onFeed = isFeedPath(pathname);
+  const feedDesktop = onFeed && enabled && mode === "desktop";
 
   return (
     <header className={cn(chromeGlassFixed, "pointer-events-none")}>

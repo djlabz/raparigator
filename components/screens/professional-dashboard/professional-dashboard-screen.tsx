@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/lib/auth-session";
 import { useAccountNotifications } from "@/lib/account-notifications";
 import type { AuthRole } from "@/lib/types";
@@ -17,17 +16,7 @@ import type { AdStatus } from "./types";
 import { confirmVerificationCode, getVerificationState, sendVerificationCode, type VerificationChannel, type VerificationState } from "@/lib/verification";
 
 function DashboardTabSkeleton() {
-  return (
-    <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-      <Skeleton className="h-8 w-48" />
-      <Skeleton className="h-40 w-full" />
-      <Skeleton className="h-24 w-full" />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-      </div>
-    </div>
-  );
+  return <div className="min-h-80 rounded-2xl border border-zinc-100 bg-zinc-50/80" aria-hidden />;
 }
 
 const AnnouncementTab = dynamic(

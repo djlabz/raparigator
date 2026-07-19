@@ -3,7 +3,6 @@
 import {
   createContext,
   useContext,
-  useLayoutEffect,
   useMemo,
   useSyncExternalStore,
   type ReactNode,
@@ -26,6 +25,10 @@ export type FeedHeaderTitleMotion = {
   inPageTitleOpacity: MotionValue<number>;
   inPageTitleMaxHeight: MotionValue<number>;
   standardDividerOpacity: MotionValue<number>;
+  titleFlightX: MotionValue<number>;
+  titleFlightY: MotionValue<number>;
+  titleFlightW: MotionValue<number>;
+  titleFlightReady: MotionValue<number>;
 };
 
 export type FeedHeaderTitleState = FeedHeaderTitleFlags & FeedHeaderTitleMotion;
@@ -44,6 +47,10 @@ function createMotionBundle(): FeedHeaderTitleMotion {
     inPageTitleOpacity: motionValue(1),
     inPageTitleMaxHeight: motionValue(48),
     standardDividerOpacity: motionValue(1),
+    titleFlightX: motionValue(0),
+    titleFlightY: motionValue(0),
+    titleFlightW: motionValue(0),
+    titleFlightReady: motionValue(0),
   };
 }
 
@@ -85,7 +92,7 @@ function createFlagsStore(): FlagsStore {
 }
 
 const globalStoreKey = "__raparigatorFeedHeaderFlagsStore";
-const globalMotionKey = "__raparigatorFeedHeaderMotion";
+const globalMotionKey = "__raparigatorFeedHeaderMotion_v2";
 
 function getFlagsStore(): FlagsStore {
   const scope = globalThis as typeof globalThis & Record<string, FlagsStore | undefined>;
@@ -120,21 +127,11 @@ export function FeedHeaderTitleRoot({ children }: { children: ReactNode }) {
 }
 
 export function FeedHeaderTitleProvider({
-  flags,
   children,
 }: {
   flags: FeedHeaderTitleFlags;
   children: ReactNode;
 }) {
-  const enabled = flags.enabled;
-  const mode = flags.mode;
-  const hasPremium = flags.hasPremium;
-  const hasStandard = flags.hasStandard;
-
-  useLayoutEffect(() => {
-    getFlagsStore().setFlags({ enabled, mode, hasPremium, hasStandard });
-  }, [enabled, mode, hasPremium, hasStandard]);
-
   return children;
 }
 

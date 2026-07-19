@@ -1,20 +1,13 @@
 "use client";
 
-import { PropsWithChildren, useLayoutEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { motion } from "motion/react";
+import { PropsWithChildren, useLayoutEffect } from "react";
 import { useAuthSession } from "@/lib/auth-session";
 import { getNavigationItems } from "@/lib/navigation";
 import { chromeHeaderOffset } from "@/lib/chrome-styles";
 import {
-  consumeTabDirection,
-  getTabDirectionSnapshot,
-  getTabIndex,
   registerShell,
-  restoreTabScroll,
   setMobileNavHidden,
   unregisterShell,
-  type TabDirection,
 } from "@/lib/tab-navigation";
 import { cn } from "@/lib/utils";
 import { useShellChrome } from "./shell-chrome";
@@ -30,19 +23,6 @@ interface AppShellProps extends PropsWithChildren {
   mainClassName?: string;
 }
 
-const tabEnterTransition = {
-  duration: 0.12,
-  ease: [0.22, 0.92, 0.3, 1] as const,
-};
-
-function getEnterOffset(direction: TabDirection) {
-  if (direction === 0) {
-    return 0;
-  }
-
-  return direction > 0 ? 12 : -12;
-}
-
 export function AppShell({
   children,
   hideMobileBottomNav: hideMobileBottomNavProp,
@@ -51,7 +31,6 @@ export function AppShell({
   onBack: onBackProp,
   mainClassName: mainClassNameProp,
 }: AppShellProps) {
-  const pathname = usePathname();
   const { role, user, isLoggedIn, logout } = useAuthSession();
   const navigationItems = getNavigationItems(role);
   const chrome = useShellChrome();
@@ -60,24 +39,6 @@ export function AppShell({
   const hideDesktopNav = hideDesktopNavProp ?? chrome.hideDesktopNav;
   const onBack = onBackProp ?? chrome.onBack;
   const mainClassName = mainClassNameProp ?? chrome.mainClassName;
-  const [tabTransition, setTabTransition] = useState<{
-    path: string;
-    direction: TabDirection;
-  }>(() => ({
-    path: pathname,
-    direction: 0,
-  }));
-
-  if (tabTransition.path !== pathname) {
-    setTabTransition({
-      path: pathname,
-      direction: getTabDirectionSnapshot(),
-    });
-  }
-
-  const enterDirection = tabTransition.path === pathname ? tabTransition.direction : 0;
-  const tabIndex = getTabIndex(pathname, navigationItems);
-  const shouldAnimateTab = enterDirection !== 0 && tabIndex >= 0;
 
   useLayoutEffect(() => {
     registerShell();
@@ -89,11 +50,6 @@ export function AppShell({
   useLayoutEffect(() => {
     setMobileNavHidden(hideMobileBottomNav);
   }, [hideMobileBottomNav]);
-
-  useLayoutEffect(() => {
-    consumeTabDirection();
-    restoreTabScroll(pathname, navigationItems);
-  }, [pathname, navigationItems]);
 
   return (
     <div className="min-h-dvh bg-zinc-50" data-app-shell>
@@ -115,26 +71,9 @@ export function AppShell({
         )}
       >
         {!hideDesktopNav && navigationItems.length > 0 ? (
-          <DesktopNav items={navigationItems} className="mb-4 hidden md:grid" />
+          <DesktopNav items={navigationItems} className="mb-4 hidden md:block" />
         ) : null}
-        {shouldAnimateTab ? (
-          <motion.div
-            key={pathname}
-            initial={{
-              opacity: 1,
-              x: getEnterOffset(enterDirection),
-            }}
-            animate={{
-              opacity: 1,
-              x: 0,
-            }}
-            transition={tabEnterTransition}
-          >
-            {children}
-          </motion.div>
-        ) : (
-          children
-        )}
+        {children}
       </main>
     </div>
   );
