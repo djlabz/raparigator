@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { AppShell } from "@/components/layout/app-shell";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DesktopNav } from "@/components/layout/desktop-nav";
+import { useSetShellChrome } from "@/components/layout/shell-chrome";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
@@ -14,11 +14,15 @@ import { FeedAdCard } from "./feed-ad-card";
 import { FeedSectionDivider } from "./feed-section-divider";
 import { FeedFiltersContent } from "./feed-filters-content";
 import { FeedLocationModal } from "./feed-location-modal";
+import { FeedHeaderTitleProvider } from "./feed-header-title-context";
+import { FeedMobileHeadingRow } from "./feed-mobile-heading-row";
+import { useFeedSectionTitleScroll } from "./use-feed-section-title-scroll";
 import { categoryByGender, defaultGender, defaultLocationLabel, defaultMaxPrice, normalizeText } from "./constants";
 
 export function FeedScreen() {
   const { role } = useAuthSession();
   const navigationItems = getNavigationItems(role);
+  useSetShellChrome({ hideDesktopNav: true });
   const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const initialLocation = searchParams.get("location") || "";
   const initialCity = initialLocation ? initialLocation.split(", ")[1] || "all" : "all";
@@ -163,6 +167,16 @@ export function FeedScreen() {
   const standardAds = useMemo(() => filteredAds.filter((ad) => ad.adTier === "normal"), [filteredAds]);
   const visibleStandardAds = standardAds.slice(0, visibleCount);
   const selectedLocation = selectedCity === "all" ? defaultLocationLabel : `SP, ${selectedCity}`;
+  const mobileHeadingRef = useRef<HTMLDivElement>(null);
+  const premiumSectionRef = useRef<HTMLDivElement>(null);
+  const standardSectionRef = useRef<HTMLDivElement>(null);
+  const headerTitleFlags = useFeedSectionTitleScroll({
+    hasPremium: premiumAds.length > 0,
+    hasStandard: standardAds.length > 0,
+    mobileHeadingRef,
+    premiumSectionRef,
+    standardSectionRef,
+  });
 
   const applySelectedLocation = (city: string) => {
     setSelectedCity(city);
@@ -187,9 +201,31 @@ export function FeedScreen() {
     setTimeout(() => setShowLocationToast(false), 3000);
   };
 
+  const filtersContentProps = {
+    resultCount: filteredAds.length,
+    selectedLocation,
+    activeQuickFilters,
+    selectedGender,
+    maxPrice,
+    selectedAdTypes,
+    selectedEthnicities,
+    selectedHairs,
+    selectedServices,
+    onToggleQuickFilter: toggleQuickFilter,
+    onSelectGender: setSelectedGender,
+    onSetMaxPrice: setMaxPrice,
+    onToggleAdTypeFilter: toggleAdTypeFilter,
+    onToggleSelection: (field: "ethnicities" | "hairs" | "services", value: string) => {
+      if (field === "ethnicities") toggleSelection(setSelectedEthnicities, value);
+      if (field === "hairs") toggleSelection(setSelectedHairs, value);
+      if (field === "services") toggleSelection(setSelectedServices, value);
+    },
+    onOpenLocationToolsModal: openLocationToolsModal,
+  };
+
   return (
-    <AppShell location={selectedLocation} hideDesktopNav>
-      <div className="space-y-6 select-none">
+    <FeedHeaderTitleProvider flags={headerTitleFlags}>
+      <div className="relative space-y-6 select-none">
         <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <aside className="hidden min-w-70 shrink-0 flex-col lg:flex">
             <div className="sticky top-20 flex max-h-[calc(100vh-6rem)] flex-col gap-3">
@@ -217,59 +253,21 @@ export function FeedScreen() {
                 </div>
 
                 <div className="custom-scrollbar flex-1 overflow-y-auto bg-white p-5">
-                  <FeedFiltersContent
-                    selectedLocation={selectedLocation}
-                    activeQuickFilters={activeQuickFilters}
-                    selectedGender={selectedGender}
-                    maxPrice={maxPrice}
-                    selectedAdTypes={selectedAdTypes}
-                    selectedEthnicities={selectedEthnicities}
-                    selectedHairs={selectedHairs}
-                    selectedServices={selectedServices}
-                    onToggleQuickFilter={toggleQuickFilter}
-                    onSelectGender={setSelectedGender}
-                    onSetMaxPrice={setMaxPrice}
-                    onToggleAdTypeFilter={toggleAdTypeFilter}
-                    onToggleSelection={(field, value) => {
-                      if (field === "ethnicities") toggleSelection(setSelectedEthnicities, value);
-                      if (field === "hairs") toggleSelection(setSelectedHairs, value);
-                      if (field === "services") toggleSelection(setSelectedServices, value);
-                    }}
-                    onOpenLocationToolsModal={openLocationToolsModal}
-                  />
+                  <FeedFiltersContent {...filtersContentProps} />
                 </div>
               </div>
             </div>
           </aside>
 
-          <div className="space-y-4">
+          <div className="relative space-y-4">
             {navigationItems.length > 0 ? (
               <DesktopNav items={navigationItems} className="mb-1 hidden md:grid lg:hidden" />
             ) : null}
 
-            <div className="mb-4 flex items-end justify-between gap-3">
-              <div>
-                <h1 className="text-2xl font-extrabold text-zinc-900">Acompanhantes</h1>
-                <p className="mt-1 text-sm text-zinc-500">{filteredAds.length} perfis encontrados</p>
-              </div>
-
-              <Button variant="secondary" className="lg:hidden" onClick={() => setShowFilters(true)}>
-                <span className="inline-flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-red-500">
-                    <line x1="21" x2="14" y1="4" y2="4" />
-                    <line x1="10" x2="3" y1="4" y2="4" />
-                    <line x1="21" x2="12" y1="12" y2="12" />
-                    <line x1="8" x2="3" y1="12" y2="12" />
-                    <line x1="21" x2="16" y1="20" y2="20" />
-                    <line x1="12" x2="3" y1="20" y2="20" />
-                    <line x1="14" x2="14" y1="2" y2="6" />
-                    <line x1="8" x2="8" y1="10" y2="14" />
-                    <line x1="16" x2="16" y1="18" y2="22" />
-                  </svg>
-                  Filtros
-                </span>
-              </Button>
-            </div>
+            <FeedMobileHeadingRow
+              headingRef={mobileHeadingRef}
+              onOpenFilters={() => setShowFilters(true)}
+            />
 
             {loadingMore ? (
               <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
@@ -280,18 +278,18 @@ export function FeedScreen() {
             ) : (
               <>
                 {premiumAds.length > 0 && (
-                  <>
+                  <div ref={premiumSectionRef} className="relative">
                     <FeedSectionDivider variant="premium" />
                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                       {premiumAds.map((ad, index) => (
                         <FeedAdCard key={ad.id} ad={ad} priority={index === 0} />
                       ))}
                     </div>
-                  </>
+                  </div>
                 )}
 
                 {visibleStandardAds.length > 0 && (
-                  <>
+                  <div ref={standardSectionRef} className="relative">
                     <FeedSectionDivider variant="standard" />
                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                       {visibleStandardAds.map((ad, index) => (
@@ -310,7 +308,7 @@ export function FeedScreen() {
                         </Button>
                       </div>
                     ) : null}
-                  </>
+                  </div>
                 )}
               </>
             )}
@@ -337,26 +335,7 @@ export function FeedScreen() {
         }
         actions={null}
       >
-        <FeedFiltersContent
-          selectedLocation={selectedLocation}
-          activeQuickFilters={activeQuickFilters}
-          selectedGender={selectedGender}
-          maxPrice={maxPrice}
-          selectedAdTypes={selectedAdTypes}
-          selectedEthnicities={selectedEthnicities}
-          selectedHairs={selectedHairs}
-          selectedServices={selectedServices}
-          onToggleQuickFilter={toggleQuickFilter}
-          onSelectGender={setSelectedGender}
-          onSetMaxPrice={setMaxPrice}
-          onToggleAdTypeFilter={toggleAdTypeFilter}
-          onToggleSelection={(field, value) => {
-            if (field === "ethnicities") toggleSelection(setSelectedEthnicities, value);
-            if (field === "hairs") toggleSelection(setSelectedHairs, value);
-            if (field === "services") toggleSelection(setSelectedServices, value);
-          }}
-          onOpenLocationToolsModal={openLocationToolsModal}
-        />
+        <FeedFiltersContent {...filtersContentProps} />
       </Modal>
 
       <FeedLocationModal
@@ -370,6 +349,6 @@ export function FeedScreen() {
         onAutomaticLocation={useAutomaticLocation}
         onClearLocation={clearLocation}
       />
-    </AppShell>
+    </FeedHeaderTitleProvider>
   );
 }

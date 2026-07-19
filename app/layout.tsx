@@ -38,6 +38,9 @@ export const metadata: Metadata = {
     title: "Sigillus",
     statusBarStyle: "black-translucent",
   },
+  icons: {
+    apple: [{ url: "/pwa/icon-192.png", sizes: "192x192", type: "image/png" }],
+  },
   other: {
     "mobile-web-app-capable": "yes",
   },

@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { InfoBanner } from "@/components/ui/info-banner";
@@ -18,7 +17,7 @@ export function TrackingScreen() {
   const [feedback, setFeedback] = useState<"success" | "error" | null>(null);
 
   return (
-    <AppShell>
+    <>
       <div className="mx-auto max-w-4xl space-y-5">
         <h1 className="text-2xl font-semibold text-zinc-900">Acompanhamento do servico</h1>
         <Card className="space-y-4">
@@ -90,7 +89,7 @@ export function TrackingScreen() {
           />
         </div>
       </Modal>
-    </AppShell>
+    </>
   );
 }
 
