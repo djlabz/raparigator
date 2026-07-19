@@ -283,8 +283,8 @@ export function FeedScreen() {
                   <>
                     <FeedSectionDivider variant="premium" />
                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                      {premiumAds.map((ad) => (
-                        <FeedAdCard key={ad.id} ad={ad} />
+                      {premiumAds.map((ad, index) => (
+                        <FeedAdCard key={ad.id} ad={ad} priority={index === 0} />
                       ))}
                     </div>
                   </>
@@ -294,8 +294,12 @@ export function FeedScreen() {
                   <>
                     <FeedSectionDivider variant="standard" />
                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                      {visibleStandardAds.map((ad) => (
-                        <FeedAdCard key={ad.id} ad={ad} />
+                      {visibleStandardAds.map((ad, index) => (
+                        <FeedAdCard
+                          key={ad.id}
+                          ad={ad}
+                          priority={premiumAds.length === 0 && index === 0}
+                        />
                       ))}
                     </div>
 
@@ -318,7 +322,6 @@ export function FeedScreen() {
         open={showFilters}
         onClose={() => setShowFilters(false)}
         title="Filtros avançados"
-        description="Refine sua busca para encontrar o perfil ideal."
         headerActions={
           <button
             type="button"

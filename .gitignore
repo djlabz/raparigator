@@ -61,3 +61,13 @@ next-env.d.ts
 # misc / caches
 .eslintcache
 .stylelintcache
+
+# local demo / temp extraction artifacts
+/*.mp4
+/.tmp-whats-frames/
+/.tmp-whats-crops/
+/.tmp-whats-transitions/
+/.tmp-bug-frames/
+/.tmp-bug-crops/
+/.tmp-venv/
+/.tmp-*-test.py
