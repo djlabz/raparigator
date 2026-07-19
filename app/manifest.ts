@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Plataforma premium para intermediar clientes e profissionais com seguranca.",
     start_url: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#b60031",
+    background_color: "#fafafa",
+    theme_color: "#fafafa",
     lang: "pt-BR",
     icons: [
       {

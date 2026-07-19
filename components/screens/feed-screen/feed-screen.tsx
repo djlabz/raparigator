@@ -187,7 +187,7 @@ export function FeedScreen() {
       <div className="space-y-6 select-none">
         <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <aside className="hidden min-w-70 shrink-0 flex-col lg:flex">
-            <div className="sticky top-24 flex max-h-[calc(100vh-120px)] flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+            <div className="sticky top-20 flex max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
               <div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50 p-5">
                 <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-900">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">

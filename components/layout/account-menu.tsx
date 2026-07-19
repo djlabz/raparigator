@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import type { AuthRole, MockUser } from "@/lib/types";
 import { getProfileHref, getRoleLabel } from "@/lib/navigation";
 import { useAccountNotifications } from "@/lib/account-notifications";
+import { chromeCircle, chromePill } from "@/lib/chrome-styles";
+import { cn } from "@/lib/utils";
 
 interface AccountMenuProps {
   role: AuthRole;
@@ -49,11 +51,11 @@ export function AccountMenu({ role, user, onLogout }: AccountMenuProps) {
         <button
           type="button"
           onClick={() => setOpen((current) => !current)}
-          className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-3 py-2 text-xs font-semibold text-zinc-900 transition hover:bg-zinc-50 sm:text-sm"
+          className={cn(chromePill, "gap-2 px-3 text-xs font-semibold text-zinc-900 sm:text-sm")}
           aria-label={`Abrir opções da conta ${getRoleLabel(role)}`}
           aria-expanded={open}
         >
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-300">
+          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-zinc-900">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 21a8 8 0 0 0-16 0" />
               <circle cx="12" cy="7" r="4" />
@@ -66,7 +68,7 @@ export function AccountMenu({ role, user, onLogout }: AccountMenuProps) {
         <button
           type="button"
           onClick={() => setOpenNotifications(true)}
-          className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-300 bg-white text-zinc-900 transition hover:bg-zinc-50"
+          className={cn(chromeCircle, "relative")}
           aria-label="Abrir central de notificações"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

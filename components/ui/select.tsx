@@ -31,9 +31,11 @@ function getStickyHeaderOffset() {
     return 12;
   }
 
-  const header = document.querySelector("header.sticky, header[class*='sticky']");
+  const header = document.querySelector(
+    "header.sticky, header.fixed, header[class*='sticky'], header[class*='fixed'], [data-app-shell] > header"
+  );
   if (!header) {
-    return 12;
+    return 72;
   }
 
   return Math.max(12, Math.ceil(header.getBoundingClientRect().bottom) + 8);
