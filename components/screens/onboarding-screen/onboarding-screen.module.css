@@ -1,6 +1,6 @@
 .hero {
   --onboarding-hero-min-height: 620px;
-  --onboarding-hero-content-pt: 1.5rem;
+  --onboarding-hero-content-pt: 5rem;
   --onboarding-hero-content-pb: 2rem;
   --onboarding-hero-content-gap: 2rem;
   --onboarding-hero-image-position: 50% 14%;
@@ -25,7 +25,7 @@
 @media (min-width: 768px) {
   .hero {
     --onboarding-hero-min-height: 560px;
-    --onboarding-hero-content-pt: 1.25rem;
+    --onboarding-hero-content-pt: 5rem;
     --onboarding-hero-content-pb: 1.5rem;
     --onboarding-hero-content-gap: 1.75rem;
     --onboarding-hero-image-position: 50% 8%;
@@ -36,7 +36,7 @@
 @media (min-width: 1024px) {
   .hero {
     --onboarding-hero-min-height: 540px;
-    --onboarding-hero-content-pt: 1rem;
+    --onboarding-hero-content-pt: 4.5rem;
     --onboarding-hero-content-pb: 1.75rem;
     --onboarding-hero-content-gap: 2rem;
     --onboarding-hero-image-position: 50% 16%;

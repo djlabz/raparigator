@@ -12,6 +12,9 @@ import { Toast } from "@/components/ui/toast";
 import { useAuthSession } from "@/lib/auth-session";
 import { AccountMenu } from "@/components/layout/account-menu";
 import { PopularLinksSection } from "../popular-links-section";
+import { ChromeScrim } from "@/components/layout/chrome-scrim";
+import { chromeControlsRow, chromePill, chromeSafeTop } from "@/lib/chrome-styles";
+import { cn } from "@/lib/utils";
 import styles from "./onboarding-screen.module.css";
 
 export function OnboardingScreen() {
@@ -90,23 +93,28 @@ export function OnboardingScreen() {
           <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/40 to-black/60"></div>
         </div>
 
-        {/* TopNavBar */}
-        <header className="relative z-20 w-full box-border max-w-384 mx-auto flex justify-between items-center px-6 md:px-12 py-6">
-          <Link href="/" className="text-2xl font-black tracking-tighter text-white! visited:text-white! hover:opacity-90 transition-opacity">
-            Sigillus
-          </Link>
-          {isLoggedIn ? (
-            <AccountMenu role={role} user={user} onLogout={logout} />
-          ) : (
-            <div className="flex items-center gap-6">
-              <Link href="/auth/login" className="text-sm font-bold text-white! visited:text-white! hover:opacity-80 transition-opacity">
-                Entrar
-              </Link>
-              <Link href="/auth/cadastro" className="bg-white text-[#800020] px-8 py-2.5 rounded-full text-sm font-extrabold tracking-tight hover:bg-gray-100 active:scale-95 transition-all">
-                Cadastrar
-              </Link>
-            </div>
-          )}
+        <header className="absolute inset-x-0 top-0 z-30 isolate overflow-visible pointer-events-none">
+          <ChromeScrim variant="dark" />
+          <div className={cn(chromeControlsRow, chromeSafeTop, "mx-auto box-border flex w-full max-w-384 items-center justify-between gap-3 px-6 pb-4 md:px-12 md:pb-5")}>
+            <Link href="/" className="text-2xl font-black tracking-tighter text-white! visited:text-white! hover:opacity-90 transition-opacity">
+              Sigillus
+            </Link>
+            {isLoggedIn ? (
+              <AccountMenu role={role} user={user} onLogout={logout} />
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link href="/auth/login" className={cn(chromePill, "px-4 text-sm font-bold text-zinc-900")}>
+                  Entrar
+                </Link>
+                <Link
+                  href="/auth/cadastro"
+                  className={cn(chromePill, "border-white/40 bg-white px-5 text-sm font-extrabold tracking-tight text-[#800020] hover:bg-zinc-100")}
+                >
+                  Cadastrar
+                </Link>
+              </div>
+            )}
+          </div>
         </header>
 
         {/* Conteúdo Principal do Hero */}

@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
 
@@ -13,6 +13,14 @@ const cormorant = Cormorant_Garamond({
   weight: ["500", "600", "700"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#fafafa",
+  colorScheme: "light",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://sigillus.app"),
   title: {
@@ -24,6 +32,14 @@ export const metadata: Metadata = {
   applicationName: "Sigillus",
   keywords: ["sigillus", "plataforma", "anuncios verificados", "seguranca", "discricao"],
   manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Sigillus",
+    statusBarStyle: "black-translucent",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({

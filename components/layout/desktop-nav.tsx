@@ -4,12 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { NavigationItem } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
+import { chromePill, chromePillActive } from "@/lib/chrome-styles";
 
 interface DesktopNavProps {
   items: NavigationItem[];
+  className?: string;
 }
 
-export function DesktopNav({ items }: DesktopNavProps) {
+export function DesktopNav({ items, className }: DesktopNavProps) {
   const pathname = usePathname();
 
   if (items.length === 0) {
@@ -17,26 +19,21 @@ export function DesktopNav({ items }: DesktopNavProps) {
   }
 
   return (
-    <nav aria-label="Navegação principal" className="sticky top-16 z-20 hidden border-b border-zinc-200 bg-white/90 backdrop-blur md:block">
-      <div className="mx-auto flex w-full max-w-7xl items-center gap-2 overflow-x-auto px-4 py-3 sm:px-6 lg:max-w-430 lg:px-8">
-        {items.map((item) => {
-          const active = pathname.startsWith(item.href);
+    <nav aria-label="Navegação principal" className={cn("hidden items-center gap-1.5 overflow-visible md:flex", className)}>
+      {items.map((item) => {
+        const active = pathname.startsWith(item.href);
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-colors",
-                active ? "bg-wine-700 text-white shadow-sm" : "text-zinc-700 hover:bg-zinc-100"
-              )}
-              style={active ? { color: "#fff" } : undefined}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
-      </div>
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn("whitespace-nowrap px-4 text-sm font-semibold", active ? chromePillActive : cn(chromePill, "text-zinc-700"))}
+            style={active ? { color: "#fff" } : undefined}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
