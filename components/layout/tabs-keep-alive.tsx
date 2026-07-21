@@ -45,6 +45,7 @@ export function TabsKeepAlive({ children }: PropsWithChildren) {
   const activeHref = getTabHrefForPathname(pathname, items) ?? pathname;
   const panelX = useMotionValue(0);
   const panelOpacity = useMotionValue(1);
+  const [animating, setAnimating] = useState(false);
   const [cache, setCache] = useState<PanelCache>(() => ({
     order: [activeHref],
     nodes: { [activeHref]: children },
@@ -78,10 +79,14 @@ export function TabsKeepAlive({ children }: PropsWithChildren) {
   if (transition.href !== activeHref) {
     const snapshotDirection = getTabDirectionSnapshot();
     const fallbackDirection = getDirectionBetweenTabs(transition.href, activeHref, items);
+    const direction = snapshotDirection !== 0 ? snapshotDirection : fallbackDirection;
     setTransition({
       href: activeHref,
-      direction: snapshotDirection !== 0 ? snapshotDirection : fallbackDirection,
+      direction,
     });
+    if (direction !== 0) {
+      setAnimating(true);
+    }
   }
 
   useLayoutEffect(() => {
@@ -96,7 +101,12 @@ export function TabsKeepAlive({ children }: PropsWithChildren) {
     panelX.set(getEnterOffset(transition.direction));
     panelOpacity.set(0.92);
     const xAnim = animate(panelX, 0, panelTransition);
-    const opacityAnim = animate(panelOpacity, 1, panelTransition);
+    const opacityAnim = animate(panelOpacity, 1, {
+      ...panelTransition,
+      onComplete: () => {
+        setAnimating(false);
+      },
+    });
 
     return () => {
       xAnim.stop();
@@ -128,6 +138,7 @@ export function TabsKeepAlive({ children }: PropsWithChildren) {
       {entries.map((href) => {
         const active = href === activeHref;
         const node = cache.nodes[href];
+        const motionActive = active && animating;
 
         return (
           <TabActivityProvider key={href} active={active}>
@@ -136,16 +147,16 @@ export function TabsKeepAlive({ children }: PropsWithChildren) {
               inert={!active}
               style={{ display: active ? "block" : "none" }}
             >
-              <motion.div
-                style={
-                  active
-                    ? { x: panelX, opacity: panelOpacity }
-                    : { x: 0, opacity: 1 }
-                }
-                className="will-change-transform"
-              >
-                {node}
-              </motion.div>
+              {motionActive ? (
+                <motion.div
+                  style={{ x: panelX, opacity: panelOpacity }}
+                  className="will-change-transform"
+                >
+                  {node}
+                </motion.div>
+              ) : (
+                <div>{node}</div>
+              )}
             </div>
           </TabActivityProvider>
         );

@@ -45,18 +45,18 @@ export function FeedMobileHeadingRow({
                 className="pointer-events-none invisible absolute inset-x-0 top-1/2 h-10 w-full -translate-y-1/2"
                 aria-hidden
               >
-                <FeedSectionTitle variant={titleVariant} size="sm" className="w-full" />
+                <FeedSectionTitle variant={titleVariant} fit className="w-full" />
               </div>
               <motion.div
                 style={{ opacity: restTitleOpacity }}
                 className="pointer-events-none absolute inset-x-0 top-1/2 flex h-10 w-full -translate-y-1/2 items-center"
               >
-                <FeedSectionTitle variant={titleVariant} size="sm" className="w-full" />
+                <FeedSectionTitle variant={titleVariant} fit className="w-full" />
               </motion.div>
             </>
           ) : (
             <div className="flex h-10 w-full items-center">
-              <FeedSectionTitle variant={titleVariant} size="sm" className="w-full" />
+              <FeedSectionTitle variant={titleVariant} fit className="w-full" />
             </div>
           )}
         </div>

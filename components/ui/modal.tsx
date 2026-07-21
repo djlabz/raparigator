@@ -104,18 +104,7 @@ export function Modal({ open, title, description, onClose, children, actions, he
         .modal-scroll::-webkit-scrollbar {
           width: 0;
           height: 0;
-        }
-
-        @media (min-width: 640px) {
-          .modal-scroll {
-            scrollbar-width: auto;
-            -ms-overflow-style: auto;
-          }
-
-          .modal-scroll::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-          }
+          display: none;
         }
       `}</style>
     </div>,

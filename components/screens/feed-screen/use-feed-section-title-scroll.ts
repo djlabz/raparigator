@@ -218,7 +218,9 @@ export function useFeedSectionTitleScroll({
           const t = reveal;
           target.x = roundPx(src.left + (dst.left - src.left) * t);
           target.y = roundPx(src.top + (dst.top - src.top) * t);
-          target.w = roundPx(dst.width > 0 ? dst.width : src.width);
+          const fromW = src.width > 0 ? src.width : dst.width;
+          const toW = dst.width > 0 ? dst.width : src.width;
+          target.w = roundPx(fromW + (toW - fromW) * t);
           target.ready = src.width > 0 || dst.width > 0 ? 1 : 0;
         } else {
           target.ready = 0;
