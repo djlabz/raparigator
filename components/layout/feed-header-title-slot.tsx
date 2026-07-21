@@ -23,8 +23,8 @@ function DesktopTitleStack() {
 
   const premiumY = useTransform(pushProgress, (value) => -value * TITLE_STACK_PX);
   const standardY = useTransform(pushProgress, (value) => (1 - value) * TITLE_STACK_PX);
-  const premiumOpacity = useTransform(pushProgress, [0, 0.42, 0.58], [1, 1, 0]);
-  const standardOpacity = useTransform(pushProgress, [0.42, 0.58, 1], [0, 1, 1]);
+  const premiumOpacity = useTransform(pushProgress, [0, 0.35, 0.65], [1, 1, 0]);
+  const standardOpacity = useTransform(pushProgress, [0.35, 0.65, 1], [0, 1, 1]);
 
   if (hasPremium && hasStandard) {
     return (
@@ -70,8 +70,8 @@ function MobileTitleSwap() {
   const fallbackReveal = useMotionValue(0);
   const headerReveal = motionValues?.headerReveal ?? fallbackReveal;
 
-  const logoOpacity = useTransform(headerReveal, [0, 0.45, 1], [1, 0.35, 0]);
-  const logoY = useTransform(headerReveal, [0, 1], [0, -8]);
+  const logoOpacity = useTransform(headerReveal, [0, 0.22, 0.55, 1], [1, 0.75, 0.2, 0]);
+  const logoY = useTransform(headerReveal, [0, 1], [0, -6]);
 
   if (!enabled) {
     return (

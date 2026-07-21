@@ -66,26 +66,26 @@ export function FeedMobileTitleFlight() {
     if (!hasPremium || !hasStandard) {
       return hasPremium ? 1 : 0;
     }
-    if (value <= 0.42) {
+    if (value <= 0.35) {
       return 1;
     }
-    if (value >= 0.58) {
+    if (value >= 0.65) {
       return 0;
     }
-    return clampFade(1 - (value - 0.42) / 0.16);
+    return clampFade(1 - (value - 0.35) / 0.3);
   });
 
   const standardOpacity = useTransform(pushProgress, (value) => {
     if (!hasPremium || !hasStandard) {
       return hasStandard && !hasPremium ? 1 : 0;
     }
-    if (value <= 0.42) {
+    if (value <= 0.35) {
       return 0;
     }
-    if (value >= 0.58) {
+    if (value >= 0.65) {
       return 1;
     }
-    return clampFade((value - 0.42) / 0.16);
+    return clampFade((value - 0.35) / 0.3);
   });
 
   if (!mounted || !isTabActive || !enabled || mode !== "mobile") {
@@ -101,7 +101,7 @@ export function FeedMobileTitleFlight() {
         width,
         opacity,
       }}
-      className="pointer-events-none fixed top-0 left-0 z-40 overflow-hidden will-change-transform"
+      className="pointer-events-none fixed top-0 left-0 z-40 overflow-hidden will-change-transform [backface-visibility:hidden]"
     >
       <div className="relative h-11 w-full min-w-0">
         {hasPremium ? (

@@ -87,6 +87,8 @@ export function FeedSectionTitle({
     }
 
     let frame = 0;
+    let settleTimer = 0;
+    let lastMeasuredWidth = -1;
 
     const measure = () => {
       const label = root.querySelector("[data-title-label]") as HTMLElement | null;
@@ -96,9 +98,14 @@ export function FeedSectionTitle({
         return;
       }
 
+      if (lastMeasuredWidth > 0 && Math.abs(available - lastMeasuredWidth) < 1.5) {
+        return;
+      }
+
       applyProbe(label, icon, FIT_MIN_PX, true);
       const withIcon = root.scrollWidth <= available + 0.5;
       const best = largestFit(root, label, icon, available, withIcon);
+      lastMeasuredWidth = available;
 
       setShowIcon((prev) => (prev === withIcon ? prev : withIcon));
       setFitPx((prev) => (prev === best ? prev : best));
@@ -106,15 +113,19 @@ export function FeedSectionTitle({
 
     const schedule = () => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(measure);
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => {
+        frame = requestAnimationFrame(measure);
+      }, 64);
     };
 
-    schedule();
+    frame = requestAnimationFrame(measure);
     const observer = new ResizeObserver(schedule);
     observer.observe(root);
 
     return () => {
       cancelAnimationFrame(frame);
+      window.clearTimeout(settleTimer);
       observer.disconnect();
     };
   }, [fit, variant]);
