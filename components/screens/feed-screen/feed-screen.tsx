@@ -222,30 +222,34 @@ export function FeedScreen() {
       <FeedMobileTitleFlight />
       <div className="relative space-y-6 select-none">
         <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
-          <aside className="hidden min-w-70 shrink-0 flex-col lg:flex">
-            <div className="sticky top-20 flex max-h-[calc(100vh-6rem)] flex-col gap-3">
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                <div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50 p-5">
-                  <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-900">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
-                      <line x1="21" x2="14" y1="4" y2="4" />
-                      <line x1="10" x2="3" y1="4" y2="4" />
-                      <line x1="21" x2="12" y1="12" y2="12" />
-                      <line x1="8" x2="3" y1="12" y2="12" />
-                      <line x1="21" x2="16" y1="20" y2="20" />
-                      <line x1="12" x2="3" y1="20" y2="20" />
-                      <line x1="14" x2="14" y1="2" y2="6" />
-                      <line x1="8" x2="8" y1="10" y2="14" />
-                      <line x1="16" x2="16" y1="18" y2="22" />
-                    </svg>
-                    Filtros
-                  </h3>
-                  <button onClick={clearFilters} className="text-xs font-bold uppercase tracking-wider text-wine-700 hover:underline">Limpar</button>
-                </div>
+          <aside
+            data-feed-filters-panel
+            className="relative hidden min-w-70 lg:block"
+          >
+            <div className="sticky top-[calc(5rem+env(safe-area-inset-top,0px))] z-10 flex max-h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-1.5rem)] flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+              <div className="flex shrink-0 items-center justify-between border-b border-zinc-100 bg-zinc-50 p-5">
+                <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-900">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
+                    <line x1="21" x2="14" y1="4" y2="4" />
+                    <line x1="10" x2="3" y1="4" y2="4" />
+                    <line x1="21" x2="12" y1="12" y2="12" />
+                    <line x1="8" x2="3" y1="12" y2="12" />
+                    <line x1="21" x2="16" y1="20" y2="20" />
+                    <line x1="12" x2="3" y1="20" y2="20" />
+                    <line x1="14" x2="14" y1="2" y2="6" />
+                    <line x1="8" x2="8" y1="10" y2="14" />
+                    <line x1="16" x2="16" y1="18" y2="22" />
+                  </svg>
+                  Filtros
+                </h3>
+                <button onClick={clearFilters} className="text-xs font-bold uppercase tracking-wider text-wine-700 hover:underline">Limpar</button>
+              </div>
 
-                <div className="custom-scrollbar flex-1 overflow-y-auto bg-white p-5">
-                  <FeedFiltersContent {...filtersContentProps} />
-                </div>
+              <div
+                data-feed-filters-scroll
+                className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white p-5"
+              >
+                <FeedFiltersContent {...filtersContentProps} />
               </div>
             </div>
           </aside>
@@ -265,9 +269,9 @@ export function FeedScreen() {
             ) : (
               <>
                 {premiumAds.length > 0 && (
-                  <div ref={premiumSectionRef} className="relative">
+                  <div ref={premiumSectionRef} className="relative z-10">
                     <FeedSectionDivider variant="premium" />
-                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                    <div className="relative grid gap-4 overflow-visible sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                       {premiumAds.map((ad, index) => (
                         <FeedAdCard key={ad.id} ad={ad} priority={index === 0} />
                       ))}

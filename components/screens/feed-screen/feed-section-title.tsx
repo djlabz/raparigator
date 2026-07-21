@@ -15,7 +15,7 @@ interface FeedSectionTitleProps {
 
 const PREMIUM_LABEL = "Modelos Premium";
 const STANDARD_LABEL = "Outras modelos";
-const FIT_MIN_PX = 18;
+const FIT_MIN_PX = 15;
 const FIT_MAX_PX = 30;
 
 function applyProbe(

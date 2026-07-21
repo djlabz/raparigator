@@ -109,7 +109,7 @@ export function FeedMobileTitleFlight() {
             style={{ y: premiumY, opacity: premiumOpacity }}
             className="flex h-11 w-full min-w-0 items-center will-change-transform"
           >
-            <FeedSectionTitle variant="premium" size="sm" className="w-full" />
+            <FeedSectionTitle variant="premium" fit className="w-full" />
           </motion.div>
         ) : null}
         {hasStandard ? (
@@ -124,7 +124,7 @@ export function FeedMobileTitleFlight() {
                 : "flex h-11 w-full min-w-0 items-center will-change-transform"
             }
           >
-            <FeedSectionTitle variant="standard" size="sm" className="w-full" />
+            <FeedSectionTitle variant="standard" fit className="w-full" />
           </motion.div>
         ) : null}
       </div>
