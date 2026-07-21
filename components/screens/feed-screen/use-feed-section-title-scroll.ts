@@ -12,10 +12,12 @@ import {
 const LG_QUERY = "(min-width: 1024px)";
 const PUSH_DISTANCE_DESKTOP_PX = 260;
 const PUSH_DISTANCE_MOBILE_PX = 200;
-const REVEAL_DISTANCE_PX = 72;
+const REVEAL_DISTANCE_PX = 96;
 const IN_PAGE_TITLE_HEIGHT = 40;
-const SMOOTH = 0.16;
-const SNAP_EPS = 0.0008;
+const REVEAL_LAMBDA = 16;
+const PUSH_LAMBDA = 14;
+const SPACER_LAMBDA = 18;
+const SNAP_EPS = 0.0005;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -26,8 +28,8 @@ function smootherstep(value: number) {
   return x * x * x * (x * (x * 6 - 15) + 10);
 }
 
-function damp(current: number, target: number, amount: number) {
-  const next = current + (target - current) * amount;
+function dampExp(current: number, target: number, lambda: number, dt: number) {
+  const next = target + (current - target) * Math.exp(-lambda * dt);
   return Math.abs(target - next) < SNAP_EPS ? target : next;
 }
 
@@ -53,11 +55,6 @@ function progressAcrossBand(edge: number, start: number, end: number) {
   }
 
   return clamp01((start - edge) / (start - end));
-}
-
-function roundPx(value: number) {
-  const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
-  return Math.round(value * dpr) / dpr;
 }
 
 interface UseFeedSectionTitleScrollArgs {
@@ -129,10 +126,6 @@ export function useFeedSectionTitleScroll({
     const target = {
       push: 0,
       reveal: 0,
-      x: 0,
-      y: 0,
-      w: 0,
-      ready: 0,
       spacer: IN_PAGE_TITLE_HEIGHT,
       divider: 1,
     };
@@ -140,10 +133,6 @@ export function useFeedSectionTitleScroll({
     const current = {
       push: 0,
       reveal: 0,
-      x: 0,
-      y: 0,
-      w: 0,
-      ready: 0,
       spacer: IN_PAGE_TITLE_HEIGHT,
       divider: 1,
     };
@@ -151,8 +140,9 @@ export function useFeedSectionTitleScroll({
     let frame = 0;
     let running = true;
     let seeded = false;
+    let lastTime = performance.now();
 
-    const sample = () => {
+    const sampleTargets = () => {
       const headerBottom = headerOffsetPx();
       const canPush = hasPremium && hasStandard;
       const mode: FeedHeaderTitleMode = isDesktop ? "desktop" : "mobile";
@@ -179,9 +169,9 @@ export function useFeedSectionTitleScroll({
 
         if (revealTarget) {
           const top = revealTarget.getBoundingClientRect().top;
-          const start = headerBottom + 4;
+          const start = headerBottom + 8;
           const end = headerBottom - REVEAL_DISTANCE_PX;
-          reveal = window.scrollY < 4 ? 0 : smootherstep(progressAcrossBand(top, start, end));
+          reveal = window.scrollY < 2 ? 0 : smootherstep(progressAcrossBand(top, start, end));
         }
 
         if (canPush && standardSectionRef.current) {
@@ -197,74 +187,83 @@ export function useFeedSectionTitleScroll({
 
       if (mode === "desktop") {
         target.spacer = 0;
-        target.ready = 0;
-        target.divider = canPush ? clamp01(1 - push / 0.12) : hasStandard ? 0 : 1;
+        target.divider = canPush ? clamp01(1 - push / 0.18) : hasStandard ? 0 : 1;
       } else {
-        target.spacer = reveal < 0.97 ? IN_PAGE_TITLE_HEIGHT : 0;
+        target.spacer = target.reveal < 0.9
+          ? IN_PAGE_TITLE_HEIGHT
+          : IN_PAGE_TITLE_HEIGHT * clamp01(1 - (target.reveal - 0.9) / 0.1);
         target.divider = !hasPremium && hasStandard
           ? 0
           : canPush
-            ? clamp01(1 - push / 0.16)
+            ? clamp01(1 - push / 0.22)
             : hasStandard
               ? 1
               : 0;
-
-        const source = document.querySelector<HTMLElement>("[data-feed-title-source]");
-        const dest = document.querySelector<HTMLElement>("[data-feed-title-target]");
-
-        if (source && dest && (hasPremium || hasStandard)) {
-          const src = source.getBoundingClientRect();
-          const dst = dest.getBoundingClientRect();
-          const t = reveal;
-          target.x = roundPx(src.left + (dst.left - src.left) * t);
-          target.y = roundPx(src.top + (dst.top - src.top) * t);
-          const fromW = src.width > 0 ? src.width : dst.width;
-          const toW = dst.width > 0 ? dst.width : src.width;
-          target.w = roundPx(fromW + (toW - fromW) * t);
-          target.ready = src.width > 0 || dst.width > 0 ? 1 : 0;
-        } else {
-          target.ready = 0;
-        }
       }
     };
 
-    const tick = () => {
+    const writeFlightFromReveal = (reveal: number) => {
+      const mode: FeedHeaderTitleMode = isDesktop ? "desktop" : "mobile";
+
+      if (mode === "desktop" || (!hasPremium && !hasStandard)) {
+        titleFlightReady.set(0);
+        return;
+      }
+
+      const source = document.querySelector<HTMLElement>("[data-feed-title-source]");
+      const dest = document.querySelector<HTMLElement>("[data-feed-title-target]");
+
+      if (!source || !dest) {
+        titleFlightReady.set(0);
+        return;
+      }
+
+      const src = source.getBoundingClientRect();
+      const dst = dest.getBoundingClientRect();
+      if (src.width <= 0 && dst.width <= 0) {
+        titleFlightReady.set(0);
+        return;
+      }
+
+      const t = reveal;
+      const fromW = src.width > 0 ? src.width : dst.width;
+      const toW = dst.width > 0 ? dst.width : src.width;
+
+      titleFlightX.set(src.left + (dst.left - src.left) * t);
+      titleFlightY.set(src.top + (dst.top - src.top) * t);
+      titleFlightW.set(fromW + (toW - fromW) * t);
+      titleFlightReady.set(1);
+    };
+
+    const tick = (now: number) => {
       if (!running) {
         return;
       }
 
-      sample();
+      const dt = Math.min(0.05, Math.max(0.001, (now - lastTime) / 1000));
+      lastTime = now;
+
+      sampleTargets();
 
       if (!seeded) {
         current.push = target.push;
         current.reveal = target.reveal;
-        current.x = target.x;
-        current.y = target.y;
-        current.w = target.w;
-        current.ready = target.ready;
         current.spacer = target.spacer;
         current.divider = target.divider;
         seeded = true;
       } else {
-        current.push = damp(current.push, target.push, SMOOTH);
-        current.reveal = damp(current.reveal, target.reveal, SMOOTH);
-        current.x = damp(current.x, target.x, SMOOTH);
-        current.y = damp(current.y, target.y, SMOOTH);
-        current.w = damp(current.w, target.w, SMOOTH);
-        current.ready = damp(current.ready, target.ready, 0.35);
-        current.spacer = damp(current.spacer, target.spacer, 0.28);
-        current.divider = damp(current.divider, target.divider, SMOOTH);
+        current.push = dampExp(current.push, target.push, PUSH_LAMBDA, dt);
+        current.reveal = dampExp(current.reveal, target.reveal, REVEAL_LAMBDA, dt);
+        current.spacer = dampExp(current.spacer, target.spacer, SPACER_LAMBDA, dt);
+        current.divider = dampExp(current.divider, target.divider, PUSH_LAMBDA, dt);
       }
 
       pushProgress.set(current.push);
       headerReveal.set(current.reveal);
-      inPageTitleOpacity.set(0);
+      inPageTitleOpacity.set(clamp01(1 - current.reveal / 0.12));
       inPageTitleMaxHeight.set(current.spacer);
       standardDividerOpacity.set(current.divider);
-      titleFlightX.set(current.x);
-      titleFlightY.set(current.y);
-      titleFlightW.set(current.w);
-      titleFlightReady.set(current.ready);
+      writeFlightFromReveal(current.reveal);
 
       frame = requestAnimationFrame(tick);
     };
