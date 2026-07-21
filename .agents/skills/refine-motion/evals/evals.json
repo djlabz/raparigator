@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "No card do feed, quero que o selo premium apareça com um fade bem sutil quando o anúncio for premium. Não precisa de nada elaborado.",
-      "expected_output": "CSS/Tailwind ou transição leve; sem entrevista de escopo; import motion/react só se presença exigir; verificação A/B básica; sem nova lib",
+      "expected_output": "CSS só se fade simples resolver 100%; senão motion/react; sem entrevista de escopo; verificação A/B básica; sem nova lib",
       "files": []
     },
     {

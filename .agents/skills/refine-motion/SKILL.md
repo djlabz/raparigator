@@ -1,17 +1,19 @@
 ---
 name: refine-motion
 description: >
-  Guarantees smooth, request-faithful UI motion for Raparigator: choose CSS vs
-  motion/react (lightness first, smoothness wins), scope-gate complex multi-step
-  effects, then verify with step-by-step + controlled-chaos + cross-navigation
-  (webapp-testing Playwright or browser MCP — whichever finds jank faster) before
-  delivery. Use whenever creating, refactoring, or adjusting animations,
-  transitions, AnimatePresence, scroll-linked motion, gestures, tab/page motion,
-  FABs, indicators, or microinteractions with movement; also for stutter, lag,
-  jank, trembling, flicker, hitching, or "animação quebrada" reports — even if
-  the user never says skill, QA, or Playwright. Prefer this over improvising
-  motion. Skip only for pure layout/color/copy with no movement component.
-  Invoke explicitly with /refine-motion when the user wants this workflow on demand.
+  Guarantees smooth, request-faithful UI motion for Raparigator. Use CSS/Tailwind
+  only for very simple effects that CSS can fully solve; otherwise prefer
+  motion/react as the primary library; allow another animation lib only when
+  Motion cannot solve the effect. Scope-gate complex multi-step effects, then
+  verify with step-by-step + controlled-chaos + cross-navigation (webapp-testing
+  Playwright or browser MCP — whichever finds jank faster) before delivery. Use
+  whenever creating, refactoring, or adjusting animations, transitions,
+  AnimatePresence, scroll-linked motion, gestures, tab/page motion, FABs,
+  indicators, or microinteractions with movement; also for stutter, lag, jank,
+  trembling, flicker, hitching, or "animação quebrada" reports — even if the
+  user never says skill, QA, or Playwright. Prefer this over improvising motion.
+  Skip only for pure layout/color/copy with no movement component. Invoke
+  explicitly with /refine-motion when the user wants this workflow on demand.
 ---
 
 # Refine Motion
@@ -21,7 +23,7 @@ Deliver motion that matches the request and feels continuous. Rough or almost-ri
 ## Workflow
 
 1. Decide if the effect is complex enough to need a scope gate.
-2. Choose CSS vs `motion/react` (lightness first, smoothness wins ties).
+2. Choose technology: CSS only if very simple and fully solvable in CSS; else `motion/react` as primary; another lib only if Motion cannot deliver.
 3. Implement surgically; do not refactor unrelated motion.
 4. Diff the result against the user's request before calling it done.
 5. Verify with chaos + step-by-step + cross-navigation routes.
@@ -48,19 +50,25 @@ Simple one-shot fades, hovers, short shakes, and single-property transitions do 
 
 ## Technology choice
 
-Order of preference:
+Default to `motion/react` whenever the effect is more than trivially simple. CSS is the exception, not the baseline.
 
-1. **CSS / Tailwind / `@keyframes`** for hover, simple fade, shimmer, short shake, and non-orchestrated state changes.
-2. **`motion/react`** for `AnimatePresence`, layout animation, springs, scroll/gesture, and multi-step orchestration.
-3. Accept more complexity only when CSS cannot deliver the requested feel smoothly.
+Use **CSS / Tailwind / `@keyframes` only when all of these are true**:
+
+- The effect is very simple (e.g. hover color/opacity, one-shot fade, short shimmer, short shake)
+- A single transition or keyframe fully delivers the request — no orchestration, no shared layout, no enter/exit coordination, no scroll/gesture-driven motion
+- The result stays smooth and faithful without fighting React mount/unmount
+
+Otherwise use **`motion/react` as the primary library** (presence, layout, springs, scroll/gesture, sequenced stages, anything that would need hacks or incomplete CSS). Prefer a correct Motion implementation over a fragile CSS workaround.
+
+If CSS is “almost enough” but not complete or not smooth, switch to `motion/react`. Smoothness and fidelity beat forcing CSS for lightness.
+
+Only when `motion/react` clearly cannot deliver the requested effect smoothly and faithfully may another animation library be introduced. Treat that as exceptional: keep `motion/react` as the default stack for all other motion in the app, justify why Motion is insufficient, prefer the smallest dependency that solves the gap, and do not proliferate multiple competing animation libs for similar problems.
 
 Project constraints:
 
-- Import from `motion/react`, not `framer-motion`.
-- Never install another animation library.
-- Prefer transforming existing Motion usage over introducing parallel patterns.
-
-Tie-breaker: if a lighter approach is almost right but stutters or fails fidelity, choose the approach that stays continuous and matches the request.
+- Prefer imports from `motion/react` for new and refactored motion work.
+- Do not replace Motion project-wide with another lib; a secondary lib is a last resort for a specific effect Motion cannot solve.
+- Prefer extending existing Motion usage over inventing a parallel pattern when Motion can do the job.
 
 ## Motion quality
 
@@ -105,7 +113,7 @@ On failure: fix → rerun the same routes → only then deliver.
 
 Input: Add a subtle fade when the premium badge appears on the ad card.
 
-Approach: CSS/Tailwind opacity transition unless presence orchestration is required. Verify appear/disappear and a quick scroll past the card. No scope interview.
+Approach: CSS only if a simple opacity transition fully covers appear/disappear; if mount timing or presence matters, use `motion/react`. Verify appear/disappear and a quick scroll past the card. No scope interview.
 
 **Example 2 — complex**
 
