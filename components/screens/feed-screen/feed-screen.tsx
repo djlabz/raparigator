@@ -6,6 +6,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ads, cities } from "@/lib/mock-data";
+import {
+  chromeBelowDesktopNavStickyMaxH,
+  chromeBelowDesktopNavStickyTop,
+} from "@/lib/chrome-styles";
+import { cn } from "@/lib/utils";
 import { FeedAdCard } from "./feed-ad-card";
 import { FeedSectionDivider } from "./feed-section-divider";
 import { FeedFiltersContent } from "./feed-filters-content";
@@ -226,7 +231,13 @@ export function FeedScreen() {
             data-feed-filters-panel
             className="relative hidden min-w-70 lg:block"
           >
-            <div className="sticky top-[calc(5rem+env(safe-area-inset-top,0px))] z-10 flex max-h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-1.5rem)] flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+            <div
+              className={cn(
+                "sticky z-10 flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm",
+                chromeBelowDesktopNavStickyTop,
+                chromeBelowDesktopNavStickyMaxH
+              )}
+            >
               <div className="flex shrink-0 items-center justify-between border-b border-zinc-100 bg-zinc-50 p-5">
                 <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-900">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">

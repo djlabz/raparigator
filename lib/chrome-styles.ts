@@ -41,6 +41,15 @@ export const chromeCircleDark =
 export const chromeHeaderOffset =
   "pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pt-[calc(5rem+env(safe-area-inset-top,0px))]";
 
+export const chromeDesktopNavSticky =
+  "sticky top-[calc(5rem+env(safe-area-inset-top,0px))] z-20";
+
+export const chromeBelowDesktopNavStickyTop =
+  "top-[calc(9rem+env(safe-area-inset-top,0px))]";
+
+export const chromeBelowDesktopNavStickyMaxH =
+  "max-h-[calc(100dvh-9rem-env(safe-area-inset-top,0px)-1.5rem)]";
+
 export const chromeScrollNone =
   "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
 

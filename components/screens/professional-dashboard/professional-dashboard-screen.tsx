@@ -9,6 +9,7 @@ import { useAuthSession } from "@/lib/auth-session";
 import { useAccountNotifications } from "@/lib/account-notifications";
 import type { AuthRole } from "@/lib/types";
 import { ads } from "@/lib/mock-data";
+import { chromeBelowDesktopNavStickyTop } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
 import { InfoBanner } from "@/components/ui/info-banner";
 import { SummaryTab } from "./summary-tab";
@@ -73,7 +74,12 @@ export function ProfessionalDashboardScreen() {
       )}>
 
         {/* Menu Lateral Desktop */}
-        <aside className="hidden lg:flex flex-col rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm h-fit self-start transition-all duration-300">
+        <aside
+          className={cn(
+            "sticky hidden h-fit flex-col self-start rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition-all duration-300 lg:flex",
+            chromeBelowDesktopNavStickyTop
+          )}
+        >
           <div className="flex items-center justify-between mb-6 px-2">
             {!isSidebarCollapsed && (
               <span className="text-sm font-black tracking-widest text-wine-700 uppercase">

@@ -3,7 +3,7 @@
 import { PropsWithChildren, useLayoutEffect } from "react";
 import { useAuthSession } from "@/lib/auth-session";
 import { getNavigationItems } from "@/lib/navigation";
-import { chromeHeaderOffset } from "@/lib/chrome-styles";
+import { chromeDesktopNavSticky, chromeHeaderOffset } from "@/lib/chrome-styles";
 import {
   registerShell,
   setMobileNavHidden,
@@ -71,7 +71,7 @@ export function AppShell({
         )}
       >
         {!hideDesktopNav && navigationItems.length > 0 ? (
-          <DesktopNav items={navigationItems} className="mb-4 hidden md:block" />
+          <DesktopNav items={navigationItems} className={cn(chromeDesktopNavSticky, "mb-4 hidden md:block")} />
         ) : null}
         {children}
       </main>
