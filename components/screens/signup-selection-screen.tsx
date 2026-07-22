@@ -76,10 +76,10 @@ export function SignupSelectionScreen() {
               <p className="hidden md:block mb-10 flex-grow text-sm leading-relaxed text-zinc-600">
                 Tenha acesso a perfis verificados e uma curadoria de elite com total discrição e segurança. Explore um universo de possibilidades.
               </p>
-              <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-wine-700">
-                <span className="hidden md:inline">Iniciar Experiência</span>
-                <span className="md:hidden">Iniciar</span>
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <div className="flex items-center justify-start text-[10px] font-black uppercase tracking-widest text-wine-700">
+                <span className="whitespace-nowrap hidden md:inline">Iniciar Experiência</span>
+                <span className="whitespace-nowrap md:hidden">Iniciar</span>
+                <ArrowRight className="ml-2 h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
               </div>
             </Link>
 
@@ -98,9 +98,10 @@ export function SignupSelectionScreen() {
               <p className="hidden md:block mb-10 flex-grow text-sm leading-relaxed text-zinc-600">
                 Apresente seu perfil na plataforma mais exclusiva do mercado e tenha controle total da sua independência e audiência.
               </p>
-              <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-wine-700">
-                <span>Candidatar-se</span>
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <div className="flex items-center justify-start text-[10px] font-black uppercase tracking-widest text-wine-700">
+                <span className="whitespace-nowrap hidden md:inline">Candidatar-se</span>
+                <span className="whitespace-nowrap md:hidden">Candidatar</span>
+                <ArrowRight className="ml-2 h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
               </div>
             </Link>
           </div>
