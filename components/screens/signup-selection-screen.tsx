@@ -32,8 +32,20 @@ export function SignupSelectionScreen() {
         </div>
       </section>
 
-      <section className="px-4 py-10 sm:px-6 md:flex md:min-h-screen md:items-center md:justify-center md:px-10">
-        <div className="mx-auto w-full max-w-xl space-y-6">
+      <section className="relative px-4 py-10 sm:px-6 md:flex md:min-h-screen md:items-center md:justify-center md:px-10">
+        <div className="absolute inset-0 overflow-hidden md:hidden">
+          <Image
+            src="/images/personas/persona3/persona3-selection-hero.png"
+            alt=""
+            fill
+            className="object-cover opacity-35"
+            sizes="100vw"
+            aria-hidden
+          />
+          <div className="absolute inset-0 bg-linear-to-b from-white/75 via-white/40 to-white/75" />
+          <div className="absolute bottom-0 left-0 right-0 h-28 bg-linear-to-t from-zinc-50 to-transparent pointer-events-none" />
+        </div>
+        <div className="relative z-10 mx-auto w-full max-w-xs space-y-6 md:max-w-xl">
           <header className="mb-10 text-center relative">
             <div className="absolute left-0 top-0 flex items-center h-8">
               <BackButton />
@@ -48,46 +60,51 @@ export function SignupSelectionScreen() {
             <p className="mx-auto mt-3 max-w-sm text-sm font-medium text-zinc-600">Selecione o caminho que melhor se adapta à sua experiência exclusiva dentro do ecossistema Sigillus.</p>
           </header>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-2 gap-3 md:gap-6">
             {/* Card Cliente */}
             <Link
               href="/auth/cadastro/cliente"
-              className="group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white/70 p-8 shadow-sm backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:border-wine-300 hover:shadow-xl hover:shadow-wine-900/10"
+              className="group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white/70 p-5 md:p-8 shadow-sm backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:border-wine-300 hover:shadow-xl hover:shadow-wine-900/10 min-h-[180px] md:min-h-0"
             >
               <div className="absolute -right-4 -top-4 p-6 opacity-0 transition-all duration-500 group-hover:-translate-y-2 group-hover:translate-x-2 group-hover:opacity-10">
                 <User className="h-32 w-32 text-wine-700" strokeWidth={1} />
               </div>
-              <div className="mb-8 flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 transition-colors duration-500 group-hover:bg-wine-50 group-hover:text-wine-700">
-                <User size={28} strokeWidth={1.5} />
+              <div className="flex flex-col flex-grow">
+                <div className="mb-3 md:mb-8 flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 transition-colors duration-500 group-hover:bg-wine-50 group-hover:text-wine-700">
+                  <User className="size-5 md:size-7" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800"><span className="md:hidden">Acessar a Plataforma</span><span className="hidden md:inline">Quero acessar a plataforma</span></h3>
               </div>
-              <h3 className="mb-4 text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800">Quero acessar a plataforma</h3>
-              <p className="mb-10 flex-grow text-sm leading-relaxed text-zinc-600">
+              <p className="hidden md:block mb-10 flex-grow text-sm leading-relaxed text-zinc-600">
                 Tenha acesso a perfis verificados e uma curadoria de elite com total discrição e segurança. Explore um universo de possibilidades.
               </p>
-              <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-wine-700">
-                <span>Iniciar Experiência</span>
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <div className="mt-auto flex items-center justify-start text-[10px] font-black uppercase tracking-widest text-wine-700">
+                <span className="whitespace-nowrap hidden md:inline">Iniciar Experiência</span>
+                <span className="whitespace-nowrap md:hidden">Iniciar</span>
+                <ArrowRight className="ml-2 h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
               </div>
             </Link>
 
             {/* Card Profissional */}
             <Link
               href="/auth/cadastro/profissional"
-              className="group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white/70 p-8 shadow-sm backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:border-wine-300 hover:shadow-xl hover:shadow-wine-900/10"
+              className="group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white/70 p-5 md:p-8 shadow-sm backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:border-wine-300 hover:shadow-xl hover:shadow-wine-900/10 min-h-[180px] md:min-h-0"
             >
               <div className="absolute -right-4 -top-4 p-6 opacity-0 transition-all duration-500 group-hover:-translate-y-2 group-hover:translate-x-2 group-hover:opacity-10">
                 <Sparkles className="h-32 w-32 text-wine-700" strokeWidth={1} />
               </div>
-              <div className="mb-8 flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 transition-colors duration-500 group-hover:bg-wine-50 group-hover:text-wine-700">
-                <Sparkles size={28} strokeWidth={1.5} />
+              <div className="flex flex-col flex-grow">
+                <div className="mb-3 md:mb-8 flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 transition-colors duration-500 group-hover:bg-wine-50 group-hover:text-wine-700">
+                  <Sparkles className="size-5 md:size-7" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800"><span className="md:hidden">Anunciar meu Perfil</span><span className="hidden md:inline">Quero anunciar meu perfil</span></h3>
               </div>
-              <h3 className="mb-4 text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800">Quero anunciar meu perfil</h3>
-              <p className="mb-10 flex-grow text-sm leading-relaxed text-zinc-600">
+              <p className="hidden md:block mb-10 flex-grow text-sm leading-relaxed text-zinc-600">
                 Apresente seu perfil na plataforma mais exclusiva do mercado e tenha controle total da sua independência e audiência.
               </p>
-              <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-wine-700">
-                <span>Candidatar-se</span>
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <div className="mt-auto flex items-center justify-start text-[9px] md:text-[10px] font-black uppercase tracking-widest text-wine-700">
+                <span className="whitespace-nowrap">Candidatar-se</span>
+                <ArrowRight className="ml-2 h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
               </div>
             </Link>
           </div>
