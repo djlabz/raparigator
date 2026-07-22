@@ -44,7 +44,7 @@ export function SignupSelectionScreen() {
           />
           <div className="absolute inset-0 bg-linear-to-b from-white/90 via-white/70 to-white/90" />
         </div>
-        <div className="relative z-10 mx-auto w-full max-w-xs space-y-6">
+        <div className="relative z-10 mx-auto w-full max-w-xs space-y-6 md:max-w-xl">
           <header className="mb-10 text-center relative">
             <div className="absolute left-0 top-0 flex items-center h-8">
               <BackButton />
@@ -71,7 +71,7 @@ export function SignupSelectionScreen() {
               <div className="mb-3 md:mb-8 flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 transition-colors duration-500 group-hover:bg-wine-50 group-hover:text-wine-700">
                 <User className="size-5 md:size-7" strokeWidth={1.5} />
               </div>
-              <h3 className="mb-4 text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800">Acessar a Plataforma</h3>
+              <h3 className="mb-4 text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800"><span className="md:hidden">Acessar a Plataforma</span><span className="hidden md:inline">Quero acessar a plataforma</span></h3>
               <p className="hidden md:block mb-10 flex-grow text-sm leading-relaxed text-zinc-600">
                 Tenha acesso a perfis verificados e uma curadoria de elite com total discrição e segurança. Explore um universo de possibilidades.
               </p>
@@ -93,7 +93,7 @@ export function SignupSelectionScreen() {
               <div className="mb-3 md:mb-8 flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 transition-colors duration-500 group-hover:bg-wine-50 group-hover:text-wine-700">
                 <Sparkles className="size-5 md:size-7" strokeWidth={1.5} />
               </div>
-              <h3 className="mb-4 text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800">Anunciar Perfil</h3>
+              <h3 className="mb-4 text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800"><span className="md:hidden">Anunciar Perfil</span><span className="hidden md:inline">Quero anunciar meu perfil</span></h3>
               <p className="hidden md:block mb-10 flex-grow text-sm leading-relaxed text-zinc-600">
                 Apresente seu perfil na plataforma mais exclusiva do mercado e tenha controle total da sua independência e audiência.
               </p>
