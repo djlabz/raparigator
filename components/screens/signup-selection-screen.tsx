@@ -38,11 +38,11 @@ export function SignupSelectionScreen() {
             src="/images/personas/persona3/persona3-selection-hero.png"
             alt=""
             fill
-            className="object-cover opacity-15"
+            className="object-cover opacity-35"
             sizes="100vw"
             aria-hidden
           />
-          <div className="absolute inset-0 bg-linear-to-b from-white/90 via-white/70 to-white/90" />
+          <div className="absolute inset-0 bg-linear-to-b from-white/75 via-white/40 to-white/75" />
         </div>
         <div className="relative z-10 mx-auto w-full max-w-xs space-y-6 md:max-w-xl">
           <header className="mb-10 text-center relative">
