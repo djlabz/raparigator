@@ -38,6 +38,17 @@ function setStoredRole(role: AuthRole) {
   emitChange();
 }
 
+export function pathRequiresAuth(pathname: string) {
+  return (
+    pathname.startsWith("/conta")
+    || pathname.startsWith("/chat")
+    || pathname.startsWith("/acompanhamento")
+    || pathname.startsWith("/profissional")
+    || pathname.startsWith("/checkout")
+    || pathname.startsWith("/admin")
+  );
+}
+
 export function useAuthSession() {
   const role = useSyncExternalStore<AuthRole>(subscribe, readStoredRole, () => "visitor");
 
@@ -55,8 +66,12 @@ export function useAuthSession() {
     isLoggedIn: role !== "visitor",
     logout: () => {
       setStoredRole("visitor");
-      if (typeof window !== "undefined") {
-        window.location.href = "/";
+      if (typeof window === "undefined") {
+        return;
+      }
+
+      if (pathRequiresAuth(window.location.pathname)) {
+        window.location.href = "/feed";
       }
     },
     setRole: (nextRole: AuthRole) => setStoredRole(nextRole),

@@ -1,13 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BackButton } from "@/components/ui/back-button";
 import type { AuthRole, MockUser } from "@/lib/types";
 import {
   chromeControlsRow,
   chromeGlassFixed,
-  chromePillActive,
   chromeSafeTop,
 } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
@@ -15,6 +13,7 @@ import { AccountMenu } from "./account-menu";
 import { ChromeScrim } from "./chrome-scrim";
 import { FeedHeaderDesktopTitle, FeedHeaderTitleSlot } from "./feed-header-title-slot";
 import { useFeedHeaderTitleFlags } from "@/components/screens/feed-screen/feed-header-title-context";
+import { GuestAuthControls } from "./guest-auth-controls";
 
 interface TopHeaderProps {
   role: AuthRole;
@@ -58,21 +57,7 @@ export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeade
           {isLoggedIn ? (
             <AccountMenu role={role} user={user} onLogout={onLogout} />
           ) : (
-            <div className="flex items-center gap-3 text-sm">
-              <Link
-                href="/auth/login"
-                className="font-medium text-zinc-600 transition-colors hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-500 focus-visible:ring-offset-2"
-              >
-                Entrar
-              </Link>
-              <Link
-                href="/auth/cadastro"
-                className={cn(chromePillActive, "px-3 font-medium")}
-                style={{ color: "#fff" }}
-              >
-                Criar conta
-              </Link>
-            </div>
+            <GuestAuthControls />
           )}
         </div>
       </div>
