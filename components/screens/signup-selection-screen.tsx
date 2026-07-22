@@ -11,7 +11,7 @@ export function SignupSelectionScreen() {
       <section className="hidden h-screen bg-black md:sticky md:top-0 md:block">
         <div className="relative h-full w-full overflow-hidden">
           <Image
-            src="/images/personas/persona3/persona3 (27).png"
+            src="/images/personas/persona3/persona3-selection-hero.png"
             alt="Modelo Sigillus"
             fill
             priority
