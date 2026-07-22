@@ -50,11 +50,17 @@ export const chromeBelowDesktopNavStickyTop =
 export const chromeBelowDesktopNavStickyMaxH =
   "max-h-[calc(100dvh-9rem-env(safe-area-inset-top,0px)-1.5rem)]";
 
+export const chromeBelowDesktopNavStickyMinH =
+  "lg:min-h-[calc(100dvh-9rem-env(safe-area-inset-top,0px)-1.5rem)]";
+
 export const chromeBelowHeaderStickyTop =
   "top-[calc(5rem+env(safe-area-inset-top,0px))]";
 
 export const chromeBelowHeaderStickyMaxH =
   "max-h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-1.5rem)]";
+
+export const chromeBelowHeaderStickyMinH =
+  "lg:min-h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-1.5rem)]";
 
 export const chromeScrollNone =
   "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";

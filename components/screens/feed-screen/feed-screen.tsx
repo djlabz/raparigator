@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
@@ -8,8 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ads, cities } from "@/lib/mock-data";
 import {
   chromeBelowDesktopNavStickyMaxH,
+  chromeBelowDesktopNavStickyMinH,
   chromeBelowDesktopNavStickyTop,
   chromeBelowHeaderStickyMaxH,
+  chromeBelowHeaderStickyMinH,
   chromeBelowHeaderStickyTop,
 } from "@/lib/chrome-styles";
 import { useAuthSession } from "@/lib/auth-session";
@@ -185,6 +187,76 @@ export function FeedScreen() {
   const { role } = useAuthSession();
   const { hideDesktopNav } = useShellChrome();
   const hasDesktopNav = !hideDesktopNav && getNavigationItems(role).length > 0;
+  const filtersAnchorRef = useRef<HTMLDivElement>(null);
+  const filtersScrollRef = useRef<HTMLDivElement | null>(null);
+  const filtersScrollTopRef = useRef(0);
+  const filtersUserScrollAllowedRef = useRef(false);
+  const filtersUserScrollTimerRef = useRef(0);
+  const [filtersFixedBox, setFiltersFixedBox] = useState<{ left: number; width: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const anchor = filtersAnchorRef.current;
+    if (!anchor) {
+      return;
+    }
+
+    const sync = () => {
+      const rect = anchor.getBoundingClientRect();
+      setFiltersFixedBox({ left: rect.left, width: rect.width });
+    };
+
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(anchor);
+    window.addEventListener("resize", sync);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", sync);
+    };
+  }, []);
+
+  const setFiltersScrollNode = useCallback((node: HTMLDivElement | null) => {
+    const previous = filtersScrollRef.current as
+      | (HTMLDivElement & { __filtersScrollCleanup?: () => void })
+      | null;
+    previous?.__filtersScrollCleanup?.();
+    filtersScrollRef.current = node;
+
+    if (!node) {
+      return;
+    }
+
+    const allowUserScroll = () => {
+      filtersUserScrollAllowedRef.current = true;
+      window.clearTimeout(filtersUserScrollTimerRef.current);
+      filtersUserScrollTimerRef.current = window.setTimeout(() => {
+        filtersUserScrollAllowedRef.current = false;
+      }, 180);
+    };
+
+    const onScroll = () => {
+      if (!filtersUserScrollAllowedRef.current) {
+        if (node.scrollTop !== filtersScrollTopRef.current) {
+          node.scrollTop = filtersScrollTopRef.current;
+        }
+        return;
+      }
+      filtersScrollTopRef.current = node.scrollTop;
+    };
+
+    node.addEventListener("wheel", allowUserScroll, { passive: true });
+    node.addEventListener("touchstart", allowUserScroll, { passive: true });
+    node.addEventListener("keydown", allowUserScroll);
+    node.addEventListener("scroll", onScroll);
+
+    (node as HTMLDivElement & { __filtersScrollCleanup?: () => void }).__filtersScrollCleanup = () => {
+      window.clearTimeout(filtersUserScrollTimerRef.current);
+      node.removeEventListener("wheel", allowUserScroll);
+      node.removeEventListener("touchstart", allowUserScroll);
+      node.removeEventListener("keydown", allowUserScroll);
+      node.removeEventListener("scroll", onScroll);
+    };
+  }, []);
 
   const applySelectedLocation = (city: string) => {
     setSelectedCity(city);
@@ -235,17 +307,27 @@ export function FeedScreen() {
     <FeedHeaderTitleProvider flags={headerTitleFlags}>
       <FeedMobileTitleFlight />
       <div className="relative space-y-6 select-none">
-        <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
-          <aside
-            data-feed-filters-panel
-            className="relative hidden min-w-70 lg:block"
+        <section className="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
+          <div
+            ref={filtersAnchorRef}
+            className={cn(
+              "relative hidden min-w-70 lg:block",
+              hasDesktopNav ? chromeBelowDesktopNavStickyMinH : chromeBelowHeaderStickyMinH
+            )}
           >
-            <div
+            <aside
+              data-feed-filters-panel
               className={cn(
-                "sticky z-10 flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm",
+                "z-10 flex h-fit w-full min-w-70 flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm",
+                "lg:fixed",
                 hasDesktopNav ? chromeBelowDesktopNavStickyTop : chromeBelowHeaderStickyTop,
                 hasDesktopNav ? chromeBelowDesktopNavStickyMaxH : chromeBelowHeaderStickyMaxH
               )}
+              style={
+                filtersFixedBox
+                  ? { left: filtersFixedBox.left, width: filtersFixedBox.width }
+                  : undefined
+              }
             >
               <div className="flex shrink-0 items-center justify-between border-b border-zinc-100 bg-zinc-50 p-5">
                 <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-900">
@@ -262,19 +344,31 @@ export function FeedScreen() {
                   </svg>
                   Filtros
                 </h3>
-                <button onClick={clearFilters} className="text-xs font-bold uppercase tracking-wider text-wine-700 hover:underline">Limpar</button>
+                <button type="button" onClick={clearFilters} className="text-xs font-bold uppercase tracking-wider text-wine-700 hover:underline">Limpar</button>
               </div>
 
               <div
+                ref={setFiltersScrollNode}
                 data-feed-filters-scroll
-                className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white p-5"
+                className="min-h-0 flex-1 overflow-y-auto overscroll-contain overscroll-y-contain bg-white p-5 [overflow-anchor:none]"
+                onMouseDown={(event) => {
+                  const target = event.target as HTMLElement | null;
+                  if (target?.closest("button, input, label, a, [role='button']")) {
+                    event.preventDefault();
+                  }
+                }}
               >
                 <FeedFiltersContent {...filtersContentProps} />
               </div>
-            </div>
-          </aside>
+            </aside>
+          </div>
 
-          <div className="relative space-y-4">
+          <div
+            className={cn(
+              "relative space-y-4",
+              hasDesktopNav ? chromeBelowDesktopNavStickyMinH : chromeBelowHeaderStickyMinH
+            )}
+          >
             <FeedMobileHeadingRow
               headingRef={mobileHeadingRef}
               onOpenFilters={() => setShowFilters(true)}
