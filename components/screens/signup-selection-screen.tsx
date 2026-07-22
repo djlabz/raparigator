@@ -69,14 +69,16 @@ export function SignupSelectionScreen() {
               <div className="absolute -right-4 -top-4 p-6 opacity-0 transition-all duration-500 group-hover:-translate-y-2 group-hover:translate-x-2 group-hover:opacity-10">
                 <User className="h-32 w-32 text-wine-700" strokeWidth={1} />
               </div>
-              <div className="mb-3 md:mb-8 flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 transition-colors duration-500 group-hover:bg-wine-50 group-hover:text-wine-700">
-                <User className="size-5 md:size-7" strokeWidth={1.5} />
+              <div className="flex flex-col flex-grow">
+                <div className="mb-3 md:mb-8 flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 transition-colors duration-500 group-hover:bg-wine-50 group-hover:text-wine-700">
+                  <User className="size-5 md:size-7" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800"><span className="md:hidden">Acessar a Plataforma</span><span className="hidden md:inline">Quero acessar a plataforma</span></h3>
               </div>
-              <h3 className="mb-4 text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800"><span className="md:hidden">Acessar a Plataforma</span><span className="hidden md:inline">Quero acessar a plataforma</span></h3>
               <p className="hidden md:block mb-10 flex-grow text-sm leading-relaxed text-zinc-600">
                 Tenha acesso a perfis verificados e uma curadoria de elite com total discrição e segurança. Explore um universo de possibilidades.
               </p>
-              <div className="flex items-center justify-start text-[10px] font-black uppercase tracking-widest text-wine-700">
+              <div className="mt-auto flex items-center justify-start text-[10px] font-black uppercase tracking-widest text-wine-700">
                 <span className="whitespace-nowrap hidden md:inline">Iniciar Experiência</span>
                 <span className="whitespace-nowrap md:hidden">Iniciar</span>
                 <ArrowRight className="ml-2 h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
@@ -91,16 +93,17 @@ export function SignupSelectionScreen() {
               <div className="absolute -right-4 -top-4 p-6 opacity-0 transition-all duration-500 group-hover:-translate-y-2 group-hover:translate-x-2 group-hover:opacity-10">
                 <Sparkles className="h-32 w-32 text-wine-700" strokeWidth={1} />
               </div>
-              <div className="mb-3 md:mb-8 flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 transition-colors duration-500 group-hover:bg-wine-50 group-hover:text-wine-700">
-                <Sparkles className="size-5 md:size-7" strokeWidth={1.5} />
+              <div className="flex flex-col flex-grow">
+                <div className="mb-3 md:mb-8 flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 transition-colors duration-500 group-hover:bg-wine-50 group-hover:text-wine-700">
+                  <Sparkles className="size-5 md:size-7" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800"><span className="md:hidden">Anunciar Perfil</span><span className="hidden md:inline">Quero anunciar meu perfil</span></h3>
               </div>
-              <h3 className="mb-4 text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800"><span className="md:hidden">Anunciar Perfil</span><span className="hidden md:inline">Quero anunciar meu perfil</span></h3>
               <p className="hidden md:block mb-10 flex-grow text-sm leading-relaxed text-zinc-600">
                 Apresente seu perfil na plataforma mais exclusiva do mercado e tenha controle total da sua independência e audiência.
               </p>
-              <div className="flex items-center justify-start text-[10px] font-black uppercase tracking-widest text-wine-700">
-                <span className="whitespace-nowrap hidden md:inline">Candidatar-se</span>
-                <span className="whitespace-nowrap md:hidden">Candidatar</span>
+              <div className="mt-auto flex items-center justify-start text-[9px] md:text-[10px] font-black uppercase tracking-widest text-wine-700">
+                <span className="whitespace-nowrap">Candidatar-se</span>
                 <ArrowRight className="ml-2 h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
               </div>
             </Link>
