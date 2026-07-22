@@ -9,7 +9,12 @@ import { ads, cities } from "@/lib/mock-data";
 import {
   chromeBelowDesktopNavStickyMaxH,
   chromeBelowDesktopNavStickyTop,
+  chromeBelowHeaderStickyMaxH,
+  chromeBelowHeaderStickyTop,
 } from "@/lib/chrome-styles";
+import { useAuthSession } from "@/lib/auth-session";
+import { getNavigationItems } from "@/lib/navigation";
+import { useShellChrome } from "@/components/layout/shell-chrome";
 import { cn } from "@/lib/utils";
 import { FeedAdCard } from "./feed-ad-card";
 import { FeedSectionDivider } from "./feed-section-divider";
@@ -177,6 +182,10 @@ export function FeedScreen() {
     standardSectionRef,
   });
 
+  const { role } = useAuthSession();
+  const { hideDesktopNav } = useShellChrome();
+  const hasDesktopNav = !hideDesktopNav && getNavigationItems(role).length > 0;
+
   const applySelectedLocation = (city: string) => {
     setSelectedCity(city);
     setLocationInput(city);
@@ -234,8 +243,8 @@ export function FeedScreen() {
             <div
               className={cn(
                 "sticky z-10 flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm",
-                chromeBelowDesktopNavStickyTop,
-                chromeBelowDesktopNavStickyMaxH
+                hasDesktopNav ? chromeBelowDesktopNavStickyTop : chromeBelowHeaderStickyTop,
+                hasDesktopNav ? chromeBelowDesktopNavStickyMaxH : chromeBelowHeaderStickyMaxH
               )}
             >
               <div className="flex shrink-0 items-center justify-between border-b border-zinc-100 bg-zinc-50 p-5">
