@@ -43,6 +43,7 @@ export function SignupSelectionScreen() {
             aria-hidden
           />
           <div className="absolute inset-0 bg-linear-to-b from-white/75 via-white/40 to-white/75" />
+          <div className="absolute bottom-0 left-0 right-0 h-28 bg-linear-to-t from-zinc-50 to-transparent pointer-events-none" />
         </div>
         <div className="relative z-10 mx-auto w-full max-w-xs space-y-6 md:max-w-xl">
           <header className="mb-10 text-center relative">
