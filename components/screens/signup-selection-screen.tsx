@@ -97,7 +97,7 @@ export function SignupSelectionScreen() {
                 <div className="mb-3 md:mb-8 flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 transition-colors duration-500 group-hover:bg-wine-50 group-hover:text-wine-700">
                   <Sparkles className="size-5 md:size-7" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800"><span className="md:hidden">Anunciar Perfil</span><span className="hidden md:inline">Quero anunciar meu perfil</span></h3>
+                <h3 className="text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800"><span className="md:hidden">Anunciar meu Perfil</span><span className="hidden md:inline">Quero anunciar meu perfil</span></h3>
               </div>
               <p className="hidden md:block mb-10 flex-grow text-sm leading-relaxed text-zinc-600">
                 Apresente seu perfil na plataforma mais exclusiva do mercado e tenha controle total da sua independência e audiência.
