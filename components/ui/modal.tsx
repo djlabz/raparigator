@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useModalLock } from "@/lib/modal-lock";
 import { Button } from "./button";
@@ -17,10 +17,29 @@ interface ModalProps {
   size?: "sm" | "md";
   mobileCentered?: boolean;
   titleClassName?: string;
+  scrollResetKey?: string | number;
 }
 
-export function Modal({ open, title, description, onClose, children, actions, headerActions, size = "sm", mobileCentered = false, titleClassName }: ModalProps) {
+export function Modal({
+  open,
+  title,
+  description,
+  onClose,
+  children,
+  actions,
+  headerActions,
+  size = "sm",
+  mobileCentered = false,
+  titleClassName,
+  scrollResetKey,
+}: ModalProps) {
   useModalLock(open);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open || scrollResetKey === undefined) return;
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [open, scrollResetKey]);
 
   if (!open) return null;
 
@@ -76,7 +95,10 @@ export function Modal({ open, title, description, onClose, children, actions, he
             </button>
           </div>
         </div>
-        <div className="modal-scroll min-h-0 flex-1 overflow-y-auto px-0.5 pr-1 overscroll-contain touch-pan-y pb-4 sm:px-1">
+        <div
+          ref={scrollRef}
+          className="modal-scroll min-h-0 flex-1 overflow-y-auto px-0.5 pr-1 overscroll-contain touch-pan-y pb-4 sm:px-1"
+        >
           {children}
         </div>
 

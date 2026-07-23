@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PremiumEntryButtonProps {
@@ -18,7 +18,7 @@ export function PremiumEntryButton({ onClick, className }: PremiumEntryButtonPro
         className,
       )}
     >
-      <Sparkles className="h-4 w-4" aria-hidden="true" />
+      <Crown className="h-4 w-4" aria-hidden="true" />
       Desbloquear Premium
     </button>
   );

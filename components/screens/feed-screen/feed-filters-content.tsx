@@ -33,7 +33,7 @@ function FilterChip({
       className={cn(
         "relative overflow-visible rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
         active
-          ? "border-wine-300 bg-wine-100 text-wine-800"
+          ? "border-wine-700 bg-wine-700 text-white"
           : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
       )}
     >
