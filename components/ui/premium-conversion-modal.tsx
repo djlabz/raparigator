@@ -125,20 +125,62 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
               onClick={() => setStep(1)}
               className="w-full text-center text-sm font-medium text-zinc-600 hover:text-zinc-900"
             >
-              ← Ver comparação
+              ← Ver benefícios
             </button>
           </div>
         )
       }
     >
       <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-        <span className={cn(step === 1 && "text-[#DAA520]")}>1 · Comparar</span>
+        <span className={cn(step === 1 && "text-[#DAA520]")}>1 · Benefícios</span>
         <span aria-hidden="true">/</span>
-        <span className={cn(step === 2 && "text-[#DAA520]")}>2 · Benefícios</span>
+        <span className={cn(step === 2 && "text-[#DAA520]")}>2 · Comparar</span>
       </div>
 
       <AnimatePresence mode="wait">
         {step === 1 ? (
+          <motion.div
+            key="benefits"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="rounded-2xl border border-[#DAA520]/35 bg-[#121212] p-3 sm:p-4"
+          >
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {BENEFIT_CELLS.map((cell, index) => {
+                const Icon = cell.icon;
+                const highlighted = highlight === cell.id;
+                const isLastOdd = index === BENEFIT_CELLS.length - 1 && BENEFIT_CELLS.length % 2 === 1;
+                return (
+                  <motion.li
+                    key={cell.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 360, damping: 28, delay: index * 0.05 }}
+                    className={cn(
+                      "flex gap-3 rounded-xl border border-[#2a2a2a] bg-black/35 p-3.5",
+                      isLastOdd && "sm:col-span-2",
+                      highlighted && "border-[#FFDF00]/70 bg-[#FFDF00]/5 premium-glow-pulse",
+                    )}
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#FFDF00]/12">
+                      <Icon className="h-4 w-4 text-[#FFDF00]" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0 space-y-0.5">
+                      <p className="flex items-center gap-1.5 text-sm font-semibold text-[#FFDF00]">
+                        {cell.title}
+                        {highlighted ? (
+                          <Sparkles className="h-3.5 w-3.5 shrink-0 text-[#DAA520]" aria-hidden="true" />
+                        ) : null}
+                      </p>
+                      <p className="text-xs leading-relaxed text-zinc-400">{cell.description}</p>
+                    </div>
+                  </motion.li>
+                );
+              })}
+            </ul>
+          </motion.div>
+        ) : (
           <motion.div
             key="compare"
             initial={{ opacity: 0, y: 8 }}
@@ -235,48 +277,6 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
                 <span className="ml-1 font-normal text-zinc-500">· {BILLING_LABELS[billingCycle].toLowerCase()}</span>
               </p>
             </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="benefits"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="rounded-2xl border border-[#DAA520]/35 bg-[#121212] p-3 sm:p-4"
-          >
-            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {BENEFIT_CELLS.map((cell, index) => {
-                const Icon = cell.icon;
-                const highlighted = highlight === cell.id;
-                const isLastOdd = index === BENEFIT_CELLS.length - 1 && BENEFIT_CELLS.length % 2 === 1;
-                return (
-                  <motion.li
-                    key={cell.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ type: "spring", stiffness: 360, damping: 28, delay: index * 0.05 }}
-                    className={cn(
-                      "flex gap-3 rounded-xl border border-[#2a2a2a] bg-black/35 p-3.5",
-                      isLastOdd && "sm:col-span-2",
-                      highlighted && "border-[#FFDF00]/70 bg-[#FFDF00]/5 premium-glow-pulse",
-                    )}
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#FFDF00]/12">
-                      <Icon className="h-4 w-4 text-[#FFDF00]" aria-hidden="true" />
-                    </span>
-                    <div className="min-w-0 space-y-0.5">
-                      <p className="flex items-center gap-1.5 text-sm font-semibold text-[#FFDF00]">
-                        {cell.title}
-                        {highlighted ? (
-                          <Sparkles className="h-3.5 w-3.5 shrink-0 text-[#DAA520]" aria-hidden="true" />
-                        ) : null}
-                      </p>
-                      <p className="text-xs leading-relaxed text-zinc-400">{cell.description}</p>
-                    </div>
-                  </motion.li>
-                );
-              })}
-            </ul>
           </motion.div>
         )}
       </AnimatePresence>
