@@ -26,7 +26,7 @@ export function PremiumEntryBanner({ variant, onClick, className }: PremiumEntry
         Sigillus Premium
       </span>
       <p className="mt-3 font-display text-lg font-semibold text-[#FFDF00]">
-        {isSidebar ? "Seu anúncio pode ir mais longe" : "Apareça mais. Converta mais."}
+        {isSidebar ? "Seu anúncio pode ir mais longe" : "Onde o destaque é privilégio."}
       </p>
       <p className="mt-1 text-sm leading-relaxed text-zinc-400">
         {isSidebar

@@ -110,6 +110,7 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
       titleClassName="premium-modal-title"
       size="md"
       mobileCentered
+      scrollResetKey={step}
       actions={
         step === 1 ? (
           <ShinyButton fullWidth onClick={() => setStep(2)}>

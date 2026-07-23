@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ShinyButtonProps {
@@ -33,7 +33,7 @@ export function ShinyButton({ children, onClick, fullWidth = false, size = "md",
           size === "sm" ? "px-4 py-2 text-xs" : "px-6 py-3 text-sm",
         )}
       >
-        <Sparkles className={size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"} aria-hidden="true" />
+        <Crown className={size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"} aria-hidden="true" />
         {children}
       </span>
     </motion.button>
