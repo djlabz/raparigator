@@ -11,13 +11,13 @@ import {
   Flag,
   Image as ImageIcon,
   MoreHorizontal,
+  MessageSquareText,
   Pencil,
   Plus,
   RefreshCcw,
   Send,
   Shield,
   Trash2,
-  UserRound,
   WifiOff,
 } from "lucide-react";
 import Image from "next/image";
@@ -615,10 +615,10 @@ export function ChatScreen() {
               <button
                 type="button"
                 onClick={openGlobalAliasModal}
-                className="group relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-sm transition hover:bg-zinc-50 hover:border-zinc-300"
+                className="group relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-sm transition hover:border-zinc-300 hover:bg-zinc-50 hover:text-wine-700"
                 aria-label="Alterar apelido geral"
               >
-                <UserRound size={18} />
+                <MessageSquareText size={18} />
                 <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-[1.5px] border-white bg-wine-700 text-white shadow-sm transition-transform group-hover:scale-110">
                   <Pencil size={10} strokeWidth={2.5} />
                 </div>
@@ -1113,7 +1113,7 @@ function ConversationThread({
 
             <div className="space-y-1">
               <button type="button" onClick={onOpenRename} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
-                <UserRound size={16} />
+                <MessageSquareText size={16} />
                 Alterar apelido para essa conversa
               </button>
 

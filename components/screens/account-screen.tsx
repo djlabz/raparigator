@@ -306,7 +306,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
         </div>
       </div>
 
-      <section className="flex flex-col gap-4 rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-200/70 sm:flex-row sm:items-start sm:justify-between">
+      <section className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-200/70">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Configuração da conta</p>
           <h1 className="text-3xl font-semibold text-zinc-900">Dados da sua conta</h1>
@@ -316,8 +316,6 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
               : "Edite seus dados de conta e segurança. Informações do anúncio são gerenciadas no painel profissional."}
           </p>
         </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto" />
       </section>
       
 
@@ -327,7 +325,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Notificação</p>
               <h2 className="mt-1 text-lg font-semibold text-zinc-900">Complete seu cadastro para liberar o restante da plataforma</h2>
-              <p className="mt-1 text-sm text-zinc-600">Você pode fechar este aviso e abrir novamente pelo sino no topo.</p>
+              <p className="mt-1 text-sm text-zinc-600">Você pode fechar este aviso e abrir novamente pelo sino de notificações.</p>
             </div>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => setBannerClosed(true)}>

@@ -119,6 +119,11 @@ export function ProfessionalDashboardScreen() {
         </aside>
 
         <div className="min-w-0 space-y-2 lg:space-y-6">
+          <div className="min-w-0 space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Painel profissional</p>
+            <h1 className="text-2xl font-semibold text-zinc-900 lg:text-3xl">Seu dashboard</h1>
+          </div>
+
           {!bannerClosed && (
             <InfoBanner 
               title="Configure seu anúncio" 

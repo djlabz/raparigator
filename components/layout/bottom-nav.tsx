@@ -21,6 +21,9 @@ import {
 } from "@/lib/tab-navigation";
 import { cn } from "@/lib/utils";
 import { getChatSnapshot, getChatUnreadCount, subscribeChatUnread } from "@/lib/chat-service";
+import { useAuthSession } from "@/lib/auth-session";
+import { getDashboardHref, useAccountNotifications } from "@/lib/account-notifications";
+import type { AuthRole } from "@/lib/types";
 
 interface BottomNavProps {
   items: NavigationItem[];
@@ -60,7 +63,30 @@ function NavIconSvg({
   );
 }
 
-function getNavIcon(label: string, href: string, active: boolean, unreadCount: number = 0) {
+function Badge({ count, tone }: { count: number; tone: "chat" | "notif" }) {
+  if (count <= 0) {
+    return null;
+  }
+
+  return (
+    <span
+      className={cn(
+        "absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white shadow-sm ring-1 ring-white",
+        tone === "chat" ? "bg-red-500" : "bg-wine-700"
+      )}
+    >
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
+function getNavIcon(
+  label: string,
+  href: string,
+  active: boolean,
+  chatUnreadCount: number = 0,
+  notificationBadgeCount: number = 0
+) {
   if (label === "Feed" || href === "/feed") {
     return (
       <NavIconSvg active={active}>
@@ -73,12 +99,15 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
 
   if (label === "Painel" || href.includes("dashboard")) {
     return (
-      <NavIconSvg active={active}>
-        <path d="M4 4h7v7H4z" />
-        <path d="M13 4h7v4h-7z" />
-        <path d="M13 10h7v10h-7z" />
-        <path d="M4 13h7v7H4z" />
-      </NavIconSvg>
+      <div className="relative flex items-center justify-center">
+        <NavIconSvg active={active}>
+          <path d="M4 4h7v7H4z" />
+          <path d="M13 4h7v4h-7z" />
+          <path d="M13 10h7v10h-7z" />
+          <path d="M4 13h7v7H4z" />
+        </NavIconSvg>
+        <Badge count={notificationBadgeCount} tone="notif" />
+      </div>
     );
   }
 
@@ -88,11 +117,7 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
         <NavIconSvg active={active}>
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </NavIconSvg>
-        {unreadCount > 0 && (
-          <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-sm ring-1 ring-white">
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </span>
-        )}
+        <Badge count={chatUnreadCount} tone="chat" />
       </div>
     );
   }
@@ -129,10 +154,13 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
 
   if (label === "Conta" || href === "/conta") {
     return (
-      <NavIconSvg active={active}>
-        <path d="M20 21a8 8 0 0 0-16 0" />
-        <circle cx="12" cy="7" r="4" />
-      </NavIconSvg>
+      <div className="relative flex items-center justify-center">
+        <NavIconSvg active={active}>
+          <path d="M20 21a8 8 0 0 0-16 0" />
+          <circle cx="12" cy="7" r="4" />
+        </NavIconSvg>
+        <Badge count={notificationBadgeCount} tone="notif" />
+      </div>
     );
   }
 
@@ -146,6 +174,10 @@ function getNavIcon(label: string, href: string, active: boolean, unreadCount: n
 export function BottomNav({ items }: BottomNavProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { role } = useAuthSession();
+  const safeRole = role === "visitor" ? null : (role as Exclude<AuthRole, "visitor">);
+  const notifications = useAccountNotifications(safeRole ?? "cliente");
+  const dashboardHref = getDashboardHref(role);
   const [activeTab, setActiveTab] = useState(pathname);
   const listRef = useRef<HTMLUListElement>(null);
   const itemRefs = useRef(new Map<string, HTMLLIElement>());
@@ -236,6 +268,8 @@ export function BottomNav({ items }: BottomNavProps) {
           />
           {items.map((item) => {
             const active = activeHref === item.href;
+            const isDashboardTab = item.href === dashboardHref;
+            const notificationBadge = safeRole && isDashboardTab ? notifications.navbarBadgeCount : 0;
             return (
               <li
                 key={item.href}
@@ -259,6 +293,10 @@ export function BottomNav({ items }: BottomNavProps) {
                     aria-label={item.label}
                     title={item.label}
                     onClick={() => {
+                      if (isDashboardTab && safeRole) {
+                        notifications.clearNavbarBadge();
+                      }
+
                       if (activeHref === item.href) {
                         return;
                       }
@@ -275,7 +313,7 @@ export function BottomNav({ items }: BottomNavProps) {
                     style={active ? { color: "#fff" } : undefined}
                     aria-current={active ? "page" : undefined}
                   >
-                    {getNavIcon(item.label, item.href, active, unreadCount)}
+                    {getNavIcon(item.label, item.href, active, unreadCount, notificationBadge)}
                   </Link>
                 </motion.div>
               </li>
