@@ -56,6 +56,7 @@ export function DesktopNav({ items, className }: DesktopNavProps) {
     const itemEl = activeHref ? itemRefs.current.get(activeHref) : null;
 
     if (!list || !itemEl) {
+      setIndicator((current) => (current.ready ? { ...current, ready: false } : current));
       return;
     }
 
