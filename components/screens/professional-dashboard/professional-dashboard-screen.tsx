@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
@@ -54,8 +55,29 @@ export function ProfessionalDashboardScreen() {
   const currentAd = ads[0];
   const adSlug = currentAd.slug;
 
+  const desktopNavRight = (
+    <div className="inline-flex items-center gap-3">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-800 shadow-xs">
+        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+        {adStatus === "Ativo" ? "Anúncio Ativo" : "Pausado"}
+      </span>
+      {adStatus === "Ativo" ? (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-zinc-700 shadow-xs backdrop-blur-sm">
+          👁️ 142 views hoje
+        </span>
+      ) : null}
+      <Link
+        href={`/anuncio/${adSlug}`}
+        target="_blank"
+        className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white/90 px-2.5 py-1 text-[11px] font-bold tracking-wider text-wine-700 shadow-xs transition-colors hover:bg-wine-50 hover:border-wine-200 backdrop-blur-sm"
+      >
+        Ver anúncio público
+      </Link>
+    </div>
+  );
+
   return (
-    <AppShell>
+    <AppShell desktopNavRight={desktopNavRight}>
       <div className={cn(
         "grid min-w-0 gap-4 lg:gap-8 lg:items-start transition-all duration-300",
         isSidebarCollapsed ? "lg:grid-cols-[80px_1fr]" : "lg:grid-cols-[256px_1fr]"

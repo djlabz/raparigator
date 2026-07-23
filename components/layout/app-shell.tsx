@@ -26,6 +26,7 @@ interface AppShellProps extends PropsWithChildren {
   hideDesktopNav?: boolean;
   onBack?: () => void;
   mainClassName?: string;
+  desktopNavRight?: React.ReactNode;
 }
 
 const tabEnterTransition = {
@@ -48,6 +49,7 @@ export function AppShell({
   hideDesktopNav = false,
   onBack,
   mainClassName,
+  desktopNavRight,
 }: AppShellProps) {
   const pathname = usePathname();
   const { role, user, isLoggedIn, logout } = useAuthSession();
@@ -91,7 +93,14 @@ export function AppShell({
         )}
       >
         {!hideDesktopNav && navigationItems.length > 0 ? (
-          <DesktopNav items={navigationItems} className="mb-4 hidden md:grid" />
+          <div className="mb-4 hidden items-center justify-between gap-4 md:flex">
+            <DesktopNav items={navigationItems} />
+            {desktopNavRight ? (
+              <div className="flex shrink-0 items-center gap-3">
+                {desktopNavRight}
+              </div>
+            ) : null}
+          </div>
         ) : null}
         {shouldAnimateTab ? (
           <motion.div
