@@ -38,7 +38,16 @@ Typical Raparigator shell path:
 
 Pass only if state and animation still behave: no stuck FAB/overlay, no dead transition, no duplicated layered UI, no animation that only worked on first mount.
 
+## Route D — Partial state and settle (only when relevant)
+
+Use when the effect has exclusivity, layered handoffs, or layout/fit that can settle late. Skip for simple independent fades/hovers/spins.
+
+1. Pause mid-gesture / mid-scroll / mid-timeline and assert the invariant that applies in that slice (wrong layer must not already be active).
+2. Stop abruptly; wait ~300–500ms; position, size, and copy must not visibly resettle.
+3. Reverse direction mid-effect; no stuck outgoing layer and no double-mounted UI.
+
 ## Decision after runs
 
-- Any anomaly → fix code, then rerun A/B/C (or the subset that failed) before delivery.
+- Any anomaly → fix code, then rerun A/B/C (and D if used) before delivery.
+- Softness that breaks an exclusivity or completion invariant is a failure even if the curve “feels nicer.”
 - If tooling cannot reach the screen (auth, missing server), say what blocked verification and what was checked instead. Do not pretend chaos QA ran.

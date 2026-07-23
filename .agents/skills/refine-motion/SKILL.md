@@ -1,35 +1,39 @@
 ---
 name: refine-motion
 description: >
-  Guarantees smooth, request-faithful UI motion for Raparigator. Use CSS/Tailwind
-  only for very simple effects that CSS can fully solve; otherwise prefer
-  motion/react as the primary library; allow another animation lib only when
-  Motion cannot solve the effect. Scope-gate complex multi-step effects, then
-  verify with step-by-step + controlled-chaos + cross-navigation (webapp-testing
-  Playwright or browser MCP — whichever finds jank faster) before delivery. Use
-  whenever creating, refactoring, or adjusting animations, transitions,
-  AnimatePresence, scroll-linked motion, gestures, tab/page motion, FABs,
-  indicators, or microinteractions with movement; also for stutter, lag, jank,
-  trembling, flicker, hitching, or "animação quebrada" reports — even if the
-  user never says skill, QA, or Playwright. Prefer this over improvising motion.
-  Skip only for pure layout/color/copy with no movement component. Invoke
-  explicitly with /refine-motion when the user wants this workflow on demand.
+  Guarantees smooth, request-faithful UI motion. Use CSS/Tailwind only for very
+  simple effects that CSS can fully solve; otherwise prefer motion/react as the
+  primary library; allow another animation lib only when Motion cannot solve the
+  effect. Scope-gate complex multi-step effects, define hard invariants before
+  tuning feel, implement with driver/display separation and hold-then-commit
+  handoffs, then verify with step-by-step + controlled-chaos + cross-navigation
+  (webapp-testing Playwright or browser MCP — whichever finds jank faster)
+  before delivery. Use whenever creating, refactoring, or adjusting animations,
+  transitions, AnimatePresence, scroll-linked motion, gestures, tab/page motion,
+  FABs, indicators, or microinteractions with movement; also for stutter, lag,
+  jank, trembling, flicker, hitching, or "animação quebrada" reports — even if
+  the user never says skill, QA, or Playwright. Prefer this over improvising
+  motion. Skip only for pure layout/color/copy with no movement component.
+  Invoke explicitly with /refine-motion when the user wants this workflow on
+  demand.
 ---
 
 # Refine Motion
 
-Deliver motion that matches the request and feels continuous. Rough or almost-right animation is a failed delivery. Smoothness and fidelity beat lightness when those conflict.
+Deliver motion that matches the request and feels continuous. Rough or almost-right animation is a failed delivery. Smoothness and fidelity beat lightness when those conflict. Softness that breaks a hard invariant is also a failed delivery.
 
 ## Workflow
 
 1. Decide if the effect is complex enough to need a scope gate.
-2. Choose technology: CSS only if very simple and fully solvable in CSS; else `motion/react` as primary; another lib only if Motion cannot deliver.
-3. Implement surgically; do not refactor unrelated motion.
-4. Diff the result against the user's request before calling it done.
-5. Verify with chaos + step-by-step + cross-navigation routes.
-6. Fix anomalies and retest the same routes before final delivery.
+2. Write hard invariants (what must never happen) before choosing curves.
+3. Choose technology: CSS only if very simple and fully solvable in CSS; else `motion/react` as primary; another lib only if Motion cannot deliver.
+4. Implement with driver/display separation, safe-band softness, and hold-then-commit handoffs when layers swap.
+5. Implement surgically; do not refactor unrelated motion.
+6. Diff the result against the user's request before calling it done.
+7. Verify with chaos + step-by-step + cross-navigation routes (plus partial-state and settle checks when exclusivity matters).
+8. Fix anomalies and retest the same routes before final delivery.
 
-Read `references/verification-playbook.md` when running verification.
+Read `references/implementation-principles.md` before implementing non-trivial motion from scratch or refining an existing effect. Read `references/verification-playbook.md` when running verification.
 
 ## Scope gate
 
@@ -43,6 +47,14 @@ Ask only what closes scope:
 - Whether `prefers-reduced-motion` should reduce or disable the effect
 - Desktop vs mobile differences
 - Must-have vs nice-to-have
+
+Only when the effect has a real dependency or swap between elements/states, also close:
+
+- Exclusivity: under which condition may the next state become visible
+- Completion: at the user’s “done” moment, must motion already be finished
+- Feel vs sync: if soft follow would show the wrong state, which rule wins (default: exclusivity wins)
+
+Skip those questions for independent one-element effects (single fade, hover, spin, simple enter). Do not invent A/B dependencies the request does not have.
 
 Resume implementation only after the user closes scope or explicitly says to proceed with reasonable defaults.
 
@@ -81,6 +93,20 @@ Prefer:
 - Coordinating tab/page transitions with the existing shell (`components/layout/tabs-keep-alive.tsx` and related keep-alive/nav motion)
 - Honoring `prefers-reduced-motion` when the product context calls for it
 
+### Implementation principles (any effect)
+
+Apply what fits the request. Not every effect has layered swaps.
+
+1. **Invariants before feel** — list only the hard rules this effect actually needs (may be just “no jank / no settle jump”; exclusivity only if elements depend on each other)
+2. **Driver vs display** — when progress is driven by scroll/gesture/time, smooth the shown value; do not combine live moving geometry with lagged progress without clamps
+3. **Safe-band softness** — damp/ease without breaking those rules
+4. **Hold-then-commit handoffs** — only when one layer yields to another; skip for single-element motion
+5. **Stable measurement** — if size/fit depends on space, measure settled targets, not mid-flight size
+6. **One job per channel** — transforms, opacity, and document-flow collapse must not yank each other
+7. **Regression after feel tweaks** — re-check the rules that apply to this effect
+
+Details and build sequence: `references/implementation-principles.md`.
+
 Before final delivery, re-read the user request and the changed files side by side. If the code solves a different effect than requested, fix that first.
 
 ## Verification before delivery
@@ -98,6 +124,11 @@ Minimum routes:
 1. **Faithful path** — execute the exact flow the user described.
 2. **Controlled chaos** — scrolls and clicks with slightly irregular timing and positions to surface jank that linear happy paths hide.
 3. **Cross-navigation** — leave to another page/tab, interact (scroll/click), return, repeat motion, and check that state and animation still behave (no stuck UI, no broken double-mount, no dead transitions).
+
+When exclusivity or layered handoffs matter, also:
+
+4. **Partial-state probe** — pause mid-effect; assert the invariant for that slice.
+5. **Settle probe** — stop abruptly; wait briefly; nothing should refit or jump.
 
 On failure: fix → rerun the same routes → only then deliver.
 
@@ -119,7 +150,7 @@ Approach: CSS only if a simple opacity transition fully covers appear/disappear;
 
 Input: When switching tabs, the title should fly into the header while the feed content crossfades, then the bottom nav indicator catches up.
 
-Approach: Scope gate first (order, timing, mobile vs desktop). Likely `motion/react` coordinated with keep-alive shell. Verify tab A→B→A with chaos scrolls between switches.
+Approach: Scope gate first (order, timing, mobile vs desktop, exclusivity/completion). Likely `motion/react` coordinated with keep-alive shell. Implement driver/display separation and hold-then-commit handoffs. Verify tab A→B→A with chaos scrolls between switches.
 
 **Example 3 — bug**
 
