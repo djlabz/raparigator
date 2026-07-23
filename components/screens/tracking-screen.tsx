@@ -33,7 +33,13 @@ export function TrackingScreen() {
             <Button variant="danger">Botao de emergencia / panico</Button>
           </div>
           {feedback === "success" ? <Toast type="success" title="Avaliacao enviada" message="Obrigado pelo feedback. Sua opiniao ajuda a comunidade." /> : null}
-          {feedback === "error" ? <Toast type="error" title="Falha ao enviar" message="Nao foi possivel enviar agora. Tente novamente." /> : null}
+          {feedback === "error" ? (
+            <Toast
+              type="error"
+              title="Ai, não rolou agora"
+              message="A mensagem não saiu. Tenta de novo em um segundinho?"
+            />
+          ) : null}
         </Card>
 
         <Card className="space-y-3">

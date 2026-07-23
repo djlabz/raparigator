@@ -121,7 +121,7 @@ export function FeedHeaderTitleSlot() {
     return (
       <Link
         href="/"
-        className="font-display text-xl tracking-wide text-wine-800 opacity-100 md:text-2xl"
+        className="font-display text-2xl tracking-wide text-wine-800 opacity-100"
       >
         Sigillus
       </Link>
@@ -135,7 +135,7 @@ export function FeedHeaderTitleSlot() {
   return (
     <Link
       href="/"
-      className="relative z-10 shrink-0 font-display text-xl tracking-wide text-wine-800 opacity-100 md:text-2xl"
+      className="relative z-10 shrink-0 font-display text-2xl tracking-wide text-wine-800 opacity-100"
     >
       Sigillus
     </Link>

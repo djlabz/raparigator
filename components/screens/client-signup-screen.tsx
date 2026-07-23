@@ -138,8 +138,8 @@ export function ClientSignupScreen() {
   const nextStep = () => {
     if (!validateStepOne()) {
       showToast({
-        title: "Nao foi possivel continuar",
-        message: "Preencha os dados obrigatorios do passo 1.",
+        title: "Calma, falta um detalhe",
+        message: "Preenche os campos obrigatórios do passo 1 pra gente seguir.",
         type: "error",
       });
       return;
@@ -192,8 +192,8 @@ export function ClientSignupScreen() {
     if (hasError) {
       triggerShake(2);
       showToast({
-        title: "Nao foi possivel continuar",
-        message: "E-mail ou senha invalidos.",
+        title: "Quase lá, só um ajuste",
+        message: "E-mail ou senha não bateram. Confere com carinho e tenta de novo?",
         type: "error",
       });
       return false;

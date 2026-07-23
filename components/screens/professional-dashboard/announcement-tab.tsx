@@ -1199,7 +1199,7 @@ export function AnnouncementTab({
 
     const saveResult = await manualSave();
     if (saveResult === "error") {
-      setPublishError("Não foi possível publicar agora. Tente novamente.");
+      setPublishError("Não deu pra publicar agora, amor. Tenta de novo em um instante?");
       setPublishErrorItems([]);
       setIsPublishing(false);
       return;

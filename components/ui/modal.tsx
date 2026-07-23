@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 interface ModalProps {
   open: boolean;
   title: ReactNode;
-  description?: string;
+  description?: ReactNode;
   onClose: () => void;
   children?: ReactNode;
   actions?: ReactNode | null;
@@ -53,7 +53,13 @@ export function Modal({ open, title, description, onClose, children, actions, he
         )}>
           <div className={cn("min-w-0", description && "space-y-1")}>
             <h3 className={cn("font-semibold leading-tight", titleClassName ?? "text-lg text-zinc-900 sm:text-lg")}>{title}</h3>
-            {description ? <p className="text-sm leading-snug text-zinc-600">{description}</p> : null}
+            {description ? (
+              typeof description === "string" ? (
+                <p className="text-sm leading-snug text-zinc-600">{description}</p>
+              ) : (
+                description
+              )
+            ) : null}
           </div>
           <div className="flex items-center gap-2">
             {headerActions}

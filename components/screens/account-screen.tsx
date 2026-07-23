@@ -92,8 +92,8 @@ export function AccountScreen() {
     return (
       <AppShell>
         <EmptyState
-          title="Conta indisponível"
-          description="Acesse com uma conta de Cliente ou Profissional para completar o cadastro."
+          title="Ei, falta um convite"
+          description="Entra com sua conta de Cliente ou Profissional pra gente continuar essa conversinha com estilo."
           actionLabel="Entrar"
           onAction={() => {
             window.location.href = "/auth/login";

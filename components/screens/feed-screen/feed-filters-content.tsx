@@ -1,9 +1,47 @@
 "use client";
 
+import { X } from "lucide-react";
 import { cn, currency } from "@/lib/utils";
 import { quickFilters } from "./constants";
 
 type SelectionField = "ethnicities" | "hairs" | "services";
+
+function FilterChipClearBadge() {
+  return (
+    <span
+      className="pointer-events-none absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white text-wine-700 shadow-[0_1px_3px_rgba(15,23,42,0.16)] ring-1 ring-wine-200"
+      aria-hidden
+    >
+      <X size={9} strokeWidth={2.75} />
+    </span>
+  );
+}
+
+function FilterChip({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "relative overflow-visible rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+        active
+          ? "border-wine-300 bg-wine-100 text-wine-800"
+          : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
+      )}
+    >
+      {label}
+      {active ? <FilterChipClearBadge /> : null}
+    </button>
+  );
+}
 
 interface FeedFiltersContentProps {
   resultCount: number;
@@ -48,7 +86,7 @@ export function FeedFiltersContent({
 
       <section>
         <label className="mb-2.5 block text-sm font-bold text-zinc-900">Filtros rápidos</label>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 pt-1.5 pr-1">
           {quickFilters.map((filter) => {
             const active = activeQuickFilters.includes(filter);
 
@@ -58,11 +96,14 @@ export function FeedFiltersContent({
                 type="button"
                 onClick={() => onToggleQuickFilter(filter)}
                 className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs font-medium transition",
-                  active ? "border-wine-700 bg-wine-700 text-white" : "border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-wine-300 hover:bg-wine-50"
+                  "relative overflow-visible rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                  active
+                    ? "border-wine-700 bg-wine-700 text-white"
+                    : "border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-wine-300 hover:bg-wine-50"
                 )}
               >
                 {filter}
+                {active ? <FilterChipClearBadge /> : null}
               </button>
             );
           })}
@@ -168,7 +209,7 @@ export function FeedFiltersContent({
       <section className="space-y-5">
         <div>
           <label className="mb-2 block text-sm font-bold text-zinc-900">Tipo</label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 pt-1.5 pr-1">
             {[
               "Caucasiana",
               "Negra",
@@ -176,37 +217,29 @@ export function FeedFiltersContent({
               "Latina",
               "Indígena"
             ].map((eth) => (
-              <button
+              <FilterChip
                 key={eth}
+                label={eth}
+                active={selectedEthnicities.includes(eth)}
                 onClick={() => onToggleSelection("ethnicities", eth)}
-                className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                  selectedEthnicities.includes(eth) ? "border-wine-300 bg-wine-100 text-wine-800" : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-                )}
-              >
-                {eth}
-              </button>
+              />
             ))}
           </div>
         </div>
         <div>
           <label className="mb-2 block text-sm font-bold text-zinc-900">Cabelo</label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 pt-1.5 pr-1">
             {[
               "Loira",
               "Morena",
               "Ruiva",
             ].map((hair) => (
-              <button
+              <FilterChip
                 key={hair}
+                label={hair}
+                active={selectedHairs.includes(hair)}
                 onClick={() => onToggleSelection("hairs", hair)}
-                className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                  selectedHairs.includes(hair) ? "border-wine-300 bg-wine-100 text-wine-800" : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-                )}
-              >
-                {hair}
-              </button>
+              />
             ))}
           </div>
         </div>

@@ -99,7 +99,7 @@ export function DesktopNav({ items, className }: DesktopNavProps) {
     <nav
       aria-label="Navegação principal"
       className={cn(
-        "relative ml-0 h-12 w-full max-w-md shrink-0 overflow-hidden rounded-full border border-zinc-200 bg-white p-1 shadow-[0_2px_12px_rgba(15,23,42,0.08)]",
+        "relative ml-0 h-12 w-64 max-w-64 shrink-0 overflow-hidden rounded-full border border-zinc-200 bg-white p-1 shadow-[0_2px_12px_rgba(15,23,42,0.08)]",
         className
       )}
     >
