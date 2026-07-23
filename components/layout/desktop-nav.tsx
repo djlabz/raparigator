@@ -18,6 +18,9 @@ import {
   setTabDirection,
 } from "@/lib/tab-navigation";
 import { cn } from "@/lib/utils";
+import { useAuthSession } from "@/lib/auth-session";
+import { getDashboardHref, useAccountNotifications } from "@/lib/account-notifications";
+import type { AuthRole } from "@/lib/types";
 
 interface DesktopNavProps {
   items: NavigationItem[];
@@ -34,6 +37,10 @@ const pillTransition = {
 export function DesktopNav({ items, className }: DesktopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { role } = useAuthSession();
+  const safeRole = role === "visitor" ? null : (role as Exclude<AuthRole, "visitor">);
+  const notifications = useAccountNotifications(safeRole ?? "cliente");
+  const dashboardHref = getDashboardHref(role);
   const [activeTab, setActiveTab] = useState(pathname);
   const listRef = useRef<HTMLUListElement>(null);
   const itemRefs = useRef(new Map<string, HTMLLIElement>());
@@ -92,7 +99,7 @@ export function DesktopNav({ items, className }: DesktopNavProps) {
     <nav
       aria-label="Navegação principal"
       className={cn(
-        "relative ml-0 h-12 w-64 max-w-64 shrink-0 overflow-hidden rounded-full border border-zinc-200 bg-white p-1 shadow-[0_2px_12px_rgba(15,23,42,0.08)]",
+        "relative ml-0 h-12 w-full max-w-md shrink-0 overflow-hidden rounded-full border border-zinc-200 bg-white p-1 shadow-[0_2px_12px_rgba(15,23,42,0.08)]",
         className
       )}
     >
@@ -117,6 +124,8 @@ export function DesktopNav({ items, className }: DesktopNavProps) {
         />
         {items.map((item) => {
           const active = activeHref === item.href;
+          const isDashboardTab = item.href === dashboardHref;
+          const notificationBadge = safeRole && isDashboardTab ? notifications.navbarBadgeCount : 0;
 
           return (
             <li
@@ -139,6 +148,10 @@ export function DesktopNav({ items, className }: DesktopNavProps) {
                   href={item.href}
                   prefetch
                   onClick={() => {
+                    if (isDashboardTab && safeRole) {
+                      notifications.clearNavbarBadge();
+                    }
+
                     if (activeHref === item.href) {
                       return;
                     }
@@ -149,7 +162,7 @@ export function DesktopNav({ items, className }: DesktopNavProps) {
                     setActiveTab(item.href);
                   }}
                   className={cn(
-                    "inline-flex h-full min-w-0 w-full items-center justify-center rounded-full px-2.5 text-[0.9375rem] font-semibold tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-500 focus-visible:ring-offset-2",
+                    "inline-flex h-full min-w-0 w-full items-center justify-center gap-1.5 rounded-full px-2.5 text-[0.9375rem] font-semibold tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-500 focus-visible:ring-offset-2",
                     active
                       ? "text-white"
                       : "text-zinc-700 hover:text-zinc-900"
@@ -158,6 +171,16 @@ export function DesktopNav({ items, className }: DesktopNavProps) {
                   aria-current={active ? "page" : undefined}
                 >
                   <span className="truncate">{item.label}</span>
+                  {notificationBadge > 0 ? (
+                    <span
+                      className={cn(
+                        "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold",
+                        active ? "bg-white text-wine-700" : "bg-wine-700 text-white"
+                      )}
+                    >
+                      {notificationBadge > 99 ? "99+" : notificationBadge}
+                    </span>
+                  ) : null}
                 </Link>
               </motion.div>
             </li>

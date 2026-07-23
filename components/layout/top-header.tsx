@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { BackButton } from "@/components/ui/back-button";
+import { isDashboardPath } from "@/lib/account-notifications";
 import type { AuthRole, MockUser } from "@/lib/types";
 import {
   chromeControlsRow,
@@ -14,6 +15,7 @@ import { ChromeScrim } from "./chrome-scrim";
 import { FeedHeaderDesktopTitle, FeedHeaderTitleSlot } from "./feed-header-title-slot";
 import { useFeedHeaderTitleFlags } from "@/components/screens/feed-screen/feed-header-title-context";
 import { GuestAuthControls } from "./guest-auth-controls";
+import { NotificationBellButton } from "./notification-bell-button";
 
 interface TopHeaderProps {
   role: AuthRole;
@@ -32,6 +34,8 @@ export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeade
   const { enabled, mode } = useFeedHeaderTitleFlags();
   const onFeed = isFeedPath(pathname);
   const feedDesktop = onFeed && enabled && mode === "desktop";
+  const showDashboardBell =
+    isLoggedIn && role !== "visitor" && isDashboardPath(pathname, role);
 
   return (
     <header className={cn(chromeGlassFixed, "pointer-events-none")}>
@@ -55,7 +59,10 @@ export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeade
 
         <div className="relative z-20 flex shrink-0 items-center gap-2">
           {isLoggedIn ? (
-            <AccountMenu role={role} user={user} onLogout={onLogout} />
+            <>
+              {showDashboardBell ? <NotificationBellButton role={role} /> : null}
+              <AccountMenu role={role} user={user} onLogout={onLogout} />
+            </>
           ) : (
             <GuestAuthControls />
           )}
