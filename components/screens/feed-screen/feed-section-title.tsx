@@ -11,6 +11,7 @@ interface FeedSectionTitleProps {
   size?: "md" | "sm" | "lg";
   className?: string;
   fit?: boolean;
+  fitToTarget?: boolean;
 }
 
 const PREMIUM_LABEL = "Modelos Premium";
@@ -66,11 +67,23 @@ function largestFit(
   return best;
 }
 
+function readFitAvailable(root: HTMLElement, fitToTarget: boolean) {
+  if (fitToTarget) {
+    const target = document.querySelector<HTMLElement>("[data-feed-title-target]");
+    if (target && target.clientWidth > 0) {
+      return target.clientWidth;
+    }
+  }
+
+  return root.clientWidth;
+}
+
 export function FeedSectionTitle({
   variant,
   size = "md",
   className,
   fit = false,
+  fitToTarget = false,
 }: FeedSectionTitleProps) {
   const rootRef = useRef<HTMLSpanElement>(null);
   const [fitPx, setFitPx] = useState(22);
@@ -87,13 +100,12 @@ export function FeedSectionTitle({
     }
 
     let frame = 0;
-    let settleTimer = 0;
     let lastMeasuredWidth = -1;
 
     const measure = () => {
       const label = root.querySelector("[data-title-label]") as HTMLElement | null;
       const icon = root.querySelector("[data-title-icon]") as HTMLElement | null;
-      const available = root.clientWidth;
+      const available = readFitAvailable(root, fitToTarget);
       if (!label || available <= 0) {
         return;
       }
@@ -102,10 +114,18 @@ export function FeedSectionTitle({
         return;
       }
 
+      const prevWidth = root.style.width;
+      const prevMaxWidth = root.style.maxWidth;
+      root.style.width = `${available}px`;
+      root.style.maxWidth = `${available}px`;
+
       applyProbe(label, icon, FIT_MIN_PX, true);
       const withIcon = root.scrollWidth <= available + 0.5;
       const best = largestFit(root, label, icon, available, withIcon);
       lastMeasuredWidth = available;
+
+      root.style.width = prevWidth;
+      root.style.maxWidth = prevMaxWidth;
 
       setShowIcon((prev) => (prev === withIcon ? prev : withIcon));
       setFitPx((prev) => (prev === best ? prev : best));
@@ -113,22 +133,25 @@ export function FeedSectionTitle({
 
     const schedule = () => {
       cancelAnimationFrame(frame);
-      window.clearTimeout(settleTimer);
-      settleTimer = window.setTimeout(() => {
-        frame = requestAnimationFrame(measure);
-      }, 64);
+      frame = requestAnimationFrame(measure);
     };
 
     frame = requestAnimationFrame(measure);
     const observer = new ResizeObserver(schedule);
     observer.observe(root);
 
+    const target = fitToTarget
+      ? document.querySelector<HTMLElement>("[data-feed-title-target]")
+      : null;
+    if (target) {
+      observer.observe(target);
+    }
+
     return () => {
       cancelAnimationFrame(frame);
-      window.clearTimeout(settleTimer);
       observer.disconnect();
     };
-  }, [fit, variant]);
+  }, [fit, fitToTarget, variant]);
 
   const iconSize = fit
     ? Math.max(16, Math.round(fitPx * 0.95))
