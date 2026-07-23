@@ -159,6 +159,7 @@ export function ChatScreen() {
   const [globalAliasModalOpen, setGlobalAliasModalOpen] = useState(false);
   const [presenceVisible, setPresenceVisible] = useState(true);
   const [professionalAvailability, setProfessionalAvailability] = useState<AvailabilityStatus>(() => readProfessionalAvailability());
+  const [unreadOnly, setUnreadOnly] = useState(false);
   const [availabilityPanelOpen, setAvailabilityPanelOpen] = useState(() => readAvailabilityPanelOpen());
   const [attachmentMenuOpen, setAttachmentMenuOpen] = useState(false);
   const [viewOnceModalOpen, setViewOnceModalOpen] = useState(false);
@@ -196,8 +197,8 @@ export function ChatScreen() {
   }, [localConversations]);
 
   const visibleConversations = useMemo(
-    () => localConversations.filter((conversation) => !conversation.deletedFromInboxAt),
-    [localConversations]
+    () => localConversations.filter((conversation) => !conversation.deletedFromInboxAt && (!unreadOnly || conversation.unread > 0)),
+    [localConversations, unreadOnly]
   );
 
   const showToast = (payload: NonNullable<ToastState>) => {
@@ -590,11 +591,63 @@ export function ChatScreen() {
 
   const conversationOpenMobile = isMobileViewport && mobileConversationOpen && Boolean(activeConversation);
 
+  const desktopNavRight = (
+    <div className="inline-flex items-center gap-3">
+      {role === "profissional" ? (
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/90 px-2.5 py-1 shadow-xs backdrop-blur-sm">
+          {professionalAvailabilityOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                setProfessionalAvailability(option.value);
+                saveProfessionalAvailability(option.value);
+              }}
+              className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-bold uppercase tracking-wider transition-colors ${
+                professionalAvailability === option.value
+                  ? option.activeClass + " ring-1 ring-inset"
+                  : "text-zinc-400 hover:text-zinc-700"
+              }`}
+            >
+              <span className={`h-2 w-2 rounded-full ${option.dotClass}`} />
+              {option.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <div className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white/90 p-0.5 shadow-xs backdrop-blur-sm">
+        <button
+          type="button"
+          onClick={() => setUnreadOnly(false)}
+          className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider transition-colors ${
+            !unreadOnly
+              ? "bg-wine-700 text-white shadow-[0_2px_8px_rgba(182,0,49,0.28)]"
+              : "text-zinc-500 hover:text-zinc-800"
+          }`}
+        >
+          Todas
+        </button>
+        <button
+          type="button"
+          onClick={() => setUnreadOnly(true)}
+          className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider transition-colors ${
+            unreadOnly
+              ? "bg-wine-700 text-white shadow-[0_2px_8px_rgba(182,0,49,0.28)]"
+              : "text-zinc-500 hover:text-zinc-800"
+          }`}
+        >
+          Não lidas
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <AppShell
       hideMobileBottomNav={conversationOpenMobile}
       hideTopHeader={conversationOpenMobile}
       mainClassName={conversationOpenMobile ? "px-0 pb-0 pt-0 sm:px-0" : undefined}
+      desktopNavRight={desktopNavRight}
     >
       <div className="fixed right-4 top-4 z-240 w-[min(22rem,calc(100vw-2rem))] space-y-2">
         {toast ? <Toast title={toast.title} message={toast.message} type={toast.type} /> : null}
