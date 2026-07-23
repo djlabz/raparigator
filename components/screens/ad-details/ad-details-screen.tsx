@@ -16,7 +16,10 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
   if (!ad) {
     return (
       <AppShell>
-        <EmptyState title="Perfil nao encontrado" description="Esse anuncio pode ter sido removido ou alterado." />
+        <EmptyState
+          title="Esse encanto não está mais aqui"
+          description="O perfil pode ter saído do ar ou mudado de endereço. Volta e escolhe outro que te faça piscadinha."
+        />
       </AppShell>
     );
   }

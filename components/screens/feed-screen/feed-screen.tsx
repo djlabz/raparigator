@@ -48,6 +48,9 @@ export function FeedScreen() {
   const [selectedEthnicities, setSelectedEthnicities] = useState<string[]>([]);
   const [selectedHairs, setSelectedHairs] = useState<string[]>([]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [showAppliedHint, setShowAppliedHint] = useState(false);
+  const appliedHintTimerRef = useRef<number | null>(null);
+  const filtersFingerprintRef = useRef("");
 
   const toggleSelection = (setter: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
     setter((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
@@ -281,6 +284,77 @@ export function FeedScreen() {
     setTimeout(() => setShowLocationToast(false), 3000);
   };
 
+  const filtersFingerprint = useMemo(
+    () =>
+      JSON.stringify({
+        activeQuickFilters,
+        selectedAdTypes,
+        selectedEthnicities,
+        selectedHairs,
+        selectedServices,
+        selectedCity,
+        selectedGender,
+        maxPrice,
+      }),
+    [
+      activeQuickFilters,
+      selectedAdTypes,
+      selectedEthnicities,
+      selectedHairs,
+      selectedServices,
+      selectedCity,
+      selectedGender,
+      maxPrice,
+    ]
+  );
+
+  useEffect(() => {
+    if (!showFilters) {
+      filtersFingerprintRef.current = filtersFingerprint;
+      if (appliedHintTimerRef.current !== null) {
+        window.clearTimeout(appliedHintTimerRef.current);
+        appliedHintTimerRef.current = null;
+      }
+      const hideId = window.setTimeout(() => {
+        setShowAppliedHint(false);
+      }, 0);
+      return () => {
+        window.clearTimeout(hideId);
+      };
+    }
+
+    if (!filtersFingerprintRef.current) {
+      filtersFingerprintRef.current = filtersFingerprint;
+      return;
+    }
+
+    if (filtersFingerprintRef.current === filtersFingerprint) {
+      return;
+    }
+
+    filtersFingerprintRef.current = filtersFingerprint;
+
+    if (appliedHintTimerRef.current !== null) {
+      window.clearTimeout(appliedHintTimerRef.current);
+    }
+
+    const showId = window.setTimeout(() => {
+      setShowAppliedHint(true);
+      appliedHintTimerRef.current = window.setTimeout(() => {
+        setShowAppliedHint(false);
+        appliedHintTimerRef.current = null;
+      }, 1800);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(showId);
+      if (appliedHintTimerRef.current !== null) {
+        window.clearTimeout(appliedHintTimerRef.current);
+        appliedHintTimerRef.current = null;
+      }
+    };
+  }, [filtersFingerprint, showFilters]);
+
   const filtersContentProps = {
     resultCount: filteredAds.length,
     selectedLocation,
@@ -379,7 +453,12 @@ export function FeedScreen() {
                 {Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="mx-auto h-120 w-full max-w-[320px] lg:max-w-none" />)}
               </div>
             ) : filteredAds.length === 0 ? (
-              <EmptyState title="Nenhum anuncio encontrado" description="Ajuste os filtros para encontrar perfis compativeis com sua busca." actionLabel="Resetar filtros" onAction={clearFilters} />
+              <EmptyState
+                title="Ops… sumiu todo mundo"
+                description="Nenhum perfil combinou com esses filtros. Afrouxa um pouquinho a busca e a gente te mostra quem está no clima."
+                actionLabel="Começar de novo"
+                onAction={clearFilters}
+              />
             ) : (
               <>
                 {premiumAds.length > 0 && (
@@ -424,7 +503,16 @@ export function FeedScreen() {
       <Modal
         open={showFilters}
         onClose={() => setShowFilters(false)}
-        title="Filtros avançados"
+        title={
+          <span className="block space-y-1">
+            <span className="block text-lg font-semibold text-zinc-900">Filtros avançados</span>
+            {showAppliedHint ? (
+              <span className="block text-xs font-medium text-emerald-600">
+                Alterações aplicadas
+              </span>
+            ) : null}
+          </span>
+        }
         headerActions={
           <button
             type="button"
