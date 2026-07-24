@@ -2,19 +2,54 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
+import { useRouter } from "next/navigation";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type MouseEvent,
+  type PointerEvent,
+} from "react";
 import { motion, useMotionTemplate, useSpring } from "motion/react";
 import type { ProfessionalAd } from "@/lib/types";
 import { cn, currency } from "@/lib/utils";
 import { FEED_CARD_SIZE_CLASS } from "./constants";
 
 const DESKTOP_HOVER_QUERY = "(min-width: 1024px) and (pointer: fine)";
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 const MAX_TILT_DEG = 15;
+const PRESS_TILT_DEG = 7;
 const LIFT_Z_PX = 36;
 const HOVER_SCALE = 1.025;
+const PRESS_SCALE = 0.982;
+const PRESS_SINK_Z_PX = -5;
+const PRESS_MOVE_THRESHOLD_PX = 28;
+const WAVE_DURATION_MS = 520;
+const WAVE_DURATION_REDUCED_MS = 120;
+const NAV_COMMIT_MS = 300;
+const NAV_COMMIT_REDUCED_MS = 80;
 
 const tiltSpring = { stiffness: 180, damping: 22, mass: 0.35 };
 const liftSpring = { stiffness: 220, damping: 24, mass: 0.4 };
+
+type PressRipple = {
+  key: number;
+  xPercent: number;
+  yPercent: number;
+  sizePx: number;
+  durationMs: number;
+};
+
+type PressSession = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  cancelled: boolean;
+  released: boolean;
+  waveDone: boolean;
+  navigating: boolean;
+};
 
 function subscribeDesktopHover(onChange: () => void) {
   const media = window.matchMedia(DESKTOP_HOVER_QUERY);
@@ -30,11 +65,35 @@ function useDesktopHoverEnabled() {
   );
 }
 
+function getWaveDurationMs() {
+  if (typeof window === "undefined") {
+    return WAVE_DURATION_MS;
+  }
+  return window.matchMedia(REDUCED_MOTION_QUERY).matches
+    ? WAVE_DURATION_REDUCED_MS
+    : WAVE_DURATION_MS;
+}
+
+function getNavCommitMs() {
+  if (typeof window === "undefined") {
+    return NAV_COMMIT_MS;
+  }
+  return window.matchMedia(REDUCED_MOTION_QUERY).matches
+    ? NAV_COMMIT_REDUCED_MS
+    : NAV_COMMIT_MS;
+}
+
 function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priority?: boolean }) {
+  const router = useRouter();
   const cardRef = useRef<HTMLDivElement>(null);
   const desktopHover = useDesktopHoverEnabled();
   const hoverActive = useRef(false);
+  const pressSession = useRef<PressSession | null>(null);
+  const waveTimer = useRef<number | null>(null);
+  const rippleKey = useRef(0);
+  const suppressNextClick = useRef(false);
   const [elevated, setElevated] = useState(false);
+  const [ripple, setRipple] = useState<PressRipple | null>(null);
 
   const rotX = useSpring(0, tiltSpring);
   const rotY = useSpring(0, tiltSpring);
@@ -46,6 +105,14 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
 
   const transform = useMotionTemplate`perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(${liftZ}px) scale(${scale})`;
   const glareBackground = useMotionTemplate`radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,223,0,0.18) 0%, transparent 55%)`;
+  const href = `/anuncio/${ad.slug}`;
+
+  const clearWaveTimer = () => {
+    if (waveTimer.current !== null) {
+      window.clearTimeout(waveTimer.current);
+      waveTimer.current = null;
+    }
+  };
 
   const resetTilt = () => {
     hoverActive.current = false;
@@ -65,6 +132,50 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
     liftZ.set(LIFT_Z_PX);
     scale.set(HOVER_SCALE);
     glareOpacity.set(1);
+  };
+
+  const applyPressPose = (x: number, y: number, width: number, height: number) => {
+    const centerX = (x / width - 0.5) * 2;
+    const centerY = (y / height - 0.5) * 2;
+    setElevated(true);
+    rotX.set(-centerY * PRESS_TILT_DEG);
+    rotY.set(centerX * PRESS_TILT_DEG);
+    liftZ.set(PRESS_SINK_Z_PX);
+    scale.set(PRESS_SCALE);
+    glareX.set((x / width) * 100);
+    glareY.set((y / height) * 100);
+    glareOpacity.set(0.55);
+  };
+
+  const finishPressNavigation = () => {
+    const session = pressSession.current;
+    if (!session || session.cancelled || session.navigating) {
+      return;
+    }
+    if (!session.released || !session.waveDone) {
+      return;
+    }
+
+    session.navigating = true;
+    clearWaveTimer();
+    setRipple(null);
+    resetTilt();
+    pressSession.current = null;
+    router.push(href);
+  };
+
+  const cancelPress = () => {
+    const session = pressSession.current;
+    if (!session || session.cancelled || session.navigating) {
+      return;
+    }
+
+    session.cancelled = true;
+    suppressNextClick.current = false;
+    clearWaveTimer();
+    setRipple(null);
+    resetTilt();
+    pressSession.current = null;
   };
 
   const handleMouseEnter = () => {
@@ -106,11 +217,128 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
     resetTilt();
   };
 
+  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (desktopHover || event.button !== 0 || !cardRef.current) {
+      return;
+    }
+
+    if (pressSession.current && !pressSession.current.cancelled && !pressSession.current.navigating) {
+      return;
+    }
+
+    const rect = cardRef.current.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) {
+      return;
+    }
+
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const durationMs = getWaveDurationMs();
+    const navCommitMs = getNavCommitMs();
+
+    clearWaveTimer();
+    suppressNextClick.current = true;
+    pressSession.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      cancelled: false,
+      released: false,
+      waveDone: false,
+      navigating: false,
+    };
+
+    applyPressPose(x, y, rect.width, rect.height);
+    router.prefetch(href);
+    rippleKey.current += 1;
+    const reach = Math.max(
+      Math.hypot(x, y),
+      Math.hypot(rect.width - x, y),
+      Math.hypot(x, rect.height - y),
+      Math.hypot(rect.width - x, rect.height - y)
+    );
+    setRipple({
+      key: rippleKey.current,
+      xPercent: (x / rect.width) * 100,
+      yPercent: (y / rect.height) * 100,
+      sizePx: Math.ceil(reach * 2.05),
+      durationMs,
+    });
+
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {}
+
+    waveTimer.current = window.setTimeout(() => {
+      waveTimer.current = null;
+      const session = pressSession.current;
+      if (!session || session.cancelled) {
+        return;
+      }
+      session.waveDone = true;
+      finishPressNavigation();
+    }, navCommitMs);
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const session = pressSession.current;
+    if (!session || session.cancelled || session.navigating || session.pointerId !== event.pointerId) {
+      return;
+    }
+
+    const dx = event.clientX - session.startX;
+    const dy = event.clientY - session.startY;
+    if (Math.abs(dy) > PRESS_MOVE_THRESHOLD_PX && Math.hypot(dx, dy) > PRESS_MOVE_THRESHOLD_PX) {
+      cancelPress();
+    }
+  };
+
+  const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    const session = pressSession.current;
+    if (!session || session.pointerId !== event.pointerId) {
+      return;
+    }
+
+    if (session.cancelled || session.navigating) {
+      return;
+    }
+
+    session.released = true;
+    finishPressNavigation();
+  };
+
+  const handlePointerCancel = (event: PointerEvent<HTMLDivElement>) => {
+    const session = pressSession.current;
+    if (!session || session.pointerId !== event.pointerId) {
+      return;
+    }
+    cancelPress();
+  };
+
+  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (desktopHover || event.detail === 0) {
+      return;
+    }
+    if (!suppressNextClick.current) {
+      return;
+    }
+    event.preventDefault();
+    suppressNextClick.current = false;
+  };
+
+  useEffect(() => {
+    return () => {
+      clearWaveTimer();
+    };
+  }, []);
+
   const premiumImage = ad.images[0];
+  const waveSeconds = (ripple?.durationMs ?? WAVE_DURATION_MS) / 1000;
 
   return (
     <Link
-      href={`/anuncio/${ad.slug}`}
+      href={href}
+      onClick={handleClick}
       className={cn(
         "group relative mx-auto block w-full max-w-[320px] [perspective:1000px] lg:max-w-none",
         elevated ? "z-30" : "z-0"
@@ -119,13 +347,17 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
       <motion.article
         ref={cardRef}
         className={cn(
-          "relative cursor-pointer [transform-style:preserve-3d] will-change-transform",
+          "relative cursor-pointer touch-manipulation [transform-style:preserve-3d] will-change-transform",
           FEED_CARD_SIZE_CLASS
         )}
         style={{ transform }}
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
       >
         <div className="absolute inset-0 overflow-hidden rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)]">
           <div className="absolute inset-0 bg-[#120d03]" />
@@ -196,6 +428,56 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
                 mixBlendMode: "overlay",
               }}
             />
+
+            {ripple ? (
+              <div
+                data-premium-press-ripple="true"
+                className="pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-2xl"
+              >
+                <motion.div
+                  key={`${ripple.key}-fill`}
+                  className="absolute rounded-full will-change-transform"
+                  style={{
+                    left: `${ripple.xPercent}%`,
+                    top: `${ripple.yPercent}%`,
+                    width: ripple.sizePx,
+                    height: ripple.sizePx,
+                    marginLeft: -ripple.sizePx / 2,
+                    marginTop: -ripple.sizePx / 2,
+                    background:
+                      "radial-gradient(circle, rgba(255,223,0,0.62) 0%, rgba(218,165,32,0.48) 20%, rgba(18,13,3,0.58) 46%, rgba(0,0,0,0.4) 68%, rgba(0,0,0,0) 86%)",
+                  }}
+                  initial={{ scale: 0.1, opacity: 0.88 }}
+                  animate={{ scale: 1, opacity: [0.88, 0.8, 0.55, 0] }}
+                  transition={{
+                    duration: waveSeconds,
+                    ease: [0.22, 0.1, 0.28, 1],
+                    opacity: { duration: waveSeconds, times: [0, 0.35, 0.62, 1], ease: "easeInOut" },
+                  }}
+                />
+                <motion.div
+                  key={`${ripple.key}-ring`}
+                  className="absolute rounded-full will-change-transform"
+                  style={{
+                    left: `${ripple.xPercent}%`,
+                    top: `${ripple.yPercent}%`,
+                    width: ripple.sizePx,
+                    height: ripple.sizePx,
+                    marginLeft: -ripple.sizePx / 2,
+                    marginTop: -ripple.sizePx / 2,
+                    border: "1.5px solid rgba(255,223,0,0.55)",
+                    boxShadow: "0 0 18px rgba(218,165,32,0.35), inset 0 0 22px rgba(255,223,0,0.18)",
+                  }}
+                  initial={{ scale: 0.1, opacity: 0.75 }}
+                  animate={{ scale: 1, opacity: [0.75, 0.6, 0.3, 0] }}
+                  transition={{
+                    duration: waveSeconds,
+                    ease: [0.22, 0.1, 0.28, 1],
+                    opacity: { duration: waveSeconds, times: [0, 0.32, 0.6, 1], ease: "easeInOut" },
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
         </div>
       </motion.article>
