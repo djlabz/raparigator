@@ -185,19 +185,20 @@ function VerificationTab() {
     email: user?.email ?? "",
     phone: user?.phone ?? "",
   };
+  const verificationSyncKey = `${userId}|${verificationTargets.email}|${verificationTargets.phone}`;
   const [verificationState, setVerificationState] = useState<VerificationState>(() => getVerificationState(userId, verificationTargets));
   const [codeInputs, setCodeInputs] = useState<Record<VerificationChannel, string>>({ email: "", phone: "" });
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [infoTone, setInfoTone] = useState<"success" | "error" | "info">("info");
   const [revealedCodes, setRevealedCodes] = useState<Record<VerificationChannel, string | null>>({ email: null, phone: null });
+  const [previousVerificationSyncKey, setPreviousVerificationSyncKey] = useState(verificationSyncKey);
 
-  useEffect(() => {
-     
+  if (verificationSyncKey !== previousVerificationSyncKey) {
+    setPreviousVerificationSyncKey(verificationSyncKey);
     setVerificationState(getVerificationState(userId, verificationTargets));
     setCodeInputs({ email: "", phone: "" });
     setRevealedCodes({ email: null, phone: null });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, verificationTargets.email, verificationTargets.phone]);
+  }
 
   useEffect(() => {
     if (!infoMessage) {

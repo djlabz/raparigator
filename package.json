@@ -2,12 +2,18 @@
   "name": "raparigator",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || >=24"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:legacy": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck",
+    "prepare": "bash scripts/install-git-hooks.sh",
     "share": "npx cloudflared tunnel --url http://localhost:3000"
   },
   "dependencies": {
@@ -24,8 +30,8 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint": "^10.8.0",
+    "eslint-config-next": "^16.2.12",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

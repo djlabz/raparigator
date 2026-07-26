@@ -543,7 +543,7 @@ async function rebuildMediaChainAfterUndo(currentSrc: string, historyMap: Record
   let sourceOffset: MediaSourceOffset = { x: 0, y: 0 };
 
   for (const item of remainingEntries) {
-    let nextSrc = sourceSrc;
+    let nextSrc: string;
 
     if (item.entry.operation === "edit") {
       if (!item.entry.cropArea) {
@@ -2627,12 +2627,8 @@ function HairTypeAndColorField({
   invalid?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selection, setSelection] = useState(() => parseHairSelection(value));
+  const selection = parseHairSelection(value);
   const rootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setSelection(parseHairSelection(value));
-  }, [value]);
 
   useEffect(() => {
     const handleDocumentMouseDown = (event: MouseEvent) => {
@@ -2663,7 +2659,6 @@ function HairTypeAndColorField({
   }, []);
 
   const updateSelection = (nextSelection: { type: string; color: string }) => {
-    setSelection(nextSelection);
     onChange(serializeHairSelection(nextSelection.type, nextSelection.color));
   };
 

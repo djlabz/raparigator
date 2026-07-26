@@ -179,13 +179,15 @@ export function BottomNav({ items }: BottomNavProps) {
   const notifications = useAccountNotifications(safeRole ?? "cliente");
   const dashboardHref = getDashboardHref(role);
   const [activeTab, setActiveTab] = useState(pathname);
+  const [previousPathname, setPreviousPathname] = useState(pathname);
   const listRef = useRef<HTMLUListElement>(null);
   const itemRefs = useRef(new Map<string, HTMLLIElement>());
   const [indicator, setIndicator] = useState({ x: 0, width: 0, ready: false });
 
-  useEffect(() => {
+  if (pathname !== previousPathname) {
+    setPreviousPathname(pathname);
     setActiveTab(pathname);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     items.forEach((item) => {
