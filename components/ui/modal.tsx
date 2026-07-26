@@ -70,7 +70,7 @@ export function Modal({
           "flex justify-between gap-3 sm:gap-4",
           description ? "mb-4 items-start" : "mb-3 items-center"
         )}>
-          <div className={cn("min-w-0", description && "space-y-1")}>
+          <div className={cn("min-w-0", description ? "space-y-1" : undefined)}>
             <h3 className={cn("font-semibold leading-tight", titleClassName ?? "text-lg text-zinc-900 sm:text-lg")}>{title}</h3>
             {description ? (
               typeof description === "string" ? (

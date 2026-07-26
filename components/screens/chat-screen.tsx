@@ -154,7 +154,9 @@ export function ChatScreen() {
   const [isLoading, setIsLoading] = useState(() => !initialSnapshot);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState>(null);
-  const [globalAlias, setGlobalAlias] = useState(user?.alias ?? "Cliente reservado");
+  const aliasFromUser = user?.alias ?? "Cliente reservado";
+  const [globalAlias, setGlobalAlias] = useState(aliasFromUser);
+  const [previousAliasFromUser, setPreviousAliasFromUser] = useState(aliasFromUser);
   const [globalAliasDraft, setGlobalAliasDraft] = useState(globalAlias);
   const [globalAliasModalOpen, setGlobalAliasModalOpen] = useState(false);
   const [presenceVisible, setPresenceVisible] = useState(true);
@@ -169,9 +171,31 @@ export function ChatScreen() {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
 
+  if (aliasFromUser !== previousAliasFromUser) {
+    setPreviousAliasFromUser(aliasFromUser);
+    setGlobalAlias(aliasFromUser);
+  }
+
+  const visibleConversations = useMemo(
+    () => localConversations.filter((conversation) => !conversation.deletedFromInboxAt),
+    [localConversations]
+  );
+
+  const fallbackConversationId = visibleConversations[0]?.id ?? "";
+  const hasActiveConversation = visibleConversations.some(
+    (conversation) => conversation.id === activeConversationId
+  );
+  const resolvedActiveConversationId = hasActiveConversation
+    ? activeConversationId
+    : fallbackConversationId;
+
+  if (resolvedActiveConversationId !== activeConversationId) {
+    setActiveConversationId(resolvedActiveConversationId);
+  }
+
   const activeAvailabilityOption = getProfessionalAvailabilityOption(professionalAvailability);
 
-  const activeConversation = localConversations.find((conversation) => conversation.id === activeConversationId) ?? localConversations[0];
+  const activeConversation = localConversations.find((conversation) => conversation.id === resolvedActiveConversationId) ?? localConversations[0];
   const displayContactName = activeConversation?.contactName ?? "";
   const participantAlias = activeConversation?.currentUserAlias ?? "";
   const currentDisplayName = participantAlias || globalAlias || "Cliente reservado";
@@ -194,11 +218,6 @@ export function ChatScreen() {
       })
     );
   }, [localConversations]);
-
-  const visibleConversations = useMemo(
-    () => localConversations.filter((conversation) => !conversation.deletedFromInboxAt),
-    [localConversations]
-  );
 
   const showToast = (payload: NonNullable<ToastState>) => {
     setToast(payload);
@@ -227,23 +246,34 @@ export function ChatScreen() {
   };
 
   useEffect(() => {
-    loadChat();
+    let cancelled = false;
+
+    void getChatSnapshot()
+      .then((snapshot) => {
+        if (cancelled) {
+          return;
+        }
+
+        setLocalConversations(snapshot.conversations);
+        setLocalMessages(snapshot.messages);
+        setActiveConversationId((current) => current || snapshot.conversations[0]?.id || "");
+        setLoadError(null);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLoadError("Não foi possível carregar suas conversas agora.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
-
-  useEffect(() => {
-    setGlobalAlias(user?.alias ?? "Cliente reservado");
-  }, [user?.alias]);
-
-  useEffect(() => {
-    if (!activeConversationId && visibleConversations[0]?.id) {
-      setActiveConversationId(visibleConversations[0].id);
-      return;
-    }
-
-    if (activeConversationId && !visibleConversations.some((conversation) => conversation.id === activeConversationId)) {
-      setActiveConversationId(visibleConversations[0]?.id ?? "");
-    }
-  }, [activeConversationId, visibleConversations]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 767px)");

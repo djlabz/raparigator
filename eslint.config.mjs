@@ -5,9 +5,19 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
+  {
+    settings: {
+      react: {
+        version: "19.2.3",
+      },
+    },
+    rules: {
+      "no-unassigned-vars": "error",
+      "no-useless-assignment": "error",
+      "preserve-caught-error": "error",
+    },
+  },
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",

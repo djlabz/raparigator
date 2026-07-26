@@ -112,7 +112,6 @@ export function AccountScreen() {
 
 function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; user: MockUser }) {
   const { unreadCount, bannerClosed, setBannerClosed, markAllAsRead } = useAccountNotifications(role);
-  const [profileCompleted, setProfileCompleted] = useState<boolean>(() => isProfileFormComplete(role, readStoredForm(profileFormKey(role, user.email), user)));
   const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -122,6 +121,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordModalError, setPasswordModalError] = useState<string | null>(null);
   const [passwordModalSuccess, setPasswordModalSuccess] = useState(false);
+  const profileCompleted = isProfileFormComplete(role, form);
 
   const clearFieldError = <FieldName extends keyof ProfileFormState>(fieldName: FieldName) => {
     setFieldErrors((current) => {
@@ -186,10 +186,6 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
 
     window.localStorage.setItem(profileFormKey(role, user.email), JSON.stringify(form));
   }, [form, role, user.email]);
-
-  useEffect(() => {
-    setProfileCompleted(isProfileFormComplete(role, form));
-  }, [form, role]);
 
   useEffect(() => {
     if (!saveMessage) {
@@ -261,7 +257,6 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
       setSaveMessage(null);
       return;
     }
-    setProfileCompleted(true);
     markAllAsRead();
     setBannerClosed(true);
     setFieldErrors({});
