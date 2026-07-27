@@ -12,10 +12,13 @@
   --color-wine-100: #ffd2de;
   --color-wine-200: #ffacc2;
   --color-wine-300: #ff7ba1;
+  --color-wine-400: #e8527d;
   --color-wine-500: #d93a6a;
   --color-wine-600: #c2184f;
   --color-wine-700: #b60031;
   --color-wine-800: #920027;
+  --color-wine-900: #6b001c;
+  --color-wine-950: #3d000f;
   --font-sans: var(--font-manrope);
   --font-display: var(--font-cormorant);
 }

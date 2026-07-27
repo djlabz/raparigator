@@ -321,10 +321,10 @@ export function AdminProfilesScreen() {
                       <button
                         onClick={() => handleQuickApprove(profile.id)}
                         disabled={approvingId === profile.id}
-                        className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-emerald-600/50 bg-gradient-to-r from-emerald-700 to-emerald-800 py-2.5 text-xs font-bold text-emerald-950 shadow-md transition-all hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-60"
+                        className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-emerald-500/50 bg-emerald-600 py-2.5 text-xs font-bold text-white shadow-md shadow-emerald-950/40 transition-all hover:bg-emerald-500 disabled:opacity-60"
                       >
                         {approvingId === profile.id ? (
-                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-emerald-950 border-t-transparent" />
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         ) : (
                           <CheckCircle2 className="h-4 w-4" />
                         )}
