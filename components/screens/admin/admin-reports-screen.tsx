@@ -412,10 +412,10 @@ export function AdminReportsScreen() {
                         <button
                           onClick={() => handleStartReview(report.id)}
                           disabled={actionId === report.id}
-                          className="flex items-center gap-1.5 rounded-xl border border-blue-600/50 bg-gradient-to-r from-blue-700 to-blue-800 px-4 py-2 text-xs font-bold text-blue-950 shadow-md transition-all hover:from-blue-600 hover:to-blue-700 disabled:opacity-60"
+                          className="flex items-center gap-1.5 rounded-xl border border-blue-500/50 bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-blue-950/40 transition-all hover:bg-blue-500 disabled:opacity-60"
                         >
                           {actionId === report.id ? (
-                            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-950 border-t-transparent" />
+                            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                           ) : (
                             <Eye className="h-3.5 w-3.5" />
                           )}
@@ -425,7 +425,7 @@ export function AdminReportsScreen() {
                       <button
                         onClick={() => setResolveTarget(report)}
                         disabled={actionId === report.id}
-                        className="flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-800/80 px-4 py-2 text-xs font-bold text-zinc-200 shadow-sm transition-all hover:bg-zinc-700 hover:border-zinc-600 disabled:opacity-60"
+                        className="flex items-center gap-1.5 rounded-xl border border-wine-700/80 bg-wine-900/60 px-4 py-2 text-xs font-bold text-wine-200 shadow-sm transition-all hover:bg-wine-800 hover:border-wine-600 disabled:opacity-60"
                       >
                         <CheckCircle2 className="h-3.5 w-3.5 text-wine-400" />
                         <span>Tomar Decisão</span>

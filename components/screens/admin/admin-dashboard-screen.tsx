@@ -165,7 +165,7 @@ export function AdminDashboardScreen() {
               </div>
               <Link
                 href="/admin/perfis"
-                className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 px-4 py-2 text-xs font-bold text-zinc-950 transition-all hover:from-amber-500 hover:to-amber-600 shadow-md shadow-amber-950/40"
+                className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs font-black text-zinc-950 transition-all hover:bg-amber-300 shadow-md shadow-amber-950/40 outline-none focus:ring-2 focus:ring-amber-400/50"
               >
                 <span>Revisar Agora</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -183,7 +183,7 @@ export function AdminDashboardScreen() {
                 icon: User,
                 color: "text-blue-400",
                 accentBg: "from-blue-950/40 to-zinc-900/80",
-                borderColor: "border-blue-900/40 hover:border-blue-700/60",
+                borderColor: "border-blue-900/40 hover:border-blue-700/60 focus:border-blue-600",
                 iconBg: "bg-blue-500/10 text-blue-400 ring-blue-500/30",
                 href: "/admin/clientes",
               },
@@ -194,7 +194,7 @@ export function AdminDashboardScreen() {
                 icon: Users,
                 color: "text-wine-400",
                 accentBg: "from-wine-950/50 to-zinc-900/80",
-                borderColor: "border-wine-900/50 hover:border-wine-700/60",
+                borderColor: "border-wine-900/50 hover:border-wine-700/60 focus:border-wine-600",
                 iconBg: "bg-wine-500/10 text-wine-400 ring-wine-500/30",
                 href: "/admin/profissionais",
               },
@@ -205,7 +205,7 @@ export function AdminDashboardScreen() {
                 icon: Clock,
                 color: "text-amber-400",
                 accentBg: "from-amber-950/40 to-zinc-900/80",
-                borderColor: "border-amber-900/40 hover:border-amber-700/60",
+                borderColor: "border-amber-900/40 hover:border-amber-700/60 focus:border-amber-600",
                 iconBg: "bg-amber-500/10 text-amber-400 ring-amber-500/30",
                 href: "/admin/perfis",
               },
@@ -216,7 +216,7 @@ export function AdminDashboardScreen() {
                 icon: TrendingUp,
                 color: "text-emerald-400",
                 accentBg: "from-emerald-950/40 to-zinc-900/80",
-                borderColor: "border-emerald-900/40 hover:border-emerald-700/60",
+                borderColor: "border-emerald-900/40 hover:border-emerald-700/60 focus:border-emerald-600",
                 iconBg: "bg-emerald-500/10 text-emerald-400 ring-emerald-500/30",
                 href: "/admin/clientes",
               },
@@ -229,7 +229,7 @@ export function AdminDashboardScreen() {
               >
                 <Link
                   href={stat.href}
-                  className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-gradient-to-b ${stat.accentBg} ${stat.borderColor} p-5 shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl`}
+                  className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-gradient-to-b ${stat.accentBg} ${stat.borderColor} p-5 shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl outline-none focus:ring-1 focus:ring-wine-500/40`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
