@@ -63,18 +63,13 @@ function NavIconSvg({
   );
 }
 
-function Badge({ count, tone }: { count: number; tone: "chat" | "notif" }) {
+function Badge({ count }: { count: number }) {
   if (count <= 0) {
     return null;
   }
 
   return (
-    <span
-      className={cn(
-        "absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white shadow-sm ring-1 ring-white",
-        tone === "chat" ? "bg-red-500" : "bg-wine-700"
-      )}
-    >
+    <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-wine-700 px-1 text-[10px] font-bold text-white shadow-sm ring-1 ring-white">
       {count > 99 ? "99+" : count}
     </span>
   );
@@ -106,7 +101,7 @@ function getNavIcon(
           <path d="M13 10h7v10h-7z" />
           <path d="M4 13h7v7H4z" />
         </NavIconSvg>
-        <Badge count={notificationBadgeCount} tone="notif" />
+        <Badge count={notificationBadgeCount} />
       </div>
     );
   }
@@ -117,7 +112,7 @@ function getNavIcon(
         <NavIconSvg active={active}>
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </NavIconSvg>
-        <Badge count={chatUnreadCount} tone="chat" />
+        <Badge count={chatUnreadCount} />
       </div>
     );
   }
@@ -159,7 +154,7 @@ function getNavIcon(
           <path d="M20 21a8 8 0 0 0-16 0" />
           <circle cx="12" cy="7" r="4" />
         </NavIconSvg>
-        <Badge count={notificationBadgeCount} tone="notif" />
+        <Badge count={notificationBadgeCount} />
       </div>
     );
   }
