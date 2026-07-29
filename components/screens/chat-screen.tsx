@@ -604,23 +604,23 @@ export function ChatScreen() {
 
   if (!isLoggedIn) {
     return (
-        <div className="flex min-h-120 items-center justify-center rounded-3xl border border-zinc-200 bg-white p-6 text-center shadow-sm">
-          <div className="max-w-md">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-wine-50 text-wine-700">
-              <Shield size={22} />
-            </div>
-            <h1 className="mt-4 text-2xl font-semibold text-zinc-900">Chat privado</h1>
-            <p className="mt-2 text-sm leading-relaxed text-zinc-600">Entre na sua conta para acessar conversas, apelidos e recursos de segurança da plataforma.</p>
-            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
-              <Link href="/auth/login">
-                <Button>Entrar</Button>
-              </Link>
-              <Link href="/auth/cadastro">
-                <Button variant="secondary">Criar conta</Button>
-              </Link>
-            </div>
+      <div className="flex min-h-120 items-center justify-center rounded-3xl border border-zinc-200 bg-white p-6 text-center shadow-sm">
+        <div className="max-w-md">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-wine-50 text-wine-700">
+            <Shield size={22} />
+          </div>
+          <h1 className="mt-4 text-2xl font-semibold text-zinc-900">Chat privado</h1>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-600">Entre na sua conta para acessar conversas, apelidos e recursos de segurança da plataforma.</p>
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <Link href="/auth/login">
+              <Button>Entrar</Button>
+            </Link>
+            <Link href="/auth/cadastro">
+              <Button variant="secondary">Criar conta</Button>
+            </Link>
           </div>
         </div>
+      </div>
     );
   }
 
@@ -640,7 +640,7 @@ export function ChatScreen() {
             <div className="flex items-center justify-between gap-2.5">
               <div className="min-w-0">
                 <h1 className="text-lg font-bold tracking-tight text-zinc-900">Conversas</h1>
-                <p className="mt-0.5 truncate text-[11px] font-medium text-zinc-500">Você aparece como {globalAlias} para os outros</p>
+                <p className="mt-0.5 truncate text-[11px] font-medium text-zinc-500">Você aparece como "{globalAlias}" para os outros</p>
               </div>
               <button
                 type="button"
@@ -848,38 +848,38 @@ export function ChatScreen() {
 
       {conversationOpenMobile && activeConversation && typeof document !== "undefined"
         ? createPortal(
-            <div className="fixed inset-0 z-100 flex flex-col bg-zinc-100 overscroll-none md:hidden">
-              <ConversationThread
-                activeConversation={activeConversation}
-                activeConversationId={activeConversationId}
-                activeAd={activeAd}
-                attachmentMenuOpen={attachmentMenuOpen}
-                conversationAvatar={conversationAvatars[activeConversationId] || "/placeholder.png"}
-                currentMessages={currentMessages}
-                displayContactName={displayContactName}
-                draft={draft}
-                globalAlias={globalAlias}
-                lastSentMessageId={lastSentMessageId}
-                participantAlias={participantAlias}
-                profilePanelOpen={profilePanelOpen}
-                scrollRef={scrollRef}
-                showBackButton
-                whatsappUrl={whatsappUrl}
-                onAttachmentMenuToggle={() => setAttachmentMenuOpen((current) => !current)}
-                onBack={() => { setMobileConversationOpen(false); setProfilePanelOpen(false); }}
-                onBlock={() => setBlockModalOpen(true)}
-                onDelete={() => setDeleteModalOpen(true)}
-                onDraftChange={setDraft}
-                onOpenProfile={() => setProfilePanelOpen(true)}
-                onOpenRename={openRenameModal}
-                onOpenViewOnce={handleOpenViewOnceModal}
-                onProfileClose={() => setProfilePanelOpen(false)}
-                onReport={() => setReportModalOpen(true)}
-                onSubmit={handleSubmit}
-              />
-            </div>,
-            document.body
-          )
+          <div className="fixed inset-0 z-100 flex flex-col bg-zinc-100 overscroll-none md:hidden">
+            <ConversationThread
+              activeConversation={activeConversation}
+              activeConversationId={activeConversationId}
+              activeAd={activeAd}
+              attachmentMenuOpen={attachmentMenuOpen}
+              conversationAvatar={conversationAvatars[activeConversationId] || "/placeholder.png"}
+              currentMessages={currentMessages}
+              displayContactName={displayContactName}
+              draft={draft}
+              globalAlias={globalAlias}
+              lastSentMessageId={lastSentMessageId}
+              participantAlias={participantAlias}
+              profilePanelOpen={profilePanelOpen}
+              scrollRef={scrollRef}
+              showBackButton
+              whatsappUrl={whatsappUrl}
+              onAttachmentMenuToggle={() => setAttachmentMenuOpen((current) => !current)}
+              onBack={() => { setMobileConversationOpen(false); setProfilePanelOpen(false); }}
+              onBlock={() => setBlockModalOpen(true)}
+              onDelete={() => setDeleteModalOpen(true)}
+              onDraftChange={setDraft}
+              onOpenProfile={() => setProfilePanelOpen(true)}
+              onOpenRename={openRenameModal}
+              onOpenViewOnce={handleOpenViewOnceModal}
+              onProfileClose={() => setProfilePanelOpen(false)}
+              onReport={() => setReportModalOpen(true)}
+              onSubmit={handleSubmit}
+            />
+          </div>,
+          document.body
+        )
         : null}
 
       <Modal

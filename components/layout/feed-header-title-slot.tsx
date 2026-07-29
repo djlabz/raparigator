@@ -8,11 +8,22 @@ import {
   useOptionalFeedHeaderTitleMotion,
 } from "@/components/screens/feed-screen/feed-header-title-context";
 import { FeedSectionTitle } from "@/components/screens/feed-screen/feed-section-title";
+import { cn } from "@/lib/utils";
 
 const TITLE_STACK_PX = 28;
+const BRAND_LOGO_CLASS =
+  "inline-flex h-10 shrink-0 items-center font-display text-2xl font-medium leading-none tracking-wide text-wine-800";
 
 function isFeedPath(pathname: string) {
   return pathname === "/feed" || pathname.startsWith("/feed/");
+}
+
+function BrandLogoLink({ className }: { className?: string }) {
+  return (
+    <Link href="/" className={cn(BRAND_LOGO_CLASS, className)}>
+      Sigillus
+    </Link>
+  );
 }
 
 function DesktopTitleStack() {
@@ -77,34 +88,22 @@ function MobileTitleSwap() {
   );
 
   if (!enabled) {
-    return (
-      <Link
-        href="/"
-        className="font-display text-2xl tracking-wide text-wine-800 opacity-100"
-      >
-        Sigillus
-      </Link>
-    );
+    return <BrandLogoLink />;
   }
 
   return (
     <div className="relative min-w-0 flex-1">
-      <div className="relative flex h-11 min-w-0 w-full items-center overflow-hidden">
+      <div className="relative flex h-10 min-w-0 w-full items-center overflow-hidden">
         <motion.div
           style={{ opacity: logoOpacity, y: logoY, pointerEvents: logoPointerEvents }}
-          className="relative z-10 flex shrink-0 items-center will-change-transform"
+          className="relative z-10 flex h-10 shrink-0 items-center will-change-transform"
         >
-          <Link
-            href="/"
-            className="font-display text-2xl tracking-wide text-wine-800 opacity-100"
-          >
-            Sigillus
-          </Link>
+          <BrandLogoLink />
         </motion.div>
 
         <div
           data-feed-title-target
-          className="pointer-events-none absolute inset-y-0 left-2 right-2 h-11 min-w-0"
+          className="pointer-events-none absolute inset-y-0 left-2 right-2 h-10 min-w-0"
           aria-hidden
         />
       </div>
@@ -118,28 +117,14 @@ export function FeedHeaderTitleSlot() {
   const onFeed = isFeedPath(pathname);
 
   if (!onFeed || !enabled) {
-    return (
-      <Link
-        href="/"
-        className="font-display text-2xl tracking-wide text-wine-800 opacity-100"
-      >
-        Sigillus
-      </Link>
-    );
+    return <BrandLogoLink />;
   }
 
   if (mode === "mobile") {
     return <MobileTitleSwap />;
   }
 
-  return (
-    <Link
-      href="/"
-      className="relative z-10 shrink-0 font-display text-2xl tracking-wide text-wine-800 opacity-100"
-    >
-      Sigillus
-    </Link>
-  );
+  return <BrandLogoLink className="relative z-10" />;
 }
 
 export function FeedHeaderDesktopTitle() {

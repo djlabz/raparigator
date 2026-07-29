@@ -105,11 +105,11 @@ export function FeedMobileTitleFlight() {
       }}
       className="pointer-events-none fixed top-0 left-0 z-40 overflow-hidden will-change-transform [backface-visibility:hidden]"
     >
-      <div className="relative h-11 w-full min-w-0">
+      <div className="relative h-10 w-full min-w-0">
         {hasPremium ? (
           <motion.div
             style={{ y: premiumY, opacity: premiumOpacity }}
-            className="flex h-11 w-full min-w-0 items-center will-change-transform"
+            className="flex h-10 w-full min-w-0 items-center will-change-transform"
           >
             <FeedSectionTitle
               variant="premium"
@@ -127,8 +127,8 @@ export function FeedMobileTitleFlight() {
             }}
             className={
               hasPremium
-                ? "absolute inset-0 flex h-11 w-full min-w-0 items-center will-change-transform"
-                : "flex h-11 w-full min-w-0 items-center will-change-transform"
+                ? "absolute inset-0 flex h-10 w-full min-w-0 items-center will-change-transform"
+                : "flex h-10 w-full min-w-0 items-center will-change-transform"
             }
           >
             <FeedSectionTitle

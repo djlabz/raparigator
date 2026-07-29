@@ -18,6 +18,7 @@ const PREMIUM_LABEL = "Modelos Premium";
 const STANDARD_LABEL = "Outras modelos";
 const FIT_MIN_PX = 15;
 const FIT_MAX_PX = 30;
+const FIT_MAX_HEADER_PX = 24;
 
 function applyProbe(
   label: HTMLElement,
@@ -45,10 +46,11 @@ function largestFit(
   label: HTMLElement,
   icon: HTMLElement | null,
   available: number,
-  withIcon: boolean
+  withIcon: boolean,
+  maxPx: number
 ) {
   let low = FIT_MIN_PX;
-  let high = FIT_MAX_PX;
+  let high = maxPx;
   let best = FIT_MIN_PX;
 
   while (low <= high) {
@@ -119,9 +121,10 @@ export function FeedSectionTitle({
       root.style.width = `${available}px`;
       root.style.maxWidth = `${available}px`;
 
+      const maxPx = fitToTarget ? FIT_MAX_HEADER_PX : FIT_MAX_PX;
       applyProbe(label, icon, FIT_MIN_PX, true);
       const withIcon = root.scrollWidth <= available + 0.5;
-      const best = largestFit(root, label, icon, available, withIcon);
+      const best = largestFit(root, label, icon, available, withIcon, maxPx);
       lastMeasuredWidth = available;
 
       root.style.width = prevWidth;
