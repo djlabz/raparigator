@@ -13,6 +13,9 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "check": "npm run lint && npm run typecheck",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:chromium": "playwright test --project=chromium",
     "prepare": "bash scripts/install-git-hooks.sh",
     "share": "npx cloudflared tunnel --url http://localhost:3000"
   },
@@ -26,6 +29,7 @@
     "react-image-crop": "^11.0.10"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
