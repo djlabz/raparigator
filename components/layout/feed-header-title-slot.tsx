@@ -8,6 +8,10 @@ import {
   useOptionalFeedHeaderTitleMotion,
 } from "@/components/screens/feed-screen/feed-header-title-context";
 import { FeedSectionTitle } from "@/components/screens/feed-screen/feed-section-title";
+import {
+  useDashboardHeaderTitleFlags,
+  useOptionalDashboardHeaderTitleMotion,
+} from "@/components/screens/professional-dashboard/dashboard-header-title-context";
 import { cn } from "@/lib/utils";
 
 const TITLE_STACK_PX = 28;
@@ -16,6 +20,10 @@ const BRAND_LOGO_CLASS =
 
 function isFeedPath(pathname: string) {
   return pathname === "/feed" || pathname.startsWith("/feed/");
+}
+
+function isProfessionalDashboardPath(pathname: string) {
+  return pathname === "/profissional/dashboard" || pathname.startsWith("/profissional/dashboard/");
 }
 
 function BrandLogoLink({ className }: { className?: string }) {
@@ -75,7 +83,7 @@ function DesktopTitleStack() {
   return null;
 }
 
-function MobileTitleSwap() {
+function FeedMobileTitleSwap() {
   const { enabled } = useFeedHeaderTitleFlags();
   const motionValues = useOptionalFeedHeaderTitleMotion();
   const fallbackReveal = useMotionValue(0);
@@ -111,20 +119,62 @@ function MobileTitleSwap() {
   );
 }
 
-export function FeedHeaderTitleSlot() {
-  const pathname = usePathname();
-  const { enabled, mode } = useFeedHeaderTitleFlags();
-  const onFeed = isFeedPath(pathname);
+function DashboardMobileTitleSwap() {
+  const { enabled } = useDashboardHeaderTitleFlags();
+  const motionValues = useOptionalDashboardHeaderTitleMotion();
+  const fallbackReveal = useMotionValue(0);
+  const headerReveal = motionValues?.headerReveal ?? fallbackReveal;
 
-  if (!onFeed || !enabled) {
+  const logoOpacity = useTransform(headerReveal, [0, 0.16, 0.34], [1, 1, 0]);
+  const logoY = useTransform(headerReveal, [0, 0.16, 0.34], [0, 0, -TITLE_STACK_PX]);
+  const logoPointerEvents = useTransform(headerReveal, (value) =>
+    value > 0.3 ? "none" : "auto"
+  );
+
+  if (!enabled) {
     return <BrandLogoLink />;
   }
 
-  if (mode === "mobile") {
-    return <MobileTitleSwap />;
+  return (
+    <div className="relative min-w-0 flex-1">
+      <div className="relative flex h-10 min-w-0 w-full items-center overflow-hidden">
+        <motion.div
+          style={{ opacity: logoOpacity, y: logoY, pointerEvents: logoPointerEvents }}
+          className="relative z-10 flex h-10 shrink-0 items-center will-change-transform"
+        >
+          <BrandLogoLink />
+        </motion.div>
+
+        <div
+          data-dashboard-title-target
+          className="pointer-events-none absolute inset-y-0 left-2 right-2 h-10 min-w-0"
+          aria-hidden
+        />
+      </div>
+    </div>
+  );
+}
+
+export function FeedHeaderTitleSlot() {
+  const pathname = usePathname();
+  const feed = useFeedHeaderTitleFlags();
+  const dashboard = useDashboardHeaderTitleFlags();
+
+  if (isFeedPath(pathname) && feed.enabled) {
+    if (feed.mode === "mobile") {
+      return <FeedMobileTitleSwap />;
+    }
+    return <BrandLogoLink className="relative z-10" />;
   }
 
-  return <BrandLogoLink className="relative z-10" />;
+  if (isProfessionalDashboardPath(pathname) && dashboard.enabled) {
+    if (dashboard.mode === "mobile") {
+      return <DashboardMobileTitleSwap />;
+    }
+    return <BrandLogoLink />;
+  }
+
+  return <BrandLogoLink />;
 }
 
 export function FeedHeaderDesktopTitle() {

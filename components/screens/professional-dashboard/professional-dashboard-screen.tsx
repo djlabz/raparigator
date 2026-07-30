@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,8 +12,11 @@ import { ads } from "@/lib/mock-data";
 import { chromeBelowDesktopNavStickyTop } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
 import { InfoBanner } from "@/components/ui/info-banner";
+import { DashboardHeading } from "./dashboard-heading";
+import { DashboardMobileTitleFlight } from "./dashboard-mobile-title-flight";
 import { SummaryTab } from "./summary-tab";
 import type { AdStatus } from "./types";
+import { useDashboardTitleScroll } from "./use-dashboard-title-scroll";
 import { confirmVerificationCode, getVerificationState, sendVerificationCode, type VerificationChannel, type VerificationState } from "@/lib/verification";
 
 function DashboardTabSkeleton() {
@@ -42,6 +45,8 @@ export function ProfessionalDashboardScreen() {
   const { role } = useAuthSession();
   const safeRole = role === "visitor" ? "profissional" : (role as Exclude<AuthRole, "visitor">);
   const { bannerClosed, setBannerClosed } = useAccountNotifications(safeRole);
+  const headingRef = useRef<HTMLDivElement>(null);
+  useDashboardTitleScroll({ headingRef });
 
   const [activeTab, setActiveTab] = useState<string>("Anúncio");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -68,12 +73,13 @@ export function ProfessionalDashboardScreen() {
   const adSlug = currentAd.slug;
 
   return (
+    <>
+      <DashboardMobileTitleFlight />
       <div className={cn(
         "grid min-w-0 gap-4 lg:gap-8 lg:items-start transition-all duration-300",
         isSidebarCollapsed ? "lg:grid-cols-[80px_1fr]" : "lg:grid-cols-[256px_1fr]"
       )}>
 
-        {/* Menu Lateral Desktop */}
         <aside
           className={cn(
             "sticky hidden h-fit flex-col self-start rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition-all duration-300 lg:flex",
@@ -119,10 +125,7 @@ export function ProfessionalDashboardScreen() {
         </aside>
 
         <div className="min-w-0 space-y-2 lg:space-y-6">
-          <div className="min-w-0 space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Painel profissional</p>
-            <h1 className="text-2xl font-semibold text-zinc-900 lg:text-3xl">Seu dashboard</h1>
-          </div>
+          <DashboardHeading headingRef={headingRef} />
 
           {!bannerClosed && (
             <InfoBanner 
@@ -175,6 +178,7 @@ export function ProfessionalDashboardScreen() {
           {activeTab === "Verificação" && <VerificationTab />}
         </div>
       </div>
+    </>
   );
 }
 
