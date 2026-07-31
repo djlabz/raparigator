@@ -2,11 +2,34 @@
 
 Use this after implementing or fixing motion. Goal: force anomalies to appear before the user finds them.
 
+Playwright verification is mandatory on every refine-motion run. Choose the product first, announce it, then execute the routes with that product only.
+
+## Playwright product selection
+
+Resolve autonomously before the first browser action:
+
+1. **User override** — if the prompt/command explicitly requires `webapp-testing`, use that skill even when a Playwright MCP is available.
+2. **Playwright MCP preferred** — otherwise probe the current session for a Playwright MCP that is connected and functional:
+   - Server is present and status is usable (not `needsAuth`, `error`, or `loading`)
+   - Tools are discoverable and cover navigation, interaction, and inspection needed for the routes below
+   - When this check passes, use the MCP tools for the entire verification pass; do not fall back to `webapp-testing` mid-run unless the MCP becomes unusable
+3. **Fallback** — if no Playwright MCP is connected and functional, use the `webapp-testing` skill (Python Playwright helpers)
+
+Do not install npm Playwright / `@playwright/test` to satisfy this skill. Do not substitute non-Playwright browser MCP tooling for the paths above.
+
+### Announcement (required)
+
+Before the first verification action, send the user one short formal line naming the product, for example:
+
+- `Verificação Playwright: utilizando o MCP do Playwright.`
+- `Verificação Playwright: utilizando a skill webapp-testing (MCP do Playwright indisponível).`
+- `Verificação Playwright: utilizando a skill webapp-testing (override solicitado no prompt).`
+
 ## Setup
 
 - Prefer an already-running `npm run dev` on port 3000.
+- If using Playwright MCP: discover tool schemas first, then navigate → interact → screenshot/snapshot as the MCP exposes; keep the session consistent across routes A–D.
 - If using `webapp-testing`, run script `--help` first and treat bundled helpers as black boxes.
-- If using browser MCP: navigate → lock → interact → screenshot/snapshot → unlock when fully done.
 - Wait for the UI to be interactive (`networkidle` or equivalent) before judging motion.
 
 ## Route A — Faithful path
@@ -48,6 +71,7 @@ Use when the effect has exclusivity, layered handoffs, or layout/fit that can se
 
 ## Decision after runs
 
-- Any anomaly → fix code, then rerun A/B/C (and D if used) before delivery.
+- Any anomaly → fix code, then rerun A/B/C (and D if used) with the same Playwright product before delivery.
 - Softness that breaks an exclusivity or completion invariant is a failure even if the curve “feels nicer.”
-- If tooling cannot reach the screen (auth, missing server), say what blocked verification and what was checked instead. Do not pretend chaos QA ran.
+- If tooling cannot reach the screen (auth, missing server, MCP disconnected mid-run), say what blocked verification and what was checked instead. Do not pretend chaos QA ran.
+- If Playwright MCP was selected but becomes unusable mid-run, announce the fallback to `webapp-testing` before continuing, then finish the remaining routes there.
