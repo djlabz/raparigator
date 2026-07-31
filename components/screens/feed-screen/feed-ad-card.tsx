@@ -340,14 +340,14 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
       href={href}
       onClick={handleClick}
       className={cn(
-        "group relative mx-auto block w-full max-w-[320px] [perspective:1000px] lg:max-w-none",
+        "group relative mx-auto block w-full max-w-[320px] perspective-[1000px] lg:max-w-none",
         elevated ? "z-30" : "z-0"
       )}
     >
       <motion.article
         ref={cardRef}
         className={cn(
-          "relative cursor-pointer touch-manipulation [transform-style:preserve-3d] will-change-transform",
+          "relative cursor-pointer touch-manipulation transform-3d will-change-transform",
           FEED_CARD_SIZE_CLASS
         )}
         style={{ transform }}
