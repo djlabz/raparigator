@@ -2248,8 +2248,9 @@ function BentoPhotoGallery({
                 src={resolvedCoverSrc}
                 alt={`Foto ${resolvedCoverIndex}`}
                 fill
+                priority
                 className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                sizes="100vw"
+                sizes="(max-width: 1023px) calc(100vw - 2rem), min(80rem, calc(100vw - 20rem))"
               />
 
               <div className="absolute top-4 left-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest text-wine-700 shadow-lg">
@@ -2359,7 +2360,7 @@ function BentoPhotoGallery({
               className="relative group w-full aspect-21/9 rounded-3xl overflow-hidden shadow-sm cursor-pointer bg-zinc-100"
               onClick={() => onPhotoClick(resolvedCoverIndex)}
             >
-              <Image src={resolvedCoverSrc} alt={`Foto ${resolvedCoverIndex}`} fill className="object-cover object-center transition-transform duration-500 group-hover:scale-105" sizes="100vw" />
+              <Image src={resolvedCoverSrc} alt={`Foto ${resolvedCoverIndex}`} fill priority className="object-cover object-center transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 1023px) calc(100vw - 2rem), min(80rem, calc(100vw - 20rem))" />
               <div className="absolute top-4 left-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest text-wine-700 shadow-lg">
                 Capa do Perfil
               </div>
