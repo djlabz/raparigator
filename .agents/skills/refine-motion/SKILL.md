@@ -7,16 +7,17 @@ description: >
   effect. Scope-gate complex multi-step effects, define hard invariants before
   tuning feel, implement with driver/display separation and hold-then-commit
   handoffs, then verify with Playwright (mandatory): prefer a connected,
-  functional Playwright MCP when available; otherwise use the webapp-testing
-  skill — unless the user explicitly requires webapp-testing. Announce which
-  Playwright product was selected before verification. Cover step-by-step +
-  controlled-chaos + cross-navigation before delivery. Use whenever creating,
-  refactoring, or adjusting animations, transitions, AnimatePresence,
-  scroll-linked motion, gestures, tab/page motion, FABs, indicators, or
-  microinteractions with movement; also for stutter, lag, jank, trembling,
-  flicker, hitching, or "animação quebrada" reports — even if the user never
-  says skill, QA, or Playwright. Prefer this over improvising motion. Skip only
-  for pure layout/color/copy with no movement component. Invoke explicitly with
+  functional Playwright MCP when available; otherwise use the internal
+  webapp-testing fallback under references/webapp-testing-fallback — unless the
+  user explicitly requires that fallback. Announce which Playwright product was
+  selected before verification. Cover step-by-step + controlled-chaos +
+  cross-navigation before delivery. Use whenever creating, refactoring, or
+  adjusting animations, transitions, AnimatePresence, scroll-linked motion,
+  gestures, tab/page motion, FABs, indicators, or microinteractions with
+  movement; also for stutter, lag, jank, trembling, flicker, hitching, or
+  "animação quebrada" reports — even if the user never says skill, QA, or
+  Playwright. Prefer this over improvising motion. Skip only for pure
+  layout/color/copy with no movement component. Invoke explicitly with
   /refine-motion when the user wants this workflow on demand.
 ---
 
@@ -115,15 +116,25 @@ Before final delivery, re-read the user request and the changed files side by si
 
 Verification is part of the work, not optional polish. **Playwright is mandatory** on every refine-motion run: use it to inspect, validate, and mitigate motion issues for the effect being created or adjusted. Skipping Playwright verification is a failed delivery.
 
+`refine-motion` is the only public entry point for this verification. There is no standalone `webapp-testing` skill in the catalog. The Python helpers live only at `references/webapp-testing-fallback/` and must be loaded exclusively through the selection rules below.
+
 ### Playwright product selection
 
 Resolve the verification product autonomously at the start of verification (or earlier if the task will clearly need browser interaction). Do not ask the user which product to use unless both paths are blocked.
 
 Selection rules, in order:
 
-1. **User override** — if the user prompt/command explicitly requires the `webapp-testing` skill (e.g. “use webapp-testing”, “via skill webapp-testing”, “não use o MCP”), use `webapp-testing` even when a Playwright MCP is available.
-2. **Playwright MCP preferred** — otherwise, inspect whether a Playwright MCP server is connected and functional in the current session (server present, status usable — not `needsAuth` / `error` / `loading` — and its tools discoverable/callable for navigation, interaction, and inspection). When that check passes, use the Playwright MCP tools and do **not** use `webapp-testing` for this run.
-3. **Fallback** — if no Playwright MCP is connected and functional, use the `webapp-testing` skill (Python Playwright helpers).
+1. **User override** — if the user prompt/command explicitly requires the Python fallback (e.g. “use webapp-testing”, “via fallback Python”, “não use o MCP”), use `references/webapp-testing-fallback` even when a Playwright MCP is available.
+2. **Playwright MCP preferred** — otherwise, inspect whether a Playwright MCP server is connected and functional in the current session (server present, status usable — not `needsAuth` / `error` / `loading` — and its tools discoverable/callable for navigation, interaction, and inspection). When that check passes, use the Playwright MCP tools and do **not** open `references/webapp-testing-fallback` for this run.
+3. **Fallback** — if no Playwright MCP is connected and functional, read `references/webapp-testing-fallback/FALLBACK.md` and use its Python Playwright helpers only.
+
+### Session exclusivity (mandatory)
+
+After the product is chosen, treat the other path as **forbidden for this run**:
+
+- If MCP is selected: do not read `references/webapp-testing-fallback/`, do not write Python Playwright scripts, do not invoke those helpers.
+- If fallback is selected: do not call Playwright MCP `browser_*` tools, even if they still appear in the tool list.
+- Only switch products if the chosen path becomes unusable mid-run — announce the switch first, then continue remaining routes on the new product only.
 
 Do not add npm Playwright or `@playwright/test` just to satisfy this skill. Do not use Cursor browser MCP / non-Playwright browser tooling as a substitute for the mandatory Playwright path above.
 
@@ -132,8 +143,8 @@ Do not add npm Playwright or `@playwright/test` just to satisfy this skill. Do n
 Before the first verification action, tell the user which product will be used, in a short formal line. Examples:
 
 - `Verificação Playwright: utilizando o MCP do Playwright.`
-- `Verificação Playwright: utilizando a skill webapp-testing (MCP do Playwright indisponível).`
-- `Verificação Playwright: utilizando a skill webapp-testing (override solicitado no prompt).`
+- `Verificação Playwright: utilizando o fallback Python (MCP do Playwright indisponível).`
+- `Verificação Playwright: utilizando o fallback Python (override solicitado no prompt).`
 
 ### Minimum routes
 
@@ -153,7 +164,7 @@ Details: `references/verification-playbook.md`.
 ## Relation to other skills
 
 - `frontend-design` / `brand-guidelines` own visual identity; this skill owns movement behavior and motion QA.
-- Playwright MCP (when available) or `webapp-testing` (fallback / user override) is the mandatory verification substrate; neither replaces smoothness criteria.
+- Playwright MCP (when available) or `references/webapp-testing-fallback` (fallback / user override) is the mandatory verification substrate; neither replaces smoothness criteria.
 - `karpathy-guidelines` still applies: touch only what the motion task requires.
 
 ## Examples
@@ -180,8 +191,8 @@ Approach: Announce Playwright product. Reproduce with cross-navigation + irregul
 
 Input: Refine the tab indicator spring. (Playwright MCP connected and healthy.)
 
-Approach: Announce `Verificação Playwright: utilizando o MCP do Playwright.` Run routes via MCP tools. Do not open `webapp-testing`.
+Approach: Announce `Verificação Playwright: utilizando o MCP do Playwright.` Run routes via MCP tools. Do not open `references/webapp-testing-fallback`.
 
 Input: Refine the tab indicator spring. Use webapp-testing for QA.
 
-Approach: Honor override. Announce `Verificação Playwright: utilizando a skill webapp-testing (override solicitado no prompt).` Ignore MCP even if available.
+Approach: Honor override. Announce `Verificação Playwright: utilizando o fallback Python (override solicitado no prompt).` Read `references/webapp-testing-fallback/FALLBACK.md` and ignore MCP even if available.
