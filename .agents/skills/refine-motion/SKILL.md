@@ -6,16 +6,18 @@ description: >
   primary library; allow another animation lib only when Motion cannot solve the
   effect. Scope-gate complex multi-step effects, define hard invariants before
   tuning feel, implement with driver/display separation and hold-then-commit
-  handoffs, then verify with step-by-step + controlled-chaos + cross-navigation
-  (webapp-testing Playwright or browser MCP — whichever finds jank faster)
-  before delivery. Use whenever creating, refactoring, or adjusting animations,
-  transitions, AnimatePresence, scroll-linked motion, gestures, tab/page motion,
-  FABs, indicators, or microinteractions with movement; also for stutter, lag,
-  jank, trembling, flicker, hitching, or "animação quebrada" reports — even if
-  the user never says skill, QA, or Playwright. Prefer this over improvising
-  motion. Skip only for pure layout/color/copy with no movement component.
-  Invoke explicitly with /refine-motion when the user wants this workflow on
-  demand.
+  handoffs, then verify with Playwright (mandatory): prefer a connected,
+  functional Playwright MCP when available; otherwise use the webapp-testing
+  skill — unless the user explicitly requires webapp-testing. Announce which
+  Playwright product was selected before verification. Cover step-by-step +
+  controlled-chaos + cross-navigation before delivery. Use whenever creating,
+  refactoring, or adjusting animations, transitions, AnimatePresence,
+  scroll-linked motion, gestures, tab/page motion, FABs, indicators, or
+  microinteractions with movement; also for stutter, lag, jank, trembling,
+  flicker, hitching, or "animação quebrada" reports — even if the user never
+  says skill, QA, or Playwright. Prefer this over improvising motion. Skip only
+  for pure layout/color/copy with no movement component. Invoke explicitly with
+  /refine-motion when the user wants this workflow on demand.
 ---
 
 # Refine Motion
@@ -30,7 +32,7 @@ Deliver motion that matches the request and feels continuous. Rough or almost-ri
 4. Implement with driver/display separation, safe-band softness, and hold-then-commit handoffs when layers swap.
 5. Implement surgically; do not refactor unrelated motion.
 6. Diff the result against the user's request before calling it done.
-7. Verify with chaos + step-by-step + cross-navigation routes (plus partial-state and settle checks when exclusivity matters).
+7. Select the Playwright verification product (see below), announce it to the user, then verify with chaos + step-by-step + cross-navigation routes (plus partial-state and settle checks when exclusivity matters).
 8. Fix anomalies and retest the same routes before final delivery.
 
 Read `references/implementation-principles.md` before implementing non-trivial motion from scratch or refining an existing effect. Read `references/verification-playbook.md` when running verification.
@@ -111,15 +113,29 @@ Before final delivery, re-read the user request and the changed files side by si
 
 ## Verification before delivery
 
-Verification is part of the work, not optional polish.
+Verification is part of the work, not optional polish. **Playwright is mandatory** on every refine-motion run: use it to inspect, validate, and mitigate motion issues for the effect being created or adjusted. Skipping Playwright verification is a failed delivery.
 
-Tool preference (pick the one that finds anomalies fastest for the current case):
+### Playwright product selection
 
-1. Skill `webapp-testing` (Python Playwright helpers) when scripted interaction is the clearest path.
-2. Cursor browser MCP when interactive visual inspection is faster.
-3. Do not add npm Playwright or `@playwright/test` just to satisfy this skill.
+Resolve the verification product autonomously at the start of verification (or earlier if the task will clearly need browser interaction). Do not ask the user which product to use unless both paths are blocked.
 
-Minimum routes:
+Selection rules, in order:
+
+1. **User override** — if the user prompt/command explicitly requires the `webapp-testing` skill (e.g. “use webapp-testing”, “via skill webapp-testing”, “não use o MCP”), use `webapp-testing` even when a Playwright MCP is available.
+2. **Playwright MCP preferred** — otherwise, inspect whether a Playwright MCP server is connected and functional in the current session (server present, status usable — not `needsAuth` / `error` / `loading` — and its tools discoverable/callable for navigation, interaction, and inspection). When that check passes, use the Playwright MCP tools and do **not** use `webapp-testing` for this run.
+3. **Fallback** — if no Playwright MCP is connected and functional, use the `webapp-testing` skill (Python Playwright helpers).
+
+Do not add npm Playwright or `@playwright/test` just to satisfy this skill. Do not use Cursor browser MCP / non-Playwright browser tooling as a substitute for the mandatory Playwright path above.
+
+### Announce the chosen product
+
+Before the first verification action, tell the user which product will be used, in a short formal line. Examples:
+
+- `Verificação Playwright: utilizando o MCP do Playwright.`
+- `Verificação Playwright: utilizando a skill webapp-testing (MCP do Playwright indisponível).`
+- `Verificação Playwright: utilizando a skill webapp-testing (override solicitado no prompt).`
+
+### Minimum routes
 
 1. **Faithful path** — execute the exact flow the user described.
 2. **Controlled chaos** — scrolls and clicks with slightly irregular timing and positions to surface jank that linear happy paths hide.
@@ -130,12 +146,14 @@ When exclusivity or layered handoffs matter, also:
 4. **Partial-state probe** — pause mid-effect; assert the invariant for that slice.
 5. **Settle probe** — stop abruptly; wait briefly; nothing should refit or jump.
 
-On failure: fix → rerun the same routes → only then deliver.
+On failure: fix → rerun the same routes with the same Playwright product → only then deliver.
+
+Details: `references/verification-playbook.md`.
 
 ## Relation to other skills
 
 - `frontend-design` / `brand-guidelines` own visual identity; this skill owns movement behavior and motion QA.
-- `webapp-testing` is a verification tool, not a substitute for smoothness criteria.
+- Playwright MCP (when available) or `webapp-testing` (fallback / user override) is the mandatory verification substrate; neither replaces smoothness criteria.
 - `karpathy-guidelines` still applies: touch only what the motion task requires.
 
 ## Examples
@@ -144,16 +162,26 @@ On failure: fix → rerun the same routes → only then deliver.
 
 Input: Add a subtle fade when the premium badge appears on the ad card.
 
-Approach: CSS only if a simple opacity transition fully covers appear/disappear; if mount timing or presence matters, use `motion/react`. Verify appear/disappear and a quick scroll past the card. No scope interview.
+Approach: CSS only if a simple opacity transition fully covers appear/disappear; if mount timing or presence matters, use `motion/react`. Select Playwright product, announce it, then verify appear/disappear and a quick scroll past the card. No scope interview.
 
 **Example 2 — complex**
 
 Input: When switching tabs, the title should fly into the header while the feed content crossfades, then the bottom nav indicator catches up.
 
-Approach: Scope gate first (order, timing, mobile vs desktop, exclusivity/completion). Likely `motion/react` coordinated with keep-alive shell. Implement driver/display separation and hold-then-commit handoffs. Verify tab A→B→A with chaos scrolls between switches.
+Approach: Scope gate first (order, timing, mobile vs desktop, exclusivity/completion). Likely `motion/react` coordinated with keep-alive shell. Implement driver/display separation and hold-then-commit handoffs. Announce Playwright product, then verify tab A→B→A with chaos scrolls between switches.
 
 **Example 3 — bug**
 
 Input: The contact FAB stutters when I scroll down and open chat then come back.
 
-Approach: Reproduce with cross-navigation + irregular scroll. Prefer fixing render/subscription thrash or conflicting animations over adding heavier motion. Retest the same path after the fix.
+Approach: Announce Playwright product. Reproduce with cross-navigation + irregular scroll. Prefer fixing render/subscription thrash or conflicting animations over adding heavier motion. Retest the same path after the fix.
+
+**Example 4 — product selection**
+
+Input: Refine the tab indicator spring. (Playwright MCP connected and healthy.)
+
+Approach: Announce `Verificação Playwright: utilizando o MCP do Playwright.` Run routes via MCP tools. Do not open `webapp-testing`.
+
+Input: Refine the tab indicator spring. Use webapp-testing for QA.
+
+Approach: Honor override. Announce `Verificação Playwright: utilizando a skill webapp-testing (override solicitado no prompt).` Ignore MCP even if available.
