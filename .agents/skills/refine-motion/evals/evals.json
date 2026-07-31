@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "No card do feed, quero que o selo premium apareça com um fade bem sutil quando o anúncio for premium. Não precisa de nada elaborado.",
-      "expected_output": "CSS só se fade simples resolver 100%; senão motion/react; sem entrevista de escopo; selecionar produto Playwright (MCP se funcional, senão webapp-testing), anunciar ao usuário, verificação A/B básica; sem nova lib",
+      "expected_output": "CSS só se fade simples resolver 100%; senão motion/react; sem entrevista de escopo; selecionar produto Playwright (MCP se funcional, senão fallback Python interno), anunciar ao usuário, verificação A/B básica; sem nova lib",
       "files": []
     },
     {
@@ -22,13 +22,13 @@
     {
       "id": 4,
       "prompt": "Refine a mola do indicador da bottom nav. O MCP do Playwright está disponível nesta sessão.",
-      "expected_output": "Detectar MCP Playwright conectado/funcional; anunciar uso do MCP; verificar rotas via MCP; não usar webapp-testing",
+      "expected_output": "Detectar MCP Playwright conectado/funcional; anunciar uso do MCP; verificar rotas via MCP; não abrir references/webapp-testing-fallback",
       "files": []
     },
     {
       "id": 5,
       "prompt": "Refine a mola do indicador da bottom nav. Use a skill webapp-testing para o QA.",
-      "expected_output": "Honrar override; anunciar webapp-testing; usar skill mesmo se MCP Playwright estiver disponível",
+      "expected_output": "Honrar override; anunciar fallback Python; ler references/webapp-testing-fallback/FALLBACK.md; não usar tools MCP mesmo se disponíveis",
       "files": []
     }
   ]

@@ -36,6 +36,13 @@ Frontend de uma plataforma de anúncios de acompanhantes com feed, chat, checkou
 - Textos de UI em português (PT-BR)
 - Não escreva comentários no código
 
+## Verificação de motion / browser ad hoc
+
+- Para QA de animação e interação visual ad hoc, use a skill `refine-motion` (não há skill `webapp-testing` no catálogo).
+- Preferir MCP Playwright quando conectado; senão o fallback Python em `.agents/skills/refine-motion/references/webapp-testing-fallback/`.
+- Depois de escolher o produto, não misture MCP e fallback na mesma run.
+- Suite E2E do repo (`npm run test:e2e` / `@playwright/test`) é independente desse fluxo.
+
 ## Nunca faça
 
 - Nunca chame API externa nem crie fetch para backend real — consuma os serviços/mocks de `lib/`
