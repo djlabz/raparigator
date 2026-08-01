@@ -3,7 +3,11 @@
 import { PropsWithChildren, useLayoutEffect } from "react";
 import { useAuthSession } from "@/lib/auth-session";
 import { getNavigationItems } from "@/lib/navigation";
-import { chromeDesktopNavSticky, chromeHeaderOffset } from "@/lib/chrome-styles";
+import {
+  chromeDesktopNavSticky,
+  chromeHeaderOffset,
+  shellContainerClass,
+} from "@/lib/chrome-styles";
 import {
   registerShell,
   setMobileNavHidden,
@@ -64,7 +68,7 @@ export function AppShell({
       )}
       <main
         className={cn(
-          "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:max-w-430 lg:px-8",
+          shellContainerClass,
           hideMobileBottomNav ? "pb-6 md:pb-10" : "pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:pb-10",
           !hideTopHeader && chromeHeaderOffset,
           mainClassName

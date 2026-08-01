@@ -8,6 +8,7 @@ import {
   chromeControlsRow,
   chromeGlassFixed,
   chromeSafeTop,
+  shellContainerClass,
 } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
 import { AccountMenu } from "./account-menu";
@@ -45,7 +46,8 @@ export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeade
         className={cn(
           chromeControlsRow,
           chromeSafeTop,
-          "relative mx-auto flex w-full max-w-7xl items-center gap-3 px-4 pb-3 sm:gap-4 sm:px-6 md:pb-4 lg:max-w-430 lg:px-8"
+          "relative flex items-center gap-3 pb-3 sm:gap-4 md:pb-4",
+          shellContainerClass
         )}
       >
         {feedDesktop ? <FeedHeaderDesktopTitle /> : null}

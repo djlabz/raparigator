@@ -66,3 +66,6 @@ export const chromeScrollNone =
   "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
 
 export const chromeSafeTop = "pt-[max(0.75rem,env(safe-area-inset-top,0px))]";
+
+export const shellContainerClass =
+  "mr-auto w-full max-w-7xl px-4 sm:px-6 lg:max-w-430 lg:px-8";
