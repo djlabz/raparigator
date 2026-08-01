@@ -49,7 +49,6 @@ export function ProfessionalDashboardScreen() {
   useDashboardTitleScroll({ headingRef });
 
   const [activeTab, setActiveTab] = useState<string>("Anúncio");
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [adStatus, setAdStatus] = useState<AdStatus>("Ativo");
 
   useEffect(() => {
@@ -75,31 +74,17 @@ export function ProfessionalDashboardScreen() {
   return (
     <>
       <DashboardMobileTitleFlight />
-      <div className={cn(
-        "grid min-w-0 gap-4 lg:gap-8 lg:items-start transition-all duration-300",
-        isSidebarCollapsed ? "lg:grid-cols-[80px_1fr]" : "lg:grid-cols-[256px_1fr]"
-      )}>
-
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[256px_1fr] lg:items-start lg:gap-8">
         <aside
           className={cn(
-            "sticky hidden h-fit flex-col self-start rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition-all duration-300 lg:flex",
+            "sticky hidden h-fit flex-col self-start rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm lg:flex",
             chromeBelowDesktopNavStickyTop
           )}
         >
-          <div className="flex items-center justify-between mb-6 px-2">
-            {!isSidebarCollapsed && (
-              <span className="text-sm font-black tracking-widest text-wine-700 uppercase">
-                Painel Profissional
-              </span>
-            )}
-            <button
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="p-1.5 text-zinc-400 hover:text-wine-700 hover:bg-wine-50 rounded-lg transition-colors ml-auto"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d={isSidebarCollapsed ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} />
-              </svg>
-            </button>
+          <div className="mb-6 px-2">
+            <span className="text-sm font-black tracking-widest text-wine-700 uppercase">
+              Painel Profissional
+            </span>
           </div>
 
           <nav className="space-y-1.5">
@@ -107,7 +92,6 @@ export function ProfessionalDashboardScreen() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                title={isSidebarCollapsed ? tab.id : undefined}
                 className={cn(
                   "w-full flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-bold transition-all",
                   activeTab === tab.id
@@ -118,7 +102,7 @@ export function ProfessionalDashboardScreen() {
                 <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   {tab.icon}
                 </svg>
-                {!isSidebarCollapsed && <span>{tab.id}</span>}
+                <span>{tab.id}</span>
               </button>
             ))}
           </nav>
