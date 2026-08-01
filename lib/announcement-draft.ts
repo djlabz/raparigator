@@ -21,6 +21,7 @@ import type {
   AnnouncementSmartTip,
   AvailabilityDay,
 } from "@/lib/announcement-draft-types";
+import { ads } from "@/lib/mock-data";
 
 const SELECT_PLACEHOLDER = "Selecionar";
 const HAIR_SELECTION_SEPARATOR = "::";
@@ -415,10 +416,46 @@ function getMissingCharacteristics(characteristics: AnnouncementCharacteristics)
   });
 }
 
-async function persistDraftMock(): Promise<"saved" | "error"> {
+function syncDraftToMockAd(slug: string, form: AnnouncementDraftState) {
+  const target = ads.find((item) => item.slug === slug);
+
+  if (!target) {
+    return false;
+  }
+
+  target.images = [...form.images];
+  target.shortDescription = form.shortDescription;
+  target.description = form.description;
+
+  if (form.locationCity.trim()) {
+    target.city = form.locationCity.trim();
+  }
+
+  if (form.locationState.trim()) {
+    target.state = form.locationState.trim();
+  }
+
+  const activeAddress = form.locationAddresses.find((address) => address.active);
+  if (activeAddress?.addressLine.trim()) {
+    target.neighborhood = activeAddress.addressLine.trim();
+  }
+
+  const selectedServices = form.services.filter((service) => service.selected).map((service) => service.label);
+  if (selectedServices.length > 0) {
+    target.services = selectedServices;
+  }
+
+  return true;
+}
+
+async function persistDraftMock(slug: string, form: AnnouncementDraftState): Promise<"saved" | "error"> {
   await new Promise<void>((resolve) => {
     window.setTimeout(resolve, SAVE_LATENCY_MS);
   });
+
+  if (!syncDraftToMockAd(slug, form)) {
+    return "error";
+  }
 
   return "saved";
 }
@@ -454,6 +491,16 @@ export function useAnnouncementDraft(ad: AnnouncementAdPreview) {
   useEffect(() => {
     setHasUnsavedChanges(serializeAnnouncementDraft(form) !== lastSavedSnapshotRef.current);
   }, [form, savedEpoch]);
+
+  useEffect(() => {
+    const target = ads.find((item) => item.slug === ad.slug);
+
+    if (!target) {
+      return;
+    }
+
+    target.images = [...form.images];
+  }, [ad.slug, form.images]);
 
   const score = calculateProfileScore(form);
   const tips = generateSmartTips(form);
@@ -505,7 +552,7 @@ export function useAnnouncementDraft(ad: AnnouncementAdPreview) {
     setSaveStatus("saving");
 
     try {
-      const result = await persistDraftMock();
+      const result = await persistDraftMock(ad.slug, formRef.current);
 
       if (result === "error") {
         setSaveStatus("error");
@@ -525,7 +572,7 @@ export function useAnnouncementDraft(ad: AnnouncementAdPreview) {
     } finally {
       isSavingRef.current = false;
     }
-  }, []);
+  }, [ad.slug]);
 
   const saveSection = useCallback(
     async (section: AnnouncementSectionKey): Promise<AnnouncementSaveSectionResult> => {
