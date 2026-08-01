@@ -479,7 +479,10 @@ export function FeedScreen() {
 
                 {visibleStandardAds.length > 0 && (
                   <div ref={standardSectionRef} className="relative">
-                    <FeedSectionDivider variant="standard" />
+                    <FeedSectionDivider
+                      variant="standard"
+                      hasPremiumSection={premiumAds.length > 0}
+                    />
                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                       {visibleStandardAds.map((ad, index) => (
                         <FeedAdCard

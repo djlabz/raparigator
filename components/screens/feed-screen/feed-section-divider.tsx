@@ -9,9 +9,14 @@ import { FeedSectionTitle, type FeedSectionTitleVariant } from "./feed-section-t
 interface FeedSectionDividerProps {
   variant: FeedSectionTitleVariant;
   className?: string;
+  hasPremiumSection?: boolean;
 }
 
-export function FeedSectionDivider({ variant, className }: FeedSectionDividerProps) {
+export function FeedSectionDivider({
+  variant,
+  className,
+  hasPremiumSection = false,
+}: FeedSectionDividerProps) {
   const isTabActive = useIsTabActive();
   const motionValues = useOptionalFeedHeaderTitleMotion();
   const fallbackOpacity = useMotionValue(1);
@@ -29,6 +34,10 @@ export function FeedSectionDivider({ variant, className }: FeedSectionDividerPro
         </div>
       </div>
     );
+  }
+
+  if (isTabActive && !hasPremiumSection) {
+    return null;
   }
 
   return (
