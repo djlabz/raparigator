@@ -12,7 +12,13 @@ import { Select } from "../ui/select";
 import { useAuthSession } from "../../lib/auth-session";
 import { useAccountNotifications } from "../../lib/account-notifications";
 import { getRoleLabel } from "../../lib/navigation";
-import { isProfileFormComplete } from "@/lib/profile-completion";
+import {
+  formatCpf,
+  formatPhone,
+  getProfileFieldErrors,
+  isProfileFormComplete,
+  validatePasswordPair,
+} from "@/lib/identity";
 import { getVerificationState } from "@/lib/verification";
 import type { AuthRole, MockUser } from "../../lib/types";
 
@@ -66,24 +72,6 @@ function readStoredForm(key: string, user: MockUser | null): ProfileFormState {
     return initialFormState(user);
   }
 }
-
-function isValidEmail(value: string) {
-  return /^\S+@\S+\.\S+$/.test(value.trim());
-}
-
-function sanitizeCpfDigits(value: string) {
-  return value.replace(/\D/g, "").slice(0, 11);
-}
-
-function formatCpf(value: string) {
-  const digits = sanitizeCpfDigits(value);
-
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
-}
-
 
 export function AccountScreen() {
   const { role, user } = useAuthSession();
@@ -148,27 +136,28 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
     clearFieldError("cpf");
   };
 
+  const handlePhoneChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setForm((current) => ({ ...current, phone: formatPhone(event.target.value) }));
+    setSaveMessage(null);
+    clearFieldError("phone");
+  };
+
   const handlePasswordChange = () => {
     setPasswordModalError(null);
-
-    if (newPassword.trim().length < 8) {
-      setPasswordModalError("A senha deve ter ao menos 8 caracteres.");
+    const pair = validatePasswordPair(newPassword, confirmNewPassword);
+    const firstError = pair.password ?? pair.confirmPassword;
+    if (firstError) {
+      setPasswordModalError(firstError);
       return;
     }
-
-    if (newPassword !== confirmNewPassword) {
-      setPasswordModalError("As senhas não coincidem.");
-      return;
-    }
-
-      setPasswordModalSuccess(true);
-      setTimeout(() => {
-        setShowPasswordModal(false);
-        setNewPassword("");
-        setConfirmNewPassword("");
-        setPasswordModalSuccess(false);
-        setSaveMessage("Senha alterada com sucesso.");
-      }, 1500);
+    setPasswordModalSuccess(true);
+    setTimeout(() => {
+      setShowPasswordModal(false);
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setPasswordModalSuccess(false);
+      setSaveMessage("Senha alterada com sucesso.");
+    }, 1500);
   };
 
   useEffect(() => {
@@ -210,45 +199,18 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
   };
 
   const validateForm = () => {
-    const nextErrors: ProfileFieldErrors = {};
-    const cpfDigits = form.cpf.replace(/\D/g, "");
-    const phoneDigits = form.phone.replace(/\D/g, "");
-
-    if (!form.fullName.trim()) {
-      nextErrors.fullName = "Informe seu nome completo.";
-    }
-
-    if (cpfDigits.length !== 11) {
-      nextErrors.cpf = "CPF inválido.";
-    }
-
-    if (!isValidEmail(form.email)) {
-      nextErrors.email = "Informe um email válido.";
-    }
-
-    if (form.confirmEmail.trim() !== form.email.trim()) {
-      nextErrors.confirmEmail = "Os emails não coincidem.";
-    }
-
-    if (phoneDigits.length < 10) {
-      nextErrors.phone = "Informe um telefone válido com DDD.";
-    }
-
-
-    if (role === "cliente") {
-      if (!form.city.trim()) {
-        nextErrors.city = "Informe sua cidade.";
-      }
-
-      if (!form.preference.trim()) {
-        nextErrors.preference = "Selecione uma preferência principal.";
-      }
-    }
-
+    const nextErrors = getProfileFieldErrors(role, {
+      fullName: form.fullName,
+      cpf: form.cpf,
+      email: form.email,
+      confirmEmail: form.confirmEmail,
+      phone: form.phone,
+      city: form.city,
+      preference: form.preference,
+    });
     setFieldErrors(nextErrors);
     const isValid = Object.keys(nextErrors).length === 0;
     setFormError(isValid ? null : "Revise os campos destacados para continuar.");
-
     return isValid;
   };
 
@@ -380,7 +342,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
                 type="tel"
                 placeholder="+55 (00) 00000-0000"
                 value={form.phone}
-                onChange={updateField("phone")}
+                onChange={handlePhoneChange}
                 error={fieldErrors.phone}
               />
             </div>
