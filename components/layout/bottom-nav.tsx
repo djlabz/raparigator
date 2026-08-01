@@ -20,7 +20,12 @@ import {
   setTabDirection,
 } from "@/lib/tab-navigation";
 import { cn } from "@/lib/utils";
-import { getChatSnapshot, getChatUnreadCount, subscribeChatUnread } from "@/lib/chat-service";
+import {
+  ensureChatStore,
+  getChatUnreadCount,
+  getServerChatStoreSnapshot,
+  subscribeChatStore,
+} from "@/lib/chat-store";
 import { useAuthSession } from "@/lib/auth-session";
 import { getDashboardHref, useAccountNotifications } from "@/lib/account-notifications";
 import type { AuthRole } from "@/lib/types";
@@ -226,15 +231,17 @@ export function BottomNav({ items }: BottomNavProps) {
   }, [updateIndicator]);
 
   const hasChat = items.some((item) => item.label === "Chat" || item.href === "/chat");
-  const unreadCount = useSyncExternalStore(subscribeChatUnread, getChatUnreadCount, () => 0);
+  const unreadCount = useSyncExternalStore(
+    subscribeChatStore,
+    getChatUnreadCount,
+    () => getServerChatStoreSnapshot().conversations.reduce((total, conversation) => total + (conversation.unread || 0), 0),
+  );
 
   useEffect(() => {
     if (!hasChat) {
       return;
     }
-
-    getChatSnapshot().catch(() => {
-    });
+    ensureChatStore();
   }, [hasChat, pathname]);
 
   if (items.length === 0) {

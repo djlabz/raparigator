@@ -16,4 +16,21 @@ test.describe('Chat', () => {
 
     await expect(page.getByRole('heading', { name: 'Conversas' })).toBeVisible();
   });
+
+  test('cliente envia mensagem de texto na conversa ativa', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await seedUserRole(page, 'cliente');
+    await page.goto('/chat');
+
+    await expect(page.getByRole('heading', { name: 'Conversas' })).toBeVisible();
+
+    const composer = page.getByPlaceholder('Mensagem...');
+    await expect(composer).toBeVisible();
+
+    const unique = `ping-store-${Date.now()}`;
+    await composer.fill(unique);
+    await page.getByRole('button', { name: 'Enviar' }).click();
+
+    await expect(page.locator('p.leading-relaxed').filter({ hasText: unique })).toBeVisible();
+  });
 });
