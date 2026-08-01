@@ -33,16 +33,19 @@ import { Toast } from "@/components/ui/toast";
 import { chromeCircle } from "@/lib/chrome-styles";
 import { useModalLock } from "@/lib/modal-lock";
 import {
-  deleteConversationFromInbox as apiDeleteConversationFromInbox,
-  getCachedChatSnapshot,
-  getChatSnapshot,
-  publishChatSnapshot,
-  reportConversation as apiReportConversation,
-  sendTextMessage,
-  sendViewOnceMediaMessage,
-  setConversationBlocked as apiSetConversationBlocked,
-  updateParticipantAlias as apiUpdateParticipantAlias,
-} from "@/lib/chat-service";
+  deleteChatConversationFromInbox,
+  ensureChatStore,
+  getChatStoreSnapshot,
+  getServerChatStoreSnapshot,
+  markConversationAsRead,
+  reseedChatStore,
+  reportChatConversation,
+  sendChatText,
+  sendChatViewOnceMedia,
+  setChatConversationBlocked,
+  subscribeChatStore,
+  updateChatParticipantAlias,
+} from "@/lib/chat-store";
 import { ads } from "@/lib/mock-data";
 import type { AvailabilityStatus, Conversation, Message, ProfessionalAd } from "@/lib/types";
 import { useAuthSession } from "@/lib/auth-session";
@@ -240,9 +243,14 @@ type ToastState = { title: string; message: string; type?: "success" | "error" |
 export function ChatScreen() {
   const { isLoggedIn, user, role } = useAuthSession();
   const { isPremium, canSendViewOnce } = usePremiumPlan();
-  const initialSnapshot = getCachedChatSnapshot();
-  const [localConversations, setLocalConversations] = useState<Conversation[]>(() => initialSnapshot?.conversations ?? []);
-  const [localMessages, setLocalMessages] = useState<Message[]>(() => initialSnapshot?.messages ?? []);
+  ensureChatStore();
+  const snapshot = useSyncExternalStore(
+    subscribeChatStore,
+    getChatStoreSnapshot,
+    getServerChatStoreSnapshot,
+  );
+  const localConversations = snapshot.conversations;
+  const localMessages = snapshot.messages;
   const [activeConversationId, setActiveConversationId] = useState("");
   const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
@@ -251,7 +259,6 @@ export function ChatScreen() {
   const [renameDraft, setRenameDraft] = useState("");
   const [draft, setDraft] = useState("");
   const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(() => !initialSnapshot);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState>(null);
   const aliasFromUser = user?.alias ?? "Cliente reservado";
@@ -324,56 +331,14 @@ export function ChatScreen() {
     window.setTimeout(() => setToast(null), 3600);
   };
 
-  const loadChat = async (options?: { showLoading?: boolean }) => {
-    const showLoading = options?.showLoading ?? !getCachedChatSnapshot();
-
-    if (showLoading) {
-      setIsLoading(true);
-    }
-
-    setLoadError(null);
-
+  const loadChat = () => {
     try {
-      const snapshot = await getChatSnapshot();
-      setLocalConversations(snapshot.conversations);
-      setLocalMessages(snapshot.messages);
-      setActiveConversationId((current) => current || snapshot.conversations[0]?.id || "");
+      reseedChatStore();
+      setLoadError(null);
     } catch {
       setLoadError("Não foi possível carregar suas conversas agora.");
-    } finally {
-      setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void getChatSnapshot()
-      .then((snapshot) => {
-        if (cancelled) {
-          return;
-        }
-
-        setLocalConversations(snapshot.conversations);
-        setLocalMessages(snapshot.messages);
-        setActiveConversationId((current) => current || snapshot.conversations[0]?.id || "");
-        setLoadError(null);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setLoadError("Não foi possível carregar suas conversas agora.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 767px)");
@@ -422,35 +387,6 @@ export function ChatScreen() {
     return () => window.clearTimeout(timeout);
   }, [lastSentMessageId]);
 
-  useEffect(() => {
-    if (localConversations.length === 0 && localMessages.length === 0) {
-      return;
-    }
-
-    publishChatSnapshot(localConversations, localMessages);
-  }, [localConversations, localMessages]);
-
-  const markConversationAsRead = (conversationId: string) => {
-    setLocalConversations((previous) => {
-      const conversation = previous.find((item) => item.id === conversationId);
-      if (!conversation || conversation.unread === 0) {
-        return previous;
-      }
-
-      return previous.map((item) => (
-        item.id === conversationId ? { ...item, unread: 0 } : item
-      ));
-    });
-  };
-
-  const syncConversationPreview = (conversationId: string, lastMessage: string) => {
-    setLocalConversations((previous) => previous.map((conversation) => (
-      conversation.id === conversationId
-        ? { ...conversation, lastMessage, lastMessageAt: "agora", unread: 0 }
-        : conversation
-    )));
-  };
-
   const openConversation = (conversationId: string) => {
     markConversationAsRead(conversationId);
     setActiveConversationId(conversationId);
@@ -464,38 +400,14 @@ export function ChatScreen() {
     const content = draft.trim();
     if (!content || !activeConversation || activeConversation.isBlocked) return;
 
-    const optimisticId = `local-${Date.now()}`;
-    const optimisticMessage: Message = {
-      id: optimisticId,
-      conversationId: activeConversation.id,
-      senderId: "current-user",
-      senderRole: "cliente",
-      senderDisplayName: currentDisplayName,
-      from: "me",
-      content,
-      messageType: "text",
-      status: "sending",
-      sentAt: "agora",
-      deliveredAt: null,
-      editedAt: null,
-      deletedAt: null,
-    };
-
-    setLocalMessages((previous) => [...previous, optimisticMessage]);
-    syncConversationPreview(activeConversation.id, content);
-    setLastSentMessageId(optimisticId);
     setDraft("");
-
-    try {
-      const confirmed = await sendTextMessage(activeConversation.id, content, currentDisplayName);
-      setLocalMessages((previous) => previous.map((message) => (
-        message.id === optimisticId ? confirmed : message
-      )));
-      setLastSentMessageId(confirmed.id);
-    } catch {
-      setLocalMessages((previous) => previous.map((message) => (
-        message.id === optimisticId ? { ...message, status: "failed" } : message
-      )));
+    const result = await sendChatText(activeConversation.id, content, currentDisplayName);
+    if (result.ok) {
+      setLastSentMessageId(result.messageId);
+      return;
+    }
+    if (result.messageId) {
+      setLastSentMessageId(result.messageId);
     }
   };
 
@@ -523,46 +435,17 @@ export function ChatScreen() {
       return;
     }
 
-    const optimisticId = `local-media-${Date.now()}`;
-    const optimisticMessage: Message = {
-      id: optimisticId,
-      conversationId: activeConversation.id,
-      senderId: "current-user",
-      senderRole: "cliente",
-      senderDisplayName: currentDisplayName,
-      from: "me",
-      messageType: "media",
-      status: "sending",
-      media: {
-        id: `local-asset-${Date.now()}`,
-        kind: "image",
-        name: "Mídia temporária",
-        isViewOnce: true,
-        openedAt: null,
-      },
-      sentAt: "agora",
-      deliveredAt: null,
-      editedAt: null,
-      deletedAt: null,
-    };
-
-    setLocalMessages((previous) => [...previous, optimisticMessage]);
-    syncConversationPreview(activeConversation.id, "Mídia temporária");
-    setLastSentMessageId(optimisticId);
     setViewOnceModalOpen(false);
     setAttachmentMenuOpen(false);
 
-    try {
-      const confirmed = await sendViewOnceMediaMessage(activeConversation.id, currentDisplayName);
-      setLocalMessages((previous) => previous.map((message) => (
-        message.id === optimisticId ? confirmed : message
-      )));
-      setLastSentMessageId(confirmed.id);
+    const result = await sendChatViewOnceMedia(activeConversation.id, currentDisplayName);
+    if (result.ok) {
+      setLastSentMessageId(result.messageId);
       showToast({ title: "Mídia temporária enviada", message: "Ela aparecerá como visualização única na conversa.", type: "success" });
-    } catch {
-      setLocalMessages((previous) => previous.map((message) => (
-        message.id === optimisticId ? { ...message, status: "failed" } : message
-      )));
+      return;
+    }
+    if (result.messageId) {
+      setLastSentMessageId(result.messageId);
     }
   };
 
@@ -587,23 +470,24 @@ export function ChatScreen() {
 
   const saveParticipantAlias = async () => {
     if (!activeConversation) return;
-
     const sanitized = renameDraft.trim();
-    // Optimistic update
-    setLocalConversations((previous) => previous.map((conversation) => (
-      conversation.id === activeConversation.id
-        ? { ...conversation, currentUserAlias: sanitized || undefined }
-        : conversation
-    )));
     setRenameModalOpen(false);
-    showToast({ title: "Apelido atualizado", message: sanitized ? "Este apelido será usado nesta conversa." : "A conversa voltou a usar seu apelido geral.", type: "success" });
-
-    // Persist via service (no-op em mock, chamada real quando backend estiver pronto)
-    try {
-      await apiUpdateParticipantAlias(activeConversation.id, sanitized || null);
-    } catch {
-      // Silencia no modo mock; em produção, considerar reverter o estado ou logar o erro
+    const result = await updateChatParticipantAlias(activeConversation.id, sanitized || null);
+    if (result.ok) {
+      showToast({
+        title: "Apelido atualizado",
+        message: sanitized
+          ? "Este apelido será usado nesta conversa."
+          : "A conversa voltou a usar seu apelido geral.",
+        type: "success",
+      });
+      return;
     }
+    showToast({
+      title: "Não foi possível salvar",
+      message: "Tente novamente em instantes.",
+      type: "error",
+    });
   };
 
   const saveGlobalAlias = () => {
@@ -618,57 +502,56 @@ export function ChatScreen() {
     if (!activeConversation) return;
 
     const conversationId = activeConversation.id;
-    const now = new Date().toISOString();
-    // Optimistic update
-    setLocalConversations((previous) => previous.map((conversation) => (
-      conversation.id === conversationId ? { ...conversation, deletedFromInboxAt: now } : conversation
-    )));
     setProfilePanelOpen(false);
     setDeleteModalOpen(false);
     setMobileConversationOpen(false);
-    showToast({ title: "Conversa removida", message: "Ela saiu da sua caixa de entrada.", type: "success" });
 
-    try {
-      await apiDeleteConversationFromInbox(conversationId);
-    } catch {
-      // Silencia no modo mock; em produção, considerar reverter o estado
+    const result = await deleteChatConversationFromInbox(conversationId);
+    if (result.ok) {
+      showToast({ title: "Conversa removida", message: "Ela saiu da sua caixa de entrada.", type: "success" });
+      return;
     }
+    showToast({
+      title: "Não foi possível excluir",
+      message: "Tente novamente em instantes.",
+      type: "error",
+    });
   };
 
   const handleBlockUser = async () => {
     if (!activeConversation) return;
 
-    // Optimistic update
-    setLocalConversations((previous) => previous.map((conversation) => (
-      conversation.id === activeConversation.id ? { ...conversation, isBlocked: true } : conversation
-    )));
     setProfilePanelOpen(false);
     setBlockModalOpen(false);
-    showToast({ title: "Usuário bloqueado", message: "Novas mensagens ficam desativadas nesta conversa.", type: "success" });
 
-    try {
-      await apiSetConversationBlocked(activeConversation.id, true);
-    } catch {
-      // Silencia no modo mock
+    const result = await setChatConversationBlocked(activeConversation.id, true);
+    if (result.ok) {
+      showToast({ title: "Usuário bloqueado", message: "Novas mensagens ficam desativadas nesta conversa.", type: "success" });
+      return;
     }
+    showToast({
+      title: "Não foi possível bloquear",
+      message: "Tente novamente em instantes.",
+      type: "error",
+    });
   };
 
   const handleUnblockUser = async () => {
     if (!activeConversation) return;
 
-    // Optimistic update
-    setLocalConversations((previous) => previous.map((conversation) => (
-      conversation.id === activeConversation.id ? { ...conversation, isBlocked: false } : conversation
-    )));
     setProfilePanelOpen(false);
     setBlockModalOpen(false);
-    showToast({ title: "Usuário desbloqueado", message: "O envio de mensagens foi reativado nesta conversa.", type: "success" });
 
-    try {
-      await apiSetConversationBlocked(activeConversation.id, false);
-    } catch {
-      // Silencia no modo mock
+    const result = await setChatConversationBlocked(activeConversation.id, false);
+    if (result.ok) {
+      showToast({ title: "Usuário desbloqueado", message: "O envio de mensagens foi reativado nesta conversa.", type: "success" });
+      return;
     }
+    showToast({
+      title: "Não foi possível desbloquear",
+      message: "Tente novamente em instantes.",
+      type: "error",
+    });
   };
 
   const handleReportConversation = async () => {
@@ -678,13 +561,17 @@ export function ChatScreen() {
     setReportModalOpen(false);
     setProfilePanelOpen(false);
     setReportReason("");
-    showToast({ title: "Denúncia registrada", message: "A denúncia foi enviada para análise pela equipe.", type: "success" });
 
-    try {
-      await apiReportConversation(activeConversation.id, reason);
-    } catch {
-      // Silencia no modo mock
+    const result = await reportChatConversation(activeConversation.id, reason);
+    if (result.ok) {
+      showToast({ title: "Denúncia registrada", message: "A denúncia foi enviada para análise pela equipe.", type: "success" });
+      return;
     }
+    showToast({
+      title: "Não foi possível denunciar",
+      message: "Tente novamente em instantes.",
+      type: "error",
+    });
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -803,24 +690,12 @@ export function ChatScreen() {
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            {isLoading ? (
-              <div className="space-y-2 p-2.5">
-                {[0, 1, 2].map((item) => (
-                  <div key={item} className="flex items-center gap-3 rounded-2xl border border-zinc-100 bg-white p-3">
-                    <div className="h-12 w-12 animate-pulse rounded-full bg-zinc-200" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-3 w-28 animate-pulse rounded bg-zinc-200" />
-                      <div className="h-3 w-44 animate-pulse rounded bg-zinc-100" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : loadError ? (
+            {loadError ? (
               <div className="flex min-h-full items-center justify-center p-6 text-center">
                 <div>
                   <WifiOff className="mx-auto text-zinc-400" size={28} />
                   <p className="mt-3 text-sm font-semibold text-zinc-800">{loadError}</p>
-                  <Button className="mt-4" variant="secondary" size="sm" onClick={() => void loadChat()}>
+                  <Button className="mt-4" variant="secondary" size="sm" onClick={loadChat}>
                     <RefreshCcw size={15} />
                     Tentar novamente
                   </Button>
