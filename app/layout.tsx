@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
+import { AgeGateGate } from "@/components/layout/age-gate-gate";
 import { MobileNavHost } from "@/components/layout/mobile-nav-host";
 import "./globals.css";
 
@@ -54,8 +55,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={`${manrope.variable} ${cormorant.variable} antialiased`}>
-        {children}
-        <MobileNavHost />
+        <AgeGateGate>
+          {children}
+          <MobileNavHost />
+        </AgeGateGate>
       </body>
     </html>
   );

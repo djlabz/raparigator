@@ -13,6 +13,7 @@ export default defineConfig({
   },
   use: {
     baseURL: 'http://localhost:3000',
+    storageState: 'tests/storage/age-verified.json',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
