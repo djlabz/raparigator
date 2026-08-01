@@ -16,4 +16,18 @@ test.describe('Feed', () => {
     await expect(page.getByRole('button', { name: 'Livre Agora' }).first()).toBeVisible();
     await expect(page.getByRole('button', { name: /Com local/i }).first()).toBeVisible();
   });
+
+  test('filtro Premium restringe a lista a anúncios premium', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto('/feed');
+
+    await page
+      .locator('[data-feed-filters-panel]')
+      .getByRole('button', { name: 'Premium' })
+      .click();
+
+    await expect(page.getByText('Luna Velvet').first()).toBeVisible();
+    await expect(page.getByText('Valentina Noir')).toHaveCount(0);
+    await expect(page.getByText('Outras modelos')).toHaveCount(0);
+  });
 });
