@@ -92,6 +92,10 @@ export function TabsKeepAlive({ children }: PropsWithChildren) {
   useLayoutEffect(() => {
     consumeTabDirection();
 
+    // #region agent log
+    fetch('http://127.0.0.1:7646/ingest/d82e9f74-3e06-47f8-a7a0-3b4681263fb3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'900cae'},body:JSON.stringify({sessionId:'900cae',runId:'pre-fix',hypothesisId:'A',location:'tabs-keep-alive.tsx:transition-effect',message:'tab transition effect',data:{href:transition.href,direction:transition.direction,enterOffset:getEnterOffset(transition.direction),animating},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+
     if (transition.direction === 0) {
       panelX.set(0);
       panelOpacity.set(1);
@@ -104,6 +108,9 @@ export function TabsKeepAlive({ children }: PropsWithChildren) {
     const opacityAnim = animate(panelOpacity, 1, {
       ...panelTransition,
       onComplete: () => {
+        // #region agent log
+        fetch('http://127.0.0.1:7646/ingest/d82e9f74-3e06-47f8-a7a0-3b4681263fb3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'900cae'},body:JSON.stringify({sessionId:'900cae',runId:'pre-fix',hypothesisId:'A',location:'tabs-keep-alive.tsx:anim-complete',message:'tab enter animation complete',data:{href:transition.href,direction:transition.direction},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         setAnimating(false);
       },
     });
