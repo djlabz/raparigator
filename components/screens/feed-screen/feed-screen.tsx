@@ -201,33 +201,16 @@ export function FeedScreen() {
 
   useLayoutEffect(() => {
     const anchor = filtersAnchorRef.current;
-    if (!anchor) {
+    if (!anchor || !isTabActive) {
       return;
     }
 
     const sync = () => {
       const rect = anchor.getBoundingClientRect();
-      setFiltersFixedBox({ left: rect.left, width: rect.width });
-
-      // #region agent log
-      const panel = document.querySelector("[data-feed-filters-panel]") as HTMLElement | null;
-      const panelRect = panel?.getBoundingClientRect();
-      let node: HTMLElement | null = panel;
-      const transformedAncestors: Array<{ tag: string; transform: string; className: string }> = [];
-      while (node) {
-        const style = window.getComputedStyle(node);
-        if (style.transform && style.transform !== "none") {
-          transformedAncestors.push({
-            tag: node.tagName.toLowerCase(),
-            transform: style.transform,
-            className: typeof node.className === "string" ? node.className.slice(0, 120) : "",
-          });
-        }
-        node = node.parentElement;
+      if (rect.width <= 0) {
+        return;
       }
-      const position = panel ? window.getComputedStyle(panel).position : null;
-      fetch('http://127.0.0.1:7646/ingest/d82e9f74-3e06-47f8-a7a0-3b4681263fb3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'900cae'},body:JSON.stringify({sessionId:'900cae',runId:'pre-fix',hypothesisId:'A,B,C',location:'feed-screen.tsx:filters-sync',message:'filters position sync',data:{isTabActive,anchorLeft:rect.left,anchorWidth:rect.width,anchorTop:rect.top,panelLeft:panelRect?.left??null,panelWidth:panelRect?.width??null,panelTop:panelRect?.top??null,position,transformedAncestors,overlapDelta:panelRect&&rect?panelRect.left-rect.left:null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
+      setFiltersFixedBox({ left: rect.left, width: rect.width });
     };
 
     sync();
@@ -239,42 +222,6 @@ export function FeedScreen() {
       window.removeEventListener("resize", sync);
     };
   }, [isTabActive]);
-
-  useLayoutEffect(() => {
-    if (!isTabActive) {
-      return;
-    }
-
-    // #region agent log
-    const probe = () => {
-      const panel = document.querySelector("[data-feed-filters-panel]") as HTMLElement | null;
-      const anchor = filtersAnchorRef.current;
-      if (!panel || !anchor) {
-        return;
-      }
-      const panelRect = panel.getBoundingClientRect();
-      const anchorRect = anchor.getBoundingClientRect();
-      let node: HTMLElement | null = panel;
-      let hasTransformAncestor = false;
-      while (node) {
-        const style = window.getComputedStyle(node);
-        if (style.transform && style.transform !== "none") {
-          hasTransformAncestor = true;
-          break;
-        }
-        node = node.parentElement;
-      }
-      fetch('http://127.0.0.1:7646/ingest/d82e9f74-3e06-47f8-a7a0-3b4681263fb3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'900cae'},body:JSON.stringify({sessionId:'900cae',runId:'pre-fix',hypothesisId:'A,D,E',location:'feed-screen.tsx:active-probe',message:'feed active filter probe',data:{filtersFixedBox,panelLeft:panelRect.left,anchorLeft:anchorRect.left,overlapDelta:panelRect.left-anchorRect.left,hasTransformAncestor,position:window.getComputedStyle(panel).position},timestamp:Date.now()})}).catch(()=>{});
-    };
-    probe();
-    const t1 = window.setTimeout(probe, 50);
-    const t2 = window.setTimeout(probe, 220);
-    return () => {
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-    };
-    // #endregion
-  }, [isTabActive, filtersFixedBox]);
 
   const setFiltersScrollNode = useCallback((node: HTMLDivElement | null) => {
     const previous = filtersScrollRef.current as

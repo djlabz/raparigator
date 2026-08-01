@@ -25,14 +25,6 @@ const panelTransition = {
   ease: [0.22, 1, 0.36, 1] as const,
 };
 
-function getEnterOffset(direction: TabDirection) {
-  if (direction === 0) {
-    return 0;
-  }
-
-  return direction > 0 ? 8 : -8;
-}
-
 type PanelCache = {
   order: string[];
   nodes: Record<string, ReactNode>;
@@ -43,7 +35,6 @@ export function TabsKeepAlive({ children }: PropsWithChildren) {
   const { role } = useAuthSession();
   const items = getNavigationItems(role);
   const activeHref = getTabHrefForPathname(pathname, items) ?? pathname;
-  const panelX = useMotionValue(0);
   const panelOpacity = useMotionValue(1);
   const [animating, setAnimating] = useState(false);
   const [cache, setCache] = useState<PanelCache>(() => ({
@@ -92,34 +83,23 @@ export function TabsKeepAlive({ children }: PropsWithChildren) {
   useLayoutEffect(() => {
     consumeTabDirection();
 
-    // #region agent log
-    fetch('http://127.0.0.1:7646/ingest/d82e9f74-3e06-47f8-a7a0-3b4681263fb3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'900cae'},body:JSON.stringify({sessionId:'900cae',runId:'pre-fix',hypothesisId:'A',location:'tabs-keep-alive.tsx:transition-effect',message:'tab transition effect',data:{href:transition.href,direction:transition.direction,enterOffset:getEnterOffset(transition.direction),animating},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-
     if (transition.direction === 0) {
-      panelX.set(0);
       panelOpacity.set(1);
       return;
     }
 
-    panelX.set(getEnterOffset(transition.direction));
     panelOpacity.set(0.92);
-    const xAnim = animate(panelX, 0, panelTransition);
     const opacityAnim = animate(panelOpacity, 1, {
       ...panelTransition,
       onComplete: () => {
-        // #region agent log
-        fetch('http://127.0.0.1:7646/ingest/d82e9f74-3e06-47f8-a7a0-3b4681263fb3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'900cae'},body:JSON.stringify({sessionId:'900cae',runId:'pre-fix',hypothesisId:'A',location:'tabs-keep-alive.tsx:anim-complete',message:'tab enter animation complete',data:{href:transition.href,direction:transition.direction},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         setAnimating(false);
       },
     });
 
     return () => {
-      xAnim.stop();
       opacityAnim.stop();
     };
-  }, [transition.href, transition.direction, panelX, panelOpacity]);
+  }, [transition.href, transition.direction, panelOpacity]);
 
   useLayoutEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -155,10 +135,7 @@ export function TabsKeepAlive({ children }: PropsWithChildren) {
               style={{ display: active ? "block" : "none" }}
             >
               {motionActive ? (
-                <motion.div
-                  style={{ x: panelX, opacity: panelOpacity }}
-                  className="will-change-transform"
-                >
+                <motion.div style={{ opacity: panelOpacity }}>
                   {node}
                 </motion.div>
               ) : (
