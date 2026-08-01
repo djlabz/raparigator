@@ -9,8 +9,24 @@ import { cn } from "@/lib/utils";
 import { BadgeDollarSign, Clock3, Edit, Image as ImageIcon, Lock, CreditCard, Undo, Redo } from "lucide-react";
 import { PixIcon } from "@/components/ui/pix-icon";
 import { CashIcon } from "@/components/ui/cash-icon";
-import type { AdPreview, AdStatus, AvailabilityDay, LocationAddress, PricingItem, ProfileCharacteristics, ProfileFormState, ServiceOption } from "./types";
-import { useProfileForm } from "./use-profile-form";
+import type { AdPreview, AdStatus } from "./types";
+import {
+  useAnnouncementDraft,
+  getPublishValidationErrors,
+  isHairSelectionComplete,
+  isSelectUnselected,
+  OPTIMIZE_SECTION_ORDER,
+  SECTION_LABELS,
+} from "@/lib/announcement-draft";
+import type {
+  AnnouncementCharacteristics,
+  AnnouncementLocationAddress,
+  AnnouncementPricingItem,
+  AnnouncementPublishWarningItem,
+  AnnouncementSectionKey,
+  AnnouncementServiceOption,
+  AvailabilityDay,
+} from "@/lib/announcement-draft-types";
 import { ImageCropperModal, type Area } from "@/components/ui/image-cropper-modal";
 import { ImageBlurModal, type ImageBlurResult } from "@/components/ui/image-blur-modal";
 import { Select } from "@/components/ui/select";
@@ -39,20 +55,6 @@ const HAIR_COLOR_OPTIONS = [SELECT_PLACEHOLDER, "Preto", "Castanho", "Loiro", "R
 const SMOKER_OPTIONS = [SELECT_PLACEHOLDER, "Sim", "Não"];
 const HAIR_SELECTION_SEPARATOR = "::";
 type VisibilityStatus = "Ativo" | "Pausado" | "Invisível";
-type SectionKey = "characteristics" | "pricing" | "location" | "description" | "services" | "availability";
-const SECTION_LABELS: Record<SectionKey, string> = {
-  characteristics: "Características físicas",
-  pricing: "Tabela de preços",
-  location: "Localização",
-  description: "Descrição do Perfil",
-  services: "Serviços Oferecidos",
-  availability: "Horários de Disponibilidade",
-};
-type PublishWarningItem = {
-  kind: "required" | "unsaved";
-  section: SectionKey;
-  label: string;
-};
 const MAX_LOCATION_ADDRESSES = 10;
 const GROUP_WARNING_AUTO_DISMISS_MS = 3200;
 type LocationStatusTone = "success" | "error" | "info";
@@ -93,23 +95,6 @@ type DetectedLocation = LocationDraft & {
   longitude: number;
   displayName: string;
 };
-
-const CHARACTERISTICS_FIELD_LABELS: Record<keyof Pick<ProfileCharacteristics, "gender" | "ethnicity" | "height" | "weight" | "hairColor" | "smoker">, string> = {
-  gender: "Gênero",
-  ethnicity: "Etnia",
-  height: "Altura (cm)",
-  weight: "Peso (kg)",
-  hairColor: "Tipo e Cor do Cabelo",
-  smoker: "Fumante",
-};
-
-function isSelectUnselected(value: string) {
-  return value.trim().length === 0 || value === SELECT_PLACEHOLDER;
-}
-
-function sanitizeNumericInput(value: string, maxLength = 4) {
-  return value.replace(/\D/g, "").slice(0, maxLength);
-}
 
 function formatIntegerGroup(value: string) {
   const normalized = value.replace(/^0+(?=\d)/, "");
@@ -187,20 +172,6 @@ function serializeHairSelection(type: string, color: string) {
   return `${type}${HAIR_SELECTION_SEPARATOR}${color}`;
 }
 
-function isHairSelectionComplete(value: string) {
-  if (!value.trim() || value === SELECT_PLACEHOLDER) {
-    return false;
-  }
-
-  if (!value.includes(HAIR_SELECTION_SEPARATOR)) {
-    return true;
-  }
-
-  const { type, color } = parseHairSelection(value);
-
-  return !isSelectUnselected(type) && !isSelectUnselected(color);
-}
-
 function formatHairSelectionSummary(value: string) {
   const { type, color } = parseHairSelection(value);
 
@@ -219,7 +190,7 @@ function formatHairSelectionSummary(value: string) {
   return "Selecione o tipo e a cor";
 }
 
-function resolvePricingBillingType(item: PricingItem) {
+function resolvePricingBillingType(item: AnnouncementPricingItem) {
   if (item.billingType) {
     return item.billingType;
   }
@@ -281,7 +252,7 @@ function hasSameAddressData(a: Partial<LocationDraft>, b: Partial<LocationDraft>
   );
 }
 
-function formatLocationSummary(location: LocationAddress) {
+function formatLocationSummary(location: AnnouncementLocationAddress) {
   const parts = [location.addressLine, `${location.city}${location.state ? `, ${location.state}` : ""}`, location.country, location.notes].filter(Boolean);
   return parts.join(" • ");
 }
@@ -346,39 +317,6 @@ function sanitizeTimeInput(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 4);
   if (digits.length <= 2) return digits;
   return `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
-}
-
-function buildSectionSnapshots(form: ProfileFormState) {
-  return {
-    characteristics: JSON.stringify(form.characteristics),
-    pricing: JSON.stringify({ pricing: form.pricing, paymentMethods: form.paymentMethods }),
-    location: JSON.stringify({ locationState: form.locationState, locationCity: form.locationCity, acceptsTravel: form.acceptsTravel, locationAddresses: form.locationAddresses }),
-    description: JSON.stringify({ shortDescription: form.shortDescription, description: form.description }),
-    services: JSON.stringify(form.services),
-    availability: JSON.stringify({ showAvailability: form.showAvailability, availability: form.availability }),
-  };
-}
-
-function getPublishValidationErrors(form: ProfileFormState) {
-  const errors: string[] = [];
-  const hasCharacteristics = ![
-    isSelectUnselected(form.characteristics.gender),
-    isSelectUnselected(form.characteristics.ethnicity),
-    sanitizeNumericInput(form.characteristics.height).length === 0,
-    sanitizeNumericInput(form.characteristics.weight).length === 0,
-    !isHairSelectionComplete(form.characteristics.hairColor),
-    isSelectUnselected(form.characteristics.smoker),
-  ].some(Boolean);
-  const hasPricing = form.pricing.some((item) => !item.disabled && item.price.trim().length > 0);
-  const hasLocation = form.locationState.trim().length > 0 && form.locationCity.trim().length > 0;
-  const hasPaymentMethods = (form.paymentMethods || []).length > 0;
-
-  if (!hasCharacteristics) errors.push("Preencha os campos obrigatórios em Características físicas.");
-  if (!hasPricing) errors.push("Defina ao menos um preço ativo na Tabela de preços.");
-  if (!hasPaymentMethods) errors.push("Selecione ao menos uma forma de pagamento aceita na Tabela de preços.");
-  if (!hasLocation) errors.push("Preencha Estado e Cidade na seção Localização.");
-
-  return errors;
 }
 
 function resolveCoverIndex(coverIndex: number, imageCount: number) {
@@ -587,8 +525,22 @@ export function AnnouncementTab({
   status: AdStatus;
   onToggleStatus: () => void;
 }) {
-  const formHook = useProfileForm(ad);
-  const { form, saveStatus, hasUnsavedChanges, lastSavedAt, score, tips, updateField, updateNestedField, updateForm, manualSave } = formHook;
+  const {
+    form,
+    saveStatus,
+    hasUnsavedChanges,
+    lastSavedAt,
+    score,
+    tips,
+    sectionDirtyState,
+    updateField,
+    updateNestedField,
+    updateForm,
+    saveSection,
+    cancelSection,
+    publish,
+    isSectionReadyForOptimization,
+  } = useAnnouncementDraft(ad);
   const { isPremium, photoLimit, videoLimit } = usePremiumPlan();
   const [conversionOpen, setConversionOpen] = useState(false);
   const [conversionHighlight, setConversionHighlight] = useState<"portfolio" | undefined>(undefined);
@@ -612,14 +564,14 @@ export function AnnouncementTab({
   const [mediaHistoryMap, setMediaHistoryMap] = useState<Record<string, MediaHistoryEntry>>({});
   const visibilityStatus: VisibilityStatus = status === "Pausado" ? "Pausado" : "Ativo";
   const [publishError, setPublishError] = useState<string | null>(null);
-  const [publishErrorItems, setPublishErrorItems] = useState<PublishWarningItem[]>([]);
+  const [publishErrorItems, setPublishErrorItems] = useState<AnnouncementPublishWarningItem[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
   const [availabilityCloseSignal, setAvailabilityCloseSignal] = useState(0);
   const [isGallerySectionOpen, setIsGallerySectionOpen] = useState(true);
   const [isTipsModalOpen, setIsTipsModalOpen] = useState(false);
   const [characteristicsError, setCharacteristicsError] = useState<string | null>(null);
   const [pricingError, setPricingError] = useState<string | null>(null);
-  const [characteristicsInvalidFields, setCharacteristicsInvalidFields] = useState<Array<keyof ProfileCharacteristics>>([]);
+  const [characteristicsInvalidFields, setCharacteristicsInvalidFields] = useState<Array<keyof AnnouncementCharacteristics>>([]);
   const [isCharacteristicsShaking, setIsCharacteristicsShaking] = useState(false);
   const [isPricingShaking, setIsPricingShaking] = useState(false);
   const [isLocationSectionOpen, setIsLocationSectionOpen] = useState(false);
@@ -632,9 +584,8 @@ export function AnnouncementTab({
   const [removingLocationId, setRemovingLocationId] = useState<string | null>(null);
   const [locationStatusMessage, setLocationStatusMessage] = useState<string | null>(null);
   const [locationStatusTone, setLocationStatusTone] = useState<LocationStatusTone>("info");
-  const [savedSectionSnapshots, setSavedSectionSnapshots] = useState(() => buildSectionSnapshots(form));
-  const [highlightedSection, setHighlightedSection] = useState<SectionKey | null>(null);
-  const sectionRefs = useRef<Record<SectionKey, HTMLDivElement | null>>({
+  const [highlightedSection, setHighlightedSection] = useState<AnnouncementSectionKey | null>(null);
+  const sectionRefs = useRef<Record<AnnouncementSectionKey, HTMLDivElement | null>>({
     characteristics: null,
     pricing: null,
     location: null,
@@ -647,18 +598,6 @@ export function AnnouncementTab({
   const [isDescriptionSectionOpen, setIsDescriptionSectionOpen] = useState(false);
   const [isServicesSectionOpen, setIsServicesSectionOpen] = useState(false);
   const [isAvailabilitySectionOpen, setIsAvailabilitySectionOpen] = useState(false);
-  const sectionSnapshots = useMemo(() => buildSectionSnapshots(form), [form]);
-  const sectionDirtyState = useMemo(
-    () => ({
-      characteristics: sectionSnapshots.characteristics !== savedSectionSnapshots.characteristics,
-      pricing: sectionSnapshots.pricing !== savedSectionSnapshots.pricing,
-      location: sectionSnapshots.location !== savedSectionSnapshots.location,
-      description: sectionSnapshots.description !== savedSectionSnapshots.description,
-      services: sectionSnapshots.services !== savedSectionSnapshots.services,
-      availability: sectionSnapshots.availability !== savedSectionSnapshots.availability,
-    }),
-    [savedSectionSnapshots, sectionSnapshots],
-  );
 
   useEffect(() => {
     if (!highlightedSection) {
@@ -696,43 +635,7 @@ export function AnnouncementTab({
     return () => clearTimeout(timeoutId);
   }, [locationStatusMessage]);
 
-  const optimizeSectionOrder: SectionKey[] = ["characteristics", "pricing", "location", "description", "services", "availability"];
-
-  const isSectionReadyForOptimization = (section: SectionKey) => {
-    if (section === "characteristics") {
-      return [
-        form.characteristics.gender,
-        form.characteristics.ethnicity,
-        form.characteristics.height,
-        form.characteristics.weight,
-        form.characteristics.smoker,
-      ].every((value) => value.trim().length > 0 && value !== SELECT_PLACEHOLDER) && isHairSelectionComplete(form.characteristics.hairColor);
-    }
-
-    if (section === "pricing") {
-      return form.pricing.some((item) => !item.disabled && item.price.trim().length > 0);
-    }
-
-    if (section === "location") {
-      return form.locationState.trim().length > 0 && form.locationCity.trim().length > 0 && form.locationAddresses.some((address) => address.active);
-    }
-
-    if (section === "description") {
-      return form.shortDescription.trim().length > 0 && form.description.trim().length > 10;
-    }
-
-    if (section === "services") {
-      return form.services.some((service) => service.selected);
-    }
-
-    if (section === "availability") {
-      return form.showAvailability && form.availability.some((day) => day.enabled);
-    }
-
-    return true;
-  };
-
-  const scrollToSection = (section: SectionKey) => {
+  const scrollToSection = (section: AnnouncementSectionKey) => {
     if (section === "characteristics") {
       setIsCharacteristicsSectionOpen(true);
     }
@@ -771,7 +674,7 @@ export function AnnouncementTab({
   };
 
   const handleOptimizeNow = () => {
-    const targetSection = optimizeSectionOrder.find((section) => sectionDirtyState[section] || !isSectionReadyForOptimization(section));
+    const targetSection = OPTIMIZE_SECTION_ORDER.find((section) => sectionDirtyState[section] || !isSectionReadyForOptimization(section));
 
     if (targetSection) {
       scrollToSection(targetSection);
@@ -779,7 +682,7 @@ export function AnnouncementTab({
     }
 
     const validationErrors = getPublishValidationErrors(form);
-    const publishTarget = optimizeSectionOrder.find((section) => validationErrors.some((message) => message.includes(SECTION_LABELS[section])));
+    const publishTarget = OPTIMIZE_SECTION_ORDER.find((section) => validationErrors.some((message) => message.includes(SECTION_LABELS[section])));
 
     if (publishTarget) {
       scrollToSection(publishTarget);
@@ -967,7 +870,7 @@ export function AnnouncementTab({
     }
 
     const nextLabel = buildLocationLabel(pendingLocationDraft);
-    const nextAddress: LocationAddress = {
+    const nextAddress: AnnouncementLocationAddress = {
       id: draftEditingLocationId ?? createLocationId(),
       label: nextLabel,
       addressLine: pendingLocationDraft.addressLine.trim(),
@@ -1079,7 +982,7 @@ export function AnnouncementTab({
     pushLocationStatus("Localização ativa atualizada para o endereço detectado.", "success");
   };
 
-  const handleEditLocation = (location: LocationAddress) => {
+  const handleEditLocation = (location: AnnouncementLocationAddress) => {
     openLocationDraft(
       {
         label: location.label,
@@ -1129,7 +1032,7 @@ export function AnnouncementTab({
   };
 
   const handleTravelToggle = (enabled: boolean) => {
-    updateField("acceptsTravel", enabled, { autoSave: false });
+    updateField("acceptsTravel", enabled);
   };
 
   const statusStyles = {
@@ -1157,175 +1060,79 @@ export function AnnouncementTab({
   const handlePublish = async () => {
     if (saveStatus === "saving" || isPublishing) return;
 
-    const validationErrors = getPublishValidationErrors(form);
-    const dirtySections = (Object.keys(sectionDirtyState) as SectionKey[])
-      .filter((section) => sectionDirtyState[section])
-      .map((section) => ({ kind: "unsaved" as const, section, label: SECTION_LABELS[section] }));
+    setIsPublishing(true);
 
-    if (validationErrors.length > 0 || dirtySections.length > 0) {
-      const requiredItems: PublishWarningItem[] = [];
+    const result = await publish({ status, onActivate: onToggleStatus });
 
-      validationErrors.forEach((message) => {
-        if (message.includes("Características físicas")) {
-          requiredItems.push({ kind: "required", section: "characteristics", label: SECTION_LABELS.characteristics });
-          return;
-        }
-
-        if (message.includes("Tabela de preços")) {
-          requiredItems.push({ kind: "required", section: "pricing", label: SECTION_LABELS.pricing });
-          return;
-        }
-
-        if (message.includes("Localização")) {
-          requiredItems.push({ kind: "required", section: "location", label: SECTION_LABELS.location });
-          return;
-        }
-
-        if (message.includes("Descrição do Perfil")) {
-          requiredItems.push({ kind: "required", section: "description", label: SECTION_LABELS.description });
-        }
-      });
-
-      const blockingItems = [...requiredItems, ...dirtySections];
-
-      setPublishErrorItems(blockingItems);
-      setPublishError("Há pendências nos grupos abaixo.");
+    if (!result.ok) {
+      setPublishError(result.message);
+      setPublishErrorItems(result.reason === "blocked" ? result.items : []);
+      setIsPublishing(false);
       return;
     }
 
     setPublishError(null);
     setPublishErrorItems([]);
-    setIsPublishing(true);
-
-    const saveResult = await manualSave();
-    if (saveResult === "error") {
-      setPublishError("Não deu pra publicar agora, amor. Tenta de novo em um instante?");
-      setPublishErrorItems([]);
-      setIsPublishing(false);
-      return;
-    }
-
-    setSavedSectionSnapshots(buildSectionSnapshots(form));
-    if (status !== "Ativo") {
-      onToggleStatus();
-    }
     setIsPublishing(false);
   };
 
-  const cancelSectionChanges = (section: SectionKey) => {
+  const handleCancelSection = (section: AnnouncementSectionKey) => {
     if (!sectionDirtyState[section] || saveStatus === "saving") {
       return;
     }
 
+    cancelSection(section);
+
     if (section === "characteristics") {
-      const savedCharacteristics = JSON.parse(savedSectionSnapshots.characteristics) as ProfileCharacteristics;
-      updateField("characteristics", savedCharacteristics, { autoSave: false });
       setCharacteristicsInvalidFields([]);
       setCharacteristicsError(null);
     }
 
     if (section === "pricing") {
-      const parsed = JSON.parse(savedSectionSnapshots.pricing);
-      const isLegacy = Array.isArray(parsed);
-      updateForm((current) => ({
-        ...current,
-        pricing: isLegacy ? parsed : parsed.pricing,
-        paymentMethods: isLegacy || !parsed.paymentMethods || parsed.paymentMethods.length === 0 ? ["dinheiro"] : parsed.paymentMethods,
-      }), { autoSave: false });
       setPricingError(null);
     }
 
     if (section === "location") {
-      const savedLocation = JSON.parse(savedSectionSnapshots.location) as Pick<ProfileFormState, "locationState" | "locationCity" | "acceptsTravel" | "locationAddresses">;
-      updateForm((current) => ({
-        ...current,
-        locationState: savedLocation.locationState,
-        locationCity: savedLocation.locationCity,
-        acceptsTravel: savedLocation.acceptsTravel,
-        locationAddresses: savedLocation.locationAddresses,
-      }));
       setHighlightedLocationId(null);
       setLocationStatusMessage(null);
-    }
-
-    if (section === "description") {
-      const savedDescription = JSON.parse(savedSectionSnapshots.description) as Pick<ProfileFormState, "shortDescription" | "description">;
-      updateForm((current) => ({
-        ...current,
-        shortDescription: savedDescription.shortDescription,
-        description: savedDescription.description,
-      }));
-    }
-
-    if (section === "services") {
-      const savedServices = JSON.parse(savedSectionSnapshots.services) as ServiceOption[];
-      updateField("services", savedServices, { autoSave: false });
-    }
-
-    if (section === "availability") {
-      const savedAvailability = JSON.parse(savedSectionSnapshots.availability) as Pick<ProfileFormState, "showAvailability" | "availability">;
-      updateForm((current) => ({
-        ...current,
-        showAvailability: savedAvailability.showAvailability,
-        availability: savedAvailability.availability,
-      }), { autoSave: false });
     }
 
     setPublishError(null);
     setPublishErrorItems([]);
   };
 
-  const saveSection = async (section: SectionKey) => {
-    if (!sectionDirtyState[section] || saveStatus === "saving") {
-      return;
-    }
+  const handleSaveSection = async (section: AnnouncementSectionKey) => {
+    const result = await saveSection(section);
 
-    if (section === "characteristics") {
-      const requiredKeys: Array<keyof Pick<ProfileCharacteristics, "gender" | "ethnicity" | "height" | "weight" | "hairColor" | "smoker">> = ["gender", "ethnicity", "height", "weight", "hairColor", "smoker"];
-      const missing = requiredKeys.filter((key) => {
-        const value = form.characteristics[key];
-
-        if (key === "hairColor") {
-          return !isHairSelectionComplete(value);
-        }
-
-        if (key === "height" || key === "weight") {
-          return sanitizeNumericInput(value).length === 0;
-        }
-        return isSelectUnselected(value);
-      });
-
-      if (missing.length > 0) {
-        setCharacteristicsInvalidFields(missing);
-        setCharacteristicsError(`Campo ${missing.map((field) => CHARACTERISTICS_FIELD_LABELS[field]).join(", ")} não preenchido`);
+    if (!result.ok) {
+      if (result.reason === "characteristics") {
+        setCharacteristicsInvalidFields(result.missing);
+        setCharacteristicsError(result.message);
         setIsCharacteristicsShaking(true);
         setTimeout(() => setIsCharacteristicsShaking(false), 420);
         return;
       }
 
+      if (result.reason === "pricing") {
+        setPricingError(result.message);
+        setIsPricingShaking(true);
+        setTimeout(() => setIsPricingShaking(false), 420);
+      }
+
+      return;
+    }
+
+    if (section === "characteristics") {
       setCharacteristicsInvalidFields([]);
       setCharacteristicsError(null);
     }
 
     if (section === "pricing") {
-      const hasPaymentMethods = (form.paymentMethods || []).length > 0;
-      if (!hasPaymentMethods) {
-        setPricingError("Ao menos uma modalidade de pagamento deve ser selecionada.");
-        setIsPricingShaking(true);
-        setTimeout(() => setIsPricingShaking(false), 420);
-        return;
-      }
       setPricingError(null);
     }
 
-    const saveResult = await manualSave();
-    if (saveResult !== "error" && saveResult !== "busy") {
-      setSavedSectionSnapshots(buildSectionSnapshots(form));
-      setPublishError(null);
-      if (section === "pricing") {
-        setPricingError(null);
-      }
-    }
+    setPublishError(null);
+    setPublishErrorItems([]);
   };
 
   return (
@@ -1521,7 +1328,7 @@ export function AnnouncementTab({
                     ...current,
                     images: [...current.images, result],
                     coverPreviews: [...current.coverPreviews, ""],
-                  }), { autoSave: false });
+                  }));
                 };
                 reader.readAsDataURL(file);
               });
@@ -1749,7 +1556,7 @@ export function AnnouncementTab({
                         ...current,
                         images: [...current.images, result],
                         coverPreviews: [...current.coverPreviews, ""],
-                      }), { autoSave: false });
+                      }));
                     };
                     reader.readAsDataURL(file);
                   });
@@ -1767,7 +1574,7 @@ export function AnnouncementTab({
             />
           </SectionCard>
 
-          <SectionCard sectionRef={(node) => { sectionRefs.current.characteristics = node; }} title="Características físicas" requiredAsterisk dirty={sectionDirtyState.characteristics} showSaveAction onSaveAction={() => saveSection("characteristics")} onCancelAction={() => cancelSectionChanges("characteristics")} saveDisabled={saveStatus === "saving"} open={isCharacteristicsSectionOpen} onOpenChange={setIsCharacteristicsSectionOpen} highlighted={highlightedSection === "characteristics"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}>
+          <SectionCard sectionRef={(node) => { sectionRefs.current.characteristics = node; }} title="Características físicas" requiredAsterisk dirty={sectionDirtyState.characteristics} showSaveAction onSaveAction={() => handleSaveSection("characteristics")} onCancelAction={() => handleCancelSection("characteristics")} saveDisabled={saveStatus === "saving"} open={isCharacteristicsSectionOpen} onOpenChange={setIsCharacteristicsSectionOpen} highlighted={highlightedSection === "characteristics"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}>
             <CharacteristicsSection
               characteristics={form.characteristics}
               invalidFields={characteristicsInvalidFields}
@@ -1791,25 +1598,21 @@ export function AnnouncementTab({
                 setCharacteristicsError(null);
 
                 if ((field === "gender" || field === "ethnicity" || field === "hairColor" || field === "smoker") && sanitizedValue === SELECT_PLACEHOLDER) {
-                  updateField(
-                    "characteristics",
-                    {
-                      ...form.characteristics,
-                      [field]: sanitizedValue,
-                      height: "",
-                      weight: "",
-                    },
-                    { autoSave: false },
-                  );
+                  updateField("characteristics", {
+                    ...form.characteristics,
+                    [field]: sanitizedValue,
+                    height: "",
+                    weight: "",
+                  });
                   return;
                 }
 
-                updateNestedField("characteristics", field, sanitizedValue, { autoSave: false });
+                updateNestedField("characteristics", field, sanitizedValue);
               }}
             />
           </SectionCard>
 
-          <SectionCard sectionRef={(node) => { sectionRefs.current.pricing = node; }} title="Tabela de preços" requiredAsterisk dirty={sectionDirtyState.pricing} showSaveAction onSaveAction={() => saveSection("pricing")} onCancelAction={() => cancelSectionChanges("pricing")} saveDisabled={saveStatus === "saving"} open={isPricingSectionOpen} onOpenChange={setIsPricingSectionOpen} highlighted={highlightedSection === "pricing"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
+          <SectionCard sectionRef={(node) => { sectionRefs.current.pricing = node; }} title="Tabela de preços" requiredAsterisk dirty={sectionDirtyState.pricing} showSaveAction onSaveAction={() => handleSaveSection("pricing")} onCancelAction={() => handleCancelSection("pricing")} saveDisabled={saveStatus === "saving"} open={isPricingSectionOpen} onOpenChange={setIsPricingSectionOpen} highlighted={highlightedSection === "pricing"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
             <PricingSection
               pricing={form.pricing}
               paymentMethods={form.paymentMethods || []}
@@ -1817,11 +1620,11 @@ export function AnnouncementTab({
               isShaking={isPricingShaking}
               onUpdate={(idx: number, field: string, value: string | number) => {
                 const next = form.pricing.map((p, i) => i === idx ? { ...p, [field]: field === "price" ? String(value).replace(/\D/g, "") : value } : p);
-                updateField("pricing", next, { autoSave: false });
+                updateField("pricing", next);
               }}
               onToggleDisabled={(idx: number) => {
                 const next = form.pricing.map((p, i) => i === idx ? { ...p, disabled: !p.disabled } : p);
-                updateField("pricing", next, { autoSave: false });
+                updateField("pricing", next);
               }}
               onToggleMethod={(methodId: string) => {
                 const currentMethods = form.paymentMethods || [];
@@ -1834,13 +1637,13 @@ export function AnnouncementTab({
                 const next = currentMethods.includes(methodId)
                   ? form.paymentMethods.filter((id) => id !== methodId)
                   : [...form.paymentMethods, methodId];
-                updateField("paymentMethods", next, { autoSave: false });
+                updateField("paymentMethods", next);
                 setPricingError(null);
               }}
             />
           </SectionCard>
 
-          <SectionCard sectionRef={(node) => { sectionRefs.current.location = node; }} title="Localização" requiredAsterisk dirty={sectionDirtyState.location} showSaveAction onSaveAction={() => saveSection("location")} onCancelAction={() => cancelSectionChanges("location")} saveDisabled={saveStatus === "saving"} open={isLocationSectionExpanded} onOpenChange={setIsLocationSectionOpen} highlighted={highlightedSection === "location"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}>
+          <SectionCard sectionRef={(node) => { sectionRefs.current.location = node; }} title="Localização" requiredAsterisk dirty={sectionDirtyState.location} showSaveAction onSaveAction={() => handleSaveSection("location")} onCancelAction={() => handleCancelSection("location")} saveDisabled={saveStatus === "saving"} open={isLocationSectionExpanded} onOpenChange={setIsLocationSectionOpen} highlighted={highlightedSection === "location"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}>
             <LocationSection
               addresses={form.locationAddresses}
               activeLocation={activeLocation}
@@ -1864,45 +1667,45 @@ export function AnnouncementTab({
             <h2 className="text-xl font-bold text-zinc-900">Informações Opcionais</h2>
           </div>
 
-          <SectionCard sectionRef={(node) => { sectionRefs.current.description = node; }} title="Descrição do Perfil" dirty={sectionDirtyState.description} showSaveAction onSaveAction={() => saveSection("description")} onCancelAction={() => cancelSectionChanges("description")} saveDisabled={saveStatus === "saving"} open={isDescriptionSectionOpen} onOpenChange={setIsDescriptionSectionOpen} highlighted={highlightedSection === "description"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h10" /></svg>}>
-            <DescriptionSection shortDescription={form.shortDescription} description={form.description} onShortDescChange={(v: string) => updateField("shortDescription", v.replace(/\s{2,}/g, " "), { autoSave: false })} onDescChange={(v: string) => updateField("description", v.replace(/\s{3,}/g, "  "), { autoSave: false })} />
+          <SectionCard sectionRef={(node) => { sectionRefs.current.description = node; }} title="Descrição do Perfil" dirty={sectionDirtyState.description} showSaveAction onSaveAction={() => handleSaveSection("description")} onCancelAction={() => handleCancelSection("description")} saveDisabled={saveStatus === "saving"} open={isDescriptionSectionOpen} onOpenChange={setIsDescriptionSectionOpen} highlighted={highlightedSection === "description"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h10" /></svg>}>
+            <DescriptionSection shortDescription={form.shortDescription} description={form.description} onShortDescChange={(v: string) => updateField("shortDescription", v.replace(/\s{2,}/g, " "))} onDescChange={(v: string) => updateField("description", v.replace(/\s{3,}/g, "  "))} />
           </SectionCard>
 
-          <SectionCard sectionRef={(node) => { sectionRefs.current.services = node; }} title="Serviços Oferecidos" dirty={sectionDirtyState.services} showSaveAction onSaveAction={() => saveSection("services")} onCancelAction={() => cancelSectionChanges("services")} saveDisabled={saveStatus === "saving"} open={isServicesSectionOpen} onOpenChange={setIsServicesSectionOpen} highlighted={highlightedSection === "services"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}>
+          <SectionCard sectionRef={(node) => { sectionRefs.current.services = node; }} title="Serviços Oferecidos" dirty={sectionDirtyState.services} showSaveAction onSaveAction={() => handleSaveSection("services")} onCancelAction={() => handleCancelSection("services")} saveDisabled={saveStatus === "saving"} open={isServicesSectionOpen} onOpenChange={setIsServicesSectionOpen} highlighted={highlightedSection === "services"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}>
             <ServicesSection services={form.services} onToggle={(idx: number) => {
               const next = form.services.map((s, i) => i === idx ? { ...s, selected: !s.selected } : s);
-              updateField("services", next, { autoSave: false });
+              updateField("services", next);
             }} />
           </SectionCard>
 
-          <SectionCard sectionRef={(node) => { sectionRefs.current.availability = node; }} key={`availability-${availabilityCloseSignal}`} title="Horários de Disponibilidade" dirty={sectionDirtyState.availability} showSaveAction onSaveAction={() => saveSection("availability")} onCancelAction={() => cancelSectionChanges("availability")} saveDisabled={saveStatus === "saving"} open={isAvailabilitySectionOpen} onOpenChange={setIsAvailabilitySectionOpen} highlighted={highlightedSection === "availability"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
+          <SectionCard sectionRef={(node) => { sectionRefs.current.availability = node; }} key={`availability-${availabilityCloseSignal}`} title="Horários de Disponibilidade" dirty={sectionDirtyState.availability} showSaveAction onSaveAction={() => handleSaveSection("availability")} onCancelAction={() => handleCancelSection("availability")} saveDisabled={saveStatus === "saving"} open={isAvailabilitySectionOpen} onOpenChange={setIsAvailabilitySectionOpen} highlighted={highlightedSection === "availability"} icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
             <AvailabilitySection
               showAvailability={form.showAvailability} availability={form.availability}
               onToggleShow={(v: boolean) => {
                 if (!v) {
-                  updateField("showAvailability", false, { autoSave: false });
+                  updateField("showAvailability", false);
                   return;
                 }
 
                 const hasEnabledDay = form.availability.some((day) => day.enabled);
                 if (!hasEnabledDay) {
                   const fallbackAvailability = form.availability.map((day, idx) => idx === 0 ? { ...day, enabled: true, start: "10:00", end: "22:00" } : day);
-                  updateField("availability", fallbackAvailability, { autoSave: false });
+                  updateField("availability", fallbackAvailability);
                 }
-                updateField("showAvailability", true, { autoSave: false });
+                updateField("showAvailability", true);
               }}
               onDayToggle={(idx: number, enabled: boolean) => {
                 const next = form.availability.map((d, i) => i === idx ? { ...d, enabled, start: enabled ? "10:00" : "--:--", end: enabled ? "22:00" : "--:--" } : d);
-                updateField("availability", next, { autoSave: false });
+                updateField("availability", next);
 
                 if (!next.some((d) => d.enabled)) {
-                  updateField("showAvailability", false, { autoSave: false });
+                  updateField("showAvailability", false);
                   setAvailabilityCloseSignal((prev) => prev + 1);
                 }
               }}
               onTimeChange={(idx: number, field: string, value: string) => {
                 const next = form.availability.map((d, i) => i === idx ? { ...d, [field]: sanitizeTimeInput(value) } : d);
-                updateField("availability", next, { autoSave: false });
+                updateField("availability", next);
               }}
             />
           </SectionCard>
@@ -2725,8 +2528,8 @@ function HairTypeAndColorField({
 
 // ─── Seções Específicas ──────────────────────────────────────────
 
-function CharacteristicsSection({ characteristics: c, onUpdate, invalidFields, errorMessage, isShaking }: { characteristics: ProfileCharacteristics; onUpdate: (key: keyof ProfileCharacteristics, value: string) => void; invalidFields: Array<keyof ProfileCharacteristics>; errorMessage: string | null; isShaking: boolean }) {
-  const isInvalid = (key: keyof ProfileCharacteristics) => invalidFields.includes(key);
+function CharacteristicsSection({ characteristics: c, onUpdate, invalidFields, errorMessage, isShaking }: { characteristics: AnnouncementCharacteristics; onUpdate: (key: keyof AnnouncementCharacteristics, value: string) => void; invalidFields: Array<keyof AnnouncementCharacteristics>; errorMessage: string | null; isShaking: boolean }) {
+  const isInvalid = (key: keyof AnnouncementCharacteristics) => invalidFields.includes(key);
 
   return (
     <div className={cn("space-y-4 rounded-xl border p-4", errorMessage ? "border-red-300 bg-red-50/30" : "border-zinc-200")} style={isShaking ? { animation: "characteristics-shake 420ms ease-in-out" } : undefined}>
@@ -2805,7 +2608,7 @@ function PricingSection({
   errorMessage,
   isShaking,
 }: {
-  pricing: Array<PricingItem & { isCustom?: boolean }>;
+  pricing: Array<AnnouncementPricingItem & { isCustom?: boolean }>;
   paymentMethods?: string[];
   onUpdate: (idx: number, field: string, value: string | number) => void;
   onToggleDisabled: (idx: number) => void;
@@ -2970,12 +2773,12 @@ function LocationSection({
   locationStatusTone,
   suppressErrorOverlay,
 }: {
-  addresses: LocationAddress[];
-  activeLocation: LocationAddress | null;
+  addresses: AnnouncementLocationAddress[];
+  activeLocation: AnnouncementLocationAddress | null;
   highlightedLocationId: string | null;
   onDetectLocation: () => void;
   onAddLocation: () => void;
-  onEditLocation: (location: LocationAddress) => void;
+  onEditLocation: (location: AnnouncementLocationAddress) => void;
   onToggleActive: (locationId: string) => void;
   onToggleTravel: (enabled: boolean) => void;
   acceptsTravel: boolean;
@@ -3191,7 +2994,7 @@ function LocationDecisionModal({
   onClose,
   onConfirm,
 }: {
-  activeLocation: LocationAddress | null;
+  activeLocation: AnnouncementLocationAddress | null;
   detectedLocation: DetectedLocation;
   onClose: () => void;
   onConfirm: () => void;
@@ -3458,7 +3261,7 @@ function DescriptionSection({ shortDescription, description, onShortDescChange, 
   );
 }
 
-function ServicesSection({ services, onToggle }: { services: ServiceOption[]; onToggle: (idx: number) => void }) {
+function ServicesSection({ services, onToggle }: { services: AnnouncementServiceOption[]; onToggle: (idx: number) => void }) {
   return (
     <div className="max-h-84 overflow-y-auto pr-1">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
