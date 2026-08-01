@@ -1,8 +1,8 @@
 "use client";
 
 import { X } from "lucide-react";
+import { FEED_QUICK_FILTER_LABELS } from "@/lib/feed-filters";
 import { cn, currency } from "@/lib/utils";
-import { quickFilters } from "./constants";
 
 type SelectionField = "ethnicities" | "hairs" | "services";
 
@@ -87,7 +87,7 @@ export function FeedFiltersContent({
       <section>
         <label className="mb-2.5 block text-sm font-bold text-zinc-900">Filtros rápidos</label>
         <div className="flex flex-wrap gap-2 pt-1.5 pr-1">
-          {quickFilters.map((filter) => {
+          {FEED_QUICK_FILTER_LABELS.map((filter) => {
             const active = activeQuickFilters.includes(filter);
 
             return (
@@ -185,7 +185,7 @@ export function FeedFiltersContent({
             <label key={type} className="group flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors hover:bg-wine-50/50">
               <input
                 type="checkbox"
-                checked={type === "Premium" ? selectedAdTypes.includes(type) || activeQuickFilters.includes("Premium") : selectedAdTypes.includes(type)}
+                checked={selectedAdTypes.includes(type)}
                 onChange={() => onToggleAdTypeFilter(type)}
                 className="h-4 w-4 cursor-pointer rounded border-zinc-300 accent-wine-700 focus:ring-wine-700"
               />
