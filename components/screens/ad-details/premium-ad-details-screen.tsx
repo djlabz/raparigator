@@ -12,8 +12,14 @@ import { SidebarCta } from "./sidebar-cta";
 import { PhotoLightbox } from "./photo-lightbox";
 import { MobileContactFab } from "./mobile-contact-fab";
 import { AppShell } from "@/components/layout/app-shell";
+import {
+  FEED_CARDS_COLUMN_OFFSET_CLASS,
+  FEED_CONTENT_GRID_CLASS,
+  FEED_SIDE_COLUMN_CLASS,
+} from "@/components/screens/feed-screen/constants";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RiskWarningModal } from "@/components/ui/risk-warning-modal";
+import { cn } from "@/lib/utils";
 
 interface PremiumAdDetailsScreenProps {
   slug: string;
@@ -57,46 +63,52 @@ export function PremiumAdDetailsScreen({ slug }: PremiumAdDetailsScreenProps) {
 
   return (
     <AppShell location={`${ad.city}, ${ad.state}`}>
-      <div className="mx-auto max-w-6xl space-y-7 pb-24 md:pb-12 xl:max-w-7xl">
-        <PremiumHeroSection 
-          ad={ad} 
-          onExternalLink={(target, url) => {
-            setRiskTarget(target);
-            setExternalTargetUrl(url);
-          }} 
-        />
+      <div className={FEED_CONTENT_GRID_CLASS}>
+        <div className={cn("hidden lg:block", FEED_SIDE_COLUMN_CLASS)} aria-hidden />
+        <div
+          data-ad-content-column
+          className={cn("min-w-0 space-y-7 pb-24 md:pb-12", FEED_CARDS_COLUMN_OFFSET_CLASS)}
+        >
+          <PremiumHeroSection 
+            ad={ad} 
+            onExternalLink={(target, url) => {
+              setRiskTarget(target);
+              setExternalTargetUrl(url);
+            }} 
+          />
 
-        <PhotoGallerySection
-          ad={ad}
-          galleryMode={galleryMode}
-          setGalleryMode={setGalleryMode}
-          bentoItems={bentoItems}
-          isPremium={true}
-          setSelectedPhotoIndex={setSelectedPhotoIndex}
-        />
+          <PhotoGallerySection
+            ad={ad}
+            galleryMode={galleryMode}
+            setGalleryMode={setGalleryMode}
+            bentoItems={bentoItems}
+            isPremium={true}
+            setSelectedPhotoIndex={setSelectedPhotoIndex}
+          />
 
-        <section className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-6">
-            <AboutSection ad={ad} />
-            <SchedulingSimulator
-              ad={ad}
-              selectedDuration={selectedDuration}
-              setSelectedDuration={setSelectedDuration}
-              selectedExtras={selectedExtras}
-              toggleExtra={toggleExtra}
-              basePrice={basePrice}
-              calculatedExtrasCost={calculatedExtrasCost}
-              totalCalculatedValue={totalCalculatedValue}
-              role={role}
-              setRiskTarget={setRiskTarget}
-            />
-            <SpecialtiesSection ad={ad} />
-            <ReviewsSection ad={ad} reviews={adReviews} />
-          </div>
-          <aside className="flex flex-col gap-4">
-            <SidebarCta role={role} setRiskTarget={setRiskTarget} />
-          </aside>
-        </section>
+          <section className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="space-y-6">
+              <AboutSection ad={ad} />
+              <SchedulingSimulator
+                ad={ad}
+                selectedDuration={selectedDuration}
+                setSelectedDuration={setSelectedDuration}
+                selectedExtras={selectedExtras}
+                toggleExtra={toggleExtra}
+                basePrice={basePrice}
+                calculatedExtrasCost={calculatedExtrasCost}
+                totalCalculatedValue={totalCalculatedValue}
+                role={role}
+                setRiskTarget={setRiskTarget}
+              />
+              <SpecialtiesSection ad={ad} />
+              <ReviewsSection ad={ad} reviews={adReviews} />
+            </div>
+            <aside className="flex flex-col gap-4">
+              <SidebarCta role={role} setRiskTarget={setRiskTarget} />
+            </aside>
+          </section>
+        </div>
       </div>
 
       <PhotoLightbox

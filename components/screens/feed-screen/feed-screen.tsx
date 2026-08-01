@@ -48,6 +48,11 @@ import { FeedHeaderTitleProvider } from "./feed-header-title-context";
 import { FeedMobileHeadingRow } from "./feed-mobile-heading-row";
 import { FeedMobileTitleFlight } from "./feed-mobile-title-flight";
 import { useFeedSectionTitleScroll } from "./use-feed-section-title-scroll";
+import {
+  FEED_CARDS_COLUMN_OFFSET_CLASS,
+  FEED_CONTENT_GRID_CLASS,
+  FEED_SIDE_COLUMN_CLASS,
+} from "./constants";
 
 export function FeedScreen() {
   const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
@@ -293,18 +298,20 @@ export function FeedScreen() {
     <FeedHeaderTitleProvider flags={headerTitleFlags}>
       <FeedMobileTitleFlight />
       <div className="relative space-y-6 select-none">
-        <section className="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
+        <section className={FEED_CONTENT_GRID_CLASS}>
           <div
             ref={filtersAnchorRef}
             className={cn(
-              "relative hidden min-w-70 lg:block",
+              "relative hidden lg:block",
+              FEED_SIDE_COLUMN_CLASS,
               hasDesktopNav ? chromeBelowDesktopNavStickyMinH : chromeBelowHeaderStickyMinH
             )}
           >
             <aside
               data-feed-filters-panel
               className={cn(
-                "z-10 flex h-fit w-full min-w-70 flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm",
+                "z-10 flex h-fit w-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm",
+                FEED_SIDE_COLUMN_CLASS,
                 "lg:fixed",
                 hasDesktopNav ? chromeBelowDesktopNavStickyTop : chromeBelowHeaderStickyTop,
                 hasDesktopNav ? chromeBelowDesktopNavStickyMaxH : chromeBelowHeaderStickyMaxH
@@ -350,8 +357,10 @@ export function FeedScreen() {
           </div>
 
           <div
+            data-feed-content-column
             className={cn(
               "relative space-y-4",
+              FEED_CARDS_COLUMN_OFFSET_CLASS,
               hasDesktopNav ? chromeBelowDesktopNavStickyMinH : chromeBelowHeaderStickyMinH
             )}
           >
