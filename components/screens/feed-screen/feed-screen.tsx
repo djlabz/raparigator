@@ -44,7 +44,6 @@ import { FeedAdCard } from "./feed-ad-card";
 import { FeedSectionDivider } from "./feed-section-divider";
 import { FeedFiltersContent } from "./feed-filters-content";
 import { FeedLocationModal } from "./feed-location-modal";
-import { FeedHeaderTitleProvider } from "./feed-header-title-context";
 import { FeedMobileHeadingRow } from "./feed-mobile-heading-row";
 import { FeedMobileTitleFlight } from "./feed-mobile-title-flight";
 import { useFeedSectionTitleScroll } from "./use-feed-section-title-scroll";
@@ -110,7 +109,7 @@ export function FeedScreen() {
   const mobileHeadingRef = useRef<HTMLDivElement>(null);
   const premiumSectionRef = useRef<HTMLDivElement>(null);
   const standardSectionRef = useRef<HTMLDivElement>(null);
-  const headerTitleFlags = useFeedSectionTitleScroll({
+  useFeedSectionTitleScroll({
     hasPremium: premiumAds.length > 0,
     hasStandard: standardAds.length > 0,
     mobileHeadingRef,
@@ -295,7 +294,7 @@ export function FeedScreen() {
   };
 
   return (
-    <FeedHeaderTitleProvider flags={headerTitleFlags}>
+    <>
       <FeedMobileTitleFlight />
       <div className="relative space-y-6 select-none">
         <section className={FEED_CONTENT_GRID_CLASS}>
@@ -466,6 +465,6 @@ export function FeedScreen() {
         onAutomaticLocation={useAutomaticLocation}
         onClearLocation={clearLocation}
       />
-    </FeedHeaderTitleProvider>
+    </>
   );
 }

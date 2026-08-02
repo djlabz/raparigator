@@ -17,9 +17,8 @@ import {
   FeedHeaderDesktopTitle,
   HeaderTitleSlot,
 } from "@/components/layout/header-title-flight/header-title-slot";
-import { useFeedHeaderTitleFlags } from "@/components/screens/feed-screen/feed-header-title-context";
+import { useActiveTitleFlightSurface } from "@/components/layout/header-title-flight/use-title-flight-surface";
 import { DashboardHeaderDesktopTitle } from "@/components/screens/professional-dashboard/dashboard-header-desktop-title";
-import { useDashboardHeaderTitleFlags } from "@/components/screens/professional-dashboard/dashboard-header-title-context";
 import { GuestAuthControls } from "./guest-auth-controls";
 import { NotificationBellButton } from "./notification-bell-button";
 
@@ -31,22 +30,13 @@ interface TopHeaderProps {
   onBack?: () => void;
 }
 
-function isFeedPath(pathname: string) {
-  return pathname === "/feed" || pathname.startsWith("/feed/");
-}
-
-function isProfessionalDashboardPath(pathname: string) {
-  return pathname === "/profissional/dashboard" || pathname.startsWith("/profissional/dashboard/");
-}
-
 export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeaderProps) {
   const pathname = usePathname();
-  const feed = useFeedHeaderTitleFlags();
-  const dashboard = useDashboardHeaderTitleFlags();
-  const onFeed = isFeedPath(pathname);
-  const feedDesktop = onFeed && feed.enabled && feed.mode === "desktop";
+  const active = useActiveTitleFlightSurface(pathname);
+  const feedDesktop =
+    active?.id === "feed" && active.flags.enabled && active.flags.mode === "desktop";
   const dashboardDesktop =
-    isProfessionalDashboardPath(pathname) && dashboard.enabled && dashboard.mode === "desktop";
+    active?.id === "dashboard" && active.flags.enabled && active.flags.mode === "desktop";
   const showDashboardBell =
     isLoggedIn && role !== "visitor" && isDashboardPath(pathname, role);
 
