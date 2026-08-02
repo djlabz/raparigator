@@ -3,11 +3,12 @@
 import type { RefObject } from "react";
 import { motion, useMotionValue, useTransform } from "motion/react";
 import { useIsTabActive } from "@/components/layout/tab-activity";
+import { cn } from "@/lib/utils";
 import {
   useDashboardHeaderTitleFlags,
   useOptionalDashboardHeaderTitleMotion,
 } from "./dashboard-header-title-context";
-import { DASHBOARD_HEADER_TITLE } from "./dashboard-title";
+import { DASHBOARD_HEADER_TITLE, DASHBOARD_TITLE_HEADER_CLASS } from "./dashboard-title";
 
 interface DashboardHeadingProps {
   headingRef: RefObject<HTMLDivElement | null>;
@@ -44,7 +45,7 @@ export function DashboardHeading({ headingRef }: DashboardHeadingProps) {
               className="pointer-events-none invisible absolute inset-x-0 top-0 flex h-10 w-full items-center"
               aria-hidden
             >
-              <span className="truncate text-2xl font-semibold leading-none tracking-tight text-zinc-900">
+              <span className={cn("truncate", DASHBOARD_TITLE_HEADER_CLASS)}>
                 {DASHBOARD_HEADER_TITLE}
               </span>
             </div>
@@ -52,14 +53,14 @@ export function DashboardHeading({ headingRef }: DashboardHeadingProps) {
               style={{ opacity: restTitleOpacity }}
               className="pointer-events-none absolute inset-x-0 top-0 flex h-10 w-full items-center"
             >
-              <h1 className="truncate text-2xl font-semibold leading-none tracking-tight text-zinc-900">
+              <h1 className={cn("truncate", DASHBOARD_TITLE_HEADER_CLASS)}>
                 {DASHBOARD_HEADER_TITLE}
               </h1>
             </motion.div>
           </>
         ) : (
           <div className="flex h-10 w-full items-center">
-            <h1 className="truncate text-2xl font-semibold leading-none tracking-tight text-zinc-900">
+            <h1 className={cn("truncate", DASHBOARD_TITLE_HEADER_CLASS)}>
               {DASHBOARD_HEADER_TITLE}
             </h1>
           </div>

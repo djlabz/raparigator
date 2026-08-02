@@ -383,7 +383,7 @@ export function FeedScreen() {
             ) : (
               <>
                 {premiumAds.length > 0 && (
-                  <div ref={premiumSectionRef} className="relative z-10">
+                  <div ref={premiumSectionRef} data-feed-premium-section className="relative z-10">
                     <FeedSectionDivider variant="premium" />
                     <div className="relative grid gap-4 overflow-visible sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                       {premiumAds.map((ad, index) => (
@@ -394,7 +394,7 @@ export function FeedScreen() {
                 )}
 
                 {visibleStandardAds.length > 0 && (
-                  <div ref={standardSectionRef} className="relative">
+                  <div ref={standardSectionRef} data-feed-standard-section className="relative">
                     <FeedSectionDivider
                       variant="standard"
                       hasPremiumSection={premiumAds.length > 0}

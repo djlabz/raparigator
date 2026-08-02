@@ -13,8 +13,13 @@ import {
 import { cn } from "@/lib/utils";
 import { AccountMenu } from "./account-menu";
 import { ChromeScrim } from "./chrome-scrim";
-import { FeedHeaderDesktopTitle, FeedHeaderTitleSlot } from "./feed-header-title-slot";
+import {
+  FeedHeaderDesktopTitle,
+  HeaderTitleSlot,
+} from "@/components/layout/header-title-flight/header-title-slot";
 import { useFeedHeaderTitleFlags } from "@/components/screens/feed-screen/feed-header-title-context";
+import { DashboardHeaderDesktopTitle } from "@/components/screens/professional-dashboard/dashboard-header-desktop-title";
+import { useDashboardHeaderTitleFlags } from "@/components/screens/professional-dashboard/dashboard-header-title-context";
 import { GuestAuthControls } from "./guest-auth-controls";
 import { NotificationBellButton } from "./notification-bell-button";
 
@@ -30,11 +35,18 @@ function isFeedPath(pathname: string) {
   return pathname === "/feed" || pathname.startsWith("/feed/");
 }
 
+function isProfessionalDashboardPath(pathname: string) {
+  return pathname === "/profissional/dashboard" || pathname.startsWith("/profissional/dashboard/");
+}
+
 export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeaderProps) {
   const pathname = usePathname();
-  const { enabled, mode } = useFeedHeaderTitleFlags();
+  const feed = useFeedHeaderTitleFlags();
+  const dashboard = useDashboardHeaderTitleFlags();
   const onFeed = isFeedPath(pathname);
-  const feedDesktop = onFeed && enabled && mode === "desktop";
+  const feedDesktop = onFeed && feed.enabled && feed.mode === "desktop";
+  const dashboardDesktop =
+    isProfessionalDashboardPath(pathname) && dashboard.enabled && dashboard.mode === "desktop";
   const showDashboardBell =
     isLoggedIn && role !== "visitor" && isDashboardPath(pathname, role);
 
@@ -51,11 +63,12 @@ export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeade
         )}
       >
         {feedDesktop ? <FeedHeaderDesktopTitle /> : null}
+        {dashboardDesktop ? <DashboardHeaderDesktopTitle /> : null}
 
         <div className="relative z-20 flex min-w-0 flex-1 items-center gap-3 md:gap-5">
           <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
             <BackButton onBack={onBack} />
-            <FeedHeaderTitleSlot />
+            <HeaderTitleSlot />
           </div>
         </div>
 

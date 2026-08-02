@@ -9,6 +9,10 @@ import {
   type RefObject,
 } from "react";
 import { motionValue, type MotionValue } from "motion/react";
+import {
+  createFlagsStore,
+  getOrCreateGlobal,
+} from "@/components/layout/header-title-flight/flags-store";
 
 export type FeedHeaderTitleMode = "desktop" | "mobile";
 
@@ -54,64 +58,28 @@ function createMotionBundle(): FeedHeaderTitleMotion {
   };
 }
 
-type FlagsStore = {
-  flags: FeedHeaderTitleFlags;
-  listeners: Set<() => void>;
-  subscribe: (listener: () => void) => () => void;
-  getSnapshot: () => FeedHeaderTitleFlags;
-  setFlags: (flags: FeedHeaderTitleFlags) => void;
-};
+const globalStoreKey = "__raparigatorFeedHeaderFlagsStore";
+const globalMotionKey = "__raparigatorFeedHeaderMotion_v2";
 
-function createFlagsStore(): FlagsStore {
-  const listeners = new Set<() => void>();
-  const store: FlagsStore = {
-    flags: defaultFlags,
-    listeners,
-    subscribe: (listener) => {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-    getSnapshot: () => store.flags,
-    setFlags: (next) => {
-      const prev = store.flags;
-      if (
+function getFlagsStore() {
+  return getOrCreateGlobal(globalStoreKey, () =>
+    createFlagsStore<FeedHeaderTitleFlags>(
+      defaultFlags,
+      (prev, next) =>
         prev.enabled === next.enabled
         && prev.mode === next.mode
         && prev.hasPremium === next.hasPremium
         && prev.hasStandard === next.hasStandard
-      ) {
-        return;
-      }
-      store.flags = next;
-      listeners.forEach((listener) => listener());
-    },
-  };
-  return store;
-}
-
-const globalStoreKey = "__raparigatorFeedHeaderFlagsStore";
-const globalMotionKey = "__raparigatorFeedHeaderMotion_v2";
-
-function getFlagsStore(): FlagsStore {
-  const scope = globalThis as typeof globalThis & Record<string, FlagsStore | undefined>;
-  if (!scope[globalStoreKey]) {
-    scope[globalStoreKey] = createFlagsStore();
-  }
-  return scope[globalStoreKey]!;
+    )
+  );
 }
 
 export function publishFeedHeaderTitleFlags(flags: FeedHeaderTitleFlags) {
   getFlagsStore().setFlags(flags);
 }
 
-function getMotionBundle(): FeedHeaderTitleMotion {
-  const scope = globalThis as typeof globalThis & Record<string, FeedHeaderTitleMotion | undefined>;
-  if (!scope[globalMotionKey]) {
-    scope[globalMotionKey] = createMotionBundle();
-  }
-  return scope[globalMotionKey]!;
+function getMotionBundle() {
+  return getOrCreateGlobal(globalMotionKey, createMotionBundle);
 }
 
 const FeedHeaderTitleMotionContext = createContext<FeedHeaderTitleMotion | null>(null);
@@ -141,8 +109,7 @@ export function useFeedHeaderTitleFlags() {
 }
 
 export function useFeedHeaderTitleMotion() {
-  const motion = useContext(FeedHeaderTitleMotionContext) ?? getMotionBundle();
-  return motion;
+  return useContext(FeedHeaderTitleMotionContext) ?? getMotionBundle();
 }
 
 export function useFeedHeaderTitle(): FeedHeaderTitleState {

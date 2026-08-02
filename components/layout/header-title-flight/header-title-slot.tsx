@@ -13,8 +13,9 @@ import {
   useOptionalDashboardHeaderTitleMotion,
 } from "@/components/screens/professional-dashboard/dashboard-header-title-context";
 import { cn } from "@/lib/utils";
+import { TITLE_STACK_PX } from "./constants";
+import { MobileLogoSwap } from "./mobile-logo-swap";
 
-const TITLE_STACK_PX = 28;
 const BRAND_LOGO_CLASS =
   "inline-flex h-10 shrink-0 items-center font-display text-2xl font-medium leading-none tracking-wide text-wine-800";
 
@@ -47,14 +48,19 @@ function DesktopTitleStack() {
 
   if (hasPremium && hasStandard) {
     return (
-      <div className="relative mx-auto h-12 w-full max-w-lg overflow-hidden">
+      <div
+        data-feed-desktop-title-stack
+        className="relative mx-auto h-12 w-full max-w-lg overflow-hidden"
+      >
         <motion.div
+          data-feed-desktop-title="premium"
           style={{ y: premiumY, opacity: premiumOpacity }}
           className="flex h-12 w-full items-center justify-center will-change-transform"
         >
           <FeedSectionTitle variant="premium" size="lg" className="justify-center" />
         </motion.div>
         <motion.div
+          data-feed-desktop-title="standard"
           style={{ y: standardY, opacity: standardOpacity }}
           className="absolute inset-0 flex h-12 w-full items-center justify-center will-change-transform"
         >
@@ -89,33 +95,14 @@ function FeedMobileTitleSwap() {
   const fallbackReveal = useMotionValue(0);
   const headerReveal = motionValues?.headerReveal ?? fallbackReveal;
 
-  const logoOpacity = useTransform(headerReveal, [0, 0.16, 0.34], [1, 1, 0]);
-  const logoY = useTransform(headerReveal, [0, 0.16, 0.34], [0, 0, -TITLE_STACK_PX]);
-  const logoPointerEvents = useTransform(headerReveal, (value) =>
-    value > 0.3 ? "none" : "auto"
-  );
-
-  if (!enabled) {
-    return <BrandLogoLink />;
-  }
-
   return (
-    <div className="relative min-w-0 flex-1">
-      <div className="relative flex h-10 min-w-0 w-full items-center overflow-hidden">
-        <motion.div
-          style={{ opacity: logoOpacity, y: logoY, pointerEvents: logoPointerEvents }}
-          className="relative z-10 flex h-10 shrink-0 items-center will-change-transform"
-        >
-          <BrandLogoLink />
-        </motion.div>
-
-        <div
-          data-feed-title-target
-          className="pointer-events-none absolute inset-y-0 left-2 right-2 h-10 min-w-0"
-          aria-hidden
-        />
-      </div>
-    </div>
+    <MobileLogoSwap
+      enabled={enabled}
+      headerReveal={headerReveal}
+      targetAttr="data-feed-title-target"
+      fallback={<BrandLogoLink />}
+      logo={<BrandLogoLink />}
+    />
   );
 }
 
@@ -125,37 +112,18 @@ function DashboardMobileTitleSwap() {
   const fallbackReveal = useMotionValue(0);
   const headerReveal = motionValues?.headerReveal ?? fallbackReveal;
 
-  const logoOpacity = useTransform(headerReveal, [0, 0.16, 0.34], [1, 1, 0]);
-  const logoY = useTransform(headerReveal, [0, 0.16, 0.34], [0, 0, -TITLE_STACK_PX]);
-  const logoPointerEvents = useTransform(headerReveal, (value) =>
-    value > 0.3 ? "none" : "auto"
-  );
-
-  if (!enabled) {
-    return <BrandLogoLink />;
-  }
-
   return (
-    <div className="relative min-w-0 flex-1">
-      <div className="relative flex h-10 min-w-0 w-full items-center overflow-hidden">
-        <motion.div
-          style={{ opacity: logoOpacity, y: logoY, pointerEvents: logoPointerEvents }}
-          className="relative z-10 flex h-10 shrink-0 items-center will-change-transform"
-        >
-          <BrandLogoLink />
-        </motion.div>
-
-        <div
-          data-dashboard-title-target
-          className="pointer-events-none absolute inset-y-0 left-2 right-2 h-10 min-w-0"
-          aria-hidden
-        />
-      </div>
-    </div>
+    <MobileLogoSwap
+      enabled={enabled}
+      headerReveal={headerReveal}
+      targetAttr="data-dashboard-title-target"
+      fallback={<BrandLogoLink />}
+      logo={<BrandLogoLink />}
+    />
   );
 }
 
-export function FeedHeaderTitleSlot() {
+export function HeaderTitleSlot() {
   const pathname = usePathname();
   const feed = useFeedHeaderTitleFlags();
   const dashboard = useDashboardHeaderTitleFlags();

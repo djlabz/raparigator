@@ -1,7 +1,24 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState, type RefObject } from "react";
+import { useLayoutEffect, useRef, type RefObject } from "react";
 import { useIsTabActive } from "@/components/layout/tab-activity";
+import {
+  clamp01,
+  dampExp,
+  headerOffsetPx,
+  inPageSpacerFromReveal,
+  IN_PAGE_OPACITY_REVEAL_DIVISOR,
+  IN_PAGE_TITLE_HEIGHT,
+  progressAcrossBand,
+  REVEAL_LAMBDA_DESKTOP,
+  REVEAL_LAMBDA_MOBILE,
+  sampleMobileTitleReveal,
+  smootherstep,
+  SPACER_LAMBDA,
+  useDampedScrollLoop,
+  useMatchDesktop,
+  writeFlightFromReveal,
+} from "@/components/layout/header-title-flight";
 import {
   publishFeedHeaderTitleFlags,
   useFeedHeaderTitleMotion,
@@ -9,63 +26,9 @@ import {
   type FeedHeaderTitleMode,
 } from "./feed-header-title-context";
 
-const LG_QUERY = "(min-width: 1024px)";
-const PUSH_DISTANCE_DESKTOP_PX = 260;
 const PUSH_CLEAR_BAND_MOBILE_PX = 56;
-const REVEAL_START_MOBILE_PX = 108;
-const REVEAL_END_MOBILE_PX = 6;
-const REVEAL_SCROLL_FADE_PX = 28;
-const FLIGHT_SNAP_REVEAL = 0.96;
-const IN_PAGE_TITLE_HEIGHT = 40;
-const REVEAL_LAMBDA_DESKTOP = 16;
-const REVEAL_LAMBDA_MOBILE = 4.6;
 const PUSH_LAMBDA_DESKTOP = 14;
 const PUSH_LAMBDA_MOBILE = 16;
-const SPACER_LAMBDA = 8;
-const SNAP_EPS = 0.0005;
-
-function clamp01(value: number) {
-  return Math.min(1, Math.max(0, value));
-}
-
-function smootherstep(value: number) {
-  const x = clamp01(value);
-  return x * x * x * (x * (x * 6 - 15) + 10);
-}
-
-function easeInOutCubic(value: number) {
-  const x = clamp01(value);
-  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-}
-
-function dampExp(current: number, target: number, lambda: number, dt: number) {
-  const next = target + (current - target) * Math.exp(-lambda * dt);
-  return Math.abs(target - next) < SNAP_EPS ? target : next;
-}
-
-function readIsDesktop() {
-  if (typeof window === "undefined") {
-    return true;
-  }
-
-  return window.matchMedia(LG_QUERY).matches;
-}
-
-function headerOffsetPx() {
-  if (typeof window === "undefined") {
-    return 80;
-  }
-
-  return window.matchMedia("(min-width: 768px)").matches ? 80 : 64;
-}
-
-function progressAcrossBand(edge: number, start: number, end: number) {
-  if (start === end) {
-    return edge <= end ? 1 : 0;
-  }
-
-  return clamp01((start - edge) / (start - end));
-}
 
 interface UseFeedSectionTitleScrollArgs {
   hasPremium: boolean;
@@ -84,19 +47,21 @@ export function useFeedSectionTitleScroll({
 }: UseFeedSectionTitleScrollArgs): FeedHeaderTitleFlags {
   const motion = useFeedHeaderTitleMotion();
   const isTabActive = useIsTabActive();
-  const [isDesktop, setIsDesktop] = useState(readIsDesktop);
-
-  useEffect(() => {
-    const desktopMq = window.matchMedia(LG_QUERY);
-
-    const sync = () => {
-      setIsDesktop(desktopMq.matches);
-    };
-
-    sync();
-    desktopMq.addEventListener("change", sync);
-    return () => desktopMq.removeEventListener("change", sync);
-  }, []);
+  const isDesktop = useMatchDesktop();
+  const stateRef = useRef({
+    target: {
+      push: 0,
+      reveal: 0,
+      spacer: IN_PAGE_TITLE_HEIGHT,
+      divider: 1,
+    },
+    current: {
+      push: 0,
+      reveal: 0,
+      spacer: IN_PAGE_TITLE_HEIGHT,
+      divider: 1,
+    },
+  });
 
   useLayoutEffect(() => {
     publishFeedHeaderTitleFlags({
@@ -116,43 +81,22 @@ export function useFeedSectionTitleScroll({
     }
   }, [hasPremium, hasStandard, isDesktop, isTabActive, motion]);
 
-  useEffect(() => {
-    if (!isTabActive) {
-      return;
-    }
+  useDampedScrollLoop(
+    isTabActive,
+    (dt, seeded) => {
+      const {
+        pushProgress,
+        headerReveal,
+        inPageTitleOpacity,
+        inPageTitleMaxHeight,
+        standardDividerOpacity,
+        titleFlightX,
+        titleFlightY,
+        titleFlightW,
+        titleFlightReady,
+      } = motion;
 
-    const {
-      pushProgress,
-      headerReveal,
-      inPageTitleOpacity,
-      inPageTitleMaxHeight,
-      standardDividerOpacity,
-      titleFlightX,
-      titleFlightY,
-      titleFlightW,
-      titleFlightReady,
-    } = motion;
-
-    const target = {
-      push: 0,
-      reveal: 0,
-      spacer: IN_PAGE_TITLE_HEIGHT,
-      divider: 1,
-    };
-
-    const current = {
-      push: 0,
-      reveal: 0,
-      spacer: IN_PAGE_TITLE_HEIGHT,
-      divider: 1,
-    };
-
-    let frame = 0;
-    let running = true;
-    let seeded = false;
-    let lastTime = performance.now();
-
-    const sampleTargets = () => {
+      const { target, current } = stateRef.current;
       const headerBottom = headerOffsetPx();
       const canPush = hasPremium && hasStandard;
       const mode: FeedHeaderTitleMode = isDesktop ? "desktop" : "mobile";
@@ -166,11 +110,9 @@ export function useFeedSectionTitleScroll({
       } else if (mode === "desktop") {
         reveal = 1;
 
-        if (canPush && standardSectionRef.current) {
-          const top = standardSectionRef.current.getBoundingClientRect().top;
-          const start = headerBottom;
-          const end = headerBottom - PUSH_DISTANCE_DESKTOP_PX;
-          push = smootherstep(progressAcrossBand(top, start, end));
+        if (canPush && premiumSectionRef.current) {
+          const premiumBottom = premiumSectionRef.current.getBoundingClientRect().bottom;
+          push = premiumBottom <= headerBottom ? 1 : 0;
         }
       } else {
         const revealTarget = hasPremium
@@ -178,12 +120,11 @@ export function useFeedSectionTitleScroll({
           : mobileHeadingRef.current ?? standardSectionRef.current;
 
         if (revealTarget) {
-          const top = revealTarget.getBoundingClientRect().top;
-          const start = headerBottom + REVEAL_START_MOBILE_PX;
-          const end = headerBottom + REVEAL_END_MOBILE_PX;
-          const band = smootherstep(progressAcrossBand(top, start, end));
-          const scrollFade = smootherstep(window.scrollY / REVEAL_SCROLL_FADE_PX);
-          reveal = band * scrollFade;
+          reveal = sampleMobileTitleReveal({
+            targetTop: revealTarget.getBoundingClientRect().top,
+            headerBottom,
+            scrollY: window.scrollY,
+          }).reveal;
         }
 
         if (canPush && premiumSectionRef.current) {
@@ -205,9 +146,7 @@ export function useFeedSectionTitleScroll({
         target.spacer = 0;
         target.divider = canPush ? clamp01(1 - push / 0.18) : hasStandard ? 0 : 1;
       } else {
-        target.spacer = target.reveal < 0.82
-          ? IN_PAGE_TITLE_HEIGHT
-          : IN_PAGE_TITLE_HEIGHT * clamp01(1 - (target.reveal - 0.82) / 0.18);
+        target.spacer = inPageSpacerFromReveal(target.reveal);
         target.divider = !hasPremium && hasStandard
           ? 0
           : canPush
@@ -216,69 +155,17 @@ export function useFeedSectionTitleScroll({
               ? 1
               : 0;
       }
-    };
 
-    const writeFlightFromReveal = (reveal: number) => {
-      const mode: FeedHeaderTitleMode = isDesktop ? "desktop" : "mobile";
-
-      if (mode === "desktop" || (!hasPremium && !hasStandard)) {
-        titleFlightReady.set(0);
-        return;
-      }
-
-      const source = document.querySelector<HTMLElement>("[data-feed-title-source]");
-      const dest = document.querySelector<HTMLElement>("[data-feed-title-target]");
-
-      if (!source || !dest) {
-        titleFlightReady.set(0);
-        return;
-      }
-
-      const src = source.getBoundingClientRect();
-      const dst = dest.getBoundingClientRect();
-      if (src.width <= 0 && dst.width <= 0) {
-        titleFlightReady.set(0);
-        return;
-      }
-
-      const fromW = src.width > 0 ? src.width : dst.width;
-      const toW = dst.width > 0 ? dst.width : src.width;
-      const t = easeInOutCubic(reveal);
-      const ySpan = Math.max(0, src.top - dst.top);
-
-      if (t >= FLIGHT_SNAP_REVEAL || ySpan < 1) {
-        titleFlightX.set(dst.left);
-        titleFlightY.set(dst.top);
-        titleFlightW.set(toW);
-        titleFlightReady.set(1);
-        return;
-      }
-
-      titleFlightX.set(src.left + (dst.left - src.left) * t);
-      titleFlightY.set(dst.top + ySpan * (1 - t));
-      titleFlightW.set(fromW + (toW - fromW) * t);
-      titleFlightReady.set(1);
-    };
-
-    const tick = (now: number) => {
-      if (!running) {
-        return;
-      }
-
-      const dt = Math.min(0.05, Math.max(0.001, (now - lastTime) / 1000));
-      lastTime = now;
-      const mode: FeedHeaderTitleMode = isDesktop ? "desktop" : "mobile";
       const revealLambda = mode === "mobile" ? REVEAL_LAMBDA_MOBILE : REVEAL_LAMBDA_DESKTOP;
       const pushLambda = mode === "mobile" ? PUSH_LAMBDA_MOBILE : PUSH_LAMBDA_DESKTOP;
 
-      sampleTargets();
-
+      let nextSeeded = seeded;
       if (!seeded) {
         current.push = target.push;
         current.reveal = target.reveal;
         current.spacer = target.spacer;
         current.divider = target.divider;
-        seeded = true;
+        nextSeeded = true;
       } else {
         current.push = dampExp(current.push, target.push, pushLambda, dt);
         current.reveal = dampExp(current.reveal, target.reveal, revealLambda, dt);
@@ -286,32 +173,34 @@ export function useFeedSectionTitleScroll({
         current.divider = dampExp(current.divider, target.divider, pushLambda, dt);
       }
 
+      if (mode === "desktop" && hasPremium && hasStandard && premiumSectionRef.current) {
+        const premiumVisible =
+          premiumSectionRef.current.getBoundingClientRect().bottom > headerOffsetPx();
+        current.push = premiumVisible ? 0 : 1;
+      }
+
       pushProgress.set(current.push);
       headerReveal.set(current.reveal);
-      inPageTitleOpacity.set(clamp01(1 - current.reveal / 0.22));
+      inPageTitleOpacity.set(clamp01(1 - current.reveal / IN_PAGE_OPACITY_REVEAL_DIVISOR));
       inPageTitleMaxHeight.set(current.spacer);
       standardDividerOpacity.set(current.divider);
-      writeFlightFromReveal(current.reveal);
+      writeFlightFromReveal({
+        reveal: current.reveal,
+        sourceSelector: "[data-feed-title-source]",
+        targetSelector: "[data-feed-title-target]",
+        motion: {
+          titleFlightX,
+          titleFlightY,
+          titleFlightW,
+          titleFlightReady,
+        },
+        enabled: mode === "mobile" && (hasPremium || hasStandard),
+      });
 
-      frame = requestAnimationFrame(tick);
-    };
-
-    frame = requestAnimationFrame(tick);
-
-    return () => {
-      running = false;
-      cancelAnimationFrame(frame);
-    };
-  }, [
-    hasPremium,
-    hasStandard,
-    isDesktop,
-    isTabActive,
-    mobileHeadingRef,
-    motion,
-    premiumSectionRef,
-    standardSectionRef,
-  ]);
+      return nextSeeded;
+    },
+    `${isDesktop}:${hasPremium}:${hasStandard}`
+  );
 
   return {
     enabled: hasPremium || hasStandard,
