@@ -46,7 +46,7 @@ log_file="$(mktemp)"
 trap 'rm -f "$log_file"' EXIT
 
 set +e
-bash scripts/pre-commit-check.sh >"$log_file" 2>&1
+bash .cursor/hooks/pre-commit-check.sh >"$log_file" 2>&1
 check_status=$?
 set -e
 
@@ -63,8 +63,7 @@ summary="$(
     const lines = log.split(/\r?\n/).filter(Boolean);
     const tail = lines.slice(-40).join("\n");
     const message = [
-      "Commit bloqueado: eslint ou typecheck falhou.",
-      "Rode `npm run check` e corrija os erros antes de commitar.",
+      "Commit bloqueado pelo hook do Cursor.",
       "",
       tail,
     ].join("\n");

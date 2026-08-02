@@ -17,7 +17,6 @@
     "test:e2e:ui": "playwright test --project=chromium --ui",
     "test:e2e:chromium": "playwright test --project=chromium",
     "test:e2e:report": "playwright show-report",
-    "prepare": "bash scripts/install-git-hooks.sh",
     "share": "npx cloudflared tunnel --url http://localhost:3000"
   },
   "dependencies": {
