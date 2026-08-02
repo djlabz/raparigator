@@ -10,7 +10,7 @@ Bem-vindo ao repositório frontend do projeto **Raparigator**. Este projeto foi 
 - **Animações e Micro-interações:** [Motion](https://motion.dev/)
 - **Ícones:** [Lucide React](https://lucide.dev/)
 - **Linguagem:** TypeScript
-- **Manipulação de Imagens:** `react-image-crop` & `react-easy-crop`
+- **Manipulação de Imagens:** `react-image-crop`
 
 ## 📁 Estrutura Principal do Projeto
 
