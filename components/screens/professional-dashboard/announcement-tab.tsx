@@ -1910,7 +1910,7 @@ function BentoPhotoGallery({
           <div className="grid grid-cols-3 gap-1 sm:gap-1.5">
             {galleryItems.map((item) => (
               <div key={item.idx} className="relative aspect-square cursor-pointer overflow-hidden group rounded-xl bg-zinc-100" onClick={() => onPhotoClick(item.idx)}>
-                <Image src={item.src} alt={`Foto ${item.idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                <Image src={item.src} alt={`Foto ${item.idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 640px) 33vw, 200px" />
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                   <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
                 </div>
@@ -2079,14 +2079,14 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
         </div>
 
         <div className="w-full max-w-5xl px-4 shrink-0 pb-safe mb-6">
-          <div className="flex gap-3 overflow-x-auto px-1 py-2 pb-4 hide-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x scroll-smooth">
+          <div className="flex gap-3 overflow-x-auto px-1 py-2 pb-4 hide-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none snap-x scroll-smooth">
             {images.map((img, i) => (
               <div key={i} className="relative shrink-0 group snap-center">
                 <button
                   onClick={() => onChange(i)}
                   className={cn("relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden transition-all block", i === activeIndex ? "outline-2 outline-offset-2 outline-wine-500 opacity-100 z-10 shadow-lg" : "opacity-60 hover:opacity-100")}
                 >
-                  <Image src={img} fill className="object-cover" alt={`Thumb ${i}`} />
+                  <Image src={img} fill className="object-cover" alt={`Thumb ${i}`} sizes="(max-width: 640px) 80px, 96px" />
                 </button>
                 <button
                   type="button"

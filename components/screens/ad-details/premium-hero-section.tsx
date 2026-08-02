@@ -32,6 +32,8 @@ export function PremiumHeroSection({ ad, onExternalLink }: PremiumHeroSectionPro
           fill
           className="object-cover select-none pointer-events-none"
           priority
+          loading="eager"
+          fetchPriority="high"
           sizes="100vw"
           referrerPolicy="no-referrer"
           draggable={false}

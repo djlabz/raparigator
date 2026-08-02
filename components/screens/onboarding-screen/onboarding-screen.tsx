@@ -87,6 +87,7 @@ export function OnboardingScreen() {
             fill
             className={`object-cover ${styles.heroImage}`}
             priority
+            sizes="100vw"
             unoptimized
             quality={100}
           />

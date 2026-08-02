@@ -722,7 +722,7 @@ export function ChatScreen() {
                       )}
                     >
                       <div className="relative h-12 w-12 shrink-0">
-                        <Image src={conversationAvatars[conversation.id] || "/placeholder.png"} alt={conversation.contactName} fill className="rounded-full border border-zinc-100 object-cover" />
+                        <Image src={conversationAvatars[conversation.id] || "/placeholder.png"} alt={conversation.contactName} fill className="rounded-full border border-zinc-100 object-cover" sizes="48px" />
                         <span className={cn("absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white", getStatusColor(conversation.contactStatus))} />
                       </div>
                       <div className="min-w-0 flex-1 text-left">
@@ -1045,7 +1045,7 @@ function ConversationThread({
 
         <button type="button" className="group flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left" onClick={onOpenProfile}>
           <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-zinc-200/80 bg-white shadow-[0_2px_10px_rgba(15,23,42,0.08)]">
-            <Image src={conversationAvatar} alt="Avatar" fill className="rounded-full object-cover" />
+            <Image src={conversationAvatar} alt="Avatar" fill className="rounded-full object-cover" sizes="40px" />
             <span className={cn("absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white", getStatusColor(activeConversation.contactStatus))} />
           </div>
           <div className="min-w-0 flex-1">
