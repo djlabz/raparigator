@@ -928,13 +928,13 @@ export function AnnouncementTab({
     <div className="space-y-8 pb-12 px-1 lg:px-0">
       {/* ── 1. Header & Bento Grid Fotos ──────────────────────────── */}
       <section>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
+        <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-start">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900">
+            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 lg:leading-none">
               Seu Anúncio
               {hasUnsavedChanges && <span className="ml-2 text-base font-semibold text-amber-700">(Alterações não salvas)</span>}
             </h1>
-            <p className="text-zinc-500 mt-1">Gerencie sua identidade visual e informações do anúncio.</p>
+            <p className="mt-1 text-zinc-500">Gerencie sua identidade visual e informações do anúncio.</p>
             {publishError ? (
               <div className="mt-2 space-y-1 text-sm font-medium text-red-600">
                 <p>{publishError}</p>

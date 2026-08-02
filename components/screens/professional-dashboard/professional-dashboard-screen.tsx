@@ -81,12 +81,6 @@ export function ProfessionalDashboardScreen() {
             chromeBelowDesktopNavStickyTop
           )}
         >
-          <div className="mb-6 px-2">
-            <span className="text-sm font-black tracking-widest text-wine-700 uppercase">
-              Painel Profissional
-            </span>
-          </div>
-
           <nav className="space-y-1.5">
             {TABS.map((tab) => (
               <button
@@ -108,46 +102,45 @@ export function ProfessionalDashboardScreen() {
           </nav>
         </aside>
 
-        <div className="min-w-0 space-y-2 lg:space-y-6">
+        <div className="min-w-0 lg:-mt-16">
           <DashboardHeading headingRef={headingRef} />
 
           {!bannerClosed && (
-            <InfoBanner 
-              title="Configure seu anúncio" 
-              description="Para começar sua nova independência, configure seu anúncio e complete as informações do seu perfil na guia correspondente." 
-              tone="info" 
-              onClose={() => setBannerClosed(true)}
-            />
+            <div className="mb-4">
+              <InfoBanner 
+                title="Configure seu anúncio" 
+                description="Para começar sua nova independência, configure seu anúncio e complete as informações do seu perfil na guia correspondente." 
+                tone="info" 
+                onClose={() => setBannerClosed(true)}
+              />
+            </div>
           )}
 
-          <div className="lg:hidden">
-            <div
-              className={cn(
-                "-mx-1 flex gap-2 overflow-x-auto overscroll-x-contain touch-pan-x px-1 py-2",
-                "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-              )}
-            >
-              {TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    "inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-bold shadow-[0_2px_10px_rgba(15,23,42,0.08)] transition-colors",
-                    activeTab === tab.id
-                      ? "border-wine-700 bg-wine-700 text-white"
-                      : "border-zinc-200/80 bg-white text-zinc-600"
-                  )}
-                >
-                  <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    {tab.icon}
-                  </svg>
-                  {tab.id}
-                </button>
-              ))}
-            </div>
+          <div
+            className={cn(
+              "mb-2 -mx-1 flex gap-2 overflow-x-auto overscroll-x-contain touch-pan-x px-1 py-2 lg:hidden",
+              "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            )}
+          >
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-bold shadow-[0_2px_10px_rgba(15,23,42,0.08)] transition-colors",
+                  activeTab === tab.id
+                    ? "border-wine-700 bg-wine-700 text-white"
+                    : "border-zinc-200/80 bg-white text-zinc-600"
+                )}
+              >
+                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  {tab.icon}
+                </svg>
+                {tab.id}
+              </button>
+            ))}
           </div>
 
-          {/* CONTEÚDO DAS ABAS */}
           {activeTab === "Resumo" && <SummaryTab />}
           {activeTab === "Anúncio" && (
             <AnnouncementTab
