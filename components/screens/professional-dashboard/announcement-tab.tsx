@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, useMotionValue } from "motion/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -9,6 +10,8 @@ import { cn } from "@/lib/utils";
 import { BadgeDollarSign, Clock3, Edit, Image as ImageIcon, Lock, CreditCard, Undo, Redo } from "lucide-react";
 import { PixIcon } from "@/components/ui/pix-icon";
 import { CashIcon } from "@/components/ui/cash-icon";
+import { useOptionalDashboardHeaderTitleMotion } from "./dashboard-header-title-context";
+import { DASHBOARD_HEADER_TITLE, DASHBOARD_TITLE_PAGE_CLASS } from "./dashboard-title";
 import type { AdPreview, AdStatus } from "./types";
 import {
   useAnnouncementDraft,
@@ -352,6 +355,9 @@ export function AnnouncementTab({
     isSectionReadyForOptimization,
   } = useAnnouncementDraft(ad);
   const { isPremium, photoLimit, videoLimit } = usePremiumPlan();
+  const motionValues = useOptionalDashboardHeaderTitleMotion();
+  const fallbackInPageOpacity = useMotionValue(1);
+  const inPageTitleOpacity = motionValues?.inPageTitleOpacity ?? fallbackInPageOpacity;
   const { hasOperation, applyEdit, applyBlur, revertOperation } = useAnnouncementMedia();
   const [conversionOpen, setConversionOpen] = useState(false);
   const [conversionHighlight, setConversionHighlight] = useState<"portfolio" | undefined>(undefined);
@@ -929,11 +935,19 @@ export function AnnouncementTab({
       {/* ── 1. Header & Bento Grid Fotos ──────────────────────────── */}
       <section>
         <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-start">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 lg:leading-none">
-              Seu Anúncio
-              {hasUnsavedChanges && <span className="ml-2 text-base font-semibold text-amber-700">(Alterações não salvas)</span>}
-            </h1>
+          <div className="min-w-0">
+            <motion.div
+              data-dashboard-desktop-title-source
+              style={{ opacity: inPageTitleOpacity }}
+              className="hidden min-w-0 lg:block"
+            >
+              <h1 className={cn("truncate", DASHBOARD_TITLE_PAGE_CLASS)}>
+                {DASHBOARD_HEADER_TITLE}
+                {hasUnsavedChanges && (
+                  <span className="ml-2 text-base font-semibold text-amber-700">(Alterações não salvas)</span>
+                )}
+              </h1>
+            </motion.div>
             <p className="mt-1 text-zinc-500">Gerencie sua identidade visual e informações do anúncio.</p>
             {publishError ? (
               <div className="mt-2 space-y-1 text-sm font-medium text-red-600">

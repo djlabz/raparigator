@@ -226,6 +226,9 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
     },
     resumeNotificationSwing: () => {
       const current = getSnapshot(role);
+      if (!current.swingPaused) {
+        return;
+      }
       writeState(role, { ...current, swingPaused: false });
     },
   };

@@ -1,9 +1,8 @@
 "use client";
 
-import { createPortal } from "react-dom";
 import { motion, useMotionValue, useTransform } from "motion/react";
-import { useSyncExternalStore } from "react";
 import { useIsTabActive } from "@/components/layout/tab-activity";
+import { MobileTitleFlightPortal } from "@/components/layout/header-title-flight/mobile-title-flight-portal";
 import {
   useFeedHeaderTitleFlags,
   useOptionalFeedHeaderTitleMotion,
@@ -16,21 +15,8 @@ function clampFade(value: number) {
   return Math.min(1, Math.max(0, value));
 }
 
-function subscribeNoop() {
-  return () => {};
-}
-
-function getClientMounted() {
-  return true;
-}
-
-function getServerMounted() {
-  return false;
-}
-
 export function FeedMobileTitleFlight() {
   const isTabActive = useIsTabActive();
-  const mounted = useSyncExternalStore(subscribeNoop, getClientMounted, getServerMounted);
   const { enabled, mode, hasPremium, hasStandard } = useFeedHeaderTitleFlags();
   const motionValues = useOptionalFeedHeaderTitleMotion();
   const fallbackX = useMotionValue(0);
@@ -44,9 +30,6 @@ export function FeedMobileTitleFlight() {
   const titleFlightW = motionValues?.titleFlightW ?? fallbackW;
   const titleFlightReady = motionValues?.titleFlightReady ?? fallbackReady;
   const pushProgress = motionValues?.pushProgress ?? fallbackPush;
-
-  const opacity = useTransform(titleFlightReady, (value) => (value > 0.5 ? 1 : 0));
-  const width = useTransform(titleFlightW, (value) => Math.max(0, value));
 
   const stackT = useTransform(pushProgress, (value) => {
     if (!hasPremium || !hasStandard) {
@@ -90,20 +73,13 @@ export function FeedMobileTitleFlight() {
     return clampFade((value - 0.25) / 0.6);
   });
 
-  if (!mounted || !isTabActive || !enabled || mode !== "mobile") {
-    return null;
-  }
-
-  return createPortal(
-    <motion.div
-      aria-hidden
-      style={{
-        x: titleFlightX,
-        y: titleFlightY,
-        width,
-        opacity,
-      }}
-      className="pointer-events-none fixed top-0 left-0 z-40 overflow-hidden will-change-transform [backface-visibility:hidden]"
+  return (
+    <MobileTitleFlightPortal
+      active={isTabActive && enabled && mode === "mobile"}
+      titleFlightX={titleFlightX}
+      titleFlightY={titleFlightY}
+      titleFlightW={titleFlightW}
+      titleFlightReady={titleFlightReady}
     >
       <div className="relative h-10 w-full min-w-0">
         {hasPremium ? (
@@ -140,7 +116,6 @@ export function FeedMobileTitleFlight() {
           </motion.div>
         ) : null}
       </div>
-    </motion.div>,
-    document.body
+    </MobileTitleFlightPortal>
   );
 }

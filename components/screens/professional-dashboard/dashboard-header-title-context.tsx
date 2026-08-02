@@ -8,6 +8,10 @@ import {
   type ReactNode,
 } from "react";
 import { motionValue, type MotionValue } from "motion/react";
+import {
+  createFlagsStore,
+  getOrCreateGlobal,
+} from "@/components/layout/header-title-flight/flags-store";
 
 export type DashboardHeaderTitleMode = "desktop" | "mobile";
 
@@ -43,59 +47,24 @@ function createMotionBundle(): DashboardHeaderTitleMotion {
   };
 }
 
-type FlagsStore = {
-  flags: DashboardHeaderTitleFlags;
-  listeners: Set<() => void>;
-  subscribe: (listener: () => void) => () => void;
-  getSnapshot: () => DashboardHeaderTitleFlags;
-  setFlags: (flags: DashboardHeaderTitleFlags) => void;
-};
-
-function createFlagsStore(): FlagsStore {
-  const listeners = new Set<() => void>();
-  const store: FlagsStore = {
-    flags: defaultFlags,
-    listeners,
-    subscribe: (listener) => {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-    getSnapshot: () => store.flags,
-    setFlags: (next) => {
-      const prev = store.flags;
-      if (prev.enabled === next.enabled && prev.mode === next.mode) {
-        return;
-      }
-      store.flags = next;
-      listeners.forEach((listener) => listener());
-    },
-  };
-  return store;
-}
-
 const globalStoreKey = "__raparigatorDashboardHeaderFlagsStore";
 const globalMotionKey = "__raparigatorDashboardHeaderMotion_v1";
 
-function getFlagsStore(): FlagsStore {
-  const scope = globalThis as typeof globalThis & Record<string, FlagsStore | undefined>;
-  if (!scope[globalStoreKey]) {
-    scope[globalStoreKey] = createFlagsStore();
-  }
-  return scope[globalStoreKey]!;
+function getFlagsStore() {
+  return getOrCreateGlobal(globalStoreKey, () =>
+    createFlagsStore<DashboardHeaderTitleFlags>(
+      defaultFlags,
+      (prev, next) => prev.enabled === next.enabled && prev.mode === next.mode
+    )
+  );
 }
 
 export function publishDashboardHeaderTitleFlags(flags: DashboardHeaderTitleFlags) {
   getFlagsStore().setFlags(flags);
 }
 
-function getMotionBundle(): DashboardHeaderTitleMotion {
-  const scope = globalThis as typeof globalThis & Record<string, DashboardHeaderTitleMotion | undefined>;
-  if (!scope[globalMotionKey]) {
-    scope[globalMotionKey] = createMotionBundle();
-  }
-  return scope[globalMotionKey]!;
+function getMotionBundle() {
+  return getOrCreateGlobal(globalMotionKey, createMotionBundle);
 }
 
 const DashboardHeaderTitleMotionContext = createContext<DashboardHeaderTitleMotion | null>(null);
