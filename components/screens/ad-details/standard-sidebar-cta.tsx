@@ -65,7 +65,7 @@ export function StandardSidebarCta({ role, setRiskTarget }: StandardSidebarCtaPr
 
           <div className="mt-6 flex flex-col items-center justify-center gap-2 border-t border-zinc-100 pt-5 text-xs text-zinc-500">
             <ShieldCheck className="h-5 w-5 text-emerald-600" />
-            <p className="max-w-[200px]">Ambiente 100% seguro com moderação ativa Sigillus.</p>
+            <p className="max-w-50">Ambiente 100% seguro com moderação ativa Sigillus.</p>
           </div>
         </div>
       </div>
