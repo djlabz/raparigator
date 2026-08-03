@@ -1,9 +1,26 @@
 "use client";
 
-import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BackButton } from "@/components/ui/back-button";
+import { isDashboardPath } from "@/lib/account-notifications";
 import type { AuthRole, MockUser } from "@/lib/types";
+import {
+  chromeControlsRow,
+  chromeGlassFixed,
+  chromeSafeTop,
+  shellContainerClass,
+} from "@/lib/chrome-styles";
+import { cn } from "@/lib/utils";
 import { AccountMenu } from "./account-menu";
+import { ChromeScrim } from "./chrome-scrim";
+import {
+  FeedHeaderDesktopTitle,
+  HeaderTitleSlot,
+} from "@/components/layout/header-title-flight/header-title-slot";
+import { useActiveTitleFlightSurface } from "@/components/layout/header-title-flight/use-title-flight-surface";
+import { DashboardHeaderDesktopTitle } from "@/components/screens/professional-dashboard/dashboard-header-desktop-title";
+import { GuestAuthControls } from "./guest-auth-controls";
+import { NotificationBellButton } from "./notification-bell-button";
 
 interface TopHeaderProps {
   role: AuthRole;
@@ -14,29 +31,45 @@ interface TopHeaderProps {
 }
 
 export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeaderProps) {
-  return (
-    <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:max-w-430 lg:px-8">
+  const pathname = usePathname();
+  const active = useActiveTitleFlightSurface(pathname);
+  const feedDesktop =
+    active?.id === "feed" && active.flags.enabled && active.flags.mode === "desktop";
+  const dashboardDesktop =
+    active?.id === "dashboard" && active.flags.enabled && active.flags.mode === "desktop";
+  const showDashboardBell =
+    isLoggedIn && role !== "visitor" && isDashboardPath(pathname, role);
 
-        <div className="flex items-center gap-2 md:gap-4">
-          <BackButton onBack={onBack} />
-            <Link href="/" className="font-display text-xl tracking-wide text-wine-800">
-            Sigillus
-          </Link>
+  return (
+    <header className={cn(chromeGlassFixed, "pointer-events-none")}>
+      <ChromeScrim />
+
+      <div
+        className={cn(
+          chromeControlsRow,
+          chromeSafeTop,
+          "relative flex items-center gap-3 pb-3 sm:gap-4 md:pb-4",
+          shellContainerClass
+        )}
+      >
+        {feedDesktop ? <FeedHeaderDesktopTitle /> : null}
+        {dashboardDesktop ? <DashboardHeaderDesktopTitle /> : null}
+
+        <div className="relative z-20 flex min-w-0 flex-1 items-center gap-3 md:gap-5">
+          <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
+            <BackButton onBack={onBack} />
+            <HeaderTitleSlot />
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="relative z-20 flex shrink-0 items-center gap-2">
           {isLoggedIn ? (
-            <AccountMenu role={role} user={user} onLogout={onLogout} />
+            <>
+              {showDashboardBell ? <NotificationBellButton role={role} /> : null}
+              <AccountMenu role={role} user={user} onLogout={onLogout} />
+            </>
           ) : (
-            <div className="flex items-center gap-2 text-sm">
-              <Link href="/auth/login" className="rounded-lg px-3 py-2 text-zinc-700 transition hover:bg-zinc-100">
-                Entrar
-              </Link>
-              <Link href="/auth/cadastro" className="rounded-lg bg-wine-700 px-3 py-2 font-medium text-white transition hover:bg-wine-800" style={{ color: "#fff" }}>
-                Criar conta
-              </Link>
-            </div>
+            <GuestAuthControls />
           )}
         </div>
       </div>

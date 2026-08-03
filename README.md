@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Raparigator - Frontend
 
-## Getting Started
+Bem-vindo ao repositório frontend do projeto **Raparigator**. Este projeto foi construído utilizando as tecnologias mais modernas do ecossistema React, focado em performance, design e experiência do usuário (UX).
 
-First, run the development server:
+## 🚀 Tecnologias e Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router, Turbopack)
+- **Biblioteca de Interface:** [React 19](https://react.dev/)
+- **Estilização:** [Tailwind CSS v4](https://tailwindcss.com/)
+- **Animações e Micro-interações:** [Motion](https://motion.dev/)
+- **Ícones:** [Lucide React](https://lucide.dev/)
+- **Linguagem:** TypeScript
+- **Manipulação de Imagens:** `react-image-crop`
+
+## 📁 Estrutura Principal do Projeto
+
+A arquitetura do frontend foi dividida visando escalabilidade e separação de preocupações de rota.
+
+```
+app/
+├── (public)     # Rotas abertas (Feed, Autenticação, Anúncios, Checkout, Acompanhamento)
+├── (private)    # Rotas que exigem usuário logado (Painéis, Gerenciamento de Perfil)
+└── (admin)      # Rotas de uso exclusivo de administradores (Backoffice)
+
+components/
+├── ui/          # Componentes genéricos e primitivos (Botões, Inputs, Modais)
+├── layout/      # Componentes estruturais (Navbar, Footer, Sidebar)
+└── screens/     # Componentes e fragmentos maiores que compõem páginas
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠 Pré-requisitos
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Certifique-se de ter instalado em sua máquina:
+- **Node.js** (versão 20 ou superior)
+- Um gerenciador de pacotes da sua preferência (`npm`, `yarn`, `pnpm` ou `bun`).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 💻 Como Rodar o Projeto Localmente
 
-## Learn More
+1. **Clone o repositório e acesse o diretório:**
+   ```bash
+   # Navegue até o diretório do projeto
+   cd raparigator-front-nextjs
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Instale as dependências:**
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Configure as Variáveis de Ambiente:**
+   - Verifique quais variáveis locais de `.env` são necessárias (APIs, tokens, etc). 
+   - Crie um arquivo `.env.local` baseado em um `.env.example` (se existente).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. **Inicie o Servidor de Desenvolvimento:**
+   ```bash
+   # Com Turbopack (Recomendado para dev rápido)
+   npm run dev
 
-## Deploy on Vercel
+   # Sem Turbopack (Legacy)
+   npm run dev:legacy
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+5. O aplicativo estará disponível em: [http://localhost:3000](http://localhost:3000)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📦 Scripts Disponíveis
+
+- `npm run dev`: Inicia o servidor local usando o **Turbopack** para compilação super rápida.
+- `npm run dev:legacy`: Inicia o servidor local com o compilador padrão do Next.js.
+- `npm run build`: Faz a build otimizada da aplicação para ambiente de produção.
+- `npm run start`: Inicia o servidor Node para a versão já compilada pelo `build`.
+- `npm run lint`: Checa a qualidade de código utilizando ESLint.
+- `npm run share`: Script utilitário utilizando o `cloudflared tunnel` para expor o `localhost:3000` publicamente para testes externos (necessita ter o ngrok/cloudflared configurado).
+
+## 📝 Roadmap & TODO
+
+* Melhorar a página de visão do cliente/visitante.
+* Desenvolver componente/UI para conversão de contas Premium.
+* Implementar gatilhos e *calls-to-action* espalhadas por outras páginas para engajamento em planos Premium.
+
+## 🤝 Diretrizes de Contribuição
+
+1. **Commit Messages**: Procure utilizar padrões semânticos nos commits (ex: `feat:`, `fix:`, `chore:`, `style:`).
+2. **Branches**: Evite comitar diretamente na `main`. Crie branches descritivas como `feature/minha-feature` ou `fix/bug-navbar`.
+3. Certifique-se de executar o `npm run lint` e checar o visual antes de abrir Pull Requests.
+
+---
+
+*Desenvolvido focado em Alta Performance e Interfaces Ricas.*

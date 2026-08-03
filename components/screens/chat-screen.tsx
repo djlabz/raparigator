@@ -11,36 +11,45 @@ import {
   Flag,
   Image as ImageIcon,
   MoreHorizontal,
+  MessageSquareText,
   Pencil,
   Plus,
   RefreshCcw,
   Send,
   Shield,
   Trash2,
-  UserRound,
   WifiOff,
 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { AppShell } from "../layout/app-shell";
+import { FormEvent, type RefObject, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
+import { useSetShellChrome } from "@/components/layout/shell-chrome";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { PremiumConversionModal, type PremiumHighlight } from "@/components/ui/premium-conversion-modal";
 import { Toast } from "@/components/ui/toast";
+import { chromeCircle } from "@/lib/chrome-styles";
+import { useModalLock } from "@/lib/modal-lock";
 import {
-  deleteConversationFromInbox as apiDeleteConversationFromInbox,
-  getCachedChatSnapshot,
-  getChatSnapshot,
-  publishChatSnapshot,
-  reportConversation as apiReportConversation,
-  sendTextMessage,
-  sendViewOnceMediaMessage,
-  setConversationBlocked as apiSetConversationBlocked,
-  updateParticipantAlias as apiUpdateParticipantAlias,
-} from "@/lib/chat-service";
+  deleteChatConversationFromInbox,
+  ensureChatStore,
+  getChatStoreSnapshot,
+  getServerChatStoreSnapshot,
+  markConversationAsRead,
+  reseedChatStore,
+  reportChatConversation,
+  sendChatText,
+  sendChatViewOnceMedia,
+  setChatConversationBlocked,
+  subscribeChatStore,
+  updateChatParticipantAlias,
+} from "@/lib/chat-store";
 import { ads } from "@/lib/mock-data";
-import type { AvailabilityStatus, Conversation, Message } from "@/lib/types";
+import type { AvailabilityStatus, Conversation, Message, ProfessionalAd } from "@/lib/types";
 import { useAuthSession } from "@/lib/auth-session";
+import { usePremiumPlan } from "@/lib/premium-plan";
 import { cn } from "@/lib/utils";
 
 const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -49,7 +58,6 @@ const getStatusColor = (status: Conversation["contactStatus"]) => status === "on
 const getStatusLabel = (status: Conversation["contactStatus"]) => status === "online" ? "Online" : "Offline";
 
 const PROFESSIONAL_AVAILABILITY_STORAGE_KEY = "sigillus-professional-chat-availability";
-const PROFESSIONAL_AVAILABILITY_PANEL_STORAGE_KEY = "sigillus-professional-availability-panel-open";
 
 const professionalAvailabilityOptions: {
   value: AvailabilityStatus;
@@ -104,22 +112,121 @@ function getProfessionalAvailabilityOption(status: AvailabilityStatus) {
   return professionalAvailabilityOptions.find((item) => item.value === status) ?? professionalAvailabilityOptions[0];
 }
 
-function getProfessionalAvailabilityDescription(status: AvailabilityStatus) {
-  return getProfessionalAvailabilityOption(status).description;
+function subscribeNoop() {
+  return () => {};
 }
 
-function readAvailabilityPanelOpen(): boolean {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  return window.localStorage.getItem(PROFESSIONAL_AVAILABILITY_PANEL_STORAGE_KEY) === "true";
+function getClientMounted() {
+  return true;
 }
 
-function saveAvailabilityPanelOpen(open: boolean) {
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(PROFESSIONAL_AVAILABILITY_PANEL_STORAGE_KEY, open ? "true" : "false");
+function getServerMounted() {
+  return false;
+}
+
+function AvailabilityStatusSheet({
+  open,
+  value,
+  onClose,
+  onSelect,
+}: {
+  open: boolean;
+  value: AvailabilityStatus;
+  onClose: () => void;
+  onSelect: (status: AvailabilityStatus) => void;
+}) {
+  useModalLock(open);
+  const mounted = useSyncExternalStore(subscribeNoop, getClientMounted, getServerMounted);
+  const activeOption = getProfessionalAvailabilityOption(value);
+
+  if (!mounted) {
+    return null;
   }
+
+  return createPortal(
+    <AnimatePresence>
+      {open ? (
+        <motion.div
+          key="availability-sheet"
+          className="fixed inset-0 z-220 flex items-end justify-center px-3 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center sm:px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="availability-sheet-title"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <motion.button
+            type="button"
+            aria-label="Fechar disponibilidade"
+            className="absolute inset-0 bg-zinc-900/45"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={onClose}
+          />
+          <motion.div
+            className="relative z-10 w-full max-w-md overflow-hidden rounded-[1.75rem] bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:rounded-3xl sm:p-5"
+            initial={{ opacity: 0, y: 28, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 18, scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 420, damping: 34, mass: 0.85 }}
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p id="availability-sheet-title" className="text-lg font-semibold text-zinc-900">
+                  Disponibilidade
+                </p>
+                <p className="mt-1 text-sm leading-snug text-zinc-600">{activeOption.description}</p>
+              </div>
+              <button
+                type="button"
+                aria-label="Fechar"
+                onClick={onClose}
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-200 text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2" role="group" aria-label="Disponibilidade">
+              {professionalAvailabilityOptions.map((option) => {
+                const isActive = value === option.value;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => onSelect(option.value)}
+                    aria-pressed={isActive}
+                    className={cn(
+                      "flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition",
+                      isActive
+                        ? cn("border-transparent ring-1 shadow-sm", option.activeClass)
+                        : "border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-zinc-300 hover:bg-white",
+                    )}
+                  >
+                    <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", option.dotClass)} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-bold">{option.label}</span>
+                      <span className="mt-0.5 block text-xs leading-snug text-zinc-500">{option.description}</span>
+                    </span>
+                    {isActive ? <Check className="h-4 w-4 shrink-0" aria-hidden="true" /> : null}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>,
+    document.body,
+  );
 }
 
 const getMessageStatus = (message: Message) => {
@@ -135,9 +242,15 @@ type ToastState = { title: string; message: string; type?: "success" | "error" |
 
 export function ChatScreen() {
   const { isLoggedIn, user, role } = useAuthSession();
-  const initialSnapshot = getCachedChatSnapshot();
-  const [localConversations, setLocalConversations] = useState<Conversation[]>(() => initialSnapshot?.conversations ?? []);
-  const [localMessages, setLocalMessages] = useState<Message[]>(() => initialSnapshot?.messages ?? []);
+  const { isPremium, canSendViewOnce } = usePremiumPlan();
+  ensureChatStore();
+  const snapshot = useSyncExternalStore(
+    subscribeChatStore,
+    getChatStoreSnapshot,
+    getServerChatStoreSnapshot,
+  );
+  const localConversations = snapshot.conversations;
+  const localMessages = snapshot.messages;
   const [activeConversationId, setActiveConversationId] = useState("");
   const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
@@ -146,25 +259,50 @@ export function ChatScreen() {
   const [renameDraft, setRenameDraft] = useState("");
   const [draft, setDraft] = useState("");
   const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(() => !initialSnapshot);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState>(null);
-  const [globalAlias, setGlobalAlias] = useState(user?.alias ?? "Cliente reservado");
+  const aliasFromUser = user?.alias ?? "Cliente reservado";
+  const [globalAlias, setGlobalAlias] = useState(aliasFromUser);
+  const [previousAliasFromUser, setPreviousAliasFromUser] = useState(aliasFromUser);
   const [globalAliasDraft, setGlobalAliasDraft] = useState(globalAlias);
   const [globalAliasModalOpen, setGlobalAliasModalOpen] = useState(false);
   const [presenceVisible, setPresenceVisible] = useState(true);
   const [professionalAvailability, setProfessionalAvailability] = useState<AvailabilityStatus>(() => readProfessionalAvailability());
-  const [availabilityPanelOpen, setAvailabilityPanelOpen] = useState(() => readAvailabilityPanelOpen());
+  const [availabilitySheetOpen, setAvailabilitySheetOpen] = useState(false);
   const [attachmentMenuOpen, setAttachmentMenuOpen] = useState(false);
   const [viewOnceModalOpen, setViewOnceModalOpen] = useState(false);
+  const [premiumUpsellOpen, setPremiumUpsellOpen] = useState(false);
+  const [premiumUpsellHighlight, setPremiumUpsellHighlight] = useState<PremiumHighlight>("media");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [blockModalOpen, setBlockModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
 
+  if (aliasFromUser !== previousAliasFromUser) {
+    setPreviousAliasFromUser(aliasFromUser);
+    setGlobalAlias(aliasFromUser);
+  }
+
+  const visibleConversations = useMemo(
+    () => localConversations.filter((conversation) => !conversation.deletedFromInboxAt),
+    [localConversations]
+  );
+
+  const fallbackConversationId = visibleConversations[0]?.id ?? "";
+  const hasActiveConversation = visibleConversations.some(
+    (conversation) => conversation.id === activeConversationId
+  );
+  const resolvedActiveConversationId = hasActiveConversation
+    ? activeConversationId
+    : fallbackConversationId;
+
+  if (resolvedActiveConversationId !== activeConversationId) {
+    setActiveConversationId(resolvedActiveConversationId);
+  }
+
   const activeAvailabilityOption = getProfessionalAvailabilityOption(professionalAvailability);
 
-  const activeConversation = localConversations.find((conversation) => conversation.id === activeConversationId) ?? localConversations[0];
+  const activeConversation = localConversations.find((conversation) => conversation.id === resolvedActiveConversationId) ?? localConversations[0];
   const displayContactName = activeConversation?.contactName ?? "";
   const participantAlias = activeConversation?.currentUserAlias ?? "";
   const currentDisplayName = participantAlias || globalAlias || "Cliente reservado";
@@ -188,55 +326,19 @@ export function ChatScreen() {
     );
   }, [localConversations]);
 
-  const visibleConversations = useMemo(
-    () => localConversations.filter((conversation) => !conversation.deletedFromInboxAt),
-    [localConversations]
-  );
-
   const showToast = (payload: NonNullable<ToastState>) => {
     setToast(payload);
     window.setTimeout(() => setToast(null), 3600);
   };
 
-  const loadChat = async (options?: { showLoading?: boolean }) => {
-    const showLoading = options?.showLoading ?? !getCachedChatSnapshot();
-
-    if (showLoading) {
-      setIsLoading(true);
-    }
-
-    setLoadError(null);
-
+  const loadChat = () => {
     try {
-      const snapshot = await getChatSnapshot();
-      setLocalConversations(snapshot.conversations);
-      setLocalMessages(snapshot.messages);
-      setActiveConversationId((current) => current || snapshot.conversations[0]?.id || "");
+      reseedChatStore();
+      setLoadError(null);
     } catch {
       setLoadError("Não foi possível carregar suas conversas agora.");
-    } finally {
-      setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    loadChat();
-  }, []);
-
-  useEffect(() => {
-    setGlobalAlias(user?.alias ?? "Cliente reservado");
-  }, [user?.alias]);
-
-  useEffect(() => {
-    if (!activeConversationId && visibleConversations[0]?.id) {
-      setActiveConversationId(visibleConversations[0].id);
-      return;
-    }
-
-    if (activeConversationId && !visibleConversations.some((conversation) => conversation.id === activeConversationId)) {
-      setActiveConversationId(visibleConversations[0]?.id ?? "");
-    }
-  }, [activeConversationId, visibleConversations]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 767px)");
@@ -252,7 +354,7 @@ export function ChatScreen() {
   }, []);
 
   useEffect(() => {
-    if (!isMobileViewport) return;
+    if (!isMobileViewport || !mobileConversationOpen) return;
 
     const previousBodyOverflow = document.body.style.overflow;
     const previousBodyOverscrollBehavior = document.body.style.overscrollBehavior;
@@ -270,7 +372,7 @@ export function ChatScreen() {
       document.documentElement.style.overflow = previousHtmlOverflow;
       document.documentElement.style.overscrollBehavior = previousHtmlOverscrollBehavior;
     };
-  }, [isMobileViewport]);
+  }, [isMobileViewport, mobileConversationOpen]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -285,35 +387,6 @@ export function ChatScreen() {
     return () => window.clearTimeout(timeout);
   }, [lastSentMessageId]);
 
-  useEffect(() => {
-    if (localConversations.length === 0 && localMessages.length === 0) {
-      return;
-    }
-
-    publishChatSnapshot(localConversations, localMessages);
-  }, [localConversations, localMessages]);
-
-  const markConversationAsRead = (conversationId: string) => {
-    setLocalConversations((previous) => {
-      const conversation = previous.find((item) => item.id === conversationId);
-      if (!conversation || conversation.unread === 0) {
-        return previous;
-      }
-
-      return previous.map((item) => (
-        item.id === conversationId ? { ...item, unread: 0 } : item
-      ));
-    });
-  };
-
-  const syncConversationPreview = (conversationId: string, lastMessage: string) => {
-    setLocalConversations((previous) => previous.map((conversation) => (
-      conversation.id === conversationId
-        ? { ...conversation, lastMessage, lastMessageAt: "agora", unread: 0 }
-        : conversation
-    )));
-  };
-
   const openConversation = (conversationId: string) => {
     markConversationAsRead(conversationId);
     setActiveConversationId(conversationId);
@@ -327,114 +400,94 @@ export function ChatScreen() {
     const content = draft.trim();
     if (!content || !activeConversation || activeConversation.isBlocked) return;
 
-    const optimisticId = `local-${Date.now()}`;
-    const optimisticMessage: Message = {
-      id: optimisticId,
-      conversationId: activeConversation.id,
-      senderId: "current-user",
-      senderRole: "cliente",
-      senderDisplayName: currentDisplayName,
-      from: "me",
-      content,
-      messageType: "text",
-      status: "sending",
-      sentAt: "agora",
-      deliveredAt: null,
-      editedAt: null,
-      deletedAt: null,
-    };
-
-    setLocalMessages((previous) => [...previous, optimisticMessage]);
-    syncConversationPreview(activeConversation.id, content);
-    setLastSentMessageId(optimisticId);
     setDraft("");
-
-    try {
-      const confirmed = await sendTextMessage(activeConversation.id, content, currentDisplayName);
-      setLocalMessages((previous) => previous.map((message) => (
-        message.id === optimisticId ? confirmed : message
-      )));
-      setLastSentMessageId(confirmed.id);
-    } catch {
-      setLocalMessages((previous) => previous.map((message) => (
-        message.id === optimisticId ? { ...message, status: "failed" } : message
-      )));
+    const result = await sendChatText(activeConversation.id, content, currentDisplayName);
+    if (result.ok) {
+      setLastSentMessageId(result.messageId);
+      return;
     }
+    if (result.messageId) {
+      setLastSentMessageId(result.messageId);
+    }
+  };
+
+  const openPremiumUpsell = (highlight: PremiumHighlight) => {
+    setPremiumUpsellHighlight(highlight);
+    setPremiumUpsellOpen(true);
+  };
+
+  const handleOpenViewOnceModal = () => {
+    if (!canSendViewOnce) {
+      setAttachmentMenuOpen(false);
+      openPremiumUpsell("media");
+      return;
+    }
+
+    setViewOnceModalOpen(true);
   };
 
   const handleSendViewOnceMedia = async () => {
     if (!activeConversation || activeConversation.isBlocked) return;
 
-    const optimisticId = `local-media-${Date.now()}`;
-    const optimisticMessage: Message = {
-      id: optimisticId,
-      conversationId: activeConversation.id,
-      senderId: "current-user",
-      senderRole: "cliente",
-      senderDisplayName: currentDisplayName,
-      from: "me",
-      messageType: "media",
-      status: "sending",
-      media: {
-        id: `local-asset-${Date.now()}`,
-        kind: "image",
-        name: "Mídia temporária",
-        isViewOnce: true,
-        openedAt: null,
-      },
-      sentAt: "agora",
-      deliveredAt: null,
-      editedAt: null,
-      deletedAt: null,
-    };
+    if (!canSendViewOnce) {
+      setViewOnceModalOpen(false);
+      openPremiumUpsell("media");
+      return;
+    }
 
-    setLocalMessages((previous) => [...previous, optimisticMessage]);
-    syncConversationPreview(activeConversation.id, "Mídia temporária");
-    setLastSentMessageId(optimisticId);
     setViewOnceModalOpen(false);
     setAttachmentMenuOpen(false);
 
-    try {
-      const confirmed = await sendViewOnceMediaMessage(activeConversation.id, currentDisplayName);
-      setLocalMessages((previous) => previous.map((message) => (
-        message.id === optimisticId ? confirmed : message
-      )));
-      setLastSentMessageId(confirmed.id);
+    const result = await sendChatViewOnceMedia(activeConversation.id, currentDisplayName);
+    if (result.ok) {
+      setLastSentMessageId(result.messageId);
       showToast({ title: "Mídia temporária enviada", message: "Ela aparecerá como visualização única na conversa.", type: "success" });
-    } catch {
-      setLocalMessages((previous) => previous.map((message) => (
-        message.id === optimisticId ? { ...message, status: "failed" } : message
-      )));
+      return;
+    }
+    if (result.messageId) {
+      setLastSentMessageId(result.messageId);
     }
   };
 
   const openRenameModal = () => {
     if (!activeConversation) return;
 
+    if (!isPremium) {
+      setProfilePanelOpen(false);
+      openPremiumUpsell("alias");
+      return;
+    }
+
     setRenameDraft(activeConversation.currentUserAlias ?? "");
     setRenameModalOpen(true);
     setProfilePanelOpen(false);
   };
 
+  const openGlobalAliasModal = () => {
+    setGlobalAliasDraft(globalAlias);
+    setGlobalAliasModalOpen(true);
+  };
+
   const saveParticipantAlias = async () => {
     if (!activeConversation) return;
-
     const sanitized = renameDraft.trim();
-    // Optimistic update
-    setLocalConversations((previous) => previous.map((conversation) => (
-      conversation.id === activeConversation.id
-        ? { ...conversation, currentUserAlias: sanitized || undefined }
-        : conversation
-    )));
     setRenameModalOpen(false);
-    showToast({ title: "Apelido atualizado", message: sanitized ? "Este apelido será usado nesta conversa." : "A conversa voltou a usar seu apelido geral.", type: "success" });
-
-    // Persist via service (no-op em mock, chamada real quando backend estiver pronto)
-    try {
-      await apiUpdateParticipantAlias(activeConversation.id, sanitized || null);
-    } catch {
-      // Silencia no modo mock; em produção, considerar reverter o estado ou logar o erro
+    const result = await updateChatParticipantAlias(activeConversation.id, sanitized || null);
+    if (result.ok) {
+      showToast({
+        title: "Apelido atualizado",
+        message: sanitized
+          ? "Este apelido será usado nesta conversa."
+          : "A conversa voltou a usar seu apelido geral.",
+        type: "success",
+      });
+      return;
     }
+    showToast({
+      title: "Não foi possível salvar",
+      message: "Tente novamente em instantes.",
+      type: "error",
+    });
   };
 
   const saveGlobalAlias = () => {
@@ -449,57 +502,56 @@ export function ChatScreen() {
     if (!activeConversation) return;
 
     const conversationId = activeConversation.id;
-    const now = new Date().toISOString();
-    // Optimistic update
-    setLocalConversations((previous) => previous.map((conversation) => (
-      conversation.id === conversationId ? { ...conversation, deletedFromInboxAt: now } : conversation
-    )));
     setProfilePanelOpen(false);
     setDeleteModalOpen(false);
     setMobileConversationOpen(false);
-    showToast({ title: "Conversa removida", message: "Ela saiu da sua caixa de entrada.", type: "success" });
 
-    try {
-      await apiDeleteConversationFromInbox(conversationId);
-    } catch {
-      // Silencia no modo mock; em produção, considerar reverter o estado
+    const result = await deleteChatConversationFromInbox(conversationId);
+    if (result.ok) {
+      showToast({ title: "Conversa removida", message: "Ela saiu da sua caixa de entrada.", type: "success" });
+      return;
     }
+    showToast({
+      title: "Não foi possível excluir",
+      message: "Tente novamente em instantes.",
+      type: "error",
+    });
   };
 
   const handleBlockUser = async () => {
     if (!activeConversation) return;
 
-    // Optimistic update
-    setLocalConversations((previous) => previous.map((conversation) => (
-      conversation.id === activeConversation.id ? { ...conversation, isBlocked: true } : conversation
-    )));
     setProfilePanelOpen(false);
     setBlockModalOpen(false);
-    showToast({ title: "Usuário bloqueado", message: "Novas mensagens ficam desativadas nesta conversa.", type: "success" });
 
-    try {
-      await apiSetConversationBlocked(activeConversation.id, true);
-    } catch {
-      // Silencia no modo mock
+    const result = await setChatConversationBlocked(activeConversation.id, true);
+    if (result.ok) {
+      showToast({ title: "Usuário bloqueado", message: "Novas mensagens ficam desativadas nesta conversa.", type: "success" });
+      return;
     }
+    showToast({
+      title: "Não foi possível bloquear",
+      message: "Tente novamente em instantes.",
+      type: "error",
+    });
   };
 
   const handleUnblockUser = async () => {
     if (!activeConversation) return;
 
-    // Optimistic update
-    setLocalConversations((previous) => previous.map((conversation) => (
-      conversation.id === activeConversation.id ? { ...conversation, isBlocked: false } : conversation
-    )));
     setProfilePanelOpen(false);
     setBlockModalOpen(false);
-    showToast({ title: "Usuário desbloqueado", message: "O envio de mensagens foi reativado nesta conversa.", type: "success" });
 
-    try {
-      await apiSetConversationBlocked(activeConversation.id, false);
-    } catch {
-      // Silencia no modo mock
+    const result = await setChatConversationBlocked(activeConversation.id, false);
+    if (result.ok) {
+      showToast({ title: "Usuário desbloqueado", message: "O envio de mensagens foi reativado nesta conversa.", type: "success" });
+      return;
     }
+    showToast({
+      title: "Não foi possível desbloquear",
+      message: "Tente novamente em instantes.",
+      type: "error",
+    });
   };
 
   const handleReportConversation = async () => {
@@ -509,13 +561,17 @@ export function ChatScreen() {
     setReportModalOpen(false);
     setProfilePanelOpen(false);
     setReportReason("");
-    showToast({ title: "Denúncia registrada", message: "A denúncia foi enviada para análise pela equipe.", type: "success" });
 
-    try {
-      await apiReportConversation(activeConversation.id, reason);
-    } catch {
-      // Silencia no modo mock
+    const result = await reportChatConversation(activeConversation.id, reason);
+    if (result.ok) {
+      showToast({ title: "Denúncia registrada", message: "A denúncia foi enviada para análise pela equipe.", type: "success" });
+      return;
     }
+    showToast({
+      title: "Não foi possível denunciar",
+      message: "Tente novamente em instantes.",
+      type: "error",
+    });
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -524,124 +580,86 @@ export function ChatScreen() {
   };
 
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Olá ${activeConversation?.contactName ?? ""}, vim pelo Sigillus.`)}`;
+  const conversationOpenMobile =
+    isLoggedIn && isMobileViewport && mobileConversationOpen && Boolean(activeConversation);
+
+  useSetShellChrome({
+    hideMobileBottomNav: conversationOpenMobile,
+    hideTopHeader: conversationOpenMobile,
+    mainClassName: conversationOpenMobile ? "px-0 pb-0 pt-0 sm:px-0" : undefined,
+  });
 
   if (!isLoggedIn) {
     return (
-      <AppShell>
-        <div className="flex min-h-120 items-center justify-center rounded-3xl border border-zinc-200 bg-white p-6 text-center shadow-sm">
-          <div className="max-w-md">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-wine-50 text-wine-700">
-              <Shield size={22} />
-            </div>
-            <h1 className="mt-4 text-2xl font-semibold text-zinc-900">Chat privado</h1>
-            <p className="mt-2 text-sm leading-relaxed text-zinc-600">Entre na sua conta para acessar conversas, apelidos e recursos de segurança da plataforma.</p>
-            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
-              <Link href="/auth/login">
-                <Button>Entrar</Button>
-              </Link>
-              <Link href="/auth/cadastro">
-                <Button variant="secondary">Criar conta</Button>
-              </Link>
-            </div>
+      <div className="flex min-h-120 items-center justify-center rounded-3xl border border-zinc-200 bg-white p-6 text-center shadow-sm">
+        <div className="max-w-md">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-wine-50 text-wine-700">
+            <Shield size={22} />
+          </div>
+          <h1 className="mt-4 text-2xl font-semibold text-zinc-900">Chat privado</h1>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-600">Entre na sua conta para acessar conversas, apelidos e recursos de segurança da plataforma.</p>
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <Link href="/auth/login">
+              <Button>Entrar</Button>
+            </Link>
+            <Link href="/auth/cadastro">
+              <Button variant="secondary">Criar conta</Button>
+            </Link>
           </div>
         </div>
-      </AppShell>
+      </div>
     );
   }
 
   return (
-    <AppShell hideMobileBottomNav={isMobileViewport && mobileConversationOpen} mainClassName="pt-0 md:pt-1">
+    <>
       <div className="fixed right-4 top-4 z-240 w-[min(22rem,calc(100vw-2rem))] space-y-2">
         {toast ? <Toast title={toast.title} message={toast.message} type={toast.type} /> : null}
       </div>
 
       <div className={cn(
-        "relative flex w-full min-h-0 flex-col overflow-hidden bg-white md:grid md:grid-cols-[340px_minmax(0,1fr)] md:rounded-[28px] md:border md:border-zinc-200/80 md:shadow-[0_20px_60px_rgba(15,23,42,0.08)]",
-        "min-h-88 h-[calc(100svh-9.5rem)] md:min-h-128 md:h-[calc(100dvh-12.5rem)]"
+        "relative flex w-full min-h-0 flex-col overflow-hidden bg-zinc-50 md:grid md:grid-cols-[340px_minmax(0,1fr)] md:rounded-[28px] md:border md:border-zinc-200/80 md:bg-white md:shadow-[0_20px_60px_rgba(15,23,42,0.08)]",
+        "h-[calc(100dvh-9.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] md:min-h-128 md:h-[calc(100dvh-12.5rem)]",
+        conversationOpenMobile && "max-md:hidden"
       )}>
-        <aside className={cn(
-          "flex h-full min-h-0 w-full flex-col border-b border-zinc-200 bg-zinc-50/80 md:border-b-0 md:border-r md:shrink-0",
-          isMobileViewport && mobileConversationOpen ? "hidden md:flex" : "flex"
-        )}>
-          <div className="border-b border-zinc-200 bg-white/80 px-4 py-1.5 backdrop-blur-sm">
+        <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-zinc-50/80 md:shrink-0 md:border-r md:border-zinc-200">
+          <div className="shrink-0 border-b border-zinc-200 bg-white/90 px-4 py-1.5 backdrop-blur-sm">
             <div className="flex items-center justify-between gap-2.5">
               <div className="min-w-0">
                 <h1 className="text-lg font-bold tracking-tight text-zinc-900">Conversas</h1>
-                <p className="mt-0.5 truncate text-[11px] font-medium text-zinc-500">Você aparece como {globalAlias} para os outros</p>
+                <p className="mt-0.5 truncate text-[11px] font-medium text-zinc-500">
+                  {`Você aparece como '${globalAlias}' para os outros`}
+                </p>
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  setGlobalAliasDraft(globalAlias);
-                  setGlobalAliasModalOpen(true);
-                }}
-                className="group relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-sm transition hover:bg-zinc-50 hover:border-zinc-300"
+                onClick={openGlobalAliasModal}
+                className="group relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-sm transition hover:border-zinc-300 hover:bg-zinc-50 hover:text-wine-700"
                 aria-label="Alterar apelido geral"
               >
-                <UserRound size={18} />
+                <MessageSquareText size={18} />
                 <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-[1.5px] border-white bg-wine-700 text-white shadow-sm transition-transform group-hover:scale-110">
                   <Pencil size={10} strokeWidth={2.5} />
                 </div>
               </button>
             </div>
             {role === "profissional" ? (
-              <div className="mt-2.5 rounded-2xl border border-zinc-200 bg-zinc-50">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAvailabilityPanelOpen((current) => {
-                      const next = !current;
-                      saveAvailabilityPanelOpen(next);
-                      return next;
-                    });
-                  }}
-                  aria-expanded={availabilityPanelOpen}
-                  className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left"
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <p className="shrink-0 text-sm font-semibold text-zinc-800">Disponibilidade</p>
-                    <span className={cn("h-2 w-2 shrink-0 rounded-full", activeAvailabilityOption.dotClass)} />
-                    <span className="truncate text-xs font-semibold text-zinc-600">{activeAvailabilityOption.label}</span>
-                  </div>
-                  <ChevronDown
-                    className={cn("h-4 w-4 shrink-0 text-zinc-400 transition-transform duration-200", availabilityPanelOpen && "rotate-180")}
-                  />
-                </button>
-
-                {availabilityPanelOpen ? (
-                  <div className="border-t border-zinc-200 px-3 pb-3 pt-2">
-                    <p className="min-h-8 text-xs leading-4 text-zinc-500">
-                      {getProfessionalAvailabilityDescription(professionalAvailability)}
-                    </p>
-                    <div className="mt-2 grid grid-cols-3 gap-1.5" role="group" aria-label="Disponibilidade">
-                      {professionalAvailabilityOptions.map((option) => {
-                        const isActive = professionalAvailability === option.value;
-
-                        return (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => {
-                              setProfessionalAvailability(option.value);
-                              saveProfessionalAvailability(option.value);
-                            }}
-                            aria-pressed={isActive}
-                            className={cn(
-                              "flex flex-col items-center gap-1 rounded-xl border px-1.5 py-2 text-center transition",
-                              isActive
-                                ? cn("border-transparent ring-1 shadow-sm", option.activeClass)
-                                : "border-transparent bg-white/70 text-zinc-500 hover:bg-white hover:text-zinc-700",
-                            )}
-                          >
-                            <span className={cn("h-2 w-2 rounded-full", option.dotClass)} />
-                            <span className="text-[10px] font-bold leading-none">{option.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+              <button
+                type="button"
+                onClick={() => setAvailabilitySheetOpen(true)}
+                aria-haspopup="dialog"
+                aria-expanded={availabilitySheetOpen}
+                className="mt-2.5 flex w-full items-center justify-between gap-2 rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-left transition hover:bg-zinc-100"
+              >
+                <div className="flex min-w-0 items-center gap-2">
+                  <p className="shrink-0 text-sm font-semibold text-zinc-800">Disponibilidade</p>
+                  <span className={cn("h-2 w-2 shrink-0 rounded-full", activeAvailabilityOption.dotClass)} />
+                  <span className="truncate text-xs font-semibold text-zinc-600">{activeAvailabilityOption.label}</span>
+                </div>
+                <ChevronDown
+                  className={cn("h-4 w-4 shrink-0 text-zinc-400 transition-transform duration-200", availabilitySheetOpen && "rotate-180")}
+                />
+              </button>
             ) : (
               <div className="mt-2.5 flex items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
                 <div className="min-w-0 pr-3">
@@ -671,76 +689,72 @@ export function ChatScreen() {
             )}
           </div>
 
-          {isLoading ? (
-            <div className="space-y-2 p-2.5">
-              {[0, 1, 2].map((item) => (
-                <div key={item} className="flex items-center gap-3 rounded-2xl border border-zinc-100 bg-white p-3">
-                  <div className="h-12 w-12 animate-pulse rounded-full bg-zinc-200" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3 w-28 animate-pulse rounded bg-zinc-200" />
-                    <div className="h-3 w-44 animate-pulse rounded bg-zinc-100" />
-                  </div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            {loadError ? (
+              <div className="flex min-h-full items-center justify-center p-6 text-center">
+                <div>
+                  <WifiOff className="mx-auto text-zinc-400" size={28} />
+                  <p className="mt-3 text-sm font-semibold text-zinc-800">{loadError}</p>
+                  <Button className="mt-4" variant="secondary" size="sm" onClick={loadChat}>
+                    <RefreshCcw size={15} />
+                    Tentar novamente
+                  </Button>
                 </div>
-              ))}
-            </div>
-          ) : loadError ? (
-            <div className="flex flex-1 items-center justify-center p-6 text-center">
-              <div>
-                <WifiOff className="mx-auto text-zinc-400" size={28} />
-                <p className="mt-3 text-sm font-semibold text-zinc-800">{loadError}</p>
-                <Button className="mt-4" variant="secondary" size="sm" onClick={() => void loadChat()}>
-                  <RefreshCcw size={15} />
-                  Tentar novamente
-                </Button>
               </div>
-            </div>
-          ) : visibleConversations.length === 0 ? (
-            <div className="flex flex-1 items-center justify-center p-6 text-center">
-              <div>
-                <p className="text-sm font-semibold text-zinc-800">Nenhuma conversa na caixa</p>
-                <p className="mt-1 text-xs text-zinc-500">Quando uma conversa for iniciada, ela aparecerá aqui.</p>
+            ) : visibleConversations.length === 0 ? (
+              <div className="flex min-h-full items-center justify-center p-6 text-center">
+                <div>
+                  <p className="text-sm font-semibold text-zinc-800">Nenhuma conversa na caixa</p>
+                  <p className="mt-1 text-xs text-zinc-500">Quando uma conversa for iniciada, ela aparecerá aqui.</p>
+                </div>
               </div>
-            </div>
-          ) : (
-            <ul className="flex-1 space-y-1.5 overflow-y-auto p-2.5">
-              {visibleConversations.map((conversation) => (
-                <li key={conversation.id}>
-                  <button
-                    onClick={() => openConversation(conversation.id)}
-                    className={cn(
-                      "group flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-all duration-200",
-                      activeConversationId === conversation.id
-                        ? "border-wine-200 bg-white shadow-[0_10px_25px_rgba(15,23,42,0.06)] ring-1 ring-wine-500/10"
-                        : "border-transparent bg-transparent hover:border-zinc-200 hover:bg-white/80 hover:shadow-sm"
-                    )}
-                  >
-                    <div className="relative h-12 w-12 shrink-0">
-                      <Image src={conversationAvatars[conversation.id] || "/placeholder.png"} alt={conversation.contactName} fill className="rounded-full border border-zinc-100 object-cover" />
-                      <span className={cn("absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white", getStatusColor(conversation.contactStatus))} />
-                    </div>
-                    <div className="min-w-0 flex-1 text-left">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <p className="truncate font-bold text-zinc-900 group-hover:text-wine-800">{conversation.contactName}</p>
-                        <span className="text-[10px] font-medium text-zinc-400">{conversation.lastMessageAt}</span>
+            ) : (
+              <ul className="space-y-1.5 p-2.5">
+                {visibleConversations.map((conversation) => (
+                  <li key={conversation.id}>
+                    <button
+                      onClick={() => openConversation(conversation.id)}
+                      className={cn(
+                        "group flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-all duration-200",
+                        activeConversationId === conversation.id
+                          ? "border-wine-200 bg-white shadow-[0_10px_25px_rgba(15,23,42,0.06)] ring-1 ring-wine-500/10"
+                          : "border-transparent bg-transparent hover:border-zinc-200 hover:bg-white/80 hover:shadow-sm"
+                      )}
+                    >
+                      <div className="relative h-12 w-12 shrink-0">
+                        <Image src={conversationAvatars[conversation.id] || "/placeholder.png"} alt={conversation.contactName} fill className="rounded-full border border-zinc-100 object-cover" sizes="48px" />
+                        <span className={cn("absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white", getStatusColor(conversation.contactStatus))} />
                       </div>
-                      <p className="truncate text-xs text-zinc-500">{conversation.lastMessage}</p>
-                    </div>
-                    {conversation.unread > 0 ? (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-wine-700 px-1.5 text-[10px] font-bold text-white">{conversation.unread}</span>
-                    ) : null}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+                      <div className="min-w-0 flex-1 text-left">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="truncate font-bold text-zinc-900 group-hover:text-wine-800">{conversation.contactName}</p>
+                          <span className="text-[10px] font-medium text-zinc-400">{conversation.lastMessageAt}</span>
+                        </div>
+                        <p className="truncate text-xs text-zinc-500">{conversation.lastMessage}</p>
+                      </div>
+                      {conversation.unread > 0 ? (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-wine-700 px-1.5 text-[10px] font-bold text-white">{conversation.unread}</span>
+                      ) : null}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </aside>
 
-        <section className={cn(
-          "flex min-h-0 flex-1 flex-col overflow-hidden bg-zinc-100/50 overscroll-none",
-          isMobileViewport && mobileConversationOpen ? "fixed inset-0 md:relative md:z-auto md:h-auto md:min-h-0 md:flex" : "hidden md:flex"
-        )}
-          style={isMobileViewport && mobileConversationOpen ? { zIndex: 120, height: "100dvh", minHeight: "100dvh" } : undefined}
-        >
+        <AvailabilityStatusSheet
+          open={availabilitySheetOpen}
+          value={professionalAvailability}
+          onClose={() => setAvailabilitySheetOpen(false)}
+          onSelect={(status) => {
+            setProfessionalAvailability(status);
+            saveProfessionalAvailability(status);
+            setAvailabilitySheetOpen(false);
+          }}
+        />
+
+        <section className="relative hidden min-h-0 flex-1 flex-col overflow-hidden bg-zinc-100/50 overscroll-none md:flex">
           {!activeConversation ? (
             <div className="flex flex-1 items-center justify-center p-6 text-center">
               <div>
@@ -749,194 +763,73 @@ export function ChatScreen() {
               </div>
             </div>
           ) : (
-            <>
-              <header className="flex items-center gap-3 border-b border-zinc-200 bg-white/90 p-4 shadow-sm backdrop-blur-sm md:p-5">
-                <div className="md:hidden">
-                  <button onClick={() => { setMobileConversationOpen(false); setProfilePanelOpen(false); }} className="-ml-2 rounded-full p-2 text-zinc-600 hover:bg-zinc-100" aria-label="Voltar">
-                    <ArrowLeft size={24} strokeWidth={2.5} />
-                  </button>
-                </div>
-
-                <button type="button" className="group flex flex-1 cursor-pointer items-center gap-3 text-left" onClick={() => setProfilePanelOpen(true)}>
-                  <div className="relative h-10 w-10">
-                    <Image src={conversationAvatars[activeConversationId] || "/placeholder.png"} alt="Avatar" fill className="rounded-full object-cover" />
-                    <span className={cn("absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white", getStatusColor(activeConversation.contactStatus))} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold leading-none text-zinc-900">{displayContactName}</p>
-                    <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-zinc-500">{getStatusLabel(activeConversation.contactStatus)}</p>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setProfilePanelOpen(true)}
-                  className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
-                  aria-label="Abrir opções do contato"
-                >
-                  <MoreHorizontal size={18} />
-                </button>
-              </header>
-
-              {activeConversation.isBlocked ? (
-                <div className="border-b border-wine-100 bg-wine-50 px-4 py-3 text-sm font-medium text-wine-800">
-                  Usuário bloqueado. O envio de novas mensagens está desativado nesta conversa.
-                </div>
-              ) : null}
-
-              <div
-                className={cn(
-                  "absolute inset-0 z-20 bg-zinc-900/30 px-3 transition-opacity duration-200 md:px-5",
-                  profilePanelOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-                )}
-                onClick={() => setProfilePanelOpen(false)}
-              >
-                <div
-                  className={cn(
-                    "mt-20 rounded-2xl border border-zinc-200 bg-white p-3 shadow-xl transition-all duration-250 ease-out md:ml-auto md:mr-4 md:mt-6 md:w-90",
-                    profilePanelOpen ? "translate-y-0 scale-100 opacity-100" : "-translate-y-4 scale-[0.98] opacity-0"
-                  )}
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <div className="px-2 pb-2">
-                    <p className="truncate text-sm font-bold text-zinc-900">{displayContactName}</p>
-                    <p className="mt-1 text-xs uppercase tracking-wider text-zinc-400">Ações da conversa</p>
-                  </div>
-
-                  <div className="space-y-1">
-                    <button type="button" onClick={openRenameModal} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
-                      <UserRound size={16} />
-                      Alterar apelido para essa conversa
-                    </button>
-
-                    {activeAd ? (
-                      <Link href={`/anuncio/${activeAd.slug}`} onClick={() => setProfilePanelOpen(false)} className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
-                        Ver anúncio público
-                      </Link>
-                    ) : (
-                      <button type="button" disabled className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-400">
-                        Ver anúncio público
-                      </button>
-                    )}
-
-                    <a href={whatsappUrl} target="_blank" rel="noreferrer" className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
-                      Ir para WhatsApp
-                    </a>
-
-                    <button type="button" onClick={() => setBlockModalOpen(true)} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50">
-                      <Ban size={16} />
-                      {activeConversation.isBlocked ? "Desbloquear usuário" : "Bloquear usuário"}
-                    </button>
-
-                    <button type="button" onClick={() => setReportModalOpen(true)} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50">
-                      <Flag size={16} />
-                      Denunciar conversa
-                    </button>
-
-                    <button type="button" onClick={() => setDeleteModalOpen(true)} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-wine-700 transition hover:bg-wine-50">
-                      <Trash2 size={16} />
-                      Excluir da minha caixa
-                    </button>
-                  </div>
-
-                  <div className="mt-2 border-t border-zinc-100 px-2 pt-2">
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">Seu apelido para esse contato</p>
-                    <p className="mt-1 text-sm font-semibold text-zinc-700">{participantAlias || globalAlias}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-1 space-y-4 overflow-y-auto bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.8),rgba(248,250,252,0.92)_38%,rgba(244,244,245,1)_100%)] p-4 md:p-6">
-                {currentMessages.length === 0 ? (
-                  <div className="flex h-full items-center justify-center text-center">
-                    <div>
-                      <p className="text-sm font-semibold text-zinc-800">Nenhuma mensagem ainda</p>
-                      <p className="mt-1 text-xs text-zinc-500">Envie a primeira mensagem para iniciar a conversa.</p>
-                    </div>
-                  </div>
-                ) : currentMessages.map((message) => {
-                  const status = getMessageStatus(message);
-                  const StatusIcon = status?.icon;
-
-                  return (
-                    <div key={message.id} className={cn(
-                      "flex max-w-[85%] flex-col md:max-w-[68%]",
-                      message.from === "me" ? "ml-auto items-end" : "mr-auto items-start",
-                      message.from === "me" && message.id === lastSentMessageId ? "message-sent-pop" : ""
-                    )}>
-                      <div className={cn(
-                        "px-4 py-2.5 text-sm shadow-sm",
-                        message.from === "me" ? "rounded-2xl rounded-tr-sm bg-wine-700 text-white shadow-[0_10px_22px_rgba(182,0,49,0.18)]" : "rounded-2xl rounded-tl-sm border border-zinc-200/60 bg-white text-zinc-800"
-                      )}>
-                        {message.messageType === "media" ? (
-                          <div className="flex items-center gap-3">
-                            <span className={cn("flex h-10 w-10 items-center justify-center rounded-full", message.from === "me" ? "bg-white/15" : "bg-zinc-100")}>
-                              <ImageIcon size={18} />
-                            </span>
-                            <div>
-                              <p className="font-semibold">{message.media?.name ?? "Mídia"}</p>
-                              <p className={cn("text-xs", message.from === "me" ? "text-white/75" : "text-zinc-500")}>
-                                {message.media?.openedAt ? "Aberta" : "Visualização única"}
-                              </p>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="leading-relaxed">{message.content}</p>
-                        )}
-                      </div>
-                      <span className="mt-1 flex items-center gap-1 px-1 text-[10px] font-medium uppercase text-zinc-400">
-                        {message.sentAt}
-                        {StatusIcon ? (
-                          <>
-                            <StatusIcon size={12} className={status.className} />
-                            <span className={cn("normal-case", status.className)}>{status.label}</span>
-                          </>
-                        ) : null}
-                      </span>
-                    </div>
-                  );
-                })}
-                <div ref={scrollRef} />
-              </div>
-
-              <form className="border-t border-zinc-200 bg-white/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm" onSubmit={handleSubmit}>
-                <div className="relative mx-auto flex max-w-5xl items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setAttachmentMenuOpen((current) => !current)}
-                    disabled={activeConversation.isBlocked}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
-                    aria-label="Abrir anexos"
-                  >
-                    <Plus size={20} />
-                  </button>
-
-                  {attachmentMenuOpen ? (
-                    <div className="absolute bottom-14 left-0 z-30 w-64 rounded-2xl border border-zinc-200 bg-white p-2 shadow-xl">
-                      <button type="button" onClick={() => setViewOnceModalOpen(true)} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
-                        <ImageIcon size={17} />
-                        Enviar mídia temporária
-                      </button>
-                    </div>
-                  ) : null}
-
-                  <input
-                    value={draft}
-                    onChange={(event) => setDraft(event.target.value)}
-                    placeholder={activeConversation.isBlocked ? "Usuário bloqueado" : "Mensagem..."}
-                    disabled={activeConversation.isBlocked}
-                    className="h-11 flex-1 rounded-full border border-zinc-200 bg-zinc-50 px-5 text-sm shadow-sm transition-all focus:border-wine-500 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-                  />
-                  <Button type="submit" className="h-11 rounded-full px-4 font-bold sm:px-6 gap-2" disabled={!draft.trim() || activeConversation.isBlocked}>
-                    <Send size={17} />
-                    <span className="hidden sm:inline">Enviar</span>
-                  </Button>
-                </div>
-              </form>
-            </>
+            <ConversationThread
+              activeConversation={activeConversation}
+              activeConversationId={activeConversationId}
+              activeAd={activeAd}
+              attachmentMenuOpen={attachmentMenuOpen}
+              conversationAvatar={conversationAvatars[activeConversationId] || "/placeholder.png"}
+              currentMessages={currentMessages}
+              displayContactName={displayContactName}
+              draft={draft}
+              globalAlias={globalAlias}
+              lastSentMessageId={lastSentMessageId}
+              participantAlias={participantAlias}
+              profilePanelOpen={profilePanelOpen}
+              scrollRef={scrollRef}
+              showBackButton={false}
+              whatsappUrl={whatsappUrl}
+              onAttachmentMenuToggle={() => setAttachmentMenuOpen((current) => !current)}
+              onBack={() => { setMobileConversationOpen(false); setProfilePanelOpen(false); }}
+              onBlock={() => setBlockModalOpen(true)}
+              onDelete={() => setDeleteModalOpen(true)}
+              onDraftChange={setDraft}
+              onOpenProfile={() => setProfilePanelOpen(true)}
+              onOpenRename={openRenameModal}
+              onOpenViewOnce={handleOpenViewOnceModal}
+              onProfileClose={() => setProfilePanelOpen(false)}
+              onReport={() => setReportModalOpen(true)}
+              onSubmit={handleSubmit}
+            />
           )}
         </section>
       </div>
+
+      {conversationOpenMobile && activeConversation && typeof document !== "undefined"
+        ? createPortal(
+          <div className="fixed inset-0 z-100 flex flex-col bg-zinc-100 overscroll-none md:hidden">
+            <ConversationThread
+              activeConversation={activeConversation}
+              activeConversationId={activeConversationId}
+              activeAd={activeAd}
+              attachmentMenuOpen={attachmentMenuOpen}
+              conversationAvatar={conversationAvatars[activeConversationId] || "/placeholder.png"}
+              currentMessages={currentMessages}
+              displayContactName={displayContactName}
+              draft={draft}
+              globalAlias={globalAlias}
+              lastSentMessageId={lastSentMessageId}
+              participantAlias={participantAlias}
+              profilePanelOpen={profilePanelOpen}
+              scrollRef={scrollRef}
+              showBackButton
+              whatsappUrl={whatsappUrl}
+              onAttachmentMenuToggle={() => setAttachmentMenuOpen((current) => !current)}
+              onBack={() => { setMobileConversationOpen(false); setProfilePanelOpen(false); }}
+              onBlock={() => setBlockModalOpen(true)}
+              onDelete={() => setDeleteModalOpen(true)}
+              onDraftChange={setDraft}
+              onOpenProfile={() => setProfilePanelOpen(true)}
+              onOpenRename={openRenameModal}
+              onOpenViewOnce={handleOpenViewOnceModal}
+              onProfileClose={() => setProfilePanelOpen(false)}
+              onReport={() => setReportModalOpen(true)}
+              onSubmit={handleSubmit}
+            />
+          </div>,
+          document.body
+        )
+        : null}
 
       <Modal
         open={renameModalOpen}
@@ -1015,6 +908,13 @@ export function ChatScreen() {
         </div>
       </Modal>
 
+      <PremiumConversionModal
+        open={premiumUpsellOpen}
+        onClose={() => setPremiumUpsellOpen(false)}
+        highlight={premiumUpsellHighlight}
+        from={premiumUpsellHighlight}
+      />
+
       <Modal
         open={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
@@ -1071,6 +971,256 @@ export function ChatScreen() {
           maxLength={600}
         />
       </Modal>
-    </AppShell>
+    </>
+  );
+}
+
+function ConversationThread({
+  activeConversation,
+  activeAd,
+  attachmentMenuOpen,
+  conversationAvatar,
+  currentMessages,
+  displayContactName,
+  draft,
+  globalAlias,
+  lastSentMessageId,
+  participantAlias,
+  profilePanelOpen,
+  scrollRef,
+  showBackButton,
+  whatsappUrl,
+  onAttachmentMenuToggle,
+  onBack,
+  onBlock,
+  onDelete,
+  onDraftChange,
+  onOpenProfile,
+  onOpenRename,
+  onOpenViewOnce,
+  onProfileClose,
+  onReport,
+  onSubmit,
+}: {
+  activeConversation: Conversation;
+  activeConversationId: string;
+  activeAd: ProfessionalAd | null;
+  attachmentMenuOpen: boolean;
+  conversationAvatar: string;
+  currentMessages: Message[];
+  displayContactName: string;
+  draft: string;
+  globalAlias: string;
+  lastSentMessageId: string | null;
+  participantAlias: string;
+  profilePanelOpen: boolean;
+  scrollRef: RefObject<HTMLDivElement | null>;
+  showBackButton: boolean;
+  whatsappUrl: string;
+  onAttachmentMenuToggle: () => void;
+  onBack: () => void;
+  onBlock: () => void;
+  onDelete: () => void;
+  onDraftChange: (value: string) => void;
+  onOpenProfile: () => void;
+  onOpenRename: () => void;
+  onOpenViewOnce: () => void;
+  onProfileClose: () => void;
+  onReport: () => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <>
+      <header className="relative z-30 flex shrink-0 items-center gap-3 border-b border-zinc-200/80 bg-white/95 px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-3 backdrop-blur-sm md:px-5 md:pt-4">
+        {showBackButton ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className={cn(chromeCircle, "text-zinc-600")}
+            aria-label="Voltar"
+          >
+            <ArrowLeft size={20} strokeWidth={2.5} />
+          </button>
+        ) : null}
+
+        <button type="button" className="group flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left" onClick={onOpenProfile}>
+          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-zinc-200/80 bg-white shadow-[0_2px_10px_rgba(15,23,42,0.08)]">
+            <Image src={conversationAvatar} alt="Avatar" fill className="rounded-full object-cover" sizes="40px" />
+            <span className={cn("absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white", getStatusColor(activeConversation.contactStatus))} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-bold leading-none text-zinc-900">{displayContactName}</p>
+            <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-zinc-500">{getStatusLabel(activeConversation.contactStatus)}</p>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={onOpenProfile}
+          className={cn(chromeCircle, "text-zinc-500")}
+          aria-label="Abrir opções do contato"
+        >
+          <MoreHorizontal size={18} />
+        </button>
+      </header>
+
+      {activeConversation.isBlocked ? (
+        <div className="shrink-0 border-b border-wine-100 bg-wine-50 px-4 py-3 text-sm font-medium text-wine-800">
+          Usuário bloqueado. O envio de novas mensagens está desativado nesta conversa.
+        </div>
+      ) : null}
+
+      <div className="relative min-h-0 flex-1">
+        <div
+          className={cn(
+            "absolute inset-0 z-20 bg-zinc-900/30 px-3 transition-opacity duration-200 md:px-5",
+            profilePanelOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+          )}
+          onClick={onProfileClose}
+        >
+          <div
+            className={cn(
+              "mt-4 rounded-2xl border border-zinc-200 bg-white p-3 shadow-xl transition-all duration-250 ease-out md:ml-auto md:mr-4 md:mt-6 md:w-90",
+              profilePanelOpen ? "translate-y-0 scale-100 opacity-100" : "-translate-y-4 scale-[0.98] opacity-0"
+            )}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="px-2 pb-2">
+              <p className="truncate text-sm font-bold text-zinc-900">{displayContactName}</p>
+              <p className="mt-1 text-xs uppercase tracking-wider text-zinc-400">Ações da conversa</p>
+            </div>
+
+            <div className="space-y-1">
+              <button type="button" onClick={onOpenRename} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+                <MessageSquareText size={16} />
+                Alterar apelido para essa conversa
+              </button>
+
+              {activeAd ? (
+                <Link href={`/anuncio/${activeAd.slug}`} onClick={onProfileClose} className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+                  Ver anúncio público
+                </Link>
+              ) : (
+                <button type="button" disabled className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-400">
+                  Ver anúncio público
+                </button>
+              )}
+
+              <a href={whatsappUrl} target="_blank" rel="noreferrer" className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+                Ir para WhatsApp
+              </a>
+
+              <button type="button" onClick={onBlock} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50">
+                <Ban size={16} />
+                {activeConversation.isBlocked ? "Desbloquear usuário" : "Bloquear usuário"}
+              </button>
+
+              <button type="button" onClick={onReport} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50">
+                <Flag size={16} />
+                Denunciar conversa
+              </button>
+
+              <button type="button" onClick={onDelete} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-wine-700 transition hover:bg-wine-50">
+                <Trash2 size={16} />
+                Excluir da minha caixa
+              </button>
+            </div>
+
+            <div className="mt-2 border-t border-zinc-100 px-2 pt-2">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">Seu apelido para esse contato</p>
+              <p className="mt-1 text-sm font-semibold text-zinc-700">{participantAlias || globalAlias}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-full space-y-4 overflow-y-auto bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.8),rgba(248,250,252,0.92)_38%,rgba(244,244,245,1)_100%)] p-4 md:p-6">
+          {currentMessages.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-center">
+              <div>
+                <p className="text-sm font-semibold text-zinc-800">Nenhuma mensagem ainda</p>
+                <p className="mt-1 text-xs text-zinc-500">Envie a primeira mensagem para iniciar a conversa.</p>
+              </div>
+            </div>
+          ) : currentMessages.map((message) => {
+            const status = getMessageStatus(message);
+            const StatusIcon = status?.icon;
+
+            return (
+              <div key={message.id} className={cn(
+                "flex max-w-[85%] flex-col md:max-w-[68%]",
+                message.from === "me" ? "ml-auto items-end" : "mr-auto items-start",
+                message.from === "me" && message.id === lastSentMessageId ? "message-sent-pop" : ""
+              )}>
+                <div className={cn(
+                  "px-4 py-2.5 text-sm shadow-sm",
+                  message.from === "me" ? "rounded-2xl rounded-tr-sm bg-wine-700 text-white shadow-[0_10px_22px_rgba(182,0,49,0.18)]" : "rounded-2xl rounded-tl-sm border border-zinc-200/60 bg-white text-zinc-800"
+                )}>
+                  {message.messageType === "media" ? (
+                    <div className="flex items-center gap-3">
+                      <span className={cn("flex h-10 w-10 items-center justify-center rounded-full", message.from === "me" ? "bg-white/15" : "bg-zinc-100")}>
+                        <ImageIcon size={18} />
+                      </span>
+                      <div>
+                        <p className="font-semibold">{message.media?.name ?? "Mídia"}</p>
+                        <p className={cn("text-xs", message.from === "me" ? "text-white/75" : "text-zinc-500")}>
+                          {message.media?.openedAt ? "Aberta" : "Visualização única"}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="leading-relaxed">{message.content}</p>
+                  )}
+                </div>
+                <span className="mt-1 flex items-center gap-1 px-1 text-[10px] font-medium uppercase text-zinc-400">
+                  {message.sentAt}
+                  {StatusIcon ? (
+                    <>
+                      <StatusIcon size={12} className={status.className} />
+                      <span className={cn("normal-case", status.className)}>{status.label}</span>
+                    </>
+                  ) : null}
+                </span>
+              </div>
+            );
+          })}
+          <div ref={scrollRef} />
+        </div>
+      </div>
+
+      <form className="shrink-0 border-t border-zinc-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]" onSubmit={onSubmit}>
+        <div className="relative mx-auto flex max-w-5xl items-center gap-3">
+          <button
+            type="button"
+            onClick={onAttachmentMenuToggle}
+            disabled={activeConversation.isBlocked}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label="Abrir anexos"
+          >
+            <Plus size={20} />
+          </button>
+
+          {attachmentMenuOpen ? (
+            <div className="absolute bottom-14 left-0 z-30 w-64 rounded-2xl border border-zinc-200 bg-white p-2 shadow-xl">
+              <button type="button" onClick={onOpenViewOnce} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+                <ImageIcon size={17} />
+                Enviar mídia temporária
+              </button>
+            </div>
+          ) : null}
+
+          <input
+            value={draft}
+            onChange={(event) => onDraftChange(event.target.value)}
+            placeholder={activeConversation.isBlocked ? "Usuário bloqueado" : "Mensagem..."}
+            disabled={activeConversation.isBlocked}
+            className="h-11 flex-1 rounded-full border border-zinc-200 bg-zinc-50 px-5 text-sm shadow-sm transition-all focus:border-wine-500 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+          />
+          <Button type="submit" className="h-11 rounded-full px-4 font-bold sm:px-6 gap-2" disabled={!draft.trim() || activeConversation.isBlocked}>
+            <Send size={17} />
+            <span className="hidden sm:inline">Enviar</span>
+          </Button>
+        </div>
+      </form>
+    </>
   );
 }

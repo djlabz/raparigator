@@ -1,48 +1,59 @@
 "use client";
 
-import { Flame, Star } from "lucide-react";
+import { motion, useMotionValue } from "motion/react";
+import { useIsTabActive } from "@/components/layout/tab-activity";
 import { cn } from "@/lib/utils";
-
-type SectionDividerVariant = "premium" | "standard";
+import { useOptionalFeedHeaderTitleMotion } from "./feed-header-title-context";
+import { FeedSectionTitle, type FeedSectionTitleVariant } from "./feed-section-title";
 
 interface FeedSectionDividerProps {
-  variant: SectionDividerVariant;
+  variant: FeedSectionTitleVariant;
   className?: string;
+  hasPremiumSection?: boolean;
 }
 
-export function FeedSectionDivider({ variant, className }: FeedSectionDividerProps) {
+export function FeedSectionDivider({
+  variant,
+  className,
+  hasPremiumSection = false,
+}: FeedSectionDividerProps) {
+  const isTabActive = useIsTabActive();
+  const motionValues = useOptionalFeedHeaderTitleMotion();
+  const fallbackOpacity = useMotionValue(1);
+  const opacity = motionValues?.standardDividerOpacity ?? fallbackOpacity;
+
   if (variant === "premium") {
+    if (isTabActive) {
+      return null;
+    }
+
     return (
-      <div className={cn("flex items-center gap-3 py-4 select-none", className)}>
-        <Star
-          size={22}
-          className="shrink-0 fill-[#FFDF00] text-[#FFDF00] drop-shadow-[0_0_6px_rgba(255,223,0,0.7)]"
-        />
-        <span className="shrink-0 bg-linear-to-r from-[#B38728] via-[#DAA520] to-[#a88222] bg-clip-text font-display text-2xl font-semibold tracking-wide text-transparent">
-          Modelos Premium
-        </span>
-        <span
-          className="h-px flex-1 rounded-full"
-          style={{
-            background: "linear-gradient(to right, rgba(218, 165, 32, 0.4), transparent)",
-          }}
-        />
+      <div className={cn("mb-4 hidden items-center gap-3 py-2 select-none lg:flex", className)}>
+        <div className="min-w-0 max-w-[min(100%,20rem)] sm:max-w-[min(100%,24rem)]">
+          <FeedSectionTitle variant="premium" fit />
+        </div>
       </div>
     );
   }
 
+  if (isTabActive && !hasPremiumSection) {
+    return null;
+  }
+
   return (
-    <div className={cn("mt-6 flex items-center gap-3 py-4 select-none", className)}>
-      <Flame size={20} className="shrink-0 text-wine-700" />
-      <span className="shrink-0 text-xl font-semibold text-wine-700">
-        Descubra outras Modelos
-      </span>
+    <motion.div
+      style={{ opacity: isTabActive ? opacity : 1 }}
+      className={cn("mt-6 flex items-center gap-3 py-4 select-none", className)}
+    >
+      <div className="min-w-0 max-w-[min(100%,20rem)] sm:max-w-[min(100%,24rem)]">
+        <FeedSectionTitle variant="standard" fit />
+      </div>
       <span
-        className="h-px flex-1 rounded-full"
+        className="h-px min-w-0 flex-1 rounded-full"
         style={{
           background: "linear-gradient(to right, rgba(182, 0, 49, 0.3), transparent)",
         }}
       />
-    </div>
+    </motion.div>
   );
 }

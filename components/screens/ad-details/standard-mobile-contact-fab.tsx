@@ -105,7 +105,7 @@ export function StandardMobileContactFab({ ad, setRiskTarget, role }: StandardMo
             dragMomentum={false}
             onDragEnd={handleDragEnd}
             style={{ x, y }}
-            className="absolute bottom-[69px] flex w-14 pointer-events-auto flex-col items-center justify-end"
+            className="absolute bottom-17.25 flex w-14 pointer-events-auto flex-col items-center justify-end"
           >
             <div className="relative flex w-full items-center justify-center">
               <AnimatePresence>
@@ -201,6 +201,7 @@ export function StandardMobileContactFab({ ad, setRiskTarget, role }: StandardMo
                     fill
                     className="object-cover pointer-events-none select-none"
                     sizes="56px"
+                    loading="eager"
                     referrerPolicy="no-referrer"
                     draggable={false}
                   />

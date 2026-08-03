@@ -23,6 +23,7 @@ export const mockUsers: MockUser[] = [
     phone: "(11) 98888-7777",
     cpf: "987.654.321-00",
     alias: "Profissional",
+    plan: "standard",
   },
 ];
 
