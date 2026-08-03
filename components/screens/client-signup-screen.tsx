@@ -1,4 +1,4 @@
-"use client"; // Importante para gerenciar estado no cliente
+"use client";
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -12,23 +12,19 @@ import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import { Stepper, StepItem } from "@/components/ui/stepper";
 import { useAuthSession } from "@/lib/auth-session";
+import {
+  formatCpf,
+  validateCpf,
+  validateEmailPair,
+  validatePasswordPair,
+  validateRequiredName,
+} from "@/lib/identity";
 
 const clientImages = [
   "/images/personas/persona2/persona2-client-signup-1.png",
   "/images/personas/persona3/persona3-client-signup-2.png",
   "/images/personas/persona4/persona4-client-signup-3.png"
 ];
-
-// Função auxiliar para aplicar a máscara de CPF (Formata: 000.000.000-00)
-// E remove qualquer caractere que não seja número (Previne: letras, símbolos)
-const maskCPF = (value: string) => {
-  return value
-    .replace(/\D/g, "") // Remove tudo que não for número (Fulfillment Requirement)
-    .replace(/(\d{3})(\d)/, "$1.$2") // Coloca o primeiro ponto
-    .replace(/(\d{3})(\d)/, "$1.$2") // Coloca o segundo ponto
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2") // Coloca o hífen
-    .replace(/(-\d{2})\d+?$/, "$1"); // Impede mais de 11 dígitos total (14 com a máscara)
-};
 
 export function ClientSignupScreen() {
   const router = useRouter();
@@ -87,14 +83,7 @@ export function ClientSignupScreen() {
   };
 
   const handleCpfChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = event.target.value;
-    const masked = maskCPF(rawValue);
-
-    // Só atualiza o estado se a máscara não estourar o limite de 14 caracteres (000.000.000-00)
-    // Isso previne que o usuário cole um CPF com caracteres extras.
-    if (masked.length <= 14) {
-      setCpfValue(masked);
-    }
+    setCpfValue(formatCpf(event.target.value));
   };
 
   useEffect(() => {
@@ -114,32 +103,23 @@ export function ClientSignupScreen() {
   };
 
   const validateStepOne = () => {
-    let hasError = false;
     clearStepOneErrors();
-
-    if (cpfValue.replace(/\D/g, "").length !== 11) {
-      setCpfError("Informe um CPF válido.");
-      hasError = true;
-    }
-
-    if (!fullName.trim()) {
-      setFullNameError("Informe seu nome completo.");
-      hasError = true;
-    }
-
-    if (hasError) {
+    const cpfErrorMessage = validateCpf(cpfValue);
+    const nameErrorMessage = validateRequiredName(fullName, "full");
+    if (cpfErrorMessage) setCpfError(cpfErrorMessage);
+    if (nameErrorMessage) setFullNameError(nameErrorMessage);
+    if (cpfErrorMessage || nameErrorMessage) {
       triggerShake(1);
       return false;
     }
-
     return true;
   };
 
   const nextStep = () => {
     if (!validateStepOne()) {
       showToast({
-        title: "Nao foi possivel continuar",
-        message: "Preencha os dados obrigatorios do passo 1.",
+        title: "Calma, falta um detalhe",
+        message: "Preenche os campos obrigatórios do passo 1 pra gente seguir.",
         type: "error",
       });
       return;
@@ -154,51 +134,28 @@ export function ClientSignupScreen() {
   };
 
   const validateStepTwo = () => {
-    let hasError = false;
     clearCredentialErrors();
-
-    if (!email.trim()) {
-      setEmailError("Dados de acesso invalidos.");
-      hasError = true;
-    }
-
-    if (!confirmEmail.trim()) {
-      setConfirmEmailError("Dados de acesso invalidos.");
-      hasError = true;
-    }
-
-    if (email.trim() && confirmEmail.trim() && email.trim() !== confirmEmail.trim()) {
-      setEmailError("Dados de acesso invalidos.");
-      setConfirmEmailError("Dados de acesso invalidos.");
-      hasError = true;
-    }
-
-    if (!password.trim()) {
-      setPasswordError("Dados de acesso invalidos.");
-      hasError = true;
-    }
-
-    if (!confirmPassword.trim()) {
-      setConfirmPasswordError("Dados de acesso invalidos.");
-      hasError = true;
-    }
-
-    if (password && confirmPassword && password !== confirmPassword) {
-      setPasswordError("Dados de acesso invalidos.");
-      setConfirmPasswordError("Dados de acesso invalidos.");
-      hasError = true;
-    }
-
+    const emailErrors = validateEmailPair(email, confirmEmail);
+    const passwordErrors = validatePasswordPair(password, confirmPassword);
+    if (emailErrors.email) setEmailError(emailErrors.email);
+    if (emailErrors.confirmEmail) setConfirmEmailError(emailErrors.confirmEmail);
+    if (passwordErrors.password) setPasswordError(passwordErrors.password);
+    if (passwordErrors.confirmPassword) setConfirmPasswordError(passwordErrors.confirmPassword);
+    const hasError = Boolean(
+      emailErrors.email ||
+        emailErrors.confirmEmail ||
+        passwordErrors.password ||
+        passwordErrors.confirmPassword,
+    );
     if (hasError) {
       triggerShake(2);
       showToast({
-        title: "Nao foi possivel continuar",
-        message: "E-mail ou senha invalidos.",
+        title: "Quase lá, só um ajuste",
+        message: "E-mail ou senha precisam de um ajuste. Confere e tenta de novo?",
         type: "error",
       });
       return false;
     }
-
     return true;
   };
 

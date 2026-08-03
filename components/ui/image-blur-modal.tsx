@@ -4,6 +4,7 @@ import "react-image-crop/dist/ReactCrop.css";
 import { Button } from "@/components/ui/button";
 import { createAdaptivePresetCrop, resolveMinSelectionSize } from "@/components/ui/image-selection-utils";
 import type { Area } from "@/components/ui/image-cropper-modal";
+import { mediaFitStyle, useMediaFrameSize } from "@/components/ui/use-media-frame-size";
 
 export type ImageBlurResult = {
   src: string;
@@ -24,6 +25,7 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
   const [mode, setMode] = useState<"crop" | "brush">("crop");
   const imageRef = useRef<HTMLImageElement>(null);
   const maskCanvasRef = useRef<HTMLCanvasElement>(null);
+  const { mediaFrameRef, mediaMaxSize } = useMediaFrameSize();
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
@@ -50,14 +52,13 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
         }
       }
     };
-    // Let the image render first before syncing canvas
     const timer = setTimeout(syncCanvas, 100);
     window.addEventListener("resize", syncCanvas);
     return () => {
       clearTimeout(timer);
       window.removeEventListener("resize", syncCanvas);
     };
-  }, [mode, imageSrc]);
+  }, [mode, imageSrc, mediaMaxSize]);
 
   const getCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
     if (!maskCanvasRef.current) return null;
@@ -159,7 +160,6 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
       ctx.beginPath();
       ctx.rect(cx, cy, cWidth, cHeight);
       ctx.clip();
-      // Increase blur relative to image size for consistent look
       const blurAmount = Math.max(25, (image.naturalWidth / 1000) * 25);
       ctx.filter = `blur(${blurAmount}px)`;
       ctx.drawImage(image, 0, 0);
@@ -206,6 +206,11 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
     setCrop(createAdaptivePresetCrop(width, height));
   }, []);
 
+  const mediaStyle = mediaFitStyle(mediaMaxSize);
+  const mediaBoxStyle = mediaMaxSize
+    ? { maxWidth: mediaMaxSize.width, maxHeight: mediaMaxSize.height }
+    : undefined;
+
   return (
     <div className="fixed inset-0 z-200 bg-black/95 flex flex-col items-center justify-center p-4">
       <div className="text-center mb-4 text-white shrink-0 mt-4">
@@ -227,55 +232,58 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
         </div>
       </div>
 
-      <div className="relative w-full max-w-5xl flex-1 bg-black/50 rounded-lg overflow-hidden border border-white/10 min-h-0 select-none flex items-center justify-center p-4">
-        {mode === "crop" ? (
-          <ReactCrop
-            key={`blur-crop-${imageSrc}`}
-            crop={crop}
-            onChange={c => setCrop(c)}
-            minWidth={minSelection.width}
-            minHeight={minSelection.height}
-            keepSelection
-            ruleOfThirds
-            className="max-w-full max-h-full inline-block"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              ref={imageRef}
-              src={imageSrc}
-              alt="Blur Area"
-              className="block pointer-events-none select-none"
-              crossOrigin="anonymous"
-              onLoad={handleImageLoad}
-              style={{ maxWidth: '100%', maxHeight: 'calc(100dvh - 280px)', width: 'auto', height: 'auto' }}
-            />
-          </ReactCrop>
-        ) : (
-          <div className="relative max-w-full max-h-full inline-block">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              ref={imageRef}
-              src={imageSrc}
-              alt="Blur Area"
-              className="block pointer-events-none select-none"
-              crossOrigin="anonymous"
-              style={{ maxWidth: '100%', maxHeight: 'calc(100dvh - 280px)', width: 'auto', height: 'auto' }}
-            />
-            <canvas
-              ref={maskCanvasRef}
-              onMouseDown={startDrawing}
-              onMouseMove={draw}
-              onMouseUp={stopDrawing}
-              onMouseOut={stopDrawing}
-              onTouchStart={startDrawing}
-              onTouchMove={draw}
-              onTouchEnd={stopDrawing}
-              onTouchCancel={stopDrawing}
-              className="absolute inset-0 w-full h-full cursor-crosshair touch-none"
-              style={{ touchAction: 'none' }}
-            />
-          </div>
-        )}
+      <div className="relative w-full max-w-5xl flex-1 bg-black/50 rounded-lg overflow-hidden border border-white/10 min-h-0 select-none p-4">
+        <div ref={mediaFrameRef} className="flex h-full w-full min-h-0 items-center justify-center overflow-hidden">
+          {mode === "crop" ? (
+            <ReactCrop
+              key={`blur-crop-${imageSrc}`}
+              crop={crop}
+              onChange={c => setCrop(c)}
+              minWidth={minSelection.width}
+              minHeight={minSelection.height}
+              keepSelection
+              ruleOfThirds
+              className="max-w-full max-h-full inline-block overflow-hidden [&_.ReactCrop__crop-mask]:h-[calc(100%+2px)] [&_.ReactCrop__crop-mask]:w-[calc(100%+2px)]"
+              style={mediaBoxStyle}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                ref={imageRef}
+                src={imageSrc}
+                alt="Blur Area"
+                className="block pointer-events-none select-none"
+                crossOrigin="anonymous"
+                onLoad={handleImageLoad}
+                style={mediaStyle}
+              />
+            </ReactCrop>
+          ) : (
+            <div className="relative inline-block max-w-full max-h-full overflow-hidden" style={mediaBoxStyle}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                ref={imageRef}
+                src={imageSrc}
+                alt="Blur Area"
+                className="block pointer-events-none select-none"
+                crossOrigin="anonymous"
+                style={mediaStyle}
+              />
+              <canvas
+                ref={maskCanvasRef}
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseOut={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+                onTouchCancel={stopDrawing}
+                className="absolute inset-0 w-full h-full cursor-crosshair touch-none"
+                style={{ touchAction: "none" }}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="my-6 flex gap-4 w-full max-w-sm shrink-0">

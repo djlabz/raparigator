@@ -1,17 +1,26 @@
 "use client";
 
-import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BackButton } from "@/components/ui/back-button";
+import { isDashboardPath } from "@/lib/account-notifications";
 import type { AuthRole, MockUser } from "@/lib/types";
 import {
   chromeControlsRow,
   chromeGlassFixed,
-  chromePillActive,
   chromeSafeTop,
+  shellContainerClass,
 } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
 import { AccountMenu } from "./account-menu";
 import { ChromeScrim } from "./chrome-scrim";
+import {
+  FeedHeaderDesktopTitle,
+  HeaderTitleSlot,
+} from "@/components/layout/header-title-flight/header-title-slot";
+import { useActiveTitleFlightSurface } from "@/components/layout/header-title-flight/use-title-flight-surface";
+import { DashboardHeaderDesktopTitle } from "@/components/screens/professional-dashboard/dashboard-header-desktop-title";
+import { GuestAuthControls } from "./guest-auth-controls";
+import { NotificationBellButton } from "./notification-bell-button";
 
 interface TopHeaderProps {
   role: AuthRole;
@@ -22,6 +31,15 @@ interface TopHeaderProps {
 }
 
 export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeaderProps) {
+  const pathname = usePathname();
+  const active = useActiveTitleFlightSurface(pathname);
+  const feedDesktop =
+    active?.id === "feed" && active.flags.enabled && active.flags.mode === "desktop";
+  const dashboardDesktop =
+    active?.id === "dashboard" && active.flags.enabled && active.flags.mode === "desktop";
+  const showDashboardBell =
+    isLoggedIn && role !== "visitor" && isDashboardPath(pathname, role);
+
   return (
     <header className={cn(chromeGlassFixed, "pointer-events-none")}>
       <ChromeScrim />
@@ -30,40 +48,28 @@ export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeade
         className={cn(
           chromeControlsRow,
           chromeSafeTop,
-          "mx-auto flex w-full max-w-7xl items-center gap-3 px-4 pb-3 sm:gap-4 sm:px-6 md:pb-4 lg:max-w-430 lg:px-8"
+          "relative flex items-center gap-3 pb-3 sm:gap-4 md:pb-4",
+          shellContainerClass
         )}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-3 md:gap-5">
-          <div className="flex shrink-0 items-center gap-2 md:gap-3">
+        {feedDesktop ? <FeedHeaderDesktopTitle /> : null}
+        {dashboardDesktop ? <DashboardHeaderDesktopTitle /> : null}
+
+        <div className="relative z-20 flex min-w-0 flex-1 items-center gap-3 md:gap-5">
+          <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
             <BackButton onBack={onBack} />
-            <Link
-              href="/"
-              className="font-display text-xl tracking-wide text-wine-800 md:text-2xl"
-            >
-              Sigillus
-            </Link>
+            <HeaderTitleSlot />
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="relative z-20 flex shrink-0 items-center gap-2">
           {isLoggedIn ? (
-            <AccountMenu role={role} user={user} onLogout={onLogout} />
+            <>
+              {showDashboardBell ? <NotificationBellButton role={role} /> : null}
+              <AccountMenu role={role} user={user} onLogout={onLogout} />
+            </>
           ) : (
-            <div className="flex items-center gap-3 text-sm">
-              <Link
-                href="/auth/login"
-                className="font-medium text-zinc-600 transition-colors hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-500 focus-visible:ring-offset-2"
-              >
-                Entrar
-              </Link>
-              <Link
-                href="/auth/cadastro"
-                className={cn(chromePillActive, "px-3 font-medium")}
-                style={{ color: "#fff" }}
-              >
-                Criar conta
-              </Link>
-            </div>
+            <GuestAuthControls />
           )}
         </div>
       </div>

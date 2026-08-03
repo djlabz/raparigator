@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -517,7 +517,10 @@ export function FinancialIndependenceScreen() {
         {/* Empty State para erros */}
         {submitted && !parsed && (
           <div className="pt-4">
-            <EmptyState title="Dados inválidos" description="Por favor, revise os valores inseridos. Certifique-se de usar números positivos." />
+            <EmptyState
+              title="Hmm, esses números não fecharam"
+              description="Dá uma olhadinha nos valores — por aqui a gente só aceita números positivos, combinado?"
+            />
             <Button variant="ghost" onClick={() => setSubmitted(false)} className="mt-4 w-full">Tentar novamente</Button>
           </div>
         )}

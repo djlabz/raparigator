@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Link, X, MapPin } from "lucide-react";
@@ -25,6 +25,14 @@ interface ShareProfileModalProps {
   onExternalLink: (target: "WhatsApp" | "Telegram", url: string) => void;
 }
 
+function useIsClient() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+}
+
 export function ShareProfileModal({
   open,
   onClose,
@@ -33,10 +41,11 @@ export function ShareProfileModal({
   onExternalLink,
 }: ShareProfileModalProps) {
   const [copied, setCopied] = useState(false);
+  const isClient = useIsClient();
 
   useModalLock(open && isPremium);
 
-  if (!open && !isPremium) return null;
+  if (!open) return null;
 
   const handleCopy = async () => {
     vibrate(50);
@@ -74,24 +83,15 @@ export function ShareProfileModal({
   const adProfile = ad.images[1] || ad.images[0];
 
   if (isPremium) {
-    if (typeof document === "undefined") return null;
+    if (!isClient) return null;
 
     return createPortal(
       <div
-        className={cn(
-          "fixed inset-0 z-220 flex items-center justify-center bg-black/80 px-4 transition-opacity duration-300 touch-none",
-          open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
-        )}
+        className="fixed inset-0 z-220 flex items-center justify-center bg-black/80 px-4 touch-none pointer-events-auto opacity-100"
         role="dialog"
-        aria-modal={open}
-        aria-hidden={!open}
+        aria-modal="true"
       >
-          <div
-            className={cn(
-              "relative w-full max-w-sm overflow-hidden rounded-3xl border border-[#DAA520]/50 bg-[#121212] p-1 shadow-2xl transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)]",
-              open ? "share-modal-premium-open" : "share-modal-premium-enter"
-            )}
-          >
+          <div className="share-modal-premium-open relative w-full max-w-sm overflow-hidden rounded-3xl border border-[#DAA520]/50 bg-[#121212] p-1 shadow-2xl transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)]">
             {/* Background effects */}
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,223,0,0.05)_0%,transparent_40%,rgba(218,165,32,0.05)_100%)]" />
 
@@ -109,12 +109,24 @@ export function ShareProfileModal({
 
             {/* Premium Preview */}
             <div className="relative mx-5 mb-5 overflow-hidden rounded-2xl">
-              <Image src={adCover} alt="Capa" fill className="object-cover" />
+              <Image
+                src={adCover}
+                alt="Capa"
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) calc(100vw - 2.5rem), 384px"
+              />
               <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
               
               <div className="relative z-10 flex flex-col items-center py-6">
                 <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-[#DAA520] shadow-[0_0_15px_rgba(218,165,32,0.2)]">
-                  <Image src={adProfile} alt={ad.artisticName} fill className="object-cover" />
+                  <Image
+                    src={adProfile}
+                    alt={ad.artisticName}
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                  />
                 </div>
 
                 <div className="mt-3 text-center">
@@ -191,12 +203,24 @@ export function ShareProfileModal({
       mobileCentered={true}
     >
       <div className="relative mb-6 overflow-hidden rounded-2xl">
-        <Image src={adCover} alt="Capa" fill className="object-cover" />
+        <Image
+          src={adCover}
+          alt="Capa"
+          fill
+          className="object-cover"
+          sizes="(max-width: 640px) calc(100vw - 3rem), 384px"
+        />
         <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
         
         <div className="relative z-10 flex flex-col items-center py-6">
           <div className="relative h-20 w-20 overflow-hidden rounded-full border-4 border-white shadow-sm">
-            <Image src={adProfile} alt={ad.artisticName} fill className="object-cover" />
+            <Image
+              src={adProfile}
+              alt={ad.artisticName}
+              fill
+              className="object-cover"
+              sizes="80px"
+            />
           </div>
           
           <div className="mt-4 text-center">

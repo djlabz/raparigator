@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef } from "react";
 import ReactCrop, { centerCrop, makeAspectCrop, type Crop, type PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { resolveMinSelectionSize } from "@/components/ui/image-selection-utils";
+import { mediaFitStyle, useMediaFrameSize } from "@/components/ui/use-media-frame-size";
 
 export interface Area {
   width: number;
@@ -37,7 +38,6 @@ function buildCenteredSelection(mediaWidth: number, mediaHeight: number, aspect?
     return centerCrop(aspectCrop, mediaWidth, mediaHeight);
   }
 
-  // In free edit mode, start with the whole image selected (gallery-like behavior).
   return {
     unit: "%",
     width: 100,
@@ -53,6 +53,7 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose, aspect, c
   const [initialCrop, setInitialCrop] = useState<Crop>();
   const [minSelection, setMinSelection] = useState({ width: MIN_SELECTION_PX, height: MIN_SELECTION_PX });
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const { mediaFrameRef, mediaMaxSize } = useMediaFrameSize();
 
   const onCropCompleteCallback = useCallback((pixelCrop: PixelCrop) => {
     if (!imageRef.current) {
@@ -104,6 +105,11 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose, aspect, c
     }
   };
 
+  const mediaStyle = mediaFitStyle(mediaMaxSize);
+  const mediaBoxStyle = mediaMaxSize
+    ? { maxWidth: mediaMaxSize.width, maxHeight: mediaMaxSize.height }
+    : undefined;
+
   return (
     <div className="fixed inset-0 z-200 bg-black flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-5xl flex items-center justify-between px-2 sm:px-4 mb-5 relative z-10">
@@ -134,29 +140,32 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose, aspect, c
         </div>
       </div>
 
-      <div className="relative w-full max-w-5xl flex-1 bg-black/50 rounded-lg overflow-hidden border border-white/10 min-h-0 select-none flex items-center justify-center p-4">
-        <ReactCrop
-          crop={crop}
-          onChange={(nextCrop) => setCrop(nextCrop)}
-          onComplete={onCropCompleteCallback}
-          aspect={aspect}
-          minWidth={Math.max(MIN_SELECTION_PX, minSelection.width)}
-          minHeight={Math.max(80, Math.floor((aspect ? MIN_SELECTION_PX / aspect : minSelection.height)))}
-          className="max-w-full max-h-full inline-block"
-          keepSelection
-          ruleOfThirds
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            ref={imageRef}
-            src={imageSrc}
-            alt="Editar enquadramento"
-            className="block pointer-events-none select-none"
-            crossOrigin="anonymous"
-            onLoad={handleImageLoad}
-            style={{ maxWidth: "100%", maxHeight: "calc(100dvh - 220px)", width: "auto", height: "auto" }}
-          />
-        </ReactCrop>
+      <div className="relative w-full max-w-5xl flex-1 bg-black/50 rounded-lg overflow-hidden border border-white/10 min-h-0 select-none p-4">
+        <div ref={mediaFrameRef} className="flex h-full w-full min-h-0 items-center justify-center overflow-hidden">
+          <ReactCrop
+            crop={crop}
+            onChange={(nextCrop) => setCrop(nextCrop)}
+            onComplete={onCropCompleteCallback}
+            aspect={aspect}
+            minWidth={Math.max(MIN_SELECTION_PX, minSelection.width)}
+            minHeight={Math.max(80, Math.floor((aspect ? MIN_SELECTION_PX / aspect : minSelection.height)))}
+            className="max-w-full max-h-full inline-block overflow-hidden [&_.ReactCrop__crop-mask]:h-[calc(100%+2px)] [&_.ReactCrop__crop-mask]:w-[calc(100%+2px)]"
+            style={mediaBoxStyle}
+            keepSelection
+            ruleOfThirds
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              ref={imageRef}
+              src={imageSrc}
+              alt="Editar enquadramento"
+              className="block pointer-events-none select-none"
+              crossOrigin="anonymous"
+              onLoad={handleImageLoad}
+              style={mediaStyle}
+            />
+          </ReactCrop>
+        </div>
       </div>
 
       <div className="mt-4 text-center text-xs text-zinc-400">

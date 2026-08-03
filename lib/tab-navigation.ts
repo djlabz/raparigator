@@ -135,7 +135,19 @@ export function unregisterShell() {
 }
 
 export function getTabIndex(pathname: string, items: NavigationItem[]): number {
-  return items.findIndex((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
+  const direct = items.findIndex(
+    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
+  );
+
+  if (direct >= 0) {
+    return direct;
+  }
+
+  if (pathname.startsWith("/anuncio/") || pathname.startsWith("/p/")) {
+    return items.findIndex((item) => item.href === "/feed");
+  }
+
+  return -1;
 }
 
 export function isTabRoute(pathname: string, items: NavigationItem[]): boolean {

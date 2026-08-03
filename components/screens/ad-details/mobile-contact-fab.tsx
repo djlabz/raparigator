@@ -104,7 +104,7 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
             dragMomentum={false}
             onDragEnd={handleDragEnd}
             style={{ x, y }}
-            className="absolute bottom-[69px] flex w-14 pointer-events-auto flex-col items-center justify-end"
+            className="absolute bottom-17.25 flex w-14 pointer-events-auto flex-col items-center justify-end"
           >
             <div className="relative flex w-full items-center justify-center">
               <AnimatePresence>
@@ -196,6 +196,7 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
                     fill
                     className="object-cover"
                     sizes="56px"
+                    loading="eager"
                     referrerPolicy="no-referrer"
                   />
                 </div>
