@@ -1,21 +1,20 @@
 "use client";
 
-import { PropsWithChildren, useLayoutEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { motion } from "motion/react";
+import { PropsWithChildren, useLayoutEffect, type ReactNode } from "react";
 import { useAuthSession } from "@/lib/auth-session";
 import { getNavigationItems } from "@/lib/navigation";
-import { chromeHeaderOffset } from "@/lib/chrome-styles";
 import {
-  consumeTabDirection,
-  getTabIndex,
+  chromeDesktopNavSticky,
+  chromeHeaderOffset,
+  shellContainerClass,
+} from "@/lib/chrome-styles";
+import {
   registerShell,
-  restoreTabScroll,
   setMobileNavHidden,
   unregisterShell,
-  type TabDirection,
 } from "@/lib/tab-navigation";
 import { cn } from "@/lib/utils";
+import { useShellChrome } from "./shell-chrome";
 import { TopHeader } from "./top-header";
 import { DesktopNav } from "./desktop-nav";
 
@@ -26,37 +25,27 @@ interface AppShellProps extends PropsWithChildren {
   hideDesktopNav?: boolean;
   onBack?: () => void;
   mainClassName?: string;
-  desktopNavRight?: React.ReactNode;
-}
-
-const tabEnterTransition = {
-  duration: 0.2,
-  ease: [0.22, 0.92, 0.3, 1] as const,
-};
-
-function getEnterOffset(direction: TabDirection) {
-  if (direction === 0) {
-    return 0;
-  }
-
-  return direction > 0 ? 12 : -12;
+  desktopNavRight?: ReactNode;
 }
 
 export function AppShell({
   children,
-  hideMobileBottomNav = false,
-  hideTopHeader = false,
-  hideDesktopNav = false,
-  onBack,
-  mainClassName,
-  desktopNavRight,
+  hideMobileBottomNav: hideMobileBottomNavProp,
+  hideTopHeader: hideTopHeaderProp,
+  hideDesktopNav: hideDesktopNavProp,
+  onBack: onBackProp,
+  mainClassName: mainClassNameProp,
+  desktopNavRight: desktopNavRightProp,
 }: AppShellProps) {
-  const pathname = usePathname();
   const { role, user, isLoggedIn, logout } = useAuthSession();
   const navigationItems = getNavigationItems(role);
-  const [enterDirection] = useState<TabDirection>(() => consumeTabDirection());
-  const tabIndex = getTabIndex(pathname, navigationItems);
-  const shouldAnimateTab = enterDirection !== 0 && tabIndex >= 0;
+  const chrome = useShellChrome();
+  const hideMobileBottomNav = hideMobileBottomNavProp ?? chrome.hideMobileBottomNav;
+  const hideTopHeader = hideTopHeaderProp ?? chrome.hideTopHeader;
+  const hideDesktopNav = hideDesktopNavProp ?? chrome.hideDesktopNav;
+  const onBack = onBackProp ?? chrome.onBack;
+  const mainClassName = mainClassNameProp ?? chrome.mainClassName;
+  const desktopNavRight = desktopNavRightProp ?? chrome.desktopNavRight;
 
   useLayoutEffect(() => {
     registerShell();
@@ -68,10 +57,6 @@ export function AppShell({
   useLayoutEffect(() => {
     setMobileNavHidden(hideMobileBottomNav);
   }, [hideMobileBottomNav]);
-
-  useLayoutEffect(() => {
-    restoreTabScroll(pathname, navigationItems);
-  }, [pathname, navigationItems]);
 
   return (
     <div className="min-h-dvh bg-zinc-50" data-app-shell>
@@ -86,15 +71,15 @@ export function AppShell({
       )}
       <main
         className={cn(
-          "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:max-w-430 lg:px-8",
+          shellContainerClass,
           hideMobileBottomNav ? "pb-6 md:pb-10" : "pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:pb-10",
           !hideTopHeader && chromeHeaderOffset,
           mainClassName
         )}
       >
         {!hideDesktopNav && navigationItems.length > 0 ? (
-          <div className="mb-4 hidden items-center justify-between gap-4 md:flex">
-            <DesktopNav items={navigationItems} />
+          <div className={cn(chromeDesktopNavSticky, "mb-4 hidden items-center justify-between gap-4 md:flex")}>
+            <DesktopNav items={navigationItems} className="min-w-0 flex-1" />
             {desktopNavRight ? (
               <div className="flex shrink-0 items-center gap-3">
                 {desktopNavRight}
@@ -102,23 +87,7 @@ export function AppShell({
             ) : null}
           </div>
         ) : null}
-        {shouldAnimateTab ? (
-          <motion.div
-            initial={{
-              opacity: 1,
-              x: getEnterOffset(enterDirection),
-            }}
-            animate={{
-              opacity: 1,
-              x: 0,
-            }}
-            transition={tabEnterTransition}
-          >
-            {children}
-          </motion.div>
-        ) : (
-          children
-        )}
+        {children}
       </main>
     </div>
   );

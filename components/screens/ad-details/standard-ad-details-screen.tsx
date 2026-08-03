@@ -12,8 +12,14 @@ import { StandardSidebarCta } from "./standard-sidebar-cta";
 import { StandardMobileContactFab } from "./standard-mobile-contact-fab";
 import { PhotoLightbox } from "./photo-lightbox";
 import { AppShell } from "@/components/layout/app-shell";
+import {
+  FEED_CARDS_COLUMN_OFFSET_CLASS,
+  FEED_CONTENT_GRID_CLASS,
+  FEED_SIDE_COLUMN_CLASS,
+} from "@/components/screens/feed-screen/constants";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RiskWarningModal } from "@/components/ui/risk-warning-modal";
+import { cn } from "@/lib/utils";
 
 interface StandardAdDetailsScreenProps {
   slug: string;
@@ -47,52 +53,61 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
   if (!ad) {
     return (
       <AppShell>
-        <EmptyState title="Perfil nao encontrado" description="Esse anuncio pode ter sido removido ou alterado." />
+        <EmptyState
+          title="Esse encanto não está mais aqui"
+          description="O perfil pode ter saído do ar ou mudado de endereço. Volta e escolhe outro que te faça piscadinha."
+        />
       </AppShell>
     );
   }
 
   return (
     <AppShell location={`${ad.city}, ${ad.state}`}>
-      <div className="mx-auto max-w-6xl space-y-7 pb-24 md:pb-12 xl:max-w-7xl">
-        <StandardProfileHeader 
-          ad={ad} 
-          onExternalLink={(target, url) => {
-            setRiskTarget(target);
-            setExternalTargetUrl(url);
-          }} 
-        />
-        <PhotoGallerySection
-          ad={ad}
-          galleryMode={galleryMode}
-          setGalleryMode={setGalleryMode}
-          bentoItems={bentoItems}
-          isPremium={false}
-          setSelectedPhotoIndex={setSelectedPhotoIndex}
-        />
-        <section className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-6">
-            <StandardAboutSection ad={ad} />
-            <SpecialtiesSection ad={ad} />
-            <StandardSchedulingSimulator
-              ad={ad}
-              selectedDuration={selectedDuration}
-              setSelectedDuration={setSelectedDuration}
-              selectedExtras={selectedExtras}
-              toggleExtra={toggleExtra}
-              basePrice={basePrice}
-              calculatedExtrasCost={calculatedExtrasCost}
-              totalCalculatedValue={totalCalculatedValue}
-              role={role}
-              setRiskTarget={setRiskTarget}
-            />
-            <StandardReviewsSection ad={ad} reviews={adReviews} />
-          </div>
+      <div className={FEED_CONTENT_GRID_CLASS}>
+        <div className={cn("hidden lg:block", FEED_SIDE_COLUMN_CLASS)} aria-hidden />
+        <div
+          data-ad-content-column
+          className={cn("min-w-0 space-y-7 pb-24 md:pb-12", FEED_CARDS_COLUMN_OFFSET_CLASS)}
+        >
+          <StandardProfileHeader 
+            ad={ad} 
+            onExternalLink={(target, url) => {
+              setRiskTarget(target);
+              setExternalTargetUrl(url);
+            }} 
+          />
+          <PhotoGallerySection
+            ad={ad}
+            galleryMode={galleryMode}
+            setGalleryMode={setGalleryMode}
+            bentoItems={bentoItems}
+            isPremium={false}
+            setSelectedPhotoIndex={setSelectedPhotoIndex}
+          />
+          <section className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="space-y-6">
+              <StandardAboutSection ad={ad} />
+              <SpecialtiesSection ad={ad} />
+              <StandardSchedulingSimulator
+                ad={ad}
+                selectedDuration={selectedDuration}
+                setSelectedDuration={setSelectedDuration}
+                selectedExtras={selectedExtras}
+                toggleExtra={toggleExtra}
+                basePrice={basePrice}
+                calculatedExtrasCost={calculatedExtrasCost}
+                totalCalculatedValue={totalCalculatedValue}
+                role={role}
+                setRiskTarget={setRiskTarget}
+              />
+              <StandardReviewsSection ad={ad} reviews={adReviews} />
+            </div>
 
-          <aside className="hidden lg:block">
-            <StandardSidebarCta role={role} setRiskTarget={setRiskTarget} />
-          </aside>
-        </section>
+            <aside className="hidden lg:block">
+              <StandardSidebarCta role={role} setRiskTarget={setRiskTarget} />
+            </aside>
+          </section>
+        </div>
       </div>
 
       <PhotoLightbox

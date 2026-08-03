@@ -12,7 +12,13 @@ import { Select } from "../ui/select";
 import { useAuthSession } from "../../lib/auth-session";
 import { useAccountNotifications } from "../../lib/account-notifications";
 import { getRoleLabel } from "../../lib/navigation";
-import { isProfileFormComplete } from "@/lib/profile-completion";
+import {
+  formatCpf,
+  formatPhone,
+  getProfileFieldErrors,
+  isProfileFormComplete,
+  validatePasswordPair,
+} from "@/lib/identity";
 import { getVerificationState } from "@/lib/verification";
 import type { AuthRole, MockUser } from "../../lib/types";
 
@@ -67,24 +73,6 @@ function readStoredForm(key: string, user: MockUser | null): ProfileFormState {
   }
 }
 
-function isValidEmail(value: string) {
-  return /^\S+@\S+\.\S+$/.test(value.trim());
-}
-
-function sanitizeCpfDigits(value: string) {
-  return value.replace(/\D/g, "").slice(0, 11);
-}
-
-function formatCpf(value: string) {
-  const digits = sanitizeCpfDigits(value);
-
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
-}
-
-
 export function AccountScreen() {
   const { role, user } = useAuthSession();
 
@@ -92,8 +80,8 @@ export function AccountScreen() {
     return (
       <AppShell>
         <EmptyState
-          title="Conta indisponível"
-          description="Acesse com uma conta de Cliente ou Profissional para completar o cadastro."
+          title="Ei, falta um convite"
+          description="Entra com sua conta de Cliente ou Profissional pra gente continuar essa conversinha com estilo."
           actionLabel="Entrar"
           onAction={() => {
             window.location.href = "/auth/login";
@@ -112,7 +100,6 @@ export function AccountScreen() {
 
 function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; user: MockUser }) {
   const { unreadCount, bannerClosed, setBannerClosed, markAllAsRead } = useAccountNotifications(role);
-  const [profileCompleted, setProfileCompleted] = useState<boolean>(() => isProfileFormComplete(role, readStoredForm(profileFormKey(role, user.email), user)));
   const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -122,6 +109,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordModalError, setPasswordModalError] = useState<string | null>(null);
   const [passwordModalSuccess, setPasswordModalSuccess] = useState(false);
+  const profileCompleted = isProfileFormComplete(role, form);
 
   const clearFieldError = <FieldName extends keyof ProfileFormState>(fieldName: FieldName) => {
     setFieldErrors((current) => {
@@ -148,27 +136,28 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
     clearFieldError("cpf");
   };
 
+  const handlePhoneChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setForm((current) => ({ ...current, phone: formatPhone(event.target.value) }));
+    setSaveMessage(null);
+    clearFieldError("phone");
+  };
+
   const handlePasswordChange = () => {
     setPasswordModalError(null);
-
-    if (newPassword.trim().length < 8) {
-      setPasswordModalError("A senha deve ter ao menos 8 caracteres.");
+    const pair = validatePasswordPair(newPassword, confirmNewPassword);
+    const firstError = pair.password ?? pair.confirmPassword;
+    if (firstError) {
+      setPasswordModalError(firstError);
       return;
     }
-
-    if (newPassword !== confirmNewPassword) {
-      setPasswordModalError("As senhas não coincidem.");
-      return;
-    }
-
-      setPasswordModalSuccess(true);
-      setTimeout(() => {
-        setShowPasswordModal(false);
-        setNewPassword("");
-        setConfirmNewPassword("");
-        setPasswordModalSuccess(false);
-        setSaveMessage("Senha alterada com sucesso.");
-      }, 1500);
+    setPasswordModalSuccess(true);
+    setTimeout(() => {
+      setShowPasswordModal(false);
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setPasswordModalSuccess(false);
+      setSaveMessage("Senha alterada com sucesso.");
+    }, 1500);
   };
 
   useEffect(() => {
@@ -186,10 +175,6 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
 
     window.localStorage.setItem(profileFormKey(role, user.email), JSON.stringify(form));
   }, [form, role, user.email]);
-
-  useEffect(() => {
-    setProfileCompleted(isProfileFormComplete(role, form));
-  }, [form, role]);
 
   useEffect(() => {
     if (!saveMessage) {
@@ -214,45 +199,18 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
   };
 
   const validateForm = () => {
-    const nextErrors: ProfileFieldErrors = {};
-    const cpfDigits = form.cpf.replace(/\D/g, "");
-    const phoneDigits = form.phone.replace(/\D/g, "");
-
-    if (!form.fullName.trim()) {
-      nextErrors.fullName = "Informe seu nome completo.";
-    }
-
-    if (cpfDigits.length !== 11) {
-      nextErrors.cpf = "CPF inválido.";
-    }
-
-    if (!isValidEmail(form.email)) {
-      nextErrors.email = "Informe um email válido.";
-    }
-
-    if (form.confirmEmail.trim() !== form.email.trim()) {
-      nextErrors.confirmEmail = "Os emails não coincidem.";
-    }
-
-    if (phoneDigits.length < 10) {
-      nextErrors.phone = "Informe um telefone válido com DDD.";
-    }
-
-
-    if (role === "cliente") {
-      if (!form.city.trim()) {
-        nextErrors.city = "Informe sua cidade.";
-      }
-
-      if (!form.preference.trim()) {
-        nextErrors.preference = "Selecione uma preferência principal.";
-      }
-    }
-
+    const nextErrors = getProfileFieldErrors(role, {
+      fullName: form.fullName,
+      cpf: form.cpf,
+      email: form.email,
+      confirmEmail: form.confirmEmail,
+      phone: form.phone,
+      city: form.city,
+      preference: form.preference,
+    });
     setFieldErrors(nextErrors);
     const isValid = Object.keys(nextErrors).length === 0;
     setFormError(isValid ? null : "Revise os campos destacados para continuar.");
-
     return isValid;
   };
 
@@ -261,7 +219,6 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
       setSaveMessage(null);
       return;
     }
-    setProfileCompleted(true);
     markAllAsRead();
     setBannerClosed(true);
     setFieldErrors({});
@@ -306,7 +263,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
         </div>
       </div>
 
-      <section className="flex flex-col gap-4 rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-200/70 sm:flex-row sm:items-start sm:justify-between">
+      <section className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-200/70">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Configuração da conta</p>
           <h1 className="text-3xl font-semibold text-zinc-900">Dados da sua conta</h1>
@@ -316,8 +273,6 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
               : "Edite seus dados de conta e segurança. Informações do anúncio são gerenciadas no painel profissional."}
           </p>
         </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto" />
       </section>
       
 
@@ -327,7 +282,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Notificação</p>
               <h2 className="mt-1 text-lg font-semibold text-zinc-900">Complete seu cadastro para liberar o restante da plataforma</h2>
-              <p className="mt-1 text-sm text-zinc-600">Você pode fechar este aviso e abrir novamente pelo sino no topo.</p>
+              <p className="mt-1 text-sm text-zinc-600">Você pode fechar este aviso e abrir novamente pelo sino de notificações.</p>
             </div>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => setBannerClosed(true)}>
@@ -387,7 +342,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
                 type="tel"
                 placeholder="+55 (00) 00000-0000"
                 value={form.phone}
-                onChange={updateField("phone")}
+                onChange={handlePhoneChange}
                 error={fieldErrors.phone}
               />
             </div>

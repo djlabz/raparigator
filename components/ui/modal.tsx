@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useModalLock } from "@/lib/modal-lock";
 import { Button } from "./button";
@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 interface ModalProps {
   open: boolean;
   title: ReactNode;
-  description?: string;
+  description?: ReactNode;
   onClose: () => void;
   children?: ReactNode;
   actions?: ReactNode | null;
@@ -17,10 +17,29 @@ interface ModalProps {
   size?: "sm" | "md";
   mobileCentered?: boolean;
   titleClassName?: string;
+  scrollResetKey?: string | number;
 }
 
-export function Modal({ open, title, description, onClose, children, actions, headerActions, size = "sm", mobileCentered = false, titleClassName }: ModalProps) {
+export function Modal({
+  open,
+  title,
+  description,
+  onClose,
+  children,
+  actions,
+  headerActions,
+  size = "sm",
+  mobileCentered = false,
+  titleClassName,
+  scrollResetKey,
+}: ModalProps) {
   useModalLock(open);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open || scrollResetKey === undefined) return;
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [open, scrollResetKey]);
 
   if (!open) return null;
 
@@ -51,9 +70,15 @@ export function Modal({ open, title, description, onClose, children, actions, he
           "flex justify-between gap-3 sm:gap-4",
           description ? "mb-4 items-start" : "mb-3 items-center"
         )}>
-          <div className={cn("min-w-0", description && "space-y-1")}>
+          <div className={cn("min-w-0", description ? "space-y-1" : undefined)}>
             <h3 className={cn("font-semibold leading-tight", titleClassName ?? "text-lg text-zinc-900 sm:text-lg")}>{title}</h3>
-            {description ? <p className="text-sm leading-snug text-zinc-600">{description}</p> : null}
+            {description ? (
+              typeof description === "string" ? (
+                <p className="text-sm leading-snug text-zinc-600">{description}</p>
+              ) : (
+                description
+              )
+            ) : null}
           </div>
           <div className="flex items-center gap-2">
             {headerActions}
@@ -70,7 +95,10 @@ export function Modal({ open, title, description, onClose, children, actions, he
             </button>
           </div>
         </div>
-        <div className="modal-scroll min-h-0 flex-1 overflow-y-auto px-0.5 pr-1 overscroll-contain touch-pan-y pb-4 sm:px-1">
+        <div
+          ref={scrollRef}
+          className="modal-scroll min-h-0 flex-1 overflow-y-auto px-0.5 pr-1 overscroll-contain touch-pan-y pb-4 sm:px-1"
+        >
           {children}
         </div>
 
@@ -104,18 +132,7 @@ export function Modal({ open, title, description, onClose, children, actions, he
         .modal-scroll::-webkit-scrollbar {
           width: 0;
           height: 0;
-        }
-
-        @media (min-width: 640px) {
-          .modal-scroll {
-            scrollbar-width: auto;
-            -ms-overflow-style: auto;
-          }
-
-          .modal-scroll::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-          }
+          display: none;
         }
       `}</style>
     </div>,

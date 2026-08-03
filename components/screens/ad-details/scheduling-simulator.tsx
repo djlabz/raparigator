@@ -89,7 +89,7 @@ export function SchedulingSimulator({
           </div>
         </div>
         {ad.paymentMethods && ad.paymentMethods.length > 0 && (
-          <div className="pointer-events-none -mx-1 flex flex-nowrap items-center gap-x-2.5 overflow-x-auto px-1 touch-none select-none [scrollbar-width:none] sm:gap-x-3 [&::-webkit-scrollbar]:hidden">
+          <div className="pointer-events-none -mx-1 flex flex-nowrap items-center gap-x-2.5 overflow-x-auto px-1 touch-none select-none scrollbar-none sm:gap-x-3 [&::-webkit-scrollbar]:hidden">
             <span className="shrink-0 text-[11px] font-black uppercase tracking-widest text-zinc-900">Aceita:</span>
             {PAYMENT_METHOD_OPTIONS.map((option) =>
               ad.paymentMethods?.includes(option.id) ? (

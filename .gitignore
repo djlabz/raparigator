@@ -71,3 +71,16 @@ next-env.d.ts
 /.tmp-bug-crops/
 /.tmp-venv/
 /.tmp-*-test.py
+
+# ad-hoc local verification scripts (not part of the app)
+/scripts/
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+/.playwright-mcp/
+/mcp-smoke-*.png

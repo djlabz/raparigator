@@ -1,17 +1,19 @@
----
-name: webapp-testing
-description: Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs.
-license: Complete terms in LICENSE.txt
----
+# Webapp testing fallback (internal)
 
-# Web Application Testing
+INTERNAL ONLY. This is not a standalone skill. Load this file only when `refine-motion` selected the Python Playwright fallback (MCP Playwright unavailable, or user override). Do not use this path when Playwright MCP tools are the active product for the run.
+
+Base directory (from repo root):
+
+`.agents/skills/refine-motion/references/webapp-testing-fallback/`
 
 To test local web applications, write native Python Playwright scripts.
 
 **Helper Scripts Available**:
 - `scripts/with_server.py` - Manages server lifecycle (supports multiple servers)
 
-**Always run scripts with `--help` first** to see usage. DO NOT read the source until you try running the script first and find that a customized solution is abslutely necessary. These scripts can be very large and thus pollute your context window. They exist to be called directly as black-box scripts rather than ingested into your context window.
+**Always run scripts with `--help` first** to see usage. DO NOT read the source until you try running the script first and find that a customized solution is absolutely necessary. These scripts can be very large and thus pollute your context window. They exist to be called directly as black-box scripts rather than ingested into your context window.
+
+Invoke helpers with paths relative to this fallback directory, or with the absolute/repo-relative path above.
 
 ## Decision Tree: Choosing Your Approach
 
@@ -34,16 +36,21 @@ User task → Is it static HTML?
 
 ## Example: Using with_server.py
 
-To start a server, run `--help` first, then use the helper:
+From repo root (Raparigator default port 3000):
+
+```bash
+python .agents/skills/refine-motion/references/webapp-testing-fallback/scripts/with_server.py --help
+```
 
 **Single server:**
 ```bash
-python scripts/with_server.py --server "npm run dev" --port 5173 -- python your_automation.py
+python .agents/skills/refine-motion/references/webapp-testing-fallback/scripts/with_server.py \
+  --server "npm run dev" --port 3000 -- python your_automation.py
 ```
 
 **Multiple servers (e.g., backend + frontend):**
 ```bash
-python scripts/with_server.py \
+python .agents/skills/refine-motion/references/webapp-testing-fallback/scripts/with_server.py \
   --server "cd backend && python server.py" --port 3000 \
   --server "cd frontend && npm run dev" --port 5173 \
   -- python your_automation.py
@@ -54,11 +61,10 @@ To create an automation script, include only Playwright logic (servers are manag
 from playwright.sync_api import sync_playwright
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True) # Always launch chromium in headless mode
+    browser = p.chromium.launch(headless=True)
     page = browser.new_page()
-    page.goto('http://localhost:5173') # Server already running and ready
-    page.wait_for_load_state('networkidle') # CRITICAL: Wait for JS to execute
-    # ... your automation logic
+    page.goto('http://localhost:3000')
+    page.wait_for_load_state('networkidle')
     browser.close()
 ```
 
@@ -77,12 +83,12 @@ with sync_playwright() as p:
 
 ## Common Pitfall
 
-❌ **Don't** inspect the DOM before waiting for `networkidle` on dynamic apps
-✅ **Do** wait for `page.wait_for_load_state('networkidle')` before inspection
+Do not inspect the DOM before waiting for `networkidle` on dynamic apps.
+Do wait for `page.wait_for_load_state('networkidle')` before inspection.
 
 ## Best Practices
 
-- **Use bundled scripts as black boxes** - To accomplish a task, consider whether one of the scripts available in `scripts/` can help. These scripts handle common, complex workflows reliably without cluttering the context window. Use `--help` to see usage, then invoke directly. 
+- Use bundled scripts as black boxes. Use `--help` to see usage, then invoke directly.
 - Use `sync_playwright()` for synchronous scripts
 - Always close the browser when done
 - Use descriptive selectors: `text=`, `role=`, CSS selectors, or IDs

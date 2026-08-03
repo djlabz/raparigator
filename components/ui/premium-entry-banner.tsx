@@ -26,22 +26,22 @@ export function PremiumEntryBanner({ variant, onClick, className }: PremiumEntry
         Sigillus Premium
       </span>
       <p className="mt-3 font-display text-lg font-semibold text-[#FFDF00]">
-        {isSidebar ? "Seu anúncio pode ir mais longe" : "Ganho imediato com Premium"}
+        {isSidebar ? "Seu anúncio pode ir mais longe" : "Onde o destaque é privilégio."}
       </p>
       <p className="mt-1 text-sm leading-relaxed text-zinc-400">
         {isSidebar
           ? "Perfil em destaque, portfólio maior e tráfego VIP revelado."
-          : "Destaque com mais views e conversões, selo e card Premium."}
+          : "Suba no ranking, ganhe selo Premium e desbloqueie recursos exclusivos no chat."}
       </p>
       {!isSidebar ? (
         <ul className="mt-3 space-y-1 text-sm leading-snug text-zinc-300">
-          <li>Listagem padrão → perfil em destaque</li>
-          <li>Mídia no portfólio: 10 fotos e 3 vídeos → ilimitado</li>
-          <li>View-once no chat → exclusivo Premium</li>
+          <li>Da listagem comum → perfil em destaque</li>
+          <li>De 10 fotos e 3 vídeos → mídia ilimitada</li>
+          <li>Mídias de visualização única no chat</li>
         </ul>
       ) : null}
       <span className="mt-4 inline-flex text-xs font-bold uppercase tracking-widest text-[#DAA520]">
-        {isSidebar ? "Ver o que muda →" : "Comparar meu plano →"}
+        {isSidebar ? "Ver o que muda →" : "Ver benefícios →"}
       </span>
     </button>
   );
