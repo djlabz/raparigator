@@ -50,7 +50,7 @@ export function MobileTitleFlightPortal({
         width,
         opacity,
       }}
-      className="pointer-events-none fixed top-0 left-0 z-40 overflow-hidden will-change-transform [backface-visibility:hidden]"
+      className="pointer-events-none fixed top-0 left-0 z-40 overflow-hidden will-change-transform backface-hidden"
     >
       {children}
     </motion.div>,

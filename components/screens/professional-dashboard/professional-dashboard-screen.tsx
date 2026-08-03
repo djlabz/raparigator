@@ -119,7 +119,7 @@ export function ProfessionalDashboardScreen() {
           <div
             className={cn(
               "mb-2 -mx-1 flex gap-2 overflow-x-auto overscroll-x-contain touch-pan-x px-1 py-2 lg:hidden",
-              "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             )}
           >
             {TABS.map((tab) => (
