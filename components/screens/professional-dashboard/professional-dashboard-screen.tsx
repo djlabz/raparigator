@@ -1,8 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useSetShellChrome } from "@/components/layout/shell-chrome";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -72,25 +71,6 @@ export function ProfessionalDashboardScreen() {
 
   const currentAd = ads[0];
   const adSlug = currentAd.slug;
-
-  const desktopNavRight = useMemo(
-    () => (
-      <div className="inline-flex items-center gap-3">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-800 shadow-xs">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" />
-          {adStatus === "Ativo" ? "Anúncio Ativo" : "Pausado"}
-        </span>
-        {adStatus === "Ativo" ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-zinc-700 shadow-xs backdrop-blur-sm">
-            142 views hoje
-          </span>
-        ) : null}
-      </div>
-    ),
-    [adStatus]
-  );
-
-  useSetShellChrome({ desktopNavRight });
 
   return (
     <>
