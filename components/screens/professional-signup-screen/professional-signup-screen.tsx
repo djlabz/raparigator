@@ -12,36 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import { Stepper, StepItem } from "@/components/ui/stepper";
 import { useAuthSession } from "@/lib/auth-session";
-import {
-  formatCpf,
-  formatPhone,
-  validateCpf,
-  validateEmailPair,
-  validatePasswordPair,
-  validatePhone,
-  validateRequiredName,
-} from "@/lib/identity";
-import styles from "./professional-signup-screen.module.css";
 
-const stackedCards = [
-  {
-    src: "/images/professional-signup/stacked-cards-1.png",
-    alt: "Modelo em destaque com fundo escuro e luz suave",
-  },
-  {
-    src: "/images/professional-signup/stacked-cards-2.png",
-    alt: "Modelo em destaque com composição premium e contraste dramático",
-  },
-  {
-    src: "/images/professional-signup/stacked-cards-3.png",
-    alt: "Modelo em destaque com pose elegante e acabamento refinado",
-  },
-];
-
-const cardPlacements = [
-  { x: 0, y: 0, scale: 1, rotate: -1.5, zIndex: 3 },
-  { x: 72, y: 28, scale: 0.93, rotate: 8, zIndex: 2 },
-  { x: -64, y: 46, scale: 0.86, rotate: -11, zIndex: 1 },
+const professionalImages = [
+  "/images/professional-signup/stacked-cards-1.png",
+  "/images/professional-signup/stacked-cards-2.png",
+  "/images/personas/persona2/persona2-professional-card.png",
 ];
 
 export function ProfessionalSignupScreen() {
@@ -109,15 +84,22 @@ export function ProfessionalSignupScreen() {
 
   const validateStepOne = () => {
     const errors: { cpf?: string; civilName?: string } = {};
-    const cpfError = validateCpf(cpf);
-    const nameError = validateRequiredName(civilName, "civil");
-    if (cpfError) errors.cpf = cpfError;
-    if (nameError) errors.civilName = nameError;
+
+    if (cpf.replace(/\D/g, "").length !== 11) {
+      errors.cpf = "Informe um CPF válido.";
+    }
+
+    if (!civilName.trim()) {
+      errors.civilName = "Informe seu nome civil.";
+    }
+
     setStepOneErrors(errors);
+
     if (Object.keys(errors).length > 0) {
       triggerShake(1);
       return false;
     }
+
     return true;
   };
 
@@ -130,22 +112,43 @@ export function ProfessionalSignupScreen() {
       confirmPassword?: string;
     } = {};
 
-    const phoneError = validatePhone(phone);
-    if (phoneError) errors.phone = phoneError;
+    if (!phone.trim()) {
+      errors.phone = "Informe seu telefone.";
+    }
 
-    const emailErrors = validateEmailPair(email, confirmEmail);
-    if (emailErrors.email) errors.email = emailErrors.email;
-    if (emailErrors.confirmEmail) errors.confirmEmail = emailErrors.confirmEmail;
+    if (!email.trim()) {
+      errors.email = "Informe seu e-mail.";
+    }
 
-    const passwordErrors = validatePasswordPair(password, confirmPassword);
-    if (passwordErrors.password) errors.password = passwordErrors.password;
-    if (passwordErrors.confirmPassword) errors.confirmPassword = passwordErrors.confirmPassword;
+    if (!confirmEmail.trim()) {
+      errors.confirmEmail = "Confirme seu e-mail.";
+    }
+
+    if (email.trim() && confirmEmail.trim() && email.trim() !== confirmEmail.trim()) {
+      errors.email = "Os e-mails devem ser iguais.";
+      errors.confirmEmail = "Os e-mails devem ser iguais.";
+    }
+
+    if (!password.trim()) {
+      errors.password = "Informe sua senha.";
+    }
+
+    if (!confirmPassword.trim()) {
+      errors.confirmPassword = "Confirme sua senha.";
+    }
+
+    if (password && confirmPassword && password !== confirmPassword) {
+      errors.password = "As senhas devem ser iguais.";
+      errors.confirmPassword = "As senhas devem ser iguais.";
+    }
 
     setStepTwoErrors(errors);
+
     if (Object.keys(errors).length > 0) {
       triggerShake(2);
       return false;
     }
+
     return true;
   };
 
@@ -167,6 +170,28 @@ export function ProfessionalSignupScreen() {
 
   const prevStep = () => {
     setStep((currentStep) => (currentStep === 3 ? 2 : 1));
+  };
+
+  const formatCpf = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    const firstPart = digits.slice(0, 3);
+    const secondPart = digits.slice(3, 6);
+    const thirdPart = digits.slice(6, 9);
+    const lastPart = digits.slice(9, 11);
+
+    if (digits.length <= 3) {
+      return firstPart;
+    }
+
+    if (digits.length <= 6) {
+      return `${firstPart}.${secondPart}`;
+    }
+
+    if (digits.length <= 9) {
+      return `${firstPart}.${secondPart}.${thirdPart}`;
+    }
+
+    return `${firstPart}.${secondPart}.${thirdPart}-${lastPart}`;
   };
 
   useEffect(() => {
@@ -191,8 +216,8 @@ export function ProfessionalSignupScreen() {
     }
 
     const intervalId = window.setInterval(() => {
-      setActiveCardIndex((currentIndex) => (currentIndex + 1) % stackedCards.length);
-    }, 2500);
+      setActiveCardIndex((currentIndex) => (currentIndex + 1) % professionalImages.length);
+    }, 4000);
 
     return () => {
       window.clearInterval(intervalId);
@@ -200,49 +225,30 @@ export function ProfessionalSignupScreen() {
   }, [prefersReducedMotion]);
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex flex-col md:grid md:h-screen md:grid-cols-2 md:overflow-hidden md:items-start">
-      {/* Ajuste: Removido 'hidden' e 'md:block', e o h-screen passou a ser exclusivo do Desktop (md:h-screen) */}
-      <section className={`relative w-full overflow-hidden md:h-screen ${styles.heroPane}`}>
-        <div className={styles.heroGlow} />
-        <div className={styles.heroGrid}>
-          <div className={styles.heroStack} aria-label="Mosaico de fotos das modelos">
-            <div className={styles.stageFrame}>
-              {stackedCards.map((card, index) => {
-                const slotIndex = (index - activeCardIndex + stackedCards.length) % stackedCards.length;
-                const placement = cardPlacements[slotIndex];
-
-                return (
-                  <div
-                    key={card.src}
-                    className={styles.stackCard}
-                    data-layer={slotIndex === 0 ? "front" : slotIndex === 1 ? "middle" : "back"}
-                    style={{
-                      transform: `translate3d(${placement.x}px, ${placement.y}px, 0) scale(${placement.scale}) rotate(${placement.rotate}deg)`,
-                      zIndex: placement.zIndex,
-                    }}
-                  >
-                    <Image
-                      src={card.src}
-                      alt={card.alt}
-                      fill
-                      priority={slotIndex === 0}
-                      quality={100}
-                      className={styles.stackImage}
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                    />
-                    <div className={styles.stackOverlay} />
-                  </div>
-                );
-              })}
-
-              <div className={styles.heroCopy}>
-                <p className={styles.heroEyebrow}>Executive profile</p>
-                <h2 className={styles.heroTitle}>Curadoria de Elite</h2>
-                <p className={styles.heroDescription}>
-                  Um mosaico de presença premium que destaca cada modelo com profundidade, contraste e troca automática de cartas.
-                </p>
-              </div>
-            </div>
+    <div className="min-h-screen bg-zinc-50 md:grid md:grid-cols-2 md:items-start">
+      <section className="hidden h-screen bg-black md:sticky md:top-0 md:block">
+        <div className="relative h-full w-full overflow-hidden">
+          {professionalImages.map((src, index) => (
+            <Image
+              key={src}
+              src={src}
+              alt={`Modelo para cadastro profissional ${index + 1}`}
+              fill
+              priority={index === 0}
+              quality={100}
+              className={`object-cover object-center transition-opacity duration-1000 ease-in-out ${index === activeCardIndex ? "opacity-90" : "opacity-0"}`}
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          ))}
+          <div className="absolute inset-0 bg-linear-to-br from-black/55 via-black/25 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-wine-900/35 via-transparent to-transparent" />
+          <div className="relative z-10 flex h-full flex-col justify-end px-10 pb-14 text-white lg:px-14">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">Independent &amp; Verified</p>
+            <h2 className="mt-4 max-w-lg font-display text-5xl leading-[0.95] text-white lg:text-6xl">Você decide quanto ganha.</h2>
+            <div className="mt-7 h-px w-24 bg-white/45" />
+            <p className="mt-6 max-w-md text-base leading-relaxed text-white/80">
+              Controle total da sua agenda, preços e privacidade — tudo em um lugar.
+            </p>
           </div>
         </div>
       </section>
@@ -365,7 +371,7 @@ export function ProfessionalSignupScreen() {
                     type="tel"
                     placeholder="+55 (00) 00000-0000"
                     value={phone}
-                    onChange={(event) => setPhone(formatPhone(event.target.value))}
+                    onChange={(event) => setPhone(event.target.value)}
                     error={stepTwoErrors.phone}
                     className={shakeStep === 2 && stepTwoErrors.phone ? "field-shake" : undefined}
                     premium

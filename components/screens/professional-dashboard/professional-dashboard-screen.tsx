@@ -1,7 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSetShellChrome } from "@/components/layout/shell-chrome";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,7 @@ export function ProfessionalDashboardScreen() {
   useDashboardTitleScroll({ headingRef });
 
   const [activeTab, setActiveTab] = useState<string>("Anúncio");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [adStatus, setAdStatus] = useState<AdStatus>("Ativo");
 
   useEffect(() => {
@@ -71,32 +73,74 @@ export function ProfessionalDashboardScreen() {
   const currentAd = ads[0];
   const adSlug = currentAd.slug;
 
+  const desktopNavRight = useMemo(
+    () => (
+      <div className="inline-flex items-center gap-3">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-800 shadow-xs">
+          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+          {adStatus === "Ativo" ? "Anúncio Ativo" : "Pausado"}
+        </span>
+        {adStatus === "Ativo" ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-zinc-700 shadow-xs backdrop-blur-sm">
+            142 views hoje
+          </span>
+        ) : null}
+      </div>
+    ),
+    [adStatus]
+  );
+
+  useSetShellChrome({ desktopNavRight });
+
   return (
     <>
       <DashboardMobileTitleFlight />
-      <div className="grid min-w-0 gap-4 lg:grid-cols-[256px_1fr] lg:items-start lg:gap-8">
+      <div
+        className={cn(
+          "grid min-w-0 gap-4 transition-all duration-300 lg:items-start lg:gap-8",
+          isSidebarCollapsed ? "lg:grid-cols-[80px_1fr]" : "lg:grid-cols-[256px_1fr]"
+        )}
+      >
         <aside
           className={cn(
-            "sticky hidden h-fit flex-col self-start rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm lg:flex",
+            "sticky hidden h-fit flex-col self-start rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition-all duration-300 lg:flex",
             chromeBelowDesktopNavStickyTop
           )}
         >
+          <div className="mb-6 flex items-center justify-between px-2">
+            {!isSidebarCollapsed ? (
+              <span className="text-sm font-black uppercase tracking-widest text-wine-700">
+                Painel Profissional
+              </span>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => setIsSidebarCollapsed((current) => !current)}
+              className="ml-auto rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-wine-50 hover:text-wine-700"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d={isSidebarCollapsed ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} />
+              </svg>
+            </button>
+          </div>
           <nav className="space-y-1.5">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => setActiveTab(tab.id)}
+                title={isSidebarCollapsed ? tab.id : undefined}
                 className={cn(
-                  "w-full flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-bold transition-all",
+                  "flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-bold transition-all",
                   activeTab === tab.id
-                    ? "bg-wine-700/10 text-wine-700 border-r-4 border-wine-700"
+                    ? "border-r-4 border-wine-700 bg-wine-700/10 text-wine-700"
                     : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
                 )}
               >
-                <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   {tab.icon}
                 </svg>
-                <span>{tab.id}</span>
+                {!isSidebarCollapsed ? <span>{tab.id}</span> : null}
               </button>
             ))}
           </nav>

@@ -21,9 +21,9 @@ import {
 } from "@/lib/identity";
 
 const clientImages = [
-  "/modelo_criar_conta_cliente_1.png",
-  "/mulher_1.png",
-  "/home_page2_.png"
+  "/images/personas/persona2/persona2-client-signup-1.png",
+  "/images/personas/persona3/persona3-client-signup-2.png",
+  "/images/personas/persona4/persona4-client-signup-3.png"
 ];
 
 export function ClientSignupScreen() {

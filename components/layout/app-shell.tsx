@@ -1,6 +1,6 @@
 "use client";
 
-import { PropsWithChildren, useLayoutEffect } from "react";
+import { PropsWithChildren, useLayoutEffect, type ReactNode } from "react";
 import { useAuthSession } from "@/lib/auth-session";
 import { getNavigationItems } from "@/lib/navigation";
 import {
@@ -25,6 +25,7 @@ interface AppShellProps extends PropsWithChildren {
   hideDesktopNav?: boolean;
   onBack?: () => void;
   mainClassName?: string;
+  desktopNavRight?: ReactNode;
 }
 
 export function AppShell({
@@ -34,6 +35,7 @@ export function AppShell({
   hideDesktopNav: hideDesktopNavProp,
   onBack: onBackProp,
   mainClassName: mainClassNameProp,
+  desktopNavRight: desktopNavRightProp,
 }: AppShellProps) {
   const { role, user, isLoggedIn, logout } = useAuthSession();
   const navigationItems = getNavigationItems(role);
@@ -43,6 +45,7 @@ export function AppShell({
   const hideDesktopNav = hideDesktopNavProp ?? chrome.hideDesktopNav;
   const onBack = onBackProp ?? chrome.onBack;
   const mainClassName = mainClassNameProp ?? chrome.mainClassName;
+  const desktopNavRight = desktopNavRightProp ?? chrome.desktopNavRight;
 
   useLayoutEffect(() => {
     registerShell();
@@ -75,7 +78,14 @@ export function AppShell({
         )}
       >
         {!hideDesktopNav && navigationItems.length > 0 ? (
-          <DesktopNav items={navigationItems} className={cn(chromeDesktopNavSticky, "mb-4 hidden md:block")} />
+          <div className={cn(chromeDesktopNavSticky, "mb-4 hidden items-center justify-between gap-4 md:flex")}>
+            <DesktopNav items={navigationItems} className="min-w-0 flex-1" />
+            {desktopNavRight ? (
+              <div className="flex shrink-0 items-center gap-3">
+                {desktopNavRight}
+              </div>
+            ) : null}
+          </div>
         ) : null}
         {children}
       </main>

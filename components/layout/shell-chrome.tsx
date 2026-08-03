@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
   type PropsWithChildren,
+  type ReactNode,
 } from "react";
 import { useIsTabActive } from "./tab-activity";
 
@@ -17,6 +18,7 @@ export type ShellChromeState = {
   hideDesktopNav: boolean;
   mainClassName?: string;
   onBack?: () => void;
+  desktopNavRight?: ReactNode;
 };
 
 const defaultChrome: ShellChromeState = {
@@ -43,6 +45,7 @@ export function ShellChromeProvider({ children }: PropsWithChildren) {
       hideDesktopNav: next.hideDesktopNav ?? false,
       mainClassName: next.mainClassName,
       onBack: next.onBack,
+      desktopNavRight: next.desktopNavRight,
     });
   }, []);
 
@@ -77,6 +80,7 @@ export function useSetShellChrome(chrome: Partial<ShellChromeState>): void {
   const hideDesktopNav = chrome.hideDesktopNav ?? false;
   const mainClassName = chrome.mainClassName;
   const onBack = chrome.onBack;
+  const desktopNavRight = chrome.desktopNavRight;
 
   useLayoutEffect(() => {
     if (!setChrome || !resetChrome) {
@@ -93,6 +97,7 @@ export function useSetShellChrome(chrome: Partial<ShellChromeState>): void {
       hideDesktopNav,
       mainClassName,
       onBack,
+      desktopNavRight,
     });
 
     return () => {
@@ -107,5 +112,6 @@ export function useSetShellChrome(chrome: Partial<ShellChromeState>): void {
     hideDesktopNav,
     mainClassName,
     onBack,
+    desktopNavRight,
   ]);
 }

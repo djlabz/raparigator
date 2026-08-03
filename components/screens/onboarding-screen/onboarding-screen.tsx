@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -82,7 +82,7 @@ export function OnboardingScreen() {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/hero/homepage-main-ultrawide.png"
+            src="/images/hero/homepage-main-photo.png"
             alt="Sigillus Premium Background"
             fill
             className={`object-cover ${styles.heroImage}`}
