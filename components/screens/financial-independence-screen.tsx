@@ -1,11 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Select } from "@/components/ui/select";
+import { ShinyButton } from "@/components/ui/shiny-button";
+import { PremiumConversionModal } from "@/components/ui/premium-conversion-modal";
+import { usePremiumPlan, PREMIUM_VISIBILITY_MULTIPLIER } from "@/lib/premium-plan";
 import { currency } from "@/lib/utils";
 
 // --- Constantes e Configurações ---
@@ -149,6 +153,9 @@ export function FinancialIndependenceScreen() {
   const [projectionUnit, setProjectionUnit] = useState("months");
 
   const [submitted, setSubmitted] = useState(false);
+  const [topSearchBoost, setTopSearchBoost] = useState(false);
+  const [upsellOpen, setUpsellOpen] = useState(false);
+  const { isPremium } = usePremiumPlan();
 
   const parsed = useMemo(() => {
     const value = Number(valuePerService);
@@ -160,9 +167,13 @@ export function FinancialIndependenceScreen() {
     if (!valid) return null;
 
     // Receita do Usuário
-    const dailyRevenue = value * services;
+    const boostMultiplier = topSearchBoost ? PREMIUM_VISIBILITY_MULTIPLIER : 1;
+    const dailyRevenue = value * services * boostMultiplier;
     const weeklyRevenue = dailyRevenue * days;
     const monthlyRevenue = weeklyRevenue * 4.33;
+
+    const baseMonthlyRevenue = value * services * days * 4.33;
+    const monthsToMillionBase = Math.ceil(TARGET / baseMonthlyRevenue);
 
     // Dados CLT (Referência) — jornada fixa de 8h/dia
     const cltInss = MIN_WAGE * 0.075;
@@ -203,9 +214,10 @@ export function FinancialIndependenceScreen() {
       dreamsCalculated,
       projectedAmount,
       effectiveTimeNum,
-      effectiveUnit
+      effectiveUnit,
+      monthsSavedWithPremium: monthsToMillionBase - monthsToMillionUser,
     };
-  }, [valuePerService, servicesPerDay, workDaysPerWeek, projectionTime, projectionUnit]);
+  }, [valuePerService, servicesPerDay, workDaysPerWeek, projectionTime, projectionUnit, topSearchBoost]);
 
   const handleReset = () => {
     setSubmitted(false);
@@ -310,6 +322,61 @@ export function FinancialIndependenceScreen() {
               </Button>
             </div>
 
+            <div className={`rounded-2xl border p-5 shadow-sm transition-colors ${topSearchBoost ? "border-[#DAA520]/50 bg-[#121212] shadow-zinc-900/20" : "border-zinc-200 bg-white shadow-zinc-200/70"}`}>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className={`text-sm font-bold ${topSearchBoost ? "text-[#FFDF00]" : "text-zinc-900"}`}>
+                    Topo das Pesquisas
+                  </p>
+                  <p className={`text-xs mt-0.5 ${topSearchBoost ? "text-zinc-300" : "text-zinc-500"}`}>
+                    Simule seus resultados com a visibilidade do plano Premium
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={topSearchBoost}
+                  aria-label="Simular com Topo das Pesquisas"
+                  onClick={() => setTopSearchBoost((prev) => !prev)}
+                  className={`relative h-7 w-13 shrink-0 rounded-full transition-colors ${topSearchBoost ? "bg-[#DAA520] premium-glow-pulse" : "bg-zinc-200"}`}
+                >
+                  <motion.span
+                    layout
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow ${topSearchBoost ? "left-[calc(100%-1.625rem)]" : "left-0.5"}`}
+                  />
+                </button>
+              </div>
+              <AnimatePresence>
+                {topSearchBoost ? (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-4 flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                      <motion.p
+                        key={parsed.monthsSavedWithPremium}
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 380, damping: 22 }}
+                        className="text-sm text-zinc-300"
+                      >
+                        <span className="font-bold text-[#FFDF00]">−{parsed.monthsSavedWithPremium} meses</span> de trabalho
+                        até a sua liberdade com o Premium
+                      </motion.p>
+                      {!isPremium ? (
+                        <ShinyButton size="sm" onClick={() => setUpsellOpen(true)}>
+                          Garantir meu Topo das Pesquisas
+                        </ShinyButton>
+                      ) : null}
+                    </div>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
+
             {/* MANCHETE DE IMPACTO */}
             <div className="text-center space-y-2 pb-2">
               <h2 className="text-3xl md:text-4xl font-bold text-zinc-900">
@@ -339,7 +406,15 @@ export function FinancialIndependenceScreen() {
                     <div className="flex items-center gap-2 font-bold text-emerald-700">
                       <IconRocket className="h-5 w-5" /> SEU RITMO
                     </div>
-                    <span className="font-bold text-emerald-600 text-lg">{formatDurationDetailed(parsed.monthsToMillionUser)}</span>
+                    <motion.span
+                      key={parsed.monthsToMillionUser}
+                      initial={{ scale: 0.85, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 380, damping: 20 }}
+                      className={`font-bold text-lg ${topSearchBoost ? "text-[#DAA520]" : "text-emerald-600"}`}
+                    >
+                      {formatDurationDetailed(parsed.monthsToMillionUser)}
+                    </motion.span>
                   </div>
                   <div className="h-4 w-full bg-zinc-100 rounded-full overflow-hidden">
                     <div className="h-full bg-emerald-500 rounded-full animate-pulse w-[95%]"></div>
@@ -414,9 +489,15 @@ export function FinancialIndependenceScreen() {
                     </div>
                     <div className="mt-4 pt-3 border-t border-dashed border-zinc-200">
                       <p className="text-xs uppercase tracking-wide text-zinc-500 mb-1">Você conquista em</p>
-                      <p className={`text-xl font-bold ${dream.highlight ? 'text-emerald-600' : 'text-zinc-800'}`}>
+                      <motion.p
+                        key={dream.monthsToAchieve}
+                        initial={{ scale: 0.85, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 380, damping: 20 }}
+                        className={`text-xl font-bold ${topSearchBoost ? "text-[#DAA520]" : dream.highlight ? 'text-emerald-600' : 'text-zinc-800'}`}
+                      >
                         {formatDurationDetailed(dream.monthsToAchieve)}
-                      </p>
+                      </motion.p>
                     </div>
                   </Card>
                 ))}
@@ -426,10 +507,20 @@ export function FinancialIndependenceScreen() {
           </div>
         ) : null}
 
+        <PremiumConversionModal
+          open={upsellOpen}
+          onClose={() => setUpsellOpen(false)}
+          highlight="topSearch"
+          from="topSearch"
+        />
+
         {/* Empty State para erros */}
         {submitted && !parsed && (
           <div className="pt-4">
-            <EmptyState title="Dados inválidos" description="Por favor, revise os valores inseridos. Certifique-se de usar números positivos." />
+            <EmptyState
+              title="Hmm, esses números não fecharam"
+              description="Dá uma olhadinha nos valores — por aqui a gente só aceita números positivos, combinado?"
+            />
             <Button variant="ghost" onClick={() => setSubmitted(false)} className="mt-4 w-full">Tentar novamente</Button>
           </div>
         )}

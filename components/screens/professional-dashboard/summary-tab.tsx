@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
+import { TrafficDiscoveryCard } from "@/components/screens/professional-dashboard/traffic-discovery-card";
 import { dashboardSummary } from "@/lib/mock-data";
 import { currency, cn } from "@/lib/utils";
 
@@ -58,6 +59,8 @@ export function SummaryTab() {
           tip="2.2% acima da média"
         />
       </section>
+
+      <TrafficDiscoveryCard />
 
       {/* Card de Dicas e Orientações */}
       <Card className="bg-linear-to-r from-wine-50 to-wine-100/50 border border-wine-200 p-4 sm:p-6">

@@ -1,171 +1,53 @@
-# AGENTS.md
+# Raparigator (Frontend)
 
-## Projeto
-
-- Este repositório é o frontend Next.js do Raparigator.
-- A interface é em português do Brasil (`pt-BR`).
-- Preserve o tom do produto: segurança, discrição, custódia financeira e experiência premium.
-- Não armazene segredos, tokens, URLs privadas, credenciais reais ou preferências pessoais em arquivos versionados.
-- **Objetivo de evolução**: adicionar novas páginas e features sem quebrar rotas existentes, design system ou contratos de serviço.
+Frontend de uma plataforma de anúncios de acompanhantes com feed, chat, checkout e backoffice admin. Ainda não há backend: todos os dados são mockados em `lib/`.
 
 ## Stack
 
-- **Framework**: Next.js (App Router) com React
-- **Linguagem**: TypeScript
-- **Estilo**: Tailwind CSS v4 + `app/globals.css` (design system próprio — cores `wine-*`, `zinc-*`)
-- **Ícones**: `lucide-react`
-- **Animações**: `motion` (Framer Motion)
-- **Lint**: ESLint + `eslint-config-next` (zero warnings)
-- Use `npm` como package manager; `package-lock.json` é o lockfile canônico.
-- Não troque para `pnpm`, `yarn` ou `bun` sem ADR aceito.
-- Não instale dependências novas sem discussão.
+- TypeScript (strict) · Next.js 16 (App Router + Turbopack) · React 19
+- Tailwind CSS v4 · Motion (animações) · Lucide React (ícones)
+- Sem banco e sem API real — dados vêm de `lib/mock-data.ts` e `lib/mock-users.ts`
 
-## Comandos
+## Como rodar
 
-- `npm run dev` — inicia `next dev --turbopack`
-- `npm run dev:legacy` — inicia `next dev`
-- `npm run build` — executa `next build`
-- `npm run start` — executa `next start`
-- `npm run lint` — executa `eslint`
-- `npm run share` — expõe `http://localhost:3000` via Cloudflare Tunnel
-
-Execute `npm run lint` antes de concluir mudanças de código quando Node/npm estiverem disponíveis.
-Execute `npm run build` para mudanças em rotas, metadata, config, tipos globais ou comportamento compartilhado.
+- Instalar: `npm install`
+- Dev: `npm run dev` (porta 3000; `npm run dev:legacy` roda sem Turbopack)
+- Lint: `npm run lint` — SEMPRE rode antes de finalizar tarefa
+- Build de produção: `npm run build` · servir build: `npm run start`
+- E2E: `npm run test:e2e` (Playwright em `tests/`); só Chromium no dia a dia, `test:e2e:chromium` para filtrar
+- Verificação local típica: lint + typecheck (`npm run check`) + E2E + checagem visual quando mexer em motion/UI
+- Logins de teste estão em `credenciais_mock.txt` (admin: `admin@sigillus.dev` / `Admin@123` em `lib/mock-users.ts`)
+- PWA / tela cheia: em aba normal do navegador a barra de endereço não pode ser escondida de forma permanente. Para experiência tipo app nativo, instale via “Adicionar à Tela de Início” / “Instalar app” (`display: standalone` em `app/manifest.ts`). Valide nesse modo, não só no tunnel Cloudflare.
 
 ## Estrutura
 
-- `app/**` — rotas do Next App Router
-  - `app/(public)/` — rotas públicas (feed, anúncios, auth); não dependa de autenticação real
-  - `app/(private)/` — rotas que exigem login (chat, conta, profissional); preserve separação visual, mas não assuma proteção real de backend
-- `components/layout/**` — shell, navegação, header e bottom nav
-- `components/screens/**` — telas de produto (interatividade client-side aqui quando a page for server component)
-- `components/ui/**` — componentes reutilizáveis sem regra de negócio
-- `lib/**` — tipos, mocks, navegação, sessão mockada e utilitários
-- `public/**` — assets estáticos usados por rotas, componentes e PWA
+- `app/(tabs)` → abas principais com shell persistente (feed, chat, acompanhamento, painel)
+- `app/(public)` → rotas abertas (auth, anúncio, checkout, popular)
+- `app/(private)` → rotas logadas fora das abas (conta, financeiro, anúncios)
+- `app/(admin)` → backoffice de administradores
+- `components/ui` → primitivos genéricos · `components/layout` → navbar/footer/sidebar · `components/screens` → blocos grandes de página
+- `lib/` → tipos (`types.ts` é a fonte de verdade), mocks e serviços (auth-session, chat-service, admin-service etc.)
 
-## Regras Por Caminho
+## Convenções
 
-- `app/**`: mantenha pages pequenas; exporte `metadata` quando a rota precisar de título/descrição; delegue UI para `components/screens/**`.
-- `components/ui/**`: não importe mocks, rotas de produto ou estado de sessão; exponha props reutilizáveis.
-- `components/layout/**`: use `useAuthSession`, `getNavigationItems` e os papéis existentes antes de criar nova navegação.
-- `components/screens/professional-dashboard/**`: leia `types.ts` e `use-profile-form.ts` antes de alterar o fluxo de anúncio; evite refatorações amplas em `announcement-tab.tsx` sem tarefa explícita.
-- `lib/**`: preserve `@/*` como alias; não coloque código que dependa de DOM em módulos sem `"use client"`.
-- `public/**`: não renomeie assets referenciados por rotas, manifest ou componentes sem atualizar todos os usos.
+- Importe sempre com o alias `@/` (aponta para a raiz do repo)
+- Componentes React em PascalCase; hooks começam com `use`
+- Commits: conventional (`feat:`, `fix:`, `chore:`, `style:`)
+- Branches descritivas (`feature/...`, `fix/...`); nunca commite direto na `main`
+- Textos de UI em português (PT-BR)
+- Não escreva comentários no código
 
-## Hard Constraints
+## Verificação de motion / browser ad hoc
 
-1. Não refatorar `app/globals.css` nem o design system (cores `wine-*`, `zinc-*`).
-2. Não tocar arquivos de autenticação (`lib/auth-session.ts`, rotas `/auth/*`) sem aprovação explícita.
-3. Não criar novas convenções de componentes sem alinhar com o time antes.
-4. Não alterar a assinatura pública das funções em `lib/chat-service.ts` — o backend vai integrar por esse contrato.
-5. Não instalar dependências novas sem discussão.
-6. Não reescrever componentes de UI existentes em `components/ui/` como parte de uma feature.
-7. Manter mudanças mínimas, explícitas e revisáveis.
+- Para QA de animação e interação visual ad hoc, use a skill `refine-motion` (não há skill `webapp-testing` no catálogo).
+- Preferir MCP Playwright quando conectado; senão o fallback Python em `.agents/skills/refine-motion/references/webapp-testing-fallback/`.
+- Depois de escolher o produto, não misture MCP e fallback na mesma run.
+- Suite E2E do repo (`npm run test:e2e` / `@playwright/test`) é independente desse fluxo.
 
-## UI E Estilo
+## Nunca faça
 
-- **Consulte `docs/design-guidelines.md`** para diretrizes estritas e completas sobre estilização, Tailwind, tipografia, UI Components, acessibilidade e temas premium.
-- Use `components/ui/*` (Button, Card, Modal, etc.) antes de criar novos primitivos.
-- Mantenha `pt-BR` e um tom seguro, discreto e premium.
-- Sem cores fora do padrão `wine-*`/`zinc-*`.
-
-## Dados, Auth E Segurança
-
-- `lib/mock-data.ts` e `lib/mock-users.ts` são dados mockados de frontend.
-- `useAuthSession` usa `localStorage` e não representa autenticação real.
-- Não promova senhas mockadas, conteúdo de `credenciais_mock.txt` ou `.env*` para documentação, memória ou prompts.
-- Se uma tarefa exigir auth real, backend, pagamentos reais ou proteção de rota, registre a decisão antes de implementar.
-
-## Configuração Sensível
-
-- Preserve o bloco de `next.config.ts` que usa `DISABLE_HMR === "true"` para desabilitar file watching em ambiente de agente.
-- `next.config.ts` ignora ESLint durante build; por isso `npm run lint` é verificação separada.
-- Domínios remotos de imagem permitidos ficam em `next.config.ts`.
-
-## Contrato De Nova Feature
-
-Toda nova feature deve seguir esta estrutura padrão:
-
-1. Criar contrato em `docs/features/<feature>.md` antes de qualquer implementação.
-2. Estrutura de arquivos preferida:
-   - `app/(public|private)/<rota>/page.tsx` — Server Component (metadata + render)
-   - `components/screens/<feature>-screen.tsx` — Client Component principal
-   - `lib/<feature>-service.ts` — camada de serviço (mock agora, API real depois)
-   - `lib/types.ts` — adicionar tipos (não reescrever o arquivo)
-   - `components/ui/<componente>.tsx` — apenas se for reutilizável em outras features
-
-## Fontes De Verdade (Docs)
-
-| Arquivo | Conteúdo |
-|---|---|
-| `docs/architecture.md` | Arquitetura atual |
-| `docs/design-guidelines.md` | Design system completo |
-| `docs/decisions/` | Decisões arquiteturais aprovadas |
-| `docs/features/<feature>.md` | Contrato de cada feature |
-| `docs/tasks.md` | Fila de trabalho |
-| `docs/open-questions.md` | Perguntas em aberto |
-| `docs/handoffs.md` | Histórico de handoffs |
-| `memory-bank/project-brief.md` | Contexto estável de produto/arquitetura |
-| `memory-bank/active-context.md` | Snapshot pequeno e regravável do estado atual |
-
-Registre decisões duráveis em `docs/decisions/`. Não crie persona, skills, rules locais ou docs longos sem justificar o custo em ADR.
-
-## Time De Agentes
-
-### `orchestrator`
-
-**Responsável por:**
-- Sequenciamento de tasks
-- Manutenção de `docs/tasks.md`, `docs/decisions/`, `docs/open-questions.md`, `docs/handoffs.md`
-- Gates de aceitação
-- Identificar próximo passo e próximo agente
-
-**Não é responsável por:**
-- Implementação de código
-- Decisões arquiteturais sem review de contrato
-
-### `feature-builder`
-
-**Responsável por:**
-- Implementar a feature aprovada pelo orchestrator
-- Criar/atualizar screen, service e types
-- Registrar rota se necessário
-- Garantir zero erros e warnings no ESLint dos arquivos alterados
-- Validação manual documentada
-
-## Gates De Workflow
-
-1. Nenhuma implementação antes de um contrato de feature existir em `docs/features/<feature>.md`.
-2. Nenhuma task está completa até:
-   - ESLint dos arquivos alterados passar com `--max-warnings=0`
-   - Decisões arquiteturais registradas em `docs/decisions/`
-   - `docs/tasks.md` atualizado
-
-## Definition Of Done
-
-Uma feature está pronta somente se:
-
-- [ ] Rota carrega no browser sem erro de console
-- [ ] ESLint nos arquivos da feature: 0 erros, 0 warnings
-- [ ] Design system respeitado (sem cores fora do padrão `wine-*`/`zinc-*`)
-- [ ] Contrato de auth respeitado (visitante bloqueado onde necessário)
-- [ ] `docs/tasks.md` e `docs/decisions/` atualizados
-- [ ] Validação manual documentada no handoff
-
-## Formato De Handoff Obrigatório
-
-Todo agente deve terminar com:
-
-```
-## Handoff
-- Agente:
-- Fase:
-- Feature:
-- Arquivos lidos:
-- Arquivos alterados:
-- Decisões tomadas:
-- Perguntas em aberto:
-- Riscos:
-- Verificações manuais necessárias:
-- Próximo agente recomendado:
-```
+- Nunca chame API externa nem crie fetch para backend real — consuma os serviços/mocks de `lib/`
+- Nunca adicione novos tipos fora de `lib/types.ts` quando forem compartilhados
+- Nunca edite `.next/`, `node_modules/` ou `tsconfig.tsbuildinfo`
+- Nunca commite `.env*` (segredos ficam em `.env.local`)
+- Nunca instale outra lib de ícones ou animação — já usamos Lucide e Motion

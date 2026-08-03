@@ -2,6 +2,10 @@ export type AvailabilityStatus = "livre" | "em_atendimento" | "indisponivel";
 
 export type AdCategory = "premium" | "normal";
 
+export type PlanTier = "standard" | "premium";
+
+export type PremiumBillingCycle = "monthly" | "semiannual";
+
 export type AuthRole = "visitor" | "cliente" | "profissional";
 
 /** Status de moderação do perfil profissional */
@@ -38,6 +42,7 @@ export interface MockUser {
   cpf?: string;
   alias?: string;
   city?: string;
+  plan?: PlanTier;
 }
 export interface ProfessionalAd {
   id: string;
@@ -79,6 +84,10 @@ export interface ProfessionalAd {
   rejectionReason?: string;
   /** Suspensão administrativa */
   isSuspended?: boolean;
+  /** Número WhatsApp no formato internacional (ex: "5511999998888") */
+  whatsappNumber?: string;
+  /** Username do Telegram (sem @) */
+  telegramUsername?: string;
 }
 
 export interface MockClient {

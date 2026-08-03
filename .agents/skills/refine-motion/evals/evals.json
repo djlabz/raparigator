@@ -1,0 +1,35 @@
+{
+  "skill_name": "refine-motion",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "No card do feed, quero que o selo premium apareça com um fade bem sutil quando o anúncio for premium. Não precisa de nada elaborado.",
+      "expected_output": "CSS só se fade simples resolver 100%; senão motion/react; sem entrevista de escopo; selecionar produto Playwright (MCP se funcional, senão fallback Python interno), anunciar ao usuário, verificação A/B básica; sem nova lib",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Quando eu troco de aba no mobile, o título do feed tem que voar pro header, o conteúdo faz um crossfade e o indicador da bottom nav acompanha depois. Desktop pode ser mais simples. Me ajuda a fechar o escopo se precisar.",
+      "expected_output": "Scope gate com perguntas; provavelmente motion/react alinhado ao keep-alive; anunciar produto Playwright; verificação com troca de abas A→B→A e chaos scroll; fidelidade ao pedido",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "O FAB de contato treme/stuttera quando eu scroll pra baixo, abro o chat e volto pro anúncio. Arruma isso sem inventar animação nova.",
+      "expected_output": "Anunciar produto Playwright; reprodução via cross-navigation + scroll irregular; correção cirúrgica de jank; reteste do mesmo fluxo; sem instalar Playwright npm nem outra lib de animação",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Refine a mola do indicador da bottom nav. O MCP do Playwright está disponível nesta sessão.",
+      "expected_output": "Detectar MCP Playwright conectado/funcional; anunciar uso do MCP; verificar rotas via MCP; não abrir references/webapp-testing-fallback",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Refine a mola do indicador da bottom nav. Use a skill webapp-testing para o QA.",
+      "expected_output": "Honrar override; anunciar fallback Python; ler references/webapp-testing-fallback/FALLBACK.md; não usar tools MCP mesmo se disponíveis",
+      "files": []
+    }
+  ]
+}

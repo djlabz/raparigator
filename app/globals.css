@@ -1,7 +1,7 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #fafafa;
   --foreground: #121217;
 }
 
@@ -22,13 +22,43 @@
 
 * {
   box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+  background: transparent;
+}
+
+html {
+  background: var(--background);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 body {
   margin: 0;
+  min-height: 100dvh;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-manrope), sans-serif;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 a {
@@ -127,4 +157,90 @@ a {
 
 .premium-gold-glow:hover {
   box-shadow: 0 16px 44px rgba(184, 134, 11, 0.2), 0 0 0 1px rgba(255, 223, 0, 0.38);
+}
+
+@keyframes share-modal-premium-in {
+  from {
+    opacity: 0;
+    clip-path: circle(0% at 50% 50%);
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    clip-path: circle(150% at 50% 50%);
+    transform: scale(1);
+  }
+}
+
+.share-modal-premium-open {
+  animation: share-modal-premium-in 400ms cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+@property --shine-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes shiny-border-rotate {
+  to {
+    --shine-angle: 360deg;
+  }
+}
+
+.shiny-button-border {
+  background: conic-gradient(from var(--shine-angle),
+      rgba(218, 165, 32, 0.15) 0%,
+      rgba(255, 223, 0, 0.95) 12%,
+      rgba(218, 165, 32, 0.15) 26%,
+      rgba(182, 0, 49, 0.35) 50%,
+      rgba(218, 165, 32, 0.15) 74%,
+      rgba(255, 223, 0, 0.95) 88%,
+      rgba(218, 165, 32, 0.15) 100%);
+  animation: shiny-border-rotate 3.2s linear infinite;
+}
+
+@keyframes premium-glow-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(255, 223, 0, 0.35), 0 0 20px rgba(218, 165, 32, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 16px rgba(255, 223, 0, 0.6), 0 0 34px rgba(218, 165, 32, 0.35);
+  }
+}
+
+.premium-glow-pulse {
+  animation: premium-glow-pulse 2.4s ease-in-out infinite;
+}
+
+.premium-panel-shell {
+  border: 1px solid rgba(218, 165, 32, 0.35);
+  background: linear-gradient(145deg, #121212 0%, #1a1a1a 55%, #121212 100%);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.premium-sheen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 223, 0, 0.06) 0%, transparent 42%, rgba(218, 165, 32, 0.08) 100%);
+}
+
+.premium-modal-title {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+  font-size: 1.875rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #ffdf00;
+}
+
+@media (min-width: 640px) {
+  .premium-modal-title {
+    font-size: 2.25rem;
+  }
 }

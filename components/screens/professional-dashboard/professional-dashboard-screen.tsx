@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AppShell } from "@/components/layout/app-shell";
+import dynamic from "next/dynamic";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,13 +9,29 @@ import { useAuthSession } from "@/lib/auth-session";
 import { useAccountNotifications } from "@/lib/account-notifications";
 import type { AuthRole } from "@/lib/types";
 import { ads } from "@/lib/mock-data";
+import { chromeBelowDesktopNavStickyTop } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
 import { InfoBanner } from "@/components/ui/info-banner";
+import { DashboardHeading } from "./dashboard-heading";
+import { DashboardMobileTitleFlight } from "./dashboard-mobile-title-flight";
 import { SummaryTab } from "./summary-tab";
-import { AnnouncementTab } from "./announcement-tab";
-import { HistoryTab } from "./history-tab";
 import type { AdStatus } from "./types";
+import { useDashboardTitleScroll } from "./use-dashboard-title-scroll";
 import { confirmVerificationCode, getVerificationState, sendVerificationCode, type VerificationChannel, type VerificationState } from "@/lib/verification";
+
+function DashboardTabSkeleton() {
+  return <div className="min-h-80 rounded-2xl border border-zinc-100 bg-zinc-50/80" aria-hidden />;
+}
+
+const AnnouncementTab = dynamic(
+  () => import("./announcement-tab").then((mod) => mod.AnnouncementTab),
+  { loading: () => <DashboardTabSkeleton /> }
+);
+
+const HistoryTab = dynamic(
+  () => import("./history-tab").then((mod) => mod.HistoryTab),
+  { loading: () => <DashboardTabSkeleton /> }
+);
 
 const TABS = [
   { id: "Resumo", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /> },
@@ -29,9 +45,10 @@ export function ProfessionalDashboardScreen() {
   const { role } = useAuthSession();
   const safeRole = role === "visitor" ? "profissional" : (role as Exclude<AuthRole, "visitor">);
   const { bannerClosed, setBannerClosed } = useAccountNotifications(safeRole);
+  const headingRef = useRef<HTMLDivElement>(null);
+  useDashboardTitleScroll({ headingRef });
 
   const [activeTab, setActiveTab] = useState<string>("Anúncio");
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [adStatus, setAdStatus] = useState<AdStatus>("Ativo");
 
   useEffect(() => {
@@ -55,36 +72,20 @@ export function ProfessionalDashboardScreen() {
   const adSlug = currentAd.slug;
 
   return (
-    <AppShell>
-      <div className={cn(
-        "grid gap-4 overflow-x-hidden lg:gap-8 lg:items-start transition-all duration-300",
-        isSidebarCollapsed ? "lg:grid-cols-[80px_1fr]" : "lg:grid-cols-[256px_1fr]"
-      )}>
-
-        {/* Menu Lateral Desktop */}
-        <aside className="hidden lg:flex flex-col rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm h-fit self-start transition-all duration-300">
-          <div className="flex items-center justify-between mb-6 px-2">
-            {!isSidebarCollapsed && (
-              <span className="text-sm font-black tracking-widest text-wine-700 uppercase">
-                Painel Profissional
-              </span>
-            )}
-            <button
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="p-1.5 text-zinc-400 hover:text-wine-700 hover:bg-wine-50 rounded-lg transition-colors ml-auto"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d={isSidebarCollapsed ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} />
-              </svg>
-            </button>
-          </div>
-
+    <>
+      <DashboardMobileTitleFlight />
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[256px_1fr] lg:items-start lg:gap-8">
+        <aside
+          className={cn(
+            "sticky hidden h-fit flex-col self-start rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm lg:flex",
+            chromeBelowDesktopNavStickyTop
+          )}
+        >
           <nav className="space-y-1.5">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                title={isSidebarCollapsed ? tab.id : undefined}
                 className={cn(
                   "w-full flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-bold transition-all",
                   activeTab === tab.id
@@ -95,34 +96,44 @@ export function ProfessionalDashboardScreen() {
                 <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   {tab.icon}
                 </svg>
-                {!isSidebarCollapsed && <span>{tab.id}</span>}
+                <span>{tab.id}</span>
               </button>
             ))}
           </nav>
         </aside>
 
-        <div className="space-y-4 overflow-x-hidden lg:space-y-6">
+        <div className="min-w-0 lg:-mt-16">
+          <DashboardHeading headingRef={headingRef} />
+
           {!bannerClosed && (
-            <InfoBanner 
-              title="Configure seu anúncio" 
-              description="Para começar sua nova independência, configure seu anúncio e complete as informações do seu perfil na guia correspondente." 
-              tone="info" 
-              onClose={() => setBannerClosed(true)}
-            />
+            <div className="mb-4">
+              <InfoBanner 
+                title="Configure seu anúncio" 
+                description="Para começar sua nova independência, configure seu anúncio e complete as informações do seu perfil na guia correspondente." 
+                tone="info" 
+                onClose={() => setBannerClosed(true)}
+              />
+            </div>
           )}
 
-          {/* Menu Superior Mobile */}
-          <div className="flex gap-2 overflow-auto lg:hidden hide-scrollbar pb-2">
+          <div
+            className={cn(
+              "mb-2 -mx-1 flex gap-2 overflow-x-auto overscroll-x-contain touch-pan-x px-1 py-2 lg:hidden",
+              "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            )}
+          >
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold transition-colors",
-                  activeTab === tab.id ? "bg-wine-700 text-white" : "bg-zinc-100 text-zinc-600"
+                  "inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-bold shadow-[0_2px_10px_rgba(15,23,42,0.08)] transition-colors",
+                  activeTab === tab.id
+                    ? "border-wine-700 bg-wine-700 text-white"
+                    : "border-zinc-200/80 bg-white text-zinc-600"
                 )}
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   {tab.icon}
                 </svg>
                 {tab.id}
@@ -130,7 +141,6 @@ export function ProfessionalDashboardScreen() {
             ))}
           </div>
 
-          {/* CONTEÚDO DAS ABAS */}
           {activeTab === "Resumo" && <SummaryTab />}
           {activeTab === "Anúncio" && (
             <AnnouncementTab
@@ -145,7 +155,7 @@ export function ProfessionalDashboardScreen() {
           {activeTab === "Verificação" && <VerificationTab />}
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }
 
@@ -156,19 +166,20 @@ function VerificationTab() {
     email: user?.email ?? "",
     phone: user?.phone ?? "",
   };
+  const verificationSyncKey = `${userId}|${verificationTargets.email}|${verificationTargets.phone}`;
   const [verificationState, setVerificationState] = useState<VerificationState>(() => getVerificationState(userId, verificationTargets));
   const [codeInputs, setCodeInputs] = useState<Record<VerificationChannel, string>>({ email: "", phone: "" });
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [infoTone, setInfoTone] = useState<"success" | "error" | "info">("info");
   const [revealedCodes, setRevealedCodes] = useState<Record<VerificationChannel, string | null>>({ email: null, phone: null });
+  const [previousVerificationSyncKey, setPreviousVerificationSyncKey] = useState(verificationSyncKey);
 
-  useEffect(() => {
-     
+  if (verificationSyncKey !== previousVerificationSyncKey) {
+    setPreviousVerificationSyncKey(verificationSyncKey);
     setVerificationState(getVerificationState(userId, verificationTargets));
     setCodeInputs({ email: "", phone: "" });
     setRevealedCodes({ email: null, phone: null });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, verificationTargets.email, verificationTargets.phone]);
+  }
 
   useEffect(() => {
     if (!infoMessage) {

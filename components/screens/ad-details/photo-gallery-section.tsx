@@ -133,6 +133,7 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                loading={idx === 0 ? "eager" : "lazy"}
                 referrerPolicy="no-referrer"
               />
 
@@ -147,7 +148,7 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
       )}
 
       {galleryMode === "alternative" && (
-        <div className="grid grid-flow-dense grid-cols-2 auto-rows-[175px] gap-3 animate-fade-in sm:grid-cols-3 sm:auto-rows-[215px] lg:grid-cols-5 lg:auto-rows-[235px]">
+        <div className="grid grid-flow-dense grid-cols-2 auto-rows-43.75 gap-3 animate-fade-in sm:grid-cols-3 sm:auto-rows-53.75 lg:grid-cols-5 lg:auto-rows-58.75">
           {bentoItems.map((item, idx) => {
             const isImage = item.type === "image";
 
@@ -173,7 +174,15 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                     <div className="flex -space-x-2.5 overflow-hidden">
                       {ad.images.slice(0, 4).map((img, i) => (
                         <div key={i} className="relative inline-block h-9 w-9 overflow-hidden rounded-full bg-zinc-200 ring-2 ring-white">
-                          <Image src={img} alt="preview" fill className="object-cover" sizes="36px" referrerPolicy="no-referrer" />
+                          <Image
+                            src={img}
+                            alt="preview"
+                            fill
+                            className="object-cover"
+                            sizes="36px"
+                            loading={i === 0 ? "eager" : "lazy"}
+                            referrerPolicy="no-referrer"
+                          />
                         </div>
                       ))}
                       {ad.images.length > 4 && (
@@ -243,7 +252,7 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                   fill
                   className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                   sizes={spanClass.includes("col-span-2") ? "(max-width: 640px) 100vw, 50vw" : "(max-width: 640px) 50vw, 25vw"}
-                  priority={idx === 0}
+                  loading={idx === 0 ? "eager" : "lazy"}
                   referrerPolicy="no-referrer"
                 />
 
@@ -267,6 +276,7 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
             alt="Mais fotos"
             fill
             className="scale-110 object-cover opacity-80 blur-sm transition-all duration-500 group-hover:scale-115 group-hover:blur-[6px]"
+            sizes="100vw"
             referrerPolicy="no-referrer"
           />
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-[2px] transition-colors duration-300 group-hover:bg-black/40">
@@ -285,7 +295,15 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
               <div className="flex -space-x-2.5 overflow-hidden">
                 {ad.images.slice(0, 4).map((img, i) => (
                   <div key={i} className="relative inline-block h-10 w-10 overflow-hidden rounded-full bg-zinc-200 ring-2 ring-white sm:h-11 sm:w-11">
-                    <Image src={img} alt="preview" fill className="object-cover" sizes="36px" referrerPolicy="no-referrer" />
+                    <Image
+                      src={img}
+                      alt="preview"
+                      fill
+                      className="object-cover"
+                      sizes="36px"
+                      loading={i === 0 ? "eager" : "lazy"}
+                      referrerPolicy="no-referrer"
+                    />
                   </div>
                 ))}
                 {ad.images.length > 4 && (

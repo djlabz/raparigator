@@ -11,7 +11,7 @@ interface StandardSidebarCtaProps {
 
 export function StandardSidebarCta({ role, setRiskTarget }: StandardSidebarCtaProps) {
   return (
-    <div className="sticky top-24 flex w-full flex-col gap-4">
+    <div className="sticky top-20 flex w-full flex-col gap-4">
       <div className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="relative z-10 flex flex-col items-center text-center">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-wine-100 bg-red-50 text-wine-700">
@@ -65,7 +65,7 @@ export function StandardSidebarCta({ role, setRiskTarget }: StandardSidebarCtaPr
 
           <div className="mt-6 flex flex-col items-center justify-center gap-2 border-t border-zinc-100 pt-5 text-xs text-zinc-500">
             <ShieldCheck className="h-5 w-5 text-emerald-600" />
-            <p className="max-w-[200px]">Ambiente 100% seguro com moderação ativa Sigillus.</p>
+            <p className="max-w-50">Ambiente 100% seguro com moderação ativa Sigillus.</p>
           </div>
         </div>
       </div>

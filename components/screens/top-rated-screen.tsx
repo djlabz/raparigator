@@ -13,7 +13,12 @@ export function TopRatedScreen() {
     <AppShell>
       <div className="space-y-4">
         <h1 className="text-2xl font-semibold text-zinc-900">Mais avaliadas</h1>
-        {grouped.length === 0 ? <EmptyState title="Sem dados" description="Nenhuma avaliacao disponivel no momento." /> : null}
+        {grouped.length === 0 ? (
+          <EmptyState
+            title="Ainda sem elogios por aqui"
+            description="Quando as avaliações chegarem, elas aparecem aqui — bem cheinhas de carinho."
+          />
+        ) : null}
         {grouped.map((item) => (
           <Card key={item.category} className="space-y-3">
             <h2 className="text-base font-semibold text-zinc-900">{item.category}</h2>

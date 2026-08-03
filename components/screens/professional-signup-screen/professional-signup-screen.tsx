@@ -12,6 +12,15 @@ import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import { Stepper, StepItem } from "@/components/ui/stepper";
 import { useAuthSession } from "@/lib/auth-session";
+import {
+  formatCpf,
+  formatPhone,
+  validateCpf,
+  validateEmailPair,
+  validatePasswordPair,
+  validatePhone,
+  validateRequiredName,
+} from "@/lib/identity";
 import styles from "./professional-signup-screen.module.css";
 
 const stackedCards = [
@@ -100,22 +109,15 @@ export function ProfessionalSignupScreen() {
 
   const validateStepOne = () => {
     const errors: { cpf?: string; civilName?: string } = {};
-
-    if (cpf.replace(/\D/g, "").length !== 11) {
-      errors.cpf = "Informe um CPF válido.";
-    }
-
-    if (!civilName.trim()) {
-      errors.civilName = "Informe seu nome civil.";
-    }
-
+    const cpfError = validateCpf(cpf);
+    const nameError = validateRequiredName(civilName, "civil");
+    if (cpfError) errors.cpf = cpfError;
+    if (nameError) errors.civilName = nameError;
     setStepOneErrors(errors);
-
     if (Object.keys(errors).length > 0) {
       triggerShake(1);
       return false;
     }
-
     return true;
   };
 
@@ -128,43 +130,22 @@ export function ProfessionalSignupScreen() {
       confirmPassword?: string;
     } = {};
 
-    if (!phone.trim()) {
-      errors.phone = "Informe seu telefone.";
-    }
+    const phoneError = validatePhone(phone);
+    if (phoneError) errors.phone = phoneError;
 
-    if (!email.trim()) {
-      errors.email = "Informe seu e-mail.";
-    }
+    const emailErrors = validateEmailPair(email, confirmEmail);
+    if (emailErrors.email) errors.email = emailErrors.email;
+    if (emailErrors.confirmEmail) errors.confirmEmail = emailErrors.confirmEmail;
 
-    if (!confirmEmail.trim()) {
-      errors.confirmEmail = "Confirme seu e-mail.";
-    }
-
-    if (email.trim() && confirmEmail.trim() && email.trim() !== confirmEmail.trim()) {
-      errors.email = "Os e-mails devem ser iguais.";
-      errors.confirmEmail = "Os e-mails devem ser iguais.";
-    }
-
-    if (!password.trim()) {
-      errors.password = "Informe sua senha.";
-    }
-
-    if (!confirmPassword.trim()) {
-      errors.confirmPassword = "Confirme sua senha.";
-    }
-
-    if (password && confirmPassword && password !== confirmPassword) {
-      errors.password = "As senhas devem ser iguais.";
-      errors.confirmPassword = "As senhas devem ser iguais.";
-    }
+    const passwordErrors = validatePasswordPair(password, confirmPassword);
+    if (passwordErrors.password) errors.password = passwordErrors.password;
+    if (passwordErrors.confirmPassword) errors.confirmPassword = passwordErrors.confirmPassword;
 
     setStepTwoErrors(errors);
-
     if (Object.keys(errors).length > 0) {
       triggerShake(2);
       return false;
     }
-
     return true;
   };
 
@@ -186,28 +167,6 @@ export function ProfessionalSignupScreen() {
 
   const prevStep = () => {
     setStep((currentStep) => (currentStep === 3 ? 2 : 1));
-  };
-
-  const formatCpf = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    const firstPart = digits.slice(0, 3);
-    const secondPart = digits.slice(3, 6);
-    const thirdPart = digits.slice(6, 9);
-    const lastPart = digits.slice(9, 11);
-
-    if (digits.length <= 3) {
-      return firstPart;
-    }
-
-    if (digits.length <= 6) {
-      return `${firstPart}.${secondPart}`;
-    }
-
-    if (digits.length <= 9) {
-      return `${firstPart}.${secondPart}.${thirdPart}`;
-    }
-
-    return `${firstPart}.${secondPart}.${thirdPart}-${lastPart}`;
   };
 
   useEffect(() => {
@@ -406,7 +365,7 @@ export function ProfessionalSignupScreen() {
                     type="tel"
                     placeholder="+55 (00) 00000-0000"
                     value={phone}
-                    onChange={(event) => setPhone(event.target.value)}
+                    onChange={(event) => setPhone(formatPhone(event.target.value))}
                     error={stepTwoErrors.phone}
                     className={shakeStep === 2 && stepTwoErrors.phone ? "field-shake" : undefined}
                     premium

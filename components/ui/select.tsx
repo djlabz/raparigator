@@ -3,6 +3,7 @@ import {
   KeyboardEvent,
   ReactNode,
   SelectHTMLAttributes,
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -23,6 +24,21 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   options: Option[];
   leadingIcon?: ReactNode;
   premium?: boolean;
+}
+
+function getStickyHeaderOffset() {
+  if (typeof document === "undefined") {
+    return 12;
+  }
+
+  const header = document.querySelector(
+    "header.sticky, header.fixed, header[class*='sticky'], header[class*='fixed'], [data-app-shell] > header"
+  );
+  if (!header) {
+    return 72;
+  }
+
+  return Math.max(12, Math.ceil(header.getBoundingClientRect().bottom) + 8);
 }
 
 export function Select({ id, label, options, className, leadingIcon, premium = false, ...props }: SelectProps) {
@@ -48,6 +64,7 @@ export function Select({ id, label, options, className, leadingIcon, premium = f
   const selectedOption = visibleOptions.find((option) => option.value === currentValue);
   const hasSelection = Boolean(selectedOption);
   const displayLabel = selectedOption?.label ?? placeholderOption?.label ?? "Selecionar";
+  const visibleOptionsCount = visibleOptions.length;
 
   useEffect(() => {
     if (!isOpen) {
@@ -59,7 +76,7 @@ export function Select({ id, label, options, className, leadingIcon, premium = f
     setActiveIndex(selectedIndex);
   }, [currentValue, isOpen, visibleOptions]);
 
-  const syncFloatingPosition = () => {
+  const syncFloatingPosition = useCallback(() => {
     const trigger = triggerRef.current;
 
     if (!trigger) {
@@ -69,12 +86,14 @@ export function Select({ id, label, options, className, leadingIcon, premium = f
     const rect = trigger.getBoundingClientRect();
     const spacing = 8;
     const viewportPadding = 12;
-    const availableBelow = window.innerHeight - rect.bottom - spacing - viewportPadding;
-    const availableAbove = rect.top - spacing - viewportPadding;
-    const panelHeight = panelRef.current?.scrollHeight ?? 280;
+    const topSafeOffset = getStickyHeaderOffset();
+    const availableBelow = Math.max(0, window.innerHeight - rect.bottom - spacing - viewportPadding);
+    const availableAbove = Math.max(0, rect.top - spacing - topSafeOffset);
+    const panelHeight = panelRef.current?.scrollHeight ?? Math.min(280, visibleOptionsCount * 48 + 16);
     const openAbove = availableBelow < panelHeight && availableAbove > availableBelow;
-    const maxHeight = Math.max(160, Math.floor(Math.min(panelHeight, openAbove ? availableAbove : availableBelow)));
-    const top = openAbove ? Math.max(viewportPadding, rect.top - spacing - maxHeight) : rect.bottom + spacing;
+    const availableSpace = openAbove ? availableAbove : availableBelow;
+    const maxHeight = Math.max(0, Math.floor(Math.min(panelHeight, availableSpace)));
+    const top = openAbove ? rect.top - spacing - maxHeight : rect.bottom + spacing;
     const left = Math.max(viewportPadding, Math.min(rect.left, window.innerWidth - rect.width - viewportPadding));
 
     setFloatingStyle({
@@ -83,7 +102,7 @@ export function Select({ id, label, options, className, leadingIcon, premium = f
       width: rect.width,
       maxHeight,
     });
-  };
+  }, [visibleOptionsCount]);
 
   useLayoutEffect(() => {
     if (!isOpen) {
@@ -93,7 +112,13 @@ export function Select({ id, label, options, className, leadingIcon, premium = f
     }
 
     syncFloatingPosition();
-  }, [isOpen, currentValue]);
+
+    const frameId = window.requestAnimationFrame(() => {
+      syncFloatingPosition();
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [isOpen, currentValue, syncFloatingPosition]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -110,20 +135,30 @@ export function Select({ id, label, options, className, leadingIcon, premium = f
       setIsOpen(false);
     };
 
-    const handleWindowChange = () => {
+    const handleResize = () => {
       syncFloatingPosition();
     };
 
+    const handleScroll = (event: Event) => {
+      const target = event.target;
+
+      if (target instanceof Node && panelRef.current?.contains(target)) {
+        return;
+      }
+
+      setIsOpen(false);
+    };
+
     document.addEventListener("mousedown", handlePointerDown);
-    window.addEventListener("resize", handleWindowChange);
-    window.addEventListener("scroll", handleWindowChange, true);
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("scroll", handleScroll, true);
 
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
-      window.removeEventListener("resize", handleWindowChange);
-      window.removeEventListener("scroll", handleWindowChange, true);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", handleScroll, true);
     };
-  }, [isOpen]);
+  }, [isOpen, syncFloatingPosition]);
 
   const emitChange = (nextValue: string) => {
     if (props.disabled) {
@@ -190,7 +225,7 @@ export function Select({ id, label, options, className, leadingIcon, premium = f
         id={listboxId}
         role="listbox"
         aria-label={label}
-        className="fixed z-50 overflow-hidden rounded-2xl border border-zinc-200 bg-white p-2 shadow-[0_24px_60px_rgba(15,23,42,0.18)] ring-1 ring-black/5 backdrop-blur-sm"
+        className="fixed z-40 overflow-hidden rounded-2xl border border-zinc-200 bg-white p-2 shadow-[0_24px_60px_rgba(15,23,42,0.18)] ring-1 ring-black/5 backdrop-blur-sm"
         style={{
           left: floatingStyle.left,
           top: floatingStyle.top,
