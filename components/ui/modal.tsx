@@ -142,11 +142,11 @@ export function Modal({
             </button>
           </div>
         </div>
-        <div className="relative min-h-0 flex-1">
+        <div className="relative flex min-h-0 flex-1 flex-col">
           <div
             ref={scrollRef}
             data-testid="modal-scroll"
-            className="modal-scroll h-full min-h-0 overflow-y-auto px-0.5 pr-1 overscroll-contain touch-pan-y pb-4 sm:px-1"
+            className="modal-scroll min-h-0 flex-1 overflow-y-auto px-0.5 pr-1 overscroll-contain touch-pan-y pb-4 sm:px-1"
           >
             {children}
           </div>
