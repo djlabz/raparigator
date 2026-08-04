@@ -71,6 +71,27 @@ test.describe("Independência financeira", () => {
     await expect(page.getByTestId("info-hint-panel-race")).toHaveCount(0);
   });
 
+  test("InfoHint no mobile não gera scroll horizontal", async ({ page }) => {
+    await openCalculator(page, 375);
+    const before = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(before.scrollWidth).toBeLessThanOrEqual(before.clientWidth + 1);
+    await page.getByTestId("info-hint-trigger-calc-base").click();
+    const panel = page.getByTestId("info-hint-panel-calc-base");
+    await expect(panel).toBeVisible();
+    const box = await panel.boundingBox();
+    expect(box).toBeTruthy();
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(375 + 1);
+    const after = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(after.scrollWidth).toBeLessThanOrEqual(after.clientWidth + 1);
+  });
+
   test("Nova Simulação volta à calculadora", async ({ page }) => {
     await openCalculator(page, 375);
     await submitPanel(page);

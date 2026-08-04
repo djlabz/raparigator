@@ -259,7 +259,7 @@ export function FinancialIndependenceScreen() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-5xl space-y-4 md:space-y-5">
+      <div className="mx-auto w-full max-w-5xl min-w-0 space-y-4 overflow-x-clip md:space-y-5">
 
         {!submitted && (
           <>
@@ -437,11 +437,13 @@ export function FinancialIndependenceScreen() {
               data-testid="freedom-hero"
               data-collapsed={heroCollapsed ? "true" : "false"}
               className={cn(
-                "z-10 border border-emerald-200 bg-emerald-50/95 shadow-sm backdrop-blur-md",
-                "sticky rounded-2xl [overflow-anchor:none]",
+                "z-10 w-full min-w-0 max-w-full border border-emerald-200/90 bg-emerald-50/95 backdrop-blur-md",
+                "sticky [overflow-anchor:none]",
                 chromeBelowHeaderStickyTop,
                 "md:top-[calc(9rem+env(safe-area-inset-top,0px))]",
-                heroCollapsed ? "px-3 py-2" : "p-4 md:p-5",
+                heroCollapsed
+                  ? "rounded-xl px-3 py-2 shadow-md md:rounded-2xl md:px-4 md:py-3 md:shadow-sm"
+                  : "rounded-2xl p-4 shadow-sm md:p-5",
               )}
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -453,19 +455,32 @@ export function FinancialIndependenceScreen() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={reduceMotion ? undefined : { opacity: 0, y: -4 }}
                     transition={heroMotionTransition}
-                    className="flex items-center justify-between gap-3 md:hidden"
+                    className="flex w-full min-w-0 items-center gap-2 md:hidden"
                   >
-                    <p className="truncate text-sm font-bold text-emerald-700">
-                      {parsed.yearsSaved > 0 ? `${parsed.yearsSaved} anos` : "No ritmo"} · {currency(parsed.projectedAmount)}
-                    </p>
-                    <Button
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[10px] font-bold uppercase tracking-wider text-emerald-800/70">
+                        Sua liberdade
+                      </p>
+                      <div className="flex min-w-0 items-baseline gap-1.5">
+                        <span className="shrink-0 text-sm font-bold text-emerald-700">
+                          {parsed.yearsSaved > 0 ? `${parsed.yearsSaved} anos` : "No ritmo"}
+                        </span>
+                        <span className="text-emerald-600/50" aria-hidden>
+                          ·
+                        </span>
+                        <span className="truncate text-sm font-bold text-emerald-700">
+                          {currency(parsed.projectedAmount)}
+                        </span>
+                      </div>
+                    </div>
+                    <button
                       type="button"
                       onClick={handleReset}
-                      className="h-8 shrink-0 bg-zinc-100 px-2 text-xs text-zinc-700 hover:bg-zinc-200"
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-700 shadow-sm transition-colors hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-500"
                       aria-label="Nova Simulação"
                     >
                       <IconRefresh className="h-3.5 w-3.5" />
-                    </Button>
+                    </button>
                   </motion.div>
                 ) : (
                   <motion.div
