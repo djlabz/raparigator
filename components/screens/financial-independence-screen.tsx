@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
@@ -179,12 +179,14 @@ function Counter({ label, value, onChange, step = 1, min = 0, max = 9999, prefix
 function formatDurationDetailed(totalMonths: number) {
   const years = Math.floor(totalMonths / 12);
   const months = Math.ceil(totalMonths % 12);
+  const yearLabel = years === 1 ? "Ano" : "Anos";
+  const monthLabel = months === 1 ? "Mês" : "Meses";
 
   if (years > 0) {
-    if (months > 0) return `${years} Anos e ${months} Meses`;
-    return `${years} Anos`;
+    if (months > 0) return `${years} ${yearLabel} e ${months} ${monthLabel}`;
+    return `${years} ${yearLabel}`;
   }
-  return `${months} Meses`;
+  return `${months} ${monthLabel}`;
 }
 
 export function FinancialIndependenceScreen() {
@@ -202,12 +204,44 @@ export function FinancialIndependenceScreen() {
   const [upsellOpen, setUpsellOpen] = useState(false);
   const { isPremium } = usePremiumPlan();
   const reduceMotion = useReducedMotion();
-  const heroTransition = reduceMotion
-    ? { duration: 0.01 }
-    : { type: "spring" as const, stiffness: 380, damping: 32, mass: 0.85 };
+  const heroEase = [0.45, 0.05, 0.55, 0.95] as const;
+  const heroMotionTransition = reduceMotion
+    ? { duration: 0.12, ease: "easeInOut" as const }
+    : { duration: 0.28, ease: heroEase };
+  const premiumPopTransition = reduceMotion
+    ? { duration: 0.14, ease: "easeOut" as const }
+    : { type: "spring" as const, stiffness: 420, damping: 18, mass: 0.85 };
+  const expandedFadeTransition = reduceMotion
+    ? { duration: 0.12, ease: "easeInOut" as const }
+    : heroCollapsed
+      ? { duration: 0.22, delay: 0.06, ease: heroEase }
+      : { duration: 0.3, delay: 0.14, ease: heroEase };
+  const compactFadeTransition = reduceMotion
+    ? { duration: 0.12, ease: "easeInOut" as const }
+    : heroCollapsed
+      ? { duration: 0.3, delay: 0.14, ease: heroEase }
+      : { duration: 0.18, delay: 0.02, ease: heroEase };
+  const premiumAccentStrong = topSearchBoost
+    ? "bg-linear-to-r from-[#BF953F] via-[#B8860B] to-[#B38728] bg-clip-text text-transparent"
+    : "text-emerald-600";
+  const premiumLabel = topSearchBoost ? "text-[#B8860B]" : "text-emerald-700";
+  const premiumSoftLabel = topSearchBoost ? "text-[#B8860B]/80" : "text-emerald-800/70";
+  const expandedLayerRef = useRef<HTMLDivElement>(null);
+  const compactLayerRef = useRef<HTMLDivElement>(null);
+  const heroCollapsedRef = useRef(false);
+  const collapseLockUntilRef = useRef(0);
+  const lastScrollYRef = useRef(0);
+  const [heroLayerHeights, setHeroLayerHeights] = useState({ expanded: 0, compact: 0 });
+
+  useEffect(() => {
+    heroCollapsedRef.current = heroCollapsed;
+  }, [heroCollapsed]);
 
   useEffect(() => {
     if (!submitted) return;
+
+    lastScrollYRef.current = window.scrollY || document.documentElement.scrollTop;
+
     const onScroll = () => {
       const isMobile = window.matchMedia("(max-width: 767px)").matches;
       if (!isMobile) {
@@ -215,15 +249,32 @@ export function FinancialIndependenceScreen() {
         return;
       }
       const y = window.scrollY || document.documentElement.scrollTop;
-      if (y > 88) {
+      const scrollingUp = y < lastScrollYRef.current - 0.5;
+      lastScrollYRef.current = y;
+      const maxScroll = Math.max(
+        0,
+        (document.documentElement.scrollHeight || 0) - window.innerHeight,
+      );
+      const nearBottom = maxScroll > 48 && y >= maxScroll - 16;
+      const shouldCollapse = y > 88 || nearBottom;
+      if (shouldCollapse) {
+        if (!heroCollapsedRef.current) {
+          collapseLockUntilRef.current = performance.now() + 400;
+        }
         setHeroCollapsed(true);
         setInfoOpenId(null);
         return;
       }
-      if (y < 36) {
+      if (
+        heroCollapsedRef.current &&
+        y < 48 &&
+        performance.now() >= collapseLockUntilRef.current &&
+        (scrollingUp || y <= 2)
+      ) {
         setHeroCollapsed(false);
       }
     };
+
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
@@ -242,14 +293,13 @@ export function FinancialIndependenceScreen() {
     const valid = value > 0 && services > 0 && days > 0 && days <= 7;
     if (!valid) return null;
 
-    // Receita do Usuário
     const boostMultiplier = topSearchBoost ? PREMIUM_VISIBILITY_MULTIPLIER : 1;
-    const dailyRevenue = value * services * boostMultiplier;
-    const weeklyRevenue = dailyRevenue * days;
-    const monthlyRevenue = weeklyRevenue * 4.33;
-
     const baseMonthlyRevenue = value * services * days * 4.33;
+    const premiumMonthlyRevenue = baseMonthlyRevenue * PREMIUM_VISIBILITY_MULTIPLIER;
+    const monthlyRevenue = baseMonthlyRevenue * boostMultiplier;
+
     const monthsToMillionBase = Math.ceil(TARGET / baseMonthlyRevenue);
+    const monthsToMillionPremium = Math.ceil(TARGET / premiumMonthlyRevenue);
 
     const clt = buildCltReference();
 
@@ -261,14 +311,11 @@ export function FinancialIndependenceScreen() {
 
     const equivalenceRatio = monthlyRevenue / clt.net;
 
-    // Metas atingidas
     const dreamsCalculated = DREAMS.map(dream => ({
       ...dream,
       monthsToAchieve: Math.ceil(dream.price / monthlyRevenue)
     }));
 
-    // CÁLCULO DA PROJEÇÃO (MONTANTE ACUMULADO)
-    // Se não preencheu nada ou valor é 0, o padrão é 1 mês
     const effectiveTimeNum = Number(projectionTime) > 0 ? Number(projectionTime) : 1;
     const effectiveUnit = Number(projectionTime) > 0 ? projectionUnit : "months";
 
@@ -276,8 +323,15 @@ export function FinancialIndependenceScreen() {
     const projectedAmount = monthlyRevenue * projectionMonths;
 
     return {
+      value,
+      services,
+      days,
       monthlyRevenue,
+      baseMonthlyRevenue,
+      premiumMonthlyRevenue,
       monthsToMillionUser,
+      monthsToMillionBase,
+      monthsToMillionPremium,
       monthsToMillionCLT,
       yearsSaved,
       monthsSaved,
@@ -286,7 +340,7 @@ export function FinancialIndependenceScreen() {
       projectedAmount,
       effectiveTimeNum,
       effectiveUnit,
-      monthsSavedWithPremium: monthsToMillionBase - monthsToMillionUser,
+      monthsSavedWithPremium: monthsToMillionBase - monthsToMillionPremium,
       projectionMonths,
       clt,
     };
@@ -300,13 +354,61 @@ export function FinancialIndependenceScreen() {
     setHeroCollapsed(false);
   };
 
-  // Lógica para clarear/escurecer os inputs de meta de tempo
-  // Reseta ao estado inicial se o valor for 0 ou vazio
   const hasProjection = Number(projectionTime) > 0;
+
+  useLayoutEffect(() => {
+    if (!submitted) return;
+    let alive = true;
+    const measure = () => {
+      const expandedEl = expandedLayerRef.current;
+      const compactEl = compactLayerRef.current;
+      if (!expandedEl || !compactEl) return;
+      const expanded = Math.ceil(
+        Math.max(expandedEl.scrollHeight, expandedEl.getBoundingClientRect().height),
+      );
+      const compact = Math.ceil(
+        Math.max(compactEl.scrollHeight, compactEl.getBoundingClientRect().height),
+      );
+      if (!alive || (expanded <= 0 && compact <= 0)) return;
+      setHeroLayerHeights((prev) => {
+        const next = {
+          expanded: expanded > 0 ? expanded : prev.expanded,
+          compact: compact > 0 ? compact : prev.compact,
+        };
+        if (prev.expanded === next.expanded && prev.compact === next.compact) return prev;
+        return next;
+      });
+    };
+    measure();
+    const raf = window.requestAnimationFrame(() => {
+      measure();
+      window.requestAnimationFrame(measure);
+    });
+    const observer = new ResizeObserver(measure);
+    if (expandedLayerRef.current) observer.observe(expandedLayerRef.current);
+    if (compactLayerRef.current) observer.observe(compactLayerRef.current);
+    window.addEventListener("resize", measure);
+    return () => {
+      alive = false;
+      window.cancelAnimationFrame(raf);
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [
+    submitted,
+    topSearchBoost,
+    valuePerService,
+    servicesPerDay,
+    workDaysPerWeek,
+    projectionTime,
+    projectionUnit,
+  ]);
+
+  const targetHeroHeight = heroCollapsed ? heroLayerHeights.compact : heroLayerHeights.expanded;
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-5xl min-w-0 space-y-4 overflow-x-clip md:space-y-5">
+      <div className="mx-auto w-full max-w-5xl min-w-0 space-y-4 md:space-y-5">
 
         {!submitted && (
           <>
@@ -405,9 +507,7 @@ export function FinancialIndependenceScreen() {
                     ≈ {currency(parsed.monthlyRevenue)} / mês
                   </p>
                   <p className="mt-0.5 text-xs font-medium text-emerald-800/80 md:text-sm">
-                    {parsed.yearsSaved > 0
-                      ? `~${parsed.yearsSaved} anos a menos que o ritmo CLT`
-                      : "Você já está no ritmo — refine os números"}
+                    Até R$ 1 mi: {formatDurationDetailed(parsed.monthsToMillionUser)}
                   </p>
                 </div>
               ) : null}
@@ -428,11 +528,19 @@ export function FinancialIndependenceScreen() {
 
         {submitted && parsed ? (
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 md:space-y-4">
-            <div className={`rounded-2xl border p-5 shadow-sm transition-colors ${topSearchBoost ? "border-[#DAA520]/50 bg-[#121212] shadow-zinc-900/20" : "border-zinc-200 bg-white shadow-zinc-200/70"}`}>
+            <div
+              data-testid="freedom-premium-card"
+              className={cn(
+                "rounded-2xl border p-4 shadow-sm transition-colors sm:p-5",
+                topSearchBoost
+                  ? "border-[#DAA520]/55 bg-[#121212]"
+                  : "border-zinc-200 bg-white shadow-zinc-200/70",
+              )}
+            >
               <div className="flex items-center justify-between gap-4">
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className={`text-sm font-bold ${topSearchBoost ? "text-[#FFDF00]" : "text-zinc-900"}`}>
+                    <p className={cn("text-sm font-bold", topSearchBoost ? "text-[#FFDF00]" : "text-zinc-900")}>
                       Topo das Pesquisas
                     </p>
                     <InfoHint
@@ -452,12 +560,18 @@ export function FinancialIndependenceScreen() {
                   aria-checked={topSearchBoost}
                   aria-label="Simular com Topo das Pesquisas"
                   onClick={() => setTopSearchBoost((prev) => !prev)}
-                  className={`relative h-7 w-13 shrink-0 rounded-full transition-colors ${topSearchBoost ? "bg-[#DAA520] premium-glow-pulse" : "bg-zinc-200"}`}
+                  className={cn(
+                    "relative h-7 w-13 shrink-0 rounded-full transition-colors",
+                    topSearchBoost ? "bg-[#DAA520]" : "bg-zinc-200",
+                  )}
                 >
                   <motion.span
                     layout
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow ${topSearchBoost ? "left-[calc(100%-1.625rem)]" : "left-0.5"}`}
+                    className={cn(
+                      "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow",
+                      topSearchBoost ? "left-[calc(100%-1.625rem)]" : "left-0.5",
+                    )}
                   />
                 </button>
               </div>
@@ -469,196 +583,275 @@ export function FinancialIndependenceScreen() {
                     exit={{ opacity: 0, height: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="mt-4 flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                      <motion.p
-                        key={parsed.monthsSavedWithPremium}
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: "spring", stiffness: 380, damping: 22 }}
-                        className="text-sm text-zinc-300"
+                    <div className="mt-4 space-y-4 border-t border-[#DAA520]/25 pt-4">
+                      <div
+                        data-testid="freedom-premium-justification"
+                        className="space-y-3 rounded-xl border border-[#DAA520]/25 bg-black/30 p-3"
                       >
-                        <span className="font-bold text-[#FFDF00]">−{parsed.monthsSavedWithPremium} meses</span> de trabalho
-                        até a sua liberdade com o Premium
-                      </motion.p>
-                      {!isPremium ? (
-                        <ShinyButton size="sm" onClick={() => setUpsellOpen(true)}>
-                          Garantir meu Topo das Pesquisas
-                        </ShinyButton>
-                      ) : null}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Sem Premium</p>
+                            <p className="mt-1 text-sm font-bold text-zinc-200">
+                              {currency(parsed.baseMonthlyRevenue)}/mês
+                            </p>
+                            <p className="text-xs text-zinc-400">
+                              {formatDurationDetailed(parsed.monthsToMillionBase)} até R$ 1 mi
+                            </p>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-medium uppercase tracking-wide text-[#DAA520]">Com Premium</p>
+                            <p className="mt-1 text-sm font-bold text-[#FFDF00]">
+                              {currency(parsed.premiumMonthlyRevenue)}/mês
+                            </p>
+                            <p className="text-xs text-[#FFDF00]/80">
+                              {formatDurationDetailed(parsed.monthsToMillionPremium)} até R$ 1 mi
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-sm font-semibold leading-snug text-[#FFDF00]">
+                          +{currency(parsed.premiumMonthlyRevenue - parsed.baseMonthlyRevenue)}/mês no bolso
+                          e o milhão em {formatDurationDetailed(parsed.monthsToMillionPremium)} —{" "}
+                          {parsed.monthsSavedWithPremium}{" "}
+                          {parsed.monthsSavedWithPremium === 1 ? "mês" : "meses"} a menos no caminho.
+                        </p>
+                      </div>
+                      <div data-testid="freedom-premium-cta" className="space-y-3">
+                        <p className="text-center text-base font-semibold leading-snug text-white">
+                          Pronta pra alcançar sua liberdade mais fácil?
+                        </p>
+                        {!isPremium ? (
+                          <ShinyButton
+                            size="sm"
+                            className="w-full min-w-0"
+                            onClick={() => setUpsellOpen(true)}
+                          >
+                            Experimentar o Premium
+                          </ShinyButton>
+                        ) : null}
+                      </div>
                     </div>
                   </motion.div>
                 ) : null}
               </AnimatePresence>
             </div>
 
-            <motion.div
+            <div
               data-testid="freedom-hero"
               data-collapsed={heroCollapsed ? "true" : "false"}
-              layout
-              transition={heroTransition}
+              data-premium={topSearchBoost ? "true" : "false"}
               className={cn(
-                "z-10 w-full min-w-0 max-w-full border border-emerald-200/90 bg-emerald-50/95 backdrop-blur-md",
-                "sticky overflow-hidden [overflow-anchor:none]",
+                "pointer-events-none z-10 w-full min-w-0 max-w-full border shadow-sm transition-[border-radius,background-color,border-color] duration-500 ease-in-out",
+                topSearchBoost
+                  ? "border-[#DAA520]/55 bg-[#FFF9E8]"
+                  : "border-emerald-200/90 bg-emerald-50",
+                "sticky [overflow-anchor:none]",
                 chromeBelowHeaderStickyTop,
                 "md:top-[calc(9rem+env(safe-area-inset-top,0px))]",
-                heroCollapsed
-                  ? "rounded-xl px-3 py-2 shadow-md"
-                  : "rounded-2xl p-4 shadow-sm md:p-5",
+                heroCollapsed ? "rounded-xl" : "rounded-2xl",
               )}
             >
-              <AnimatePresence mode="popLayout" initial={false}>
-                {heroCollapsed ? (
-                  <motion.div
-                    key="compact"
-                    data-testid="freedom-hero-compact"
-                    initial={reduceMotion ? false : { opacity: 0, y: -12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={reduceMotion ? undefined : { opacity: 0, y: -10 }}
-                    transition={heroTransition}
-                    className="flex w-full min-w-0 items-center gap-2"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[10px] font-bold uppercase tracking-wider text-emerald-800/70">
-                        Tempo a menos até R$ 1 mi
-                      </p>
-                      <div className="flex min-w-0 items-baseline gap-1.5">
-                        <span className="shrink-0 text-sm font-bold text-emerald-700">
-                          {parsed.yearsSaved > 0 ? `${parsed.yearsSaved} anos` : "No ritmo"}
-                        </span>
-                        <span className="text-emerald-600/50" aria-hidden>
-                          ·
-                        </span>
-                        <span className="truncate text-sm font-bold text-emerald-700">
-                          {currency(parsed.projectedAmount)}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleReset}
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-700 shadow-sm transition-colors hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-500"
-                      aria-label="Nova Simulação"
-                    >
-                      <IconRefresh className="h-3.5 w-3.5" />
-                    </button>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="expanded"
-                    initial={reduceMotion ? false : { opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={reduceMotion ? undefined : { opacity: 0, y: 12 }}
-                    transition={heroTransition}
-                    className="space-y-3"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 space-y-2">
-                        <div className="flex items-start gap-2">
-                          <h2 className="text-2xl font-bold text-zinc-900 md:text-3xl">
-                            {parsed.yearsSaved > 0 ? (
-                              <>
-                                Você está ganhando{" "}
-                                <span className="text-emerald-600">{parsed.yearsSaved} anos</span> de tempo
-                                até a meta de R$ 1 milhão.
-                              </>
-                            ) : (
-                              <>Você já está no ritmo — refine os números.</>
-                            )}
-                          </h2>
-                          {parsed.yearsSaved > 0 ? (
-                            <InfoHint
-                              id="years-back"
-                              label="O que significa ganhar esses anos"
-                              openId={infoOpenId}
-                              onOpenChange={setInfoOpenId}
-                              align="end"
-                            >
-                              <div className="space-y-2" data-testid="years-back-explanation">
-                                <p className="font-semibold text-zinc-800">O que isso quer dizer?</p>
-                                <p>
-                                  Não é expectativa de vida. É a diferença de tempo para juntar R$ 1 milhão
-                                  no seu ritmo versus poupando só o líquido de um salário mínimo CLT.
-                                </p>
-                                <p>
-                                  CLT de referência: {formatDurationDetailed(parsed.monthsToMillionCLT)}.
-                                  Seu ritmo: {formatDurationDetailed(parsed.monthsToMillionUser)}.
-                                  Diferença: ~{parsed.yearsSaved} anos ({parsed.monthsSaved} meses a menos
-                                  de trabalho/poupança até a mesma meta).
-                                </p>
-                                <p className="text-[11px] leading-snug text-zinc-500">
-                                  Simulação assume que 100% do valor mensal vai para a meta, sem gastos,
-                                  juros nem inflação. O CLT usa o mínimo líquido (após INSS e VT).
-                                </p>
-                              </div>
-                            </InfoHint>
-                          ) : null}
-                        </div>
-                        <p className="text-sm text-zinc-600">
-                          {parsed.yearsSaved > 0
-                            ? `Porque no ritmo CLT de referência levaria ${formatDurationDetailed(parsed.monthsToMillionCLT)}; no seu, ${formatDurationDetailed(parsed.monthsToMillionUser)}.`
-                            : "Ajuste os números para ver quanto tempo você economiza até a meta."}
-                        </p>
-                      </div>
-                      <div className="hidden shrink-0 md:block">
-                        <Button
-                          onClick={handleReset}
-                          className="h-9 items-center gap-2 bg-zinc-100 px-3 text-sm text-zinc-700 hover:bg-zinc-200"
-                        >
-                          <IconRefresh className="h-4 w-4" />
-                          Nova Simulação
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-end justify-between gap-3 border-t border-emerald-200/80 pt-3">
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
-                            Montante em {parsed.effectiveTimeNum}{" "}
-                            {parsed.effectiveUnit === "years"
-                              ? parsed.effectiveTimeNum === 1
-                                ? "ano"
-                                : "anos"
-                              : parsed.effectiveTimeNum === 1
-                                ? "mês"
-                                : "meses"}
-                          </p>
-                          <InfoHint
-                            id="amount"
-                            label="Sobre o montante"
-                            openId={infoOpenId}
-                            onOpenChange={setInfoOpenId}
-                            align="end"
+              <motion.div
+                className="relative overflow-hidden will-change-[height] pointer-events-none"
+                initial={false}
+                animate={{ height: targetHeroHeight > 0 ? targetHeroHeight : "auto" }}
+                transition={heroMotionTransition}
+              >
+                <motion.div
+                  ref={expandedLayerRef}
+                  data-testid="freedom-hero-expanded"
+                  aria-hidden={heroCollapsed}
+                  initial={false}
+                  animate={{ opacity: heroCollapsed ? 0 : 1 }}
+                  transition={expandedFadeTransition}
+                  className={cn(
+                    "absolute inset-x-0 top-0 w-full min-w-0 space-y-3 p-4 md:p-5",
+                    heroCollapsed ? "pointer-events-none" : "pointer-events-auto",
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 space-y-2">
+                      <div className="flex items-start gap-2">
+                        <h2 className="text-2xl font-bold text-zinc-900 md:text-3xl">
+                          No seu ritmo, você chega a R$ 1 milhão em{" "}
+                          <motion.span
+                            key={`pace-${topSearchBoost}-${parsed.monthsToMillionUser}`}
+                            initial={reduceMotion ? false : { scale: 0.86, opacity: 0.45 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={premiumPopTransition}
+                            className={cn("inline-block font-bold", premiumAccentStrong)}
                           >
-                            <div className="space-y-2" data-testid="hint-amount">
-                              <p className="font-semibold text-zinc-800">Montante do seu cenário</p>
-                              <p>
-                                {currency(parsed.monthlyRevenue)} / mês × {parsed.projectionMonths}{" "}
-                                {parsed.projectionMonths === 1 ? "mês" : "meses"} ={" "}
-                                <span className="font-semibold text-zinc-800">{currency(parsed.projectedAmount)}</span>
-                              </p>
-                              <p className="text-[11px] leading-snug text-zinc-500">
-                                É só a projeção do seu ritmo (bruto da simulação). Não aplica INSS/VT —
-                                esses descontos entram na comparação CLT da Corrida e da Equivalência.
-                              </p>
-                            </div>
-                          </InfoHint>
-                        </div>
-                        <p data-testid="freedom-hero-amount" className="text-3xl font-bold text-emerald-600 md:text-4xl">
-                          {currency(parsed.projectedAmount)}
-                        </p>
+                            {formatDurationDetailed(parsed.monthsToMillionUser)}
+                          </motion.span>
+                          .
+                        </h2>
+                        <InfoHint
+                          id="years-back"
+                          label="Como lemos o prazo até R$ 1 milhão"
+                          openId={infoOpenId}
+                          onOpenChange={setInfoOpenId}
+                          align="end"
+                        >
+                          <div className="space-y-2" data-testid="years-back-explanation">
+                            <p className="font-semibold text-zinc-800">O número que importa</p>
+                            <p>
+                              O destaque é o seu prazo até R$ 1 milhão com a receita simulada. Ele muda quando
+                              você altera valor, atendimentos ou dias.
+                            </p>
+                            <p>
+                              A comparação com CLT (mínimo líquido) costuma ficar perto de ~{parsed.yearsSaved}{" "}
+                              anos a menos porque o CLT sozinho levaria{" "}
+                              {formatDurationDetailed(parsed.monthsToMillionCLT)} — depois que o seu prazo já é
+                              curto, essa diferença quase não muda.
+                            </p>
+                            <p className="text-[11px] leading-snug text-zinc-500">
+                              Simulação assume 100% do valor mensal na meta, sem gastos, juros nem inflação.
+                            </p>
+                          </div>
+                        </InfoHint>
                       </div>
+                      <p className="text-sm text-zinc-600">
+                        No CLT de referência: {formatDurationDetailed(parsed.monthsToMillionCLT)}. Diferença
+                        aproximada: ~{parsed.yearsSaved} anos a menos até a mesma meta.
+                      </p>
+                    </div>
+                    <div className="hidden shrink-0 md:block">
                       <Button
                         onClick={handleReset}
-                        className="inline-flex h-9 items-center gap-2 bg-zinc-100 px-3 text-sm text-zinc-700 hover:bg-zinc-200 md:hidden"
+                        className="h-9 items-center gap-2 bg-zinc-100 px-3 text-sm text-zinc-700 hover:bg-zinc-200"
                       >
                         <IconRefresh className="h-4 w-4" />
                         Nova Simulação
                       </Button>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+                  </div>
+                  <div
+                    className={cn(
+                      "flex flex-wrap items-end justify-between gap-3 border-t pt-3",
+                      topSearchBoost ? "border-[#DAA520]/35" : "border-emerald-200/80",
+                    )}
+                  >
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <p
+                          className={cn(
+                            "text-[11px] font-bold uppercase tracking-wider",
+                            topSearchBoost ? "text-[#B8860B]" : "text-emerald-800",
+                          )}
+                        >
+                          Montante em {parsed.effectiveTimeNum}{" "}
+                          {parsed.effectiveUnit === "years"
+                            ? parsed.effectiveTimeNum === 1
+                              ? "ano"
+                              : "anos"
+                            : parsed.effectiveTimeNum === 1
+                              ? "mês"
+                              : "meses"}
+                        </p>
+                        <InfoHint
+                          id="amount"
+                          label="Sobre o montante"
+                          openId={infoOpenId}
+                          onOpenChange={setInfoOpenId}
+                          align="end"
+                        >
+                          <div className="space-y-2" data-testid="hint-amount">
+                            <p className="font-semibold text-zinc-800">Montante do seu cenário</p>
+                            <p>
+                              {currency(parsed.monthlyRevenue)} / mês × {parsed.projectionMonths}{" "}
+                              {parsed.projectionMonths === 1 ? "mês" : "meses"} ={" "}
+                              <span className="font-semibold text-zinc-800">{currency(parsed.projectedAmount)}</span>
+                            </p>
+                            <p className="text-[11px] leading-snug text-zinc-500">
+                              É só a projeção do seu ritmo (bruto da simulação). Não aplica INSS/VT —
+                              esses descontos entram na comparação CLT da Corrida e da Equivalência.
+                            </p>
+                          </div>
+                        </InfoHint>
+                      </div>
+                      <motion.p
+                        data-testid="freedom-hero-amount"
+                        key={`amount-${topSearchBoost}-${parsed.projectedAmount}`}
+                        initial={reduceMotion ? false : { scale: 0.9, opacity: 0.5 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={premiumPopTransition}
+                        className={cn("text-3xl font-bold md:text-4xl", premiumAccentStrong)}
+                      >
+                        {currency(parsed.projectedAmount)}
+                      </motion.p>
+                    </div>
+                    <Button
+                      onClick={handleReset}
+                      className="inline-flex h-9 items-center gap-2 bg-zinc-100 px-3 text-sm text-zinc-700 hover:bg-zinc-200 md:hidden"
+                    >
+                      <IconRefresh className="h-4 w-4" />
+                      Nova Simulação
+                    </Button>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  ref={compactLayerRef}
+                  data-testid="freedom-hero-compact"
+                  aria-hidden={!heroCollapsed}
+                  initial={false}
+                  animate={{ opacity: heroCollapsed ? 1 : 0 }}
+                  transition={compactFadeTransition}
+                  className={cn(
+                    "absolute inset-x-0 top-0 flex w-full min-w-0 items-center gap-2 px-3 py-2",
+                    heroCollapsed ? "pointer-events-auto" : "pointer-events-none",
+                  )}
+                >
+                  <div className="min-w-0 flex-1 overflow-x-clip">
+                    <p className={cn("truncate text-[10px] font-bold uppercase tracking-wider", premiumSoftLabel)}>
+                      Você deixou de trabalhar
+                    </p>
+                    <div className="mt-0.5 grid min-w-0 grid-cols-2 gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-[9px] font-medium uppercase tracking-wide text-zinc-500">
+                          Anos a menos
+                        </p>
+                        <motion.p
+                          key={`compact-years-${topSearchBoost}-${parsed.yearsSaved}`}
+                          initial={reduceMotion ? false : { scale: 0.9, opacity: 0.55 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={premiumPopTransition}
+                          className={cn("truncate text-sm font-bold leading-tight", premiumLabel)}
+                        >
+                          {parsed.yearsSaved} {parsed.yearsSaved === 1 ? "ano" : "anos"}
+                        </motion.p>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-[9px] font-medium uppercase tracking-wide text-zinc-500">
+                          Média salarial
+                        </p>
+                        <motion.p
+                          key={`compact-salary-${topSearchBoost}-${parsed.monthlyRevenue}`}
+                          initial={reduceMotion ? false : { scale: 0.9, opacity: 0.55 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={premiumPopTransition}
+                          className={cn("truncate text-sm font-bold leading-tight", premiumLabel)}
+                        >
+                          {currency(parsed.monthlyRevenue)}/mês
+                        </motion.p>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className={cn(
+                      "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-500",
+                      topSearchBoost
+                        ? "border-[#DAA520]/40 text-[#B8860B] hover:bg-[#FFF9E8]"
+                        : "border-emerald-200 text-emerald-700 hover:bg-emerald-50",
+                    )}
+                    aria-label="Nova Simulação"
+                  >
+                    <IconRefresh className="h-3.5 w-3.5" />
+                  </button>
+                </motion.div>
+              </motion.div>
+            </div>
 
             <div data-testid="freedom-metrics-grid" className="grid gap-3 md:grid-cols-2 md:gap-4">
               <Card className="relative overflow-hidden border-zinc-200 p-4 shadow-sm md:col-span-1 md:p-5">
@@ -690,21 +883,32 @@ export function FinancialIndependenceScreen() {
                 <div className="space-y-5">
                   <div className="space-y-2">
                     <div className="flex items-end justify-between text-sm">
-                      <div className="flex items-center gap-2 font-bold text-emerald-700">
+                      <div className={cn("flex items-center gap-2 font-bold", premiumLabel)}>
                         <IconRocket className="h-5 w-5" /> SEU RITMO
                       </div>
                       <motion.span
-                        key={parsed.monthsToMillionUser}
-                        initial={{ scale: 0.85, opacity: 0 }}
+                        key={`race-${topSearchBoost}-${parsed.monthsToMillionUser}`}
+                        initial={reduceMotion ? false : { scale: 0.85, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: "spring", stiffness: 380, damping: 20 }}
-                        className={`text-lg font-bold ${topSearchBoost ? "text-[#DAA520]" : "text-emerald-600"}`}
+                        transition={premiumPopTransition}
+                        className={cn("text-lg font-bold", premiumAccentStrong)}
                       >
                         {formatDurationDetailed(parsed.monthsToMillionUser)}
                       </motion.span>
                     </div>
                     <div className="h-4 w-full overflow-hidden rounded-full bg-zinc-100">
-                      <div className="h-full w-[95%] animate-pulse rounded-full bg-emerald-500"></div>
+                      <motion.div
+                        key={`race-bar-${topSearchBoost}`}
+                        initial={reduceMotion ? false : { scaleX: 0.72, opacity: 0.7 }}
+                        animate={{ scaleX: 1, opacity: 1 }}
+                        transition={premiumPopTransition}
+                        className={cn(
+                          "h-full w-[95%] origin-left rounded-full",
+                          topSearchBoost
+                            ? "bg-linear-to-r from-[#BF953F] via-[#DAA520] to-[#FCF6BA] premium-glow-pulse"
+                            : "animate-pulse bg-emerald-500",
+                        )}
+                      />
                     </div>
                   </div>
 
@@ -732,12 +936,26 @@ export function FinancialIndependenceScreen() {
                   </div>
                 </Card>
 
-                <Card className="relative flex flex-col items-center justify-center space-y-2 overflow-hidden border-zinc-200 bg-zinc-50 p-4 text-center">
+                <Card
+                  className={cn(
+                    "relative flex flex-col items-center justify-center space-y-2 overflow-hidden p-4 text-center transition-colors",
+                    topSearchBoost
+                      ? "border-[#DAA520]/35 bg-[#FFF9E8]/70"
+                      : "border-zinc-200 bg-zinc-50",
+                  )}
+                >
                   <div className="absolute top-0 right-0 p-2 opacity-10">
                     <IconCalendar className="h-24 w-24" />
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">Equivale a</p>
+                    <p
+                      className={cn(
+                        "text-xs font-bold uppercase tracking-wider",
+                        topSearchBoost ? "text-[#B8860B]" : "text-zinc-500",
+                      )}
+                    >
+                      Equivale a
+                    </p>
                     <InfoHint
                       id="equivalence"
                       label="Sobre a equivalência"
@@ -762,9 +980,18 @@ export function FinancialIndependenceScreen() {
                       </div>
                     </InfoHint>
                   </div>
-                  <div className="text-3xl font-bold text-zinc-700 md:text-4xl">
-                    {parsed.equivalenceRatio.toFixed(1).replace('.', ',')} Meses
-                  </div>
+                  <motion.div
+                    key={`eq-${topSearchBoost}-${parsed.equivalenceRatio}`}
+                    initial={reduceMotion ? false : { scale: 0.88, opacity: 0.5 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={premiumPopTransition}
+                    className={cn(
+                      "text-3xl font-bold md:text-4xl",
+                      topSearchBoost ? premiumAccentStrong : "text-zinc-700",
+                    )}
+                  >
+                    {parsed.equivalenceRatio.toFixed(1).replace(".", ",")} Meses
+                  </motion.div>
                   <div className="flex items-center justify-center gap-2 text-zinc-500">
                     <span className="text-sm">de um trabalho comum (CLT)</span>
                   </div>
@@ -799,17 +1026,39 @@ export function FinancialIndependenceScreen() {
                   {parsed.dreamsCalculated.map((dream) => (
                     <Card
                       key={dream.id}
-                      className={`flex h-full flex-col justify-between border-2 p-3 transition-all hover:scale-105 md:p-4 ${dream.highlight
-                        ? "border-emerald-100 bg-emerald-50/50"
-                        : "border-transparent bg-white shadow-sm hover:border-zinc-200"
-                        }`}
+                      className={cn(
+                        "flex h-full flex-col justify-between border-2 p-3 transition-all hover:scale-105 md:p-4",
+                        dream.highlight
+                          ? topSearchBoost
+                            ? "border-[#DAA520]/40 bg-[#FFF9E8]/80"
+                            : "border-emerald-100 bg-emerald-50/50"
+                          : "border-transparent bg-white shadow-sm hover:border-zinc-200",
+                      )}
                     >
                       <div className="space-y-2 md:space-y-3">
-                        <div className={`w-fit rounded-lg p-2 ${dream.highlight ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-600'}`}>
+                        <div
+                          className={cn(
+                            "w-fit rounded-lg p-2",
+                            dream.highlight
+                              ? topSearchBoost
+                                ? "bg-[#DAA520]/15 text-[#B8860B]"
+                                : "bg-emerald-100 text-emerald-700"
+                              : "bg-zinc-100 text-zinc-600",
+                          )}
+                        >
                           <dream.icon className="h-6 w-6" />
                         </div>
                         <div>
-                          <p className={`font-semibold leading-tight ${dream.highlight ? 'text-emerald-700' : 'text-zinc-900'}`}>
+                          <p
+                            className={cn(
+                              "font-semibold leading-tight",
+                              dream.highlight
+                                ? topSearchBoost
+                                  ? "text-[#B8860B]"
+                                  : "text-emerald-700"
+                                : "text-zinc-900",
+                            )}
+                          >
                             {dream.label}
                           </p>
                           <p className="mt-1 text-xs text-zinc-500">{currency(dream.price)}</p>
@@ -818,11 +1067,18 @@ export function FinancialIndependenceScreen() {
                       <div className="mt-3 border-t border-dashed border-zinc-200 pt-2 md:mt-4 md:pt-3">
                         <p className="mb-1 text-xs uppercase tracking-wide text-zinc-500">Você conquista em</p>
                         <motion.p
-                          key={dream.monthsToAchieve}
-                          initial={{ scale: 0.85, opacity: 0 }}
+                          key={`dream-${dream.id}-${topSearchBoost}-${dream.monthsToAchieve}`}
+                          initial={reduceMotion ? false : { scale: 0.85, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          transition={{ type: "spring", stiffness: 380, damping: 20 }}
-                          className={`text-xl font-bold ${topSearchBoost ? "text-[#DAA520]" : dream.highlight ? 'text-emerald-600' : 'text-zinc-800'}`}
+                          transition={premiumPopTransition}
+                          className={cn(
+                            "text-xl font-bold",
+                            topSearchBoost
+                              ? premiumAccentStrong
+                              : dream.highlight
+                                ? "text-emerald-600"
+                                : "text-zinc-800",
+                          )}
                         >
                           {formatDurationDetailed(dream.monthsToAchieve)}
                         </motion.p>

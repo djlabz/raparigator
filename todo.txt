@@ -4,8 +4,6 @@ Desktop
 
 2 - Não tem foto de perfil, so de capa (daniel)
 
-3 - Não tem feed back ao clicar no botão de publicar (feito)
-
 
 Mobile
 
@@ -16,8 +14,3 @@ Mobile
 3 - tentar ver como por as imagens nas paginas de cadastro (daniel)
 
 4 - ajusta a foto da persona q esta branca (jhon)
-
-
-Ambos
-
-1 - Ajustar tela de independencia financeira (daniel)
