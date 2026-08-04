@@ -458,13 +458,15 @@ export function FinancialIndependenceScreen() {
                         <>Você já está no ritmo — refine os números.</>
                       )}
                     </h2>
-                    <Button
-                      onClick={handleReset}
-                      className="hidden h-9 shrink-0 items-center gap-2 bg-zinc-100 px-3 text-sm text-zinc-700 hover:bg-zinc-200 md:inline-flex"
-                    >
-                      <IconRefresh className="h-4 w-4" />
-                      Nova Simulação
-                    </Button>
+                    <div className="hidden shrink-0 md:block">
+                      <Button
+                        onClick={handleReset}
+                        className="h-9 items-center gap-2 bg-zinc-100 px-3 text-sm text-zinc-700 hover:bg-zinc-200"
+                      >
+                        <IconRefresh className="h-4 w-4" />
+                        Nova Simulação
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-sm text-zinc-600 md:hidden">
                     Esse é o poder de valorizar a sua hora de trabalho.
