@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { InfoHint } from "@/components/ui/info-hint";
 import { Select } from "@/components/ui/select";
 import { ShinyButton } from "@/components/ui/shiny-button";
 import { PremiumConversionModal } from "@/components/ui/premium-conversion-modal";
+import { useAuthSession } from "@/lib/auth-session";
 import { chromeBelowHeaderStickyTop } from "@/lib/chrome-styles";
 import {
   buildCltReference,
@@ -202,8 +204,38 @@ export function FinancialIndependenceScreen() {
   const [heroCollapsed, setHeroCollapsed] = useState(false);
   const [topSearchBoost, setTopSearchBoost] = useState(false);
   const [upsellOpen, setUpsellOpen] = useState(false);
+  const router = useRouter();
+  const { role } = useAuthSession();
   const { isPremium } = usePremiumPlan();
   const reduceMotion = useReducedMotion();
+  const isProfessional = role === "profissional";
+
+  const handleCreateProfessionalAccount = () => {
+    router.push("/auth/cadastro/profissional");
+  };
+
+  const handleTryPremium = () => {
+    switch (role) {
+      case "visitor":
+        router.push("/auth/login");
+        return;
+      case "cliente":
+        router.push("/auth/cadastro/profissional");
+        return;
+      case "profissional":
+        if (isPremium) {
+          router.push("/profissional/assinatura-premium");
+          return;
+        }
+        setUpsellOpen(true);
+        return;
+      default: {
+        const _exhaustive: never = role;
+        return _exhaustive;
+      }
+    }
+  };
+
   const heroEase = [0.45, 0.05, 0.55, 0.95] as const;
   const heroMotionTransition = reduceMotion
     ? { duration: 0.12, ease: "easeInOut" as const }
@@ -1022,7 +1054,7 @@ export function FinancialIndependenceScreen() {
                     </div>
                   </InfoHint>
                 </div>
-                <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
+                <div data-testid="freedom-dreams-grid" className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
                   {parsed.dreamsCalculated.map((dream) => (
                     <Card
                       key={dream.id}
@@ -1086,6 +1118,52 @@ export function FinancialIndependenceScreen() {
                     </Card>
                   ))}
                 </div>
+
+                {topSearchBoost ? (
+                  <div
+                    data-testid="freedom-premium-footer-cta"
+                    className="mt-4 w-full rounded-2xl border border-[#DAA520]/45 bg-[#121212] px-4 py-5 sm:px-6 sm:py-6"
+                  >
+                    <p className="text-center text-base font-semibold leading-snug text-white md:text-lg">
+                      Pronta pra alcançar sua liberdade mais fácil?
+                    </p>
+                    {isProfessional && isPremium ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="mt-4 w-full border border-[#DAA520]/40 bg-transparent text-[#FFDF00] hover:bg-[#DAA520]/10"
+                        onClick={() => router.push("/profissional/assinatura-premium")}
+                      >
+                        Você já está no Premium
+                      </Button>
+                    ) : (
+                      <div
+                        className={cn(
+                          "mt-4 grid gap-2 sm:gap-3",
+                          isProfessional ? "grid-cols-1" : "grid-cols-2",
+                        )}
+                      >
+                        {!isProfessional ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            className="min-w-0 border border-[#DAA520]/40 bg-transparent px-2 text-sm text-[#FFDF00] hover:bg-[#DAA520]/10 sm:text-base"
+                            onClick={handleCreateProfessionalAccount}
+                          >
+                            Criar conta profissional
+                          </Button>
+                        ) : null}
+                        <ShinyButton
+                          size="sm"
+                          className="min-w-0 w-full"
+                          onClick={handleTryPremium}
+                        >
+                          Experimentar o Premium
+                        </ShinyButton>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>

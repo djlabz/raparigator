@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { seedUserRole } from "./helpers/auth";
 
 async function openCalculator(page: Page, width: number, height = 900) {
   await page.setViewportSize({ width, height });
@@ -11,6 +12,13 @@ async function openPremiumJustification(page: Page, width = 375) {
   await submitPanel(page);
   await page.getByRole("switch", { name: /Topo das Pesquisas/i }).click();
   await expect(page.getByTestId("freedom-premium-justification")).toBeVisible();
+}
+
+async function openPremiumFooterCta(page: Page, width = 375) {
+  await openPremiumJustification(page, width);
+  const footer = page.getByTestId("freedom-premium-footer-cta");
+  await footer.scrollIntoViewIfNeeded();
+  await expect(footer).toBeVisible();
 }
 
 async function submitPanel(page: Page) {
@@ -222,13 +230,87 @@ test.describe("Independência financeira", () => {
     const cta = page.getByTestId("freedom-premium-cta");
     await expect(cta).toContainText(/liberdade mais fácil/i);
     await expect(cta.getByRole("button", { name: /Experimentar o Premium/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Criar conta profissional/i })).toHaveCount(0);
-    await expect(page.getByTestId("freedom-premium-upsell")).toHaveCount(0);
   });
 
-  test("CTA Premium abre modal de conversão", async ({ page }) => {
+  test("CTA Premium do card abre modal de conversão", async ({ page }) => {
     await openPremiumJustification(page);
-    await page.getByRole("button", { name: /Experimentar o Premium/i }).click();
+    await page
+      .getByTestId("freedom-premium-cta")
+      .getByRole("button", { name: /Experimentar o Premium/i })
+      .click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.getByText(/Sigillus Premium/i)).toBeVisible();
+  });
+
+  test("footer Premium aparece abaixo das conquistas com seletor ligado", async ({ page }) => {
+    await openCalculator(page, 1280);
+    await submitPanel(page);
+    await expect(page.getByTestId("freedom-premium-footer-cta")).toHaveCount(0);
+    await page.getByRole("switch", { name: /Topo das Pesquisas/i }).click();
+    const footer = page.getByTestId("freedom-premium-footer-cta");
+    await footer.scrollIntoViewIfNeeded();
+    await expect(footer).toBeVisible();
+    await expect(footer).toContainText(/liberdade mais fácil/i);
+    const dreamsTitle = page.getByRole("heading", { name: /Linha do Tempo das Conquistas/i });
+    const footerBox = await footer.boundingBox();
+    const dreamsBox = await dreamsTitle.boundingBox();
+    const gridBox = await page.getByTestId("freedom-dreams-grid").boundingBox();
+    expect(footerBox).toBeTruthy();
+    expect(dreamsBox).toBeTruthy();
+    expect(gridBox).toBeTruthy();
+    expect(footerBox!.y).toBeGreaterThan(dreamsBox!.y);
+    expect(Math.abs(footerBox!.width - gridBox!.width)).toBeLessThan(8);
+    await expect(footer.getByRole("button", { name: /Criar conta profissional/i })).toBeVisible();
+    await expect(footer.getByRole("button", { name: /Experimentar o Premium/i })).toBeVisible();
+  });
+
+  test("footer Premium no mobile usa duas colunas de links", async ({ page }) => {
+    await openPremiumFooterCta(page, 375);
+    const footer = page.getByTestId("freedom-premium-footer-cta");
+    const createBtn = footer.getByRole("button", { name: /Criar conta profissional/i });
+    const tryBtn = footer.getByRole("button", { name: /Experimentar o Premium/i });
+    const createBox = await createBtn.boundingBox();
+    const tryBox = await tryBtn.boundingBox();
+    expect(createBox).toBeTruthy();
+    expect(tryBox).toBeTruthy();
+    expect(Math.abs(createBox!.y - tryBox!.y)).toBeLessThan(12);
+    expect(tryBox!.x).toBeGreaterThan(createBox!.x);
+  });
+
+  test("footer Premium visitante vai para login", async ({ page }) => {
+    await openPremiumFooterCta(page);
+    await page
+      .getByTestId("freedom-premium-footer-cta")
+      .getByRole("button", { name: /Experimentar o Premium/i })
+      .click();
+    await expect(page).toHaveURL(/\/auth\/login/);
+  });
+
+  test("footer criar conta profissional abre cadastro", async ({ page }) => {
+    await openPremiumFooterCta(page);
+    await page
+      .getByTestId("freedom-premium-footer-cta")
+      .getByRole("button", { name: /Criar conta profissional/i })
+      .click();
+    await expect(page).toHaveURL(/\/auth\/cadastro\/profissional/);
+  });
+
+  test("footer Premium cliente vai para cadastro profissional", async ({ page }) => {
+    await seedUserRole(page, "cliente");
+    await openPremiumFooterCta(page);
+    await page
+      .getByTestId("freedom-premium-footer-cta")
+      .getByRole("button", { name: /Experimentar o Premium/i })
+      .click();
+    await expect(page).toHaveURL(/\/auth\/cadastro\/profissional/);
+  });
+
+  test("footer Premium profissional abre modal de conversão", async ({ page }) => {
+    await seedUserRole(page, "profissional");
+    await openPremiumFooterCta(page);
+    const footer = page.getByTestId("freedom-premium-footer-cta");
+    await expect(footer.getByRole("button", { name: /Criar conta profissional/i })).toHaveCount(0);
+    await footer.getByRole("button", { name: /Experimentar o Premium/i }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await expect(page.getByText(/Sigillus Premium/i)).toBeVisible();
   });
