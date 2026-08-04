@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { BarChart3, Images, Sparkles, TrendingUp, UserRound, Zap } from "lucide-react";
+import { BarChart3, Images, Rocket, Sparkles, TrendingUp, UserRound, Zap } from "lucide-react";
 import { Modal, type ModalScrollAvailability } from "@/components/ui/modal";
 import { ShinyButton } from "@/components/ui/shiny-button";
 import {
@@ -16,7 +16,7 @@ import {
 import type { PremiumBillingCycle } from "@/lib/types";
 import { cn, currency } from "@/lib/utils";
 
-export type PremiumHighlight = "topSearch" | "traffic" | "portfolio" | "media" | "alias";
+export type PremiumHighlight = "topSearch" | "traffic" | "portfolio" | "media" | "alias" | "earlyAccess";
 
 interface PremiumConversionModalProps {
   open: boolean;
@@ -60,6 +60,12 @@ const BENEFIT_CELLS: Array<{
     title: "Apelido por conversa",
     description: "Defina apelido por cliente/conversa — exclusivo Premium.",
     icon: UserRound,
+  },
+  {
+    id: "earlyAccess",
+    title: "Acesso prioritário",
+    description: "Acesso prioritário a novos recursos e benefícios",
+    icon: Rocket,
   },
 ];
 
