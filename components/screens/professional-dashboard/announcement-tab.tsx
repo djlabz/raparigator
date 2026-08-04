@@ -934,7 +934,7 @@ export function AnnouncementTab({
     <div className="space-y-8 pb-12 px-1 lg:px-0">
       {/* ── 1. Header & Bento Grid Fotos ──────────────────────────── */}
       <section>
-        <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-start">
+        <div className="relative z-30 mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-start">
           <div className="min-w-0">
             <motion.div
               data-dashboard-desktop-title-source
@@ -964,7 +964,7 @@ export function AnnouncementTab({
                         >
                           {item.label}
                         </button>
-                        {item.kind === "unsaved" ? "." : "."}
+                        .
                       </li>
                     ))}
                   </ol>
@@ -973,11 +973,12 @@ export function AnnouncementTab({
 
             ) : null}
           </div>
-          <div className="flex gap-2 w-full sm:w-auto sm:gap-3">
-            <button onClick={handleViewPublicAd} className="px-3 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base rounded-lg border border-zinc-200 bg-white font-bold text-zinc-700 hover:bg-zinc-50 transition-colors">
+          <div className="relative z-30 flex w-full gap-2 sm:w-auto sm:gap-3">
+            <button type="button" onClick={handleViewPublicAd} className="px-3 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base rounded-lg border border-zinc-200 bg-white font-bold text-zinc-700 hover:bg-zinc-50 transition-colors">
               Ver Anúncio Público
             </button>
             <button
+              type="button"
               onClick={handlePublish}
               disabled={saveStatus === "saving" || isPublishing}
               className="px-3 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base rounded-lg bg-wine-700 text-white font-bold shadow-md hover:bg-wine-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"

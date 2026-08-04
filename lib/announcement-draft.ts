@@ -695,36 +695,42 @@ export function useAnnouncementDraft(ad: AnnouncementAdPreview) {
       const dirtySections = (Object.keys(sectionDirtyState) as AnnouncementSectionKey[])
         .filter((section) => sectionDirtyState[section])
         .map((section) => ({ kind: "unsaved" as const, section, label: SECTION_LABELS[section] }));
+      const requiredSections = new Set<AnnouncementSectionKey>();
 
-      if (validationErrors.length > 0 || dirtySections.length > 0) {
-        const requiredItems: AnnouncementPublishWarningItem[] = [];
+      validationErrors.forEach((message) => {
+        if (message.includes(SECTION_LABELS.characteristics)) {
+          requiredSections.add("characteristics");
+          return;
+        }
 
-        validationErrors.forEach((message) => {
-          if (message.includes(SECTION_LABELS.characteristics)) {
-            requiredItems.push({ kind: "required", section: "characteristics", label: SECTION_LABELS.characteristics });
-            return;
-          }
+        if (message.includes(SECTION_LABELS.pricing)) {
+          requiredSections.add("pricing");
+          return;
+        }
 
-          if (message.includes(SECTION_LABELS.pricing)) {
-            requiredItems.push({ kind: "required", section: "pricing", label: SECTION_LABELS.pricing });
-            return;
-          }
+        if (message.includes(SECTION_LABELS.location)) {
+          requiredSections.add("location");
+          return;
+        }
 
-          if (message.includes(SECTION_LABELS.location)) {
-            requiredItems.push({ kind: "required", section: "location", label: SECTION_LABELS.location });
-            return;
-          }
+        if (message.includes(SECTION_LABELS.description)) {
+          requiredSections.add("description");
+        }
+      });
 
-          if (message.includes(SECTION_LABELS.description)) {
-            requiredItems.push({ kind: "required", section: "description", label: SECTION_LABELS.description });
-          }
-        });
+      const requiredItems: AnnouncementPublishWarningItem[] = Array.from(requiredSections).map((section) => ({
+        kind: "required" as const,
+        section,
+        label: SECTION_LABELS[section],
+      }));
+      const blockingItems = [...requiredItems, ...dirtySections];
 
+      if (blockingItems.length > 0) {
         return {
           ok: false,
           reason: "blocked",
           message: PUBLISH_BLOCKED_MESSAGE,
-          items: [...requiredItems, ...dirtySections],
+          items: blockingItems,
         };
       }
 
