@@ -11,19 +11,30 @@ interface ShinyButtonProps {
   fullWidth?: boolean;
   size?: "sm" | "md";
   className?: string;
+  disabled?: boolean;
 }
 
-export function ShinyButton({ children, onClick, fullWidth = false, size = "md", className }: ShinyButtonProps) {
+export function ShinyButton({
+  children,
+  onClick,
+  fullWidth = false,
+  size = "md",
+  className,
+  disabled = false,
+}: ShinyButtonProps) {
   return (
     <motion.button
       type="button"
-      onClick={onClick}
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.96 }}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      aria-disabled={disabled || undefined}
+      whileHover={disabled ? undefined : { scale: 1.03 }}
+      whileTap={disabled ? undefined : { scale: 0.96 }}
       transition={{ type: "spring", stiffness: 420, damping: 22 }}
       className={cn(
         "shiny-button-border relative inline-flex shrink-0 items-center justify-center rounded-full p-[1.5px]",
         fullWidth && "flex w-full",
+        disabled && "cursor-not-allowed opacity-40",
         className,
       )}
     >
