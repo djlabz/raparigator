@@ -378,13 +378,11 @@ export function FinancialIndependenceScreen() {
                       label="Sobre o Topo das Pesquisas"
                       openId={infoOpenId}
                       onOpenChange={setInfoOpenId}
+                      className={topSearchBoost ? "[&_button]:border-[#DAA520]/60 [&_button]:bg-zinc-900 [&_button]:text-[#FFDF00] [&_button]:hover:border-[#DAA520] [&_button]:hover:text-[#FFDF00]" : undefined}
                     >
                       Simula o efeito da visibilidade Premium nos seus números.
                     </InfoHint>
                   </div>
-                  <p className={`text-xs mt-0.5 ${topSearchBoost ? "text-zinc-300" : "text-zinc-500"}`}>
-                    Simule seus resultados com a visibilidade do plano Premium
-                  </p>
                 </div>
                 <button
                   type="button"
