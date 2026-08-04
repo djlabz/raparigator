@@ -1,3 +1,23 @@
-Melhorar pagina de cliente
+Desktop
 
-Criar componente para rapariga virar premium e gatilhos nas outras paginas para mostrar o componente de virar premium
+1 - ajustar cor e posição da foto da mulher (jhon)
+
+2 - Não tem foto de perfil, so de capa (daniel)
+
+3 - Não tem feed back ao clicar no botão de publicar (daniel)
+
+
+Mobile
+
+1 - Ajustar FAB q troca de posição (daniel)
+
+2 - Ajustar o layout dos elementos na pagina (daniel)
+
+3 - tentar ver como por as imagens nas paginas de cadastro (daniel)
+
+4 - ajusta a foto da persona q esta branca (jhon)
+
+
+Ambos
+
+1 - Ajustar tela de independencia financeira (daniel)
