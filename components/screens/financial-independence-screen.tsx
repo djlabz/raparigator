@@ -369,9 +369,19 @@ export function FinancialIndependenceScreen() {
             <div className={`rounded-2xl border p-5 shadow-sm transition-colors ${topSearchBoost ? "border-[#DAA520]/50 bg-[#121212] shadow-zinc-900/20" : "border-zinc-200 bg-white shadow-zinc-200/70"}`}>
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className={`text-sm font-bold ${topSearchBoost ? "text-[#FFDF00]" : "text-zinc-900"}`}>
-                    Topo das Pesquisas
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p className={`text-sm font-bold ${topSearchBoost ? "text-[#FFDF00]" : "text-zinc-900"}`}>
+                      Topo das Pesquisas
+                    </p>
+                    <InfoHint
+                      id="premium"
+                      label="Sobre o Topo das Pesquisas"
+                      openId={infoOpenId}
+                      onOpenChange={setInfoOpenId}
+                    >
+                      Simula o efeito da visibilidade Premium nos seus números.
+                    </InfoHint>
+                  </div>
                   <p className={`text-xs mt-0.5 ${topSearchBoost ? "text-zinc-300" : "text-zinc-500"}`}>
                     Simule seus resultados com a visibilidade do plano Premium
                   </p>
@@ -509,13 +519,23 @@ export function FinancialIndependenceScreen() {
               )}
             </div>
 
-            <div data-testid="freedom-metrics-grid" className="space-y-3 md:space-y-4">
-              <Card className="p-6 border-zinc-200 shadow-lg relative overflow-hidden">
-                <h3 className="text-lg font-semibold text-zinc-900 mb-6">🏁 A Corrida do Milhão</h3>
+            <div data-testid="freedom-metrics-grid" className="grid gap-3 md:grid-cols-2 md:gap-4">
+              <Card className="relative overflow-hidden border-zinc-200 p-4 shadow-sm md:col-span-1 md:p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <h3 className="text-base font-semibold text-zinc-900">🏁 A Corrida do Milhão</h3>
+                  <InfoHint
+                    id="race"
+                    label="Sobre a corrida do milhão"
+                    openId={infoOpenId}
+                    onOpenChange={setInfoOpenId}
+                  >
+                    Tempo estimado para juntar R$ 1 milhão no seu ritmo vs no ritmo CLT.
+                  </InfoHint>
+                </div>
 
-                <div className="space-y-8">
+                <div className="space-y-5">
                   <div className="space-y-2">
-                    <div className="flex justify-between items-end text-sm">
+                    <div className="flex items-end justify-between text-sm">
                       <div className="flex items-center gap-2 font-bold text-emerald-700">
                         <IconRocket className="h-5 w-5" /> SEU RITMO
                       </div>
@@ -524,50 +544,56 @@ export function FinancialIndependenceScreen() {
                         initial={{ scale: 0.85, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ type: "spring", stiffness: 380, damping: 20 }}
-                        className={`font-bold text-lg ${topSearchBoost ? "text-[#DAA520]" : "text-emerald-600"}`}
+                        className={`text-lg font-bold ${topSearchBoost ? "text-[#DAA520]" : "text-emerald-600"}`}
                       >
                         {formatDurationDetailed(parsed.monthsToMillionUser)}
                       </motion.span>
                     </div>
-                    <div className="h-4 w-full bg-zinc-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500 rounded-full animate-pulse w-[95%]"></div>
+                    <div className="h-4 w-full overflow-hidden rounded-full bg-zinc-100">
+                      <div className="h-full w-[95%] animate-pulse rounded-full bg-emerald-500"></div>
                     </div>
-                    <p className="text-xs text-zinc-500 text-right">Rumo à liberdade total</p>
                   </div>
 
                   <div className="space-y-2 opacity-60">
-                    <div className="flex justify-between items-end text-sm">
+                    <div className="flex items-end justify-between text-sm">
                       <div className="flex items-center gap-2 font-semibold text-zinc-600">
                         <IconTurtle className="h-5 w-5" /> RITMO PADRÃO (CLT)
                       </div>
                       <span className="font-semibold text-zinc-500">{formatDurationDetailed(parsed.monthsToMillionCLT)}</span>
                     </div>
-                    <div className="h-4 w-full bg-zinc-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-zinc-400 rounded-full w-[15%]"></div>
+                    <div className="h-4 w-full overflow-hidden rounded-full bg-zinc-100">
+                      <div className="h-full w-[15%] rounded-full bg-zinc-400"></div>
                     </div>
-                    <p className="text-xs text-zinc-400 text-right">Trabalhando até a aposentadoria oficial</p>
                   </div>
                 </div>
               </Card>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <Card className="bg-wine-50 border-wine-100 p-6 flex flex-col justify-center items-center text-center space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2 md:col-span-1">
+                <Card className="flex flex-col items-center justify-center space-y-2 border-wine-100 bg-wine-50 p-4 text-center">
                   <p className="text-xs font-bold uppercase tracking-wider text-wine-700">Sua potência</p>
-                  <div className="text-4xl font-bold text-zinc-900">1 Mês</div>
-                  <div className="flex items-center justify-center gap-2 text-zinc-600">
+                  <div className="text-3xl font-bold text-zinc-900 md:text-4xl">1 Mês</div>
+                  <div className="flex items-center justify-center gap-2 text-sm text-zinc-600">
                     <IconCalendar className="h-5 w-5" />
                     <span>do seu trabalho</span>
                   </div>
                 </Card>
 
-                <div className="flex md:hidden justify-center items-center text-zinc-300 font-bold text-2xl">=</div>
-
-                <Card className="bg-zinc-50 border-zinc-200 p-6 flex flex-col justify-center items-center text-center space-y-3 relative overflow-hidden">
+                <Card className="relative flex flex-col items-center justify-center space-y-2 overflow-hidden border-zinc-200 bg-zinc-50 p-4 text-center">
                   <div className="absolute top-0 right-0 p-2 opacity-10">
                     <IconCalendar className="h-24 w-24" />
                   </div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">Equivale a</p>
-                  <div className="text-4xl font-bold text-zinc-700">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">Equivale a</p>
+                    <InfoHint
+                      id="equivalence"
+                      label="Sobre a equivalência"
+                      openId={infoOpenId}
+                      onOpenChange={setInfoOpenId}
+                    >
+                      Quantos meses de CLT equivalem a 1 mês no seu ritmo simulado.
+                    </InfoHint>
+                  </div>
+                  <div className="text-3xl font-bold text-zinc-700 md:text-4xl">
                     {parsed.equivalenceRatio.toFixed(1).replace('.', ',')} Meses
                   </div>
                   <div className="flex items-center justify-center gap-2 text-zinc-500">
@@ -576,30 +602,40 @@ export function FinancialIndependenceScreen() {
                 </Card>
               </div>
 
-              <div>
-                <h3 className="text-lg font-semibold text-zinc-900 mb-3 ml-1">🏆 Linha do Tempo das Conquistas</h3>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="md:col-span-2">
+                <div className="mb-2 ml-1 flex items-center gap-2">
+                  <h3 className="text-base font-semibold text-zinc-900">🏆 Linha do Tempo das Conquistas</h3>
+                  <InfoHint
+                    id="dreams"
+                    label="Sobre as conquistas"
+                    openId={infoOpenId}
+                    onOpenChange={setInfoOpenId}
+                  >
+                    Tempo estimado para cada meta mantendo o ritmo simulado.
+                  </InfoHint>
+                </div>
+                <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
                   {parsed.dreamsCalculated.map((dream) => (
                     <Card
                       key={dream.id}
-                      className={`p-4 flex flex-col justify-between h-full border-2 transition-all hover:scale-105 ${dream.highlight
+                      className={`flex h-full flex-col justify-between border-2 p-3 transition-all hover:scale-105 md:p-4 ${dream.highlight
                         ? "border-emerald-100 bg-emerald-50/50"
                         : "border-transparent bg-white shadow-sm hover:border-zinc-200"
                         }`}
                     >
-                      <div className="space-y-3">
-                        <div className={`p-2 w-fit rounded-lg ${dream.highlight ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-600'}`}>
+                      <div className="space-y-2 md:space-y-3">
+                        <div className={`w-fit rounded-lg p-2 ${dream.highlight ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-600'}`}>
                           <dream.icon className="h-6 w-6" />
                         </div>
                         <div>
                           <p className={`font-semibold leading-tight ${dream.highlight ? 'text-emerald-700' : 'text-zinc-900'}`}>
                             {dream.label}
                           </p>
-                          <p className="text-xs text-zinc-500 mt-1">{currency(dream.price)}</p>
+                          <p className="mt-1 text-xs text-zinc-500">{currency(dream.price)}</p>
                         </div>
                       </div>
-                      <div className="mt-4 pt-3 border-t border-dashed border-zinc-200">
-                        <p className="text-xs uppercase tracking-wide text-zinc-500 mb-1">Você conquista em</p>
+                      <div className="mt-3 border-t border-dashed border-zinc-200 pt-2 md:mt-4 md:pt-3">
+                        <p className="mb-1 text-xs uppercase tracking-wide text-zinc-500">Você conquista em</p>
                         <motion.p
                           key={dream.monthsToAchieve}
                           initial={{ scale: 0.85, opacity: 0 }}
