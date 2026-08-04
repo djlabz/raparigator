@@ -6,6 +6,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { InfoHint } from "@/components/ui/info-hint";
 import { Select } from "@/components/ui/select";
 import { ShinyButton } from "@/components/ui/shiny-button";
 import { PremiumConversionModal } from "@/components/ui/premium-conversion-modal";
@@ -88,12 +89,12 @@ function Counter({ label, value, onChange, step = 1, min = 0, max = 9999, prefix
   };
 
   return (
-    <div className="space-y-1.5">
-      <label className="text-sm font-medium text-zinc-700 flex items-center gap-2">
+    <div className="space-y-1">
+      <label className="text-xs sm:text-sm font-medium text-zinc-700 flex items-center gap-2">
         {icon && <span className="text-zinc-600">{icon}</span>}
         {label}
       </label>
-      <div className={`flex h-11 items-center justify-between rounded-xl border px-3 transition-all ${highlighted
+      <div className={`flex h-10 items-center justify-between rounded-xl border px-3 transition-all ${highlighted
         ? 'border-wine-300 bg-wine-50/30 shadow-sm'
         : 'border-zinc-200 bg-white'
         }`}>
@@ -153,6 +154,7 @@ export function FinancialIndependenceScreen() {
   const [projectionUnit, setProjectionUnit] = useState("months");
 
   const [submitted, setSubmitted] = useState(false);
+  const [infoOpenId, setInfoOpenId] = useState<string | null>(null);
   const [topSearchBoost, setTopSearchBoost] = useState(false);
   const [upsellOpen, setUpsellOpen] = useState(false);
   const { isPremium } = usePremiumPlan();
@@ -221,6 +223,7 @@ export function FinancialIndependenceScreen() {
 
   const handleReset = () => {
     setSubmitted(false);
+    setInfoOpenId(null);
   };
 
   // Lógica para clarear/escurecer os inputs de meta de tempo
@@ -229,18 +232,27 @@ export function FinancialIndependenceScreen() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="mx-auto max-w-5xl space-y-4 md:space-y-5">
 
-        {/* --- TELA DE INPUTS --- */}
         {!submitted && (
           <>
-            <header>
-              <h1 className="text-2xl font-semibold text-zinc-900">Calculadora de Liberdade</h1>
+            <header className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-semibold text-zinc-900 md:text-2xl">Calculadora de Liberdade</h1>
+                <InfoHint
+                  id="calc-base"
+                  label="Como calculamos"
+                  openId={infoOpenId}
+                  onOpenChange={setInfoOpenId}
+                >
+                  Multiplicamos valor × atendimentos × dias × 4,33 semanas do mês. Usamos o salário mínimo líquido (descontos de INSS e VT) como ritmo padrão de comparação.
+                </InfoHint>
+              </div>
               <p className="text-sm text-zinc-600">Descubra o quão rápido você pode atingir sua independência financeira.</p>
             </header>
 
-            <Card className="space-y-6 p-6">
-              <div className="grid gap-5 md:grid-cols-2">
+            <Card className="space-y-4 p-4 md:space-y-5 md:p-6">
+              <div className="grid gap-3 md:grid-cols-2 md:gap-4">
                 <Counter
                   label="Valor por atendimento"
                   value={valuePerService}
@@ -270,7 +282,6 @@ export function FinancialIndependenceScreen() {
                   icon={<IconCalendar className="w-4 h-4" />}
                 />
 
-                {/* Campos opcionais com destaque especial */}
                 <div className={`flex gap-2 transition-all duration-300 ${hasProjection ? 'opacity-100 grayscale-0' : 'opacity-50 grayscale hover:opacity-100 hover:grayscale-0'}`}>
                   <div className="flex-1">
                     <Counter
@@ -299,10 +310,33 @@ export function FinancialIndependenceScreen() {
                   </div>
                 </div>
               </div>
-              <Button size="lg" className="w-full text-base md:text-lg font-semibold" onClick={() => setSubmitted(true)}>
+
+              {parsed ? (
+                <div
+                  data-testid="freedom-live-preview"
+                  className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-center"
+                >
+                  <p className="text-lg font-bold text-emerald-700 md:text-xl">
+                    ≈ {currency(parsed.monthlyRevenue)} / mês
+                  </p>
+                  <p className="mt-0.5 text-xs font-medium text-emerald-800/80 md:text-sm">
+                    {parsed.yearsSaved > 0
+                      ? `~${parsed.yearsSaved} anos a menos que o ritmo CLT`
+                      : "Você já está no ritmo — refine os números"}
+                  </p>
+                </div>
+              ) : null}
+
+              <Button
+                size="lg"
+                className="w-full text-base font-semibold md:text-lg"
+                onClick={() => {
+                  setInfoOpenId(null);
+                  setSubmitted(true);
+                }}
+              >
                 Ver meu Painel da Liberdade 🚀
               </Button>
-              <p className="text-xs text-zinc-500 text-center mt-3">Cálculo base: (Valor × Atendimentos × Dias) × 4,33 semanas por mês. Comparação com salário CLT líquido (R$ 1.512 - descontos INSS/VT).</p>
             </Card>
           </>
         )}
