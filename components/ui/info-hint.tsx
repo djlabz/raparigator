@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { CircleHelp } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,12 +8,36 @@ import { cn } from "@/lib/utils";
 export type InfoHintProps = {
   id: string;
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
   openId: string | null;
   onOpenChange: (id: string | null) => void;
   className?: string;
   align?: "start" | "center" | "end";
 };
+
+type PanelCoords = {
+  top: number;
+  left: number;
+  width: number;
+};
+
+function computePanelCoords(
+  trigger: DOMRect,
+  align: "start" | "center" | "end",
+): PanelCoords {
+  const margin = 8;
+  const width = Math.min(256, window.innerWidth - margin * 2);
+  let left = trigger.left;
+  if (align === "end") left = trigger.right - width;
+  if (align === "center") left = trigger.left + trigger.width / 2 - width / 2;
+  left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
+  let top = trigger.bottom + margin;
+  const estimatedHeight = 120;
+  if (top + estimatedHeight > window.innerHeight - margin) {
+    top = Math.max(margin, trigger.top - estimatedHeight - margin);
+  }
+  return { top, left, width };
+}
 
 export function InfoHint({
   id,
@@ -27,7 +51,25 @@ export function InfoHint({
   const open = openId === id;
   const panelDomId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
+  const [coords, setCoords] = useState<PanelCoords | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const el = rootRef.current;
+    if (!el) return;
+    const place = () => {
+      setCoords(computePanelCoords(el.getBoundingClientRect(), align));
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open, align]);
 
   useEffect(() => {
     if (!open) return;
@@ -35,9 +77,12 @@ export function InfoHint({
       if (e.key === "Escape") onOpenChange(null);
     };
     const onPointer = (e: MouseEvent | TouchEvent) => {
-      const el = rootRef.current;
-      if (!el) return;
-      if (e.target instanceof Node && !el.contains(e.target)) onOpenChange(null);
+      const root = rootRef.current;
+      const panel = panelRef.current;
+      const target = e.target;
+      if (!(target instanceof Node)) return;
+      if (root?.contains(target) || panel?.contains(target)) return;
+      onOpenChange(null);
     };
     document.addEventListener("keydown", onKey);
     document.addEventListener("mousedown", onPointer);
@@ -50,7 +95,7 @@ export function InfoHint({
   }, [open, onOpenChange]);
 
   return (
-    <div ref={rootRef} className={cn("relative inline-flex", className)}>
+    <div ref={rootRef} className={cn("relative inline-flex shrink-0", className)}>
       <button
         type="button"
         data-testid={`info-hint-trigger-${id}`}
@@ -63,8 +108,9 @@ export function InfoHint({
         <CircleHelp className="h-3.5 w-3.5" aria-hidden />
       </button>
       <AnimatePresence>
-        {open ? (
+        {open && coords ? (
           <motion.div
+            ref={panelRef}
             id={panelDomId}
             role="dialog"
             data-testid={`info-hint-panel-${id}`}
@@ -72,12 +118,8 @@ export function InfoHint({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={reduceMotion ? undefined : { opacity: 0, scale: 0.96, y: 2 }}
             transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 28 }}
-            className={cn(
-              "absolute z-40 mt-2 w-64 rounded-xl border border-zinc-200 bg-white p-3 text-left text-xs leading-relaxed text-zinc-600 shadow-lg",
-              align === "end" && "right-0",
-              align === "center" && "left-1/2 -translate-x-1/2",
-              align === "start" && "left-0",
-            )}
+            style={{ top: coords.top, left: coords.left, width: coords.width }}
+            className="fixed z-50 rounded-xl border border-zinc-200 bg-white p-3 text-left text-xs leading-relaxed text-zinc-600 shadow-lg"
           >
             {children}
           </motion.div>
