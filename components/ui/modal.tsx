@@ -1,10 +1,19 @@
 "use client";
 
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { motion } from "motion/react";
+import { ChevronDown } from "lucide-react";
 import { useModalLock } from "@/lib/modal-lock";
 import { Button } from "./button";
 import { cn } from "@/lib/utils";
+
+export type ModalScrollAvailability = {
+  canScrollDown: boolean;
+  reachedEnd: boolean;
+};
+
+const SCROLL_END_THRESHOLD_PX = 20;
 
 interface ModalProps {
   open: boolean;
@@ -18,6 +27,8 @@ interface ModalProps {
   mobileCentered?: boolean;
   titleClassName?: string;
   scrollResetKey?: string | number;
+  onScrollAvailabilityChange?: (state: ModalScrollAvailability) => void;
+  showScrollHint?: boolean;
 }
 
 export function Modal({
@@ -32,14 +43,50 @@ export function Modal({
   mobileCentered = false,
   titleClassName,
   scrollResetKey,
+  onScrollAvailabilityChange,
+  showScrollHint = false,
 }: ModalProps) {
   useModalLock(open);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const onScrollAvailabilityChangeRef = useRef(onScrollAvailabilityChange);
+
+  useEffect(() => {
+    onScrollAvailabilityChangeRef.current = onScrollAvailabilityChange;
+  }, [onScrollAvailabilityChange]);
+
+  const measureScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const maxScroll = Math.max(0, el.scrollHeight - el.clientHeight);
+    const canScrollDown = maxScroll > 1;
+    const reachedEnd = !canScrollDown || el.scrollTop >= maxScroll - SCROLL_END_THRESHOLD_PX;
+    onScrollAvailabilityChangeRef.current?.({ canScrollDown, reachedEnd });
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const el = scrollRef.current;
+    if (!el) return;
+
+    measureScroll();
+    el.addEventListener("scroll", measureScroll, { passive: true });
+    const ro = new ResizeObserver(() => measureScroll());
+    ro.observe(el);
+    if (el.firstElementChild) ro.observe(el.firstElementChild);
+
+    return () => {
+      el.removeEventListener("scroll", measureScroll);
+      ro.disconnect();
+    };
+  }, [open, scrollResetKey, children, measureScroll]);
+
   useEffect(() => {
     if (!open || scrollResetKey === undefined) return;
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, [open, scrollResetKey]);
+    const id = window.setTimeout(() => measureScroll(), 50);
+    return () => window.clearTimeout(id);
+  }, [open, scrollResetKey, measureScroll]);
 
   if (!open) return null;
 
@@ -95,11 +142,29 @@ export function Modal({
             </button>
           </div>
         </div>
-        <div
-          ref={scrollRef}
-          className="modal-scroll min-h-0 flex-1 overflow-y-auto px-0.5 pr-1 overscroll-contain touch-pan-y pb-4 sm:px-1"
-        >
-          {children}
+        <div className="relative min-h-0 flex-1">
+          <div
+            ref={scrollRef}
+            data-testid="modal-scroll"
+            className="modal-scroll h-full min-h-0 overflow-y-auto px-0.5 pr-1 overscroll-contain touch-pan-y pb-4 sm:px-1"
+          >
+            {children}
+          </div>
+          {showScrollHint ? (
+            <div
+              data-testid="modal-scroll-hint"
+              className="pointer-events-none absolute inset-x-0 bottom-0 flex h-14 items-end justify-center bg-gradient-to-t from-white via-white/80 to-transparent pb-1"
+              aria-hidden="true"
+            >
+              <motion.span
+                animate={{ y: [0, 4, 0] }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                className="text-zinc-400"
+              >
+                <ChevronDown className="h-5 w-5" />
+              </motion.span>
+            </div>
+          ) : null}
         </div>
 
         {resolvedActions ? (
