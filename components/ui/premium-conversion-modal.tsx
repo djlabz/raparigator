@@ -263,11 +263,11 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
                       <p className={cn("text-sm font-semibold", selected ? "text-[#FFDF00]" : "text-zinc-900")}>
                         {option.label}
                       </p>
-                      <p className={cn("mt-1 text-base font-bold", selected ? "text-white" : "text-zinc-800")}>
-                        {currency(option.monthlyEquivalent)}
-                        <span className={cn("ml-0.5 text-xs font-medium", selected ? "text-zinc-400" : "text-zinc-500")}>
-                          /mês
-                        </span>
+                      <p className={cn("mt-1 text-base font-bold leading-none", selected ? "text-white" : "text-zinc-800")}>
+                        {currency(option.price)}
+                      </p>
+                      <p className={cn("mt-1 text-xs font-medium", selected ? "text-zinc-400" : "text-zinc-500")}>
+                        {option.cycle === "monthly" ? "por mês" : "por semestre"}
                       </p>
                     </button>
                   );
