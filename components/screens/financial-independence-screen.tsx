@@ -14,9 +14,65 @@ import { chromeBelowHeaderStickyTop } from "@/lib/chrome-styles";
 import { usePremiumPlan, PREMIUM_VISIBILITY_MULTIPLIER } from "@/lib/premium-plan";
 import { cn, currency } from "@/lib/utils";
 
-// --- Constantes e Configurações ---
 const TARGET = 1_000_000;
 const MIN_WAGE = 1512;
+const CLT_INSS_RATE = 0.075;
+const CLT_VT_RATE = 0.06;
+const CLT_FGTS_RATE = 0.08;
+
+function buildCltReference() {
+  const gross = MIN_WAGE;
+  const inss = gross * CLT_INSS_RATE;
+  const transport = gross * CLT_VT_RATE;
+  const fgtsEmployer = gross * CLT_FGTS_RATE;
+  const net = gross - inss - transport;
+  return { gross, inss, transport, fgtsEmployer, net };
+}
+
+function CltPayrollBreakdown({
+  gross,
+  inss,
+  transport,
+  fgtsEmployer,
+  net,
+}: {
+  gross: number;
+  inss: number;
+  transport: number;
+  fgtsEmployer: number;
+  net: number;
+}) {
+  return (
+    <div className="space-y-2" data-testid="clt-payroll-breakdown">
+      <p className="font-semibold text-zinc-800">Referência CLT (salário mínimo)</p>
+      <ul className="space-y-1 text-zinc-600">
+        <li className="flex justify-between gap-3">
+          <span>Bruto</span>
+          <span className="shrink-0 font-medium text-zinc-800">{currency(gross)}</span>
+        </li>
+        <li className="flex justify-between gap-3">
+          <span>− INSS ({(CLT_INSS_RATE * 100).toFixed(1).replace(".", ",")}%)</span>
+          <span className="shrink-0 font-medium text-zinc-800">{currency(inss)}</span>
+        </li>
+        <li className="flex justify-between gap-3">
+          <span>− Vale-transporte ({(CLT_VT_RATE * 100).toFixed(0)}%)</span>
+          <span className="shrink-0 font-medium text-zinc-800">{currency(transport)}</span>
+        </li>
+        <li className="flex justify-between gap-3">
+          <span>− IRRF</span>
+          <span className="shrink-0 font-medium text-zinc-800">{currency(0)}</span>
+        </li>
+        <li className="flex justify-between gap-3 border-t border-zinc-100 pt-1 font-semibold text-zinc-800">
+          <span>= Líquido na comparação</span>
+          <span className="shrink-0">{currency(net)}</span>
+        </li>
+      </ul>
+      <p className="text-[11px] leading-snug text-zinc-500">
+        FGTS ({(CLT_FGTS_RATE * 100).toFixed(0)}% = {currency(fgtsEmployer)}) é depósito do empregador na conta do trabalhador — não desconta do contracheque. IRRF no mínimo costuma ser R$ 0.
+      </p>
+    </div>
+  );
+}
 
 // Metas tangíveis para o "Conceito C"
 const DREAMS = [
@@ -203,21 +259,15 @@ export function FinancialIndependenceScreen() {
     const baseMonthlyRevenue = value * services * days * 4.33;
     const monthsToMillionBase = Math.ceil(TARGET / baseMonthlyRevenue);
 
-    // Dados CLT (Referência) — jornada fixa de 8h/dia
-    const cltInss = MIN_WAGE * 0.075;
-    const cltTransport = MIN_WAGE * 0.06;
-    const cltNet = MIN_WAGE - cltInss - cltTransport;
+    const clt = buildCltReference();
 
-    // Tempo até 1 Milhão
     const monthsToMillionUser = Math.ceil(TARGET / monthlyRevenue);
-    const monthsToMillionCLT = Math.ceil(TARGET / cltNet);
+    const monthsToMillionCLT = Math.ceil(TARGET / clt.net);
 
-    // Anos comprados de volta (Diferença)
     const monthsSaved = monthsToMillionCLT - monthsToMillionUser;
     const yearsSaved = Math.floor(monthsSaved / 12);
 
-    // Razão de Equivalência (1 mês seu = X meses CLT)
-    const equivalenceRatio = monthlyRevenue / cltNet;
+    const equivalenceRatio = monthlyRevenue / clt.net;
 
     // Metas atingidas
     const dreamsCalculated = DREAMS.map(dream => ({
@@ -244,8 +294,12 @@ export function FinancialIndependenceScreen() {
       effectiveTimeNum,
       effectiveUnit,
       monthsSavedWithPremium: monthsToMillionBase - monthsToMillionUser,
+      projectionMonths,
+      clt,
     };
   }, [valuePerService, servicesPerDay, workDaysPerWeek, projectionTime, projectionUnit, topSearchBoost]);
+
+  const cltReference = useMemo(() => buildCltReference(), []);
 
   const handleReset = () => {
     setSubmitted(false);
@@ -272,7 +326,12 @@ export function FinancialIndependenceScreen() {
                   openId={infoOpenId}
                   onOpenChange={setInfoOpenId}
                 >
-                  Multiplicamos valor × atendimentos × dias × 4,33 semanas do mês. Usamos o salário mínimo líquido (descontos de INSS e VT) como ritmo padrão de comparação.
+                  <div className="space-y-3">
+                    <p>
+                      Seu ritmo mensal: valor × atendimentos × dias × 4,33 semanas.
+                    </p>
+                    <CltPayrollBreakdown {...cltReference} />
+                  </div>
                 </InfoHint>
               </div>
               <p className="text-sm text-zinc-600">Descubra o quão rápido você pode atingir sua independência financeira.</p>
@@ -533,8 +592,22 @@ export function FinancialIndependenceScreen() {
                             label="Sobre o montante"
                             openId={infoOpenId}
                             onOpenChange={setInfoOpenId}
+                            align="end"
                           >
-                            Projeção do seu ritmo atual nesse período.
+                            <div className="space-y-3">
+                              <div className="space-y-1">
+                                <p className="font-semibold text-zinc-800">Como chega nesse montante</p>
+                                <p>
+                                  {currency(parsed.monthlyRevenue)} / mês × {parsed.projectionMonths}{" "}
+                                  {parsed.projectionMonths === 1 ? "mês" : "meses"} ={" "}
+                                  <span className="font-semibold text-zinc-800">{currency(parsed.projectedAmount)}</span>
+                                </p>
+                                <p className="text-[11px] text-zinc-500">
+                                  Base: valor × atendimentos × dias × 4,33 semanas.
+                                </p>
+                              </div>
+                              <CltPayrollBreakdown {...parsed.clt} />
+                            </div>
                           </InfoHint>
                         </div>
                         <p data-testid="freedom-hero-amount" className="text-3xl font-bold text-emerald-600 md:text-4xl">
@@ -564,7 +637,13 @@ export function FinancialIndependenceScreen() {
                     openId={infoOpenId}
                     onOpenChange={setInfoOpenId}
                   >
-                    Tempo estimado para juntar R$ 1 milhão no seu ritmo vs no ritmo CLT.
+                    <div className="space-y-3">
+                      <p>
+                        Tempo para juntar R$ 1 milhão no seu ritmo vs poupando o líquido CLT de{" "}
+                        {currency(parsed.clt.net)} / mês.
+                      </p>
+                      <CltPayrollBreakdown {...parsed.clt} />
+                    </div>
                   </InfoHint>
                 </div>
 
@@ -624,8 +703,15 @@ export function FinancialIndependenceScreen() {
                       label="Sobre a equivalência"
                       openId={infoOpenId}
                       onOpenChange={setInfoOpenId}
+                      align="end"
                     >
-                      Quantos meses de CLT equivalem a 1 mês no seu ritmo simulado.
+                      <div className="space-y-3">
+                        <p>
+                          1 mês no seu ritmo ({currency(parsed.monthlyRevenue)}) equivale a{" "}
+                          {parsed.equivalenceRatio.toFixed(1).replace(".", ",")} meses do líquido CLT.
+                        </p>
+                        <CltPayrollBreakdown {...parsed.clt} />
+                      </div>
                     </InfoHint>
                   </div>
                   <div className="text-3xl font-bold text-zinc-700 md:text-4xl">
