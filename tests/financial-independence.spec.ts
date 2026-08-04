@@ -48,41 +48,67 @@ test.describe("Independência financeira", () => {
     expect(Math.abs((after?.y ?? 0) - (before?.y ?? 0))).toBeLessThan(80);
   });
 
-  test("hero colapsa no mobile após scroll", async ({ page }) => {
+  test("hero colapsa e reexpande suavemente no mobile", async ({ page }) => {
     await openCalculator(page, 375, 720);
     await submitPanel(page);
     await expect(page.getByTestId("freedom-hero")).toHaveAttribute("data-collapsed", "false");
     await page.evaluate(() => window.scrollBy(0, 220));
     await expect(page.getByTestId("freedom-hero")).toHaveAttribute("data-collapsed", "true");
-    await expect(page.getByTestId("freedom-hero-compact")).toBeVisible();
+    const compact = page.getByTestId("freedom-hero-compact");
+    await expect(compact).toBeVisible();
+    await expect(compact).toContainText(/anos|ritmo/i);
+    const box = await compact.boundingBox();
+    expect(box).toBeTruthy();
+    expect(box!.height).toBeGreaterThan(24);
+    expect(box!.height).toBeLessThan(96);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(page.getByTestId("freedom-hero")).toHaveAttribute("data-collapsed", "false");
+    await expect(page.getByRole("heading", { name: /ganhando .* anos de tempo até a meta/i })).toBeVisible();
   });
 
-  test("InfoHint abre, fecha com Escape e troca ao abrir outro", async ({ page }) => {
+  test("explica o significado dos anos ganhos", async ({ page }) => {
+    await openCalculator(page, 375);
+    await submitPanel(page);
+    await expect(page.getByRole("heading", { name: /ganhando .* anos de tempo até a meta/i })).toBeVisible();
+    await page.getByTestId("info-hint-trigger-years-back").click();
+    const panel = page.getByTestId("info-hint-panel-years-back");
+    await expect(panel).toBeVisible();
+    await expect(panel.getByTestId("years-back-explanation")).toContainText(/diferença de tempo/i);
+    await expect(panel).toContainText(/100%/i);
+  });
+
+  test("InfoHints têm explicação própria por módulo", async ({ page }) => {
     await openCalculator(page, 768);
     await page.getByTestId("info-hint-trigger-calc-base").click();
-    await expect(page.getByTestId("info-hint-panel-calc-base")).toBeVisible();
-    await expect(page.getByTestId("clt-payroll-breakdown")).toBeVisible();
-    await expect(page.getByText("− INSS")).toBeVisible();
-    await expect(page.getByText("− Vale-transporte")).toBeVisible();
-    await expect(page.getByText(/FGTS/)).toBeVisible();
+    const calcPanel = page.getByTestId("info-hint-panel-calc-base");
+    await expect(calcPanel.getByTestId("hint-calc-base")).toBeVisible();
+    await expect(calcPanel).toContainText(/4,33 semanas/i);
+    await expect(calcPanel.getByTestId("clt-payroll-breakdown")).toHaveCount(0);
+    await expect(calcPanel).toContainText(/1\.621,00|R\$\s*1\.621/);
     await page.keyboard.press("Escape");
-    await expect(page.getByTestId("info-hint-panel-calc-base")).toHaveCount(0);
+
     await submitPanel(page);
-    await page.getByTestId("info-hint-trigger-race").click();
-    await expect(page.getByTestId("info-hint-panel-race")).toBeVisible();
+
     await page.getByTestId("info-hint-trigger-amount").click();
     const amountPanel = page.getByTestId("info-hint-panel-amount");
-    await expect(amountPanel).toBeVisible();
-    await expect(amountPanel.getByTestId("clt-payroll-breakdown")).toBeVisible();
-    await expect(amountPanel.getByText(/Como chega nesse montante/i)).toBeVisible();
-    await expect(page.getByTestId("info-hint-panel-race")).toHaveCount(0);
-    const triggerBox = await page.getByTestId("info-hint-trigger-amount").boundingBox();
-    const box = await amountPanel.boundingBox();
-    expect(triggerBox).toBeTruthy();
-    expect(box).toBeTruthy();
-    const gapBelow = Math.abs(box!.y - (triggerBox!.y + triggerBox!.height));
-    const gapAbove = Math.abs(box!.y + box!.height - triggerBox!.y);
-    expect(Math.min(gapBelow, gapAbove)).toBeLessThan(32);
+    await expect(amountPanel.getByTestId("hint-amount")).toBeVisible();
+    await expect(amountPanel).toContainText(/Montante do seu cenário/i);
+    await expect(amountPanel.getByTestId("clt-payroll-breakdown")).toHaveCount(0);
+    await page.keyboard.press("Escape");
+
+    await page.getByTestId("info-hint-trigger-race").click();
+    const racePanel = page.getByTestId("info-hint-panel-race");
+    await expect(racePanel.getByTestId("hint-race")).toBeVisible();
+    await expect(racePanel.getByTestId("clt-payroll-breakdown")).toBeVisible();
+    await expect(racePanel).toContainText("− INSS");
+    await expect(racePanel).toContainText(/Decreto/i);
+    await page.keyboard.press("Escape");
+
+    await page.getByTestId("info-hint-trigger-equivalence").click();
+    const eqPanel = page.getByTestId("info-hint-panel-equivalence");
+    await expect(eqPanel.getByTestId("hint-equivalence")).toBeVisible();
+    await expect(eqPanel).toContainText(/÷/);
+    await expect(eqPanel.getByTestId("clt-payroll-breakdown")).toHaveCount(0);
   });
 
   test("InfoHint no mobile não gera scroll horizontal", async ({ page }) => {
