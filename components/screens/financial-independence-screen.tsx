@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,9 @@ import { InfoHint } from "@/components/ui/info-hint";
 import { Select } from "@/components/ui/select";
 import { ShinyButton } from "@/components/ui/shiny-button";
 import { PremiumConversionModal } from "@/components/ui/premium-conversion-modal";
+import { chromeBelowDesktopNavStickyTop } from "@/lib/chrome-styles";
 import { usePremiumPlan, PREMIUM_VISIBILITY_MULTIPLIER } from "@/lib/premium-plan";
-import { currency } from "@/lib/utils";
+import { cn, currency } from "@/lib/utils";
 
 // --- Constantes e Configurações ---
 const TARGET = 1_000_000;
@@ -155,9 +156,30 @@ export function FinancialIndependenceScreen() {
 
   const [submitted, setSubmitted] = useState(false);
   const [infoOpenId, setInfoOpenId] = useState<string | null>(null);
+  const [heroCollapsed, setHeroCollapsed] = useState(false);
   const [topSearchBoost, setTopSearchBoost] = useState(false);
   const [upsellOpen, setUpsellOpen] = useState(false);
   const { isPremium } = usePremiumPlan();
+
+  useEffect(() => {
+    if (!submitted) return;
+    const onScroll = () => {
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
+      if (!isMobile) {
+        setHeroCollapsed(false);
+        return;
+      }
+      const y = window.scrollY || document.documentElement.scrollTop;
+      if (y > 80) setHeroCollapsed(true);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [submitted]);
 
   const parsed = useMemo(() => {
     const value = Number(valuePerService);
@@ -224,6 +246,7 @@ export function FinancialIndependenceScreen() {
   const handleReset = () => {
     setSubmitted(false);
     setInfoOpenId(null);
+    setHeroCollapsed(false);
   };
 
   // Lógica para clarear/escurecer os inputs de meta de tempo
@@ -341,21 +364,8 @@ export function FinancialIndependenceScreen() {
           </>
         )}
 
-        {/* --- TELA DE RESULTADOS (PAINEL DA LIBERDADE) --- */}
         {submitted && parsed ? (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-
-            {/* BOTÃO REFAZER NO TOPO (Design fluído e limpo) */}
-            <div className="flex justify-end pt-2">
-              <Button
-                onClick={handleReset}
-                className="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-none shadow-none h-9 px-4 text-sm font-medium flex items-center gap-2"
-              >
-                <IconRefresh className="w-4 h-4" />
-                Nova Simulação
-              </Button>
-            </div>
-
+          <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 md:space-y-4">
             <div className={`rounded-2xl border p-5 shadow-sm transition-colors ${topSearchBoost ? "border-[#DAA520]/50 bg-[#121212] shadow-zinc-900/20" : "border-zinc-200 bg-white shadow-zinc-200/70"}`}>
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -411,133 +421,198 @@ export function FinancialIndependenceScreen() {
               </AnimatePresence>
             </div>
 
-            {/* MANCHETE DE IMPACTO */}
-            <div className="text-center space-y-2 pb-2">
-              <h2 className="text-3xl md:text-4xl font-bold text-zinc-900">
-                Você está comprando <span className="text-emerald-600">{parsed.yearsSaved} anos</span> da sua vida de volta.
-              </h2>
-              <p className="text-zinc-600">Esse é o poder de valorizar a sua hora de trabalho.</p>
-            </div>
-
-            {/* MONTANTE ACUMULADO (Sempre aparece, com 1 Mês se não for preenchido) */}
-            <Card className="bg-emerald-50 border-emerald-200 p-6 flex flex-col justify-center items-center text-center space-y-2 relative overflow-hidden">
-              <p className="text-xs font-bold uppercase tracking-wider text-emerald-800">
-                Montante Acumulado em {parsed.effectiveTimeNum} {parsed.effectiveUnit === "years" ? (parsed.effectiveTimeNum === 1 ? "Ano" : "Anos") : (parsed.effectiveTimeNum === 1 ? "Mês" : "Meses")}
-              </p>
-              <div className="text-4xl md:text-5xl font-bold text-emerald-600">
-                {currency(parsed.projectedAmount)}
-              </div>
-              <p className="text-sm text-emerald-700/80 font-medium">Mantendo o seu ritmo de trabalho atual.</p>
-            </Card>
-
-            {/* CONCEITO A: A CORRIDA DA VIDA */}
-            <Card className="p-6 border-zinc-200 shadow-lg relative overflow-hidden">
-              <h3 className="text-lg font-semibold text-zinc-900 mb-6">🏁 A Corrida do Milhão</h3>
-
-              <div className="space-y-8">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-end text-sm">
-                    <div className="flex items-center gap-2 font-bold text-emerald-700">
-                      <IconRocket className="h-5 w-5" /> SEU RITMO
-                    </div>
-                    <motion.span
-                      key={parsed.monthsToMillionUser}
-                      initial={{ scale: 0.85, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 380, damping: 20 }}
-                      className={`font-bold text-lg ${topSearchBoost ? "text-[#DAA520]" : "text-emerald-600"}`}
-                    >
-                      {formatDurationDetailed(parsed.monthsToMillionUser)}
-                    </motion.span>
-                  </div>
-                  <div className="h-4 w-full bg-zinc-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full animate-pulse w-[95%]"></div>
-                  </div>
-                  <p className="text-xs text-zinc-500 text-right">Rumo à liberdade total</p>
-                </div>
-
-                <div className="space-y-2 opacity-60">
-                  <div className="flex justify-between items-end text-sm">
-                    <div className="flex items-center gap-2 font-semibold text-zinc-600">
-                      <IconTurtle className="h-5 w-5" /> RITMO PADRÃO (CLT)
-                    </div>
-                    <span className="font-semibold text-zinc-500">{formatDurationDetailed(parsed.monthsToMillionCLT)}</span>
-                  </div>
-                  <div className="h-4 w-full bg-zinc-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-zinc-400 rounded-full w-[15%]"></div>
-                  </div>
-                  <p className="text-xs text-zinc-400 text-right">Trabalhando até a aposentadoria oficial</p>
-                </div>
-              </div>
-            </Card>
-
-            {/* CONCEITO B: BALANÇA DO ESFORÇO */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <Card className="bg-wine-50 border-wine-100 p-6 flex flex-col justify-center items-center text-center space-y-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-wine-700">Sua potência</p>
-                <div className="text-4xl font-bold text-zinc-900">1 Mês</div>
-                <div className="flex items-center justify-center gap-2 text-zinc-600">
-                  <IconCalendar className="h-5 w-5" />
-                  <span>do seu trabalho</span>
-                </div>
-              </Card>
-
-              <div className="flex md:hidden justify-center items-center text-zinc-300 font-bold text-2xl">=</div>
-
-              <Card className="bg-zinc-50 border-zinc-200 p-6 flex flex-col justify-center items-center text-center space-y-3 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-2 opacity-10">
-                  <IconCalendar className="h-24 w-24" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">Equivale a</p>
-                <div className="text-4xl font-bold text-zinc-700">
-                  {parsed.equivalenceRatio.toFixed(1).replace('.', ',')} Meses
-                </div>
-                <div className="flex items-center justify-center gap-2 text-zinc-500">
-                  <span className="text-sm">de um trabalho comum (CLT)</span>
-                </div>
-              </Card>
-            </div>
-
-            {/* CONCEITO C: METAS TANGÍVEIS */}
-            <div>
-              <h3 className="text-lg font-semibold text-zinc-900 mb-3 ml-1">🏆 Linha do Tempo das Conquistas</h3>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {parsed.dreamsCalculated.map((dream) => (
-                  <Card
-                    key={dream.id}
-                    className={`p-4 flex flex-col justify-between h-full border-2 transition-all hover:scale-105 ${dream.highlight
-                      ? "border-emerald-100 bg-emerald-50/50"
-                      : "border-transparent bg-white shadow-sm hover:border-zinc-200"
-                      }`}
+            <div
+              data-testid="freedom-hero"
+              data-collapsed={heroCollapsed ? "true" : "false"}
+              className={cn(
+                "z-10 border border-emerald-200 bg-emerald-50/95 shadow-sm backdrop-blur-md",
+                "sticky rounded-2xl [overflow-anchor:none]",
+                chromeBelowDesktopNavStickyTop,
+                heroCollapsed ? "px-3 py-2" : "p-4 md:p-5",
+              )}
+            >
+              {heroCollapsed ? (
+                <div data-testid="freedom-hero-compact" className="flex items-center justify-between gap-3 md:hidden">
+                  <p className="truncate text-sm font-bold text-emerald-700">
+                    {parsed.yearsSaved > 0 ? `${parsed.yearsSaved} anos` : "No ritmo"} · {currency(parsed.projectedAmount)}
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={handleReset}
+                    className="h-8 shrink-0 bg-zinc-100 px-2 text-xs text-zinc-700 hover:bg-zinc-200"
+                    aria-label="Nova Simulação"
                   >
-                    <div className="space-y-3">
-                      <div className={`p-2 w-fit rounded-lg ${dream.highlight ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-600'}`}>
-                        <dream.icon className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <p className={`font-semibold leading-tight ${dream.highlight ? 'text-emerald-700' : 'text-zinc-900'}`}>
-                          {dream.label}
+                    <IconRefresh className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <h2 className="text-2xl font-bold text-zinc-900 md:text-3xl">
+                      {parsed.yearsSaved > 0 ? (
+                        <>
+                          Você está comprando{" "}
+                          <span className="text-emerald-600">{parsed.yearsSaved} anos</span> da sua vida de volta.
+                        </>
+                      ) : (
+                        <>Você já está no ritmo — refine os números.</>
+                      )}
+                    </h2>
+                    <Button
+                      onClick={handleReset}
+                      className="hidden h-9 shrink-0 items-center gap-2 bg-zinc-100 px-3 text-sm text-zinc-700 hover:bg-zinc-200 md:inline-flex"
+                    >
+                      <IconRefresh className="h-4 w-4" />
+                      Nova Simulação
+                    </Button>
+                  </div>
+                  <p className="text-sm text-zinc-600 md:hidden">
+                    Esse é o poder de valorizar a sua hora de trabalho.
+                  </p>
+                  <div className="flex flex-wrap items-end justify-between gap-3 border-t border-emerald-200/80 pt-3">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
+                          Montante em {parsed.effectiveTimeNum}{" "}
+                          {parsed.effectiveUnit === "years"
+                            ? parsed.effectiveTimeNum === 1
+                              ? "ano"
+                              : "anos"
+                            : parsed.effectiveTimeNum === 1
+                              ? "mês"
+                              : "meses"}
                         </p>
-                        <p className="text-xs text-zinc-500 mt-1">{currency(dream.price)}</p>
+                        <InfoHint
+                          id="amount"
+                          label="Sobre o montante"
+                          openId={infoOpenId}
+                          onOpenChange={setInfoOpenId}
+                        >
+                          Projeção do seu ritmo atual nesse período.
+                        </InfoHint>
                       </div>
+                      <p data-testid="freedom-hero-amount" className="text-3xl font-bold text-emerald-600 md:text-4xl">
+                        {currency(parsed.projectedAmount)}
+                      </p>
                     </div>
-                    <div className="mt-4 pt-3 border-t border-dashed border-zinc-200">
-                      <p className="text-xs uppercase tracking-wide text-zinc-500 mb-1">Você conquista em</p>
-                      <motion.p
-                        key={dream.monthsToAchieve}
+                    <Button
+                      onClick={handleReset}
+                      className="inline-flex h-9 items-center gap-2 bg-zinc-100 px-3 text-sm text-zinc-700 hover:bg-zinc-200 md:hidden"
+                    >
+                      <IconRefresh className="h-4 w-4" />
+                      Nova Simulação
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div data-testid="freedom-metrics-grid" className="space-y-3 md:space-y-4">
+              <Card className="p-6 border-zinc-200 shadow-lg relative overflow-hidden">
+                <h3 className="text-lg font-semibold text-zinc-900 mb-6">🏁 A Corrida do Milhão</h3>
+
+                <div className="space-y-8">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-end text-sm">
+                      <div className="flex items-center gap-2 font-bold text-emerald-700">
+                        <IconRocket className="h-5 w-5" /> SEU RITMO
+                      </div>
+                      <motion.span
+                        key={parsed.monthsToMillionUser}
                         initial={{ scale: 0.85, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ type: "spring", stiffness: 380, damping: 20 }}
-                        className={`text-xl font-bold ${topSearchBoost ? "text-[#DAA520]" : dream.highlight ? 'text-emerald-600' : 'text-zinc-800'}`}
+                        className={`font-bold text-lg ${topSearchBoost ? "text-[#DAA520]" : "text-emerald-600"}`}
                       >
-                        {formatDurationDetailed(dream.monthsToAchieve)}
-                      </motion.p>
+                        {formatDurationDetailed(parsed.monthsToMillionUser)}
+                      </motion.span>
                     </div>
-                  </Card>
-                ))}
+                    <div className="h-4 w-full bg-zinc-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500 rounded-full animate-pulse w-[95%]"></div>
+                    </div>
+                    <p className="text-xs text-zinc-500 text-right">Rumo à liberdade total</p>
+                  </div>
+
+                  <div className="space-y-2 opacity-60">
+                    <div className="flex justify-between items-end text-sm">
+                      <div className="flex items-center gap-2 font-semibold text-zinc-600">
+                        <IconTurtle className="h-5 w-5" /> RITMO PADRÃO (CLT)
+                      </div>
+                      <span className="font-semibold text-zinc-500">{formatDurationDetailed(parsed.monthsToMillionCLT)}</span>
+                    </div>
+                    <div className="h-4 w-full bg-zinc-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-zinc-400 rounded-full w-[15%]"></div>
+                    </div>
+                    <p className="text-xs text-zinc-400 text-right">Trabalhando até a aposentadoria oficial</p>
+                  </div>
+                </div>
+              </Card>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <Card className="bg-wine-50 border-wine-100 p-6 flex flex-col justify-center items-center text-center space-y-3">
+                  <p className="text-xs font-bold uppercase tracking-wider text-wine-700">Sua potência</p>
+                  <div className="text-4xl font-bold text-zinc-900">1 Mês</div>
+                  <div className="flex items-center justify-center gap-2 text-zinc-600">
+                    <IconCalendar className="h-5 w-5" />
+                    <span>do seu trabalho</span>
+                  </div>
+                </Card>
+
+                <div className="flex md:hidden justify-center items-center text-zinc-300 font-bold text-2xl">=</div>
+
+                <Card className="bg-zinc-50 border-zinc-200 p-6 flex flex-col justify-center items-center text-center space-y-3 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-2 opacity-10">
+                    <IconCalendar className="h-24 w-24" />
+                  </div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">Equivale a</p>
+                  <div className="text-4xl font-bold text-zinc-700">
+                    {parsed.equivalenceRatio.toFixed(1).replace('.', ',')} Meses
+                  </div>
+                  <div className="flex items-center justify-center gap-2 text-zinc-500">
+                    <span className="text-sm">de um trabalho comum (CLT)</span>
+                  </div>
+                </Card>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-zinc-900 mb-3 ml-1">🏆 Linha do Tempo das Conquistas</h3>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  {parsed.dreamsCalculated.map((dream) => (
+                    <Card
+                      key={dream.id}
+                      className={`p-4 flex flex-col justify-between h-full border-2 transition-all hover:scale-105 ${dream.highlight
+                        ? "border-emerald-100 bg-emerald-50/50"
+                        : "border-transparent bg-white shadow-sm hover:border-zinc-200"
+                        }`}
+                    >
+                      <div className="space-y-3">
+                        <div className={`p-2 w-fit rounded-lg ${dream.highlight ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-600'}`}>
+                          <dream.icon className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <p className={`font-semibold leading-tight ${dream.highlight ? 'text-emerald-700' : 'text-zinc-900'}`}>
+                            {dream.label}
+                          </p>
+                          <p className="text-xs text-zinc-500 mt-1">{currency(dream.price)}</p>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-dashed border-zinc-200">
+                        <p className="text-xs uppercase tracking-wide text-zinc-500 mb-1">Você conquista em</p>
+                        <motion.p
+                          key={dream.monthsToAchieve}
+                          initial={{ scale: 0.85, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ type: "spring", stiffness: 380, damping: 20 }}
+                          className={`text-xl font-bold ${topSearchBoost ? "text-[#DAA520]" : dream.highlight ? 'text-emerald-600' : 'text-zinc-800'}`}
+                        >
+                          {formatDurationDetailed(dream.monthsToAchieve)}
+                        </motion.p>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </div>
-
           </div>
         ) : null}
 
