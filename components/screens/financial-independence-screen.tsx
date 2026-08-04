@@ -11,40 +11,24 @@ import { Select } from "@/components/ui/select";
 import { ShinyButton } from "@/components/ui/shiny-button";
 import { PremiumConversionModal } from "@/components/ui/premium-conversion-modal";
 import { chromeBelowHeaderStickyTop } from "@/lib/chrome-styles";
+import {
+  buildCltReference,
+  CLT_FGTS_RATE,
+  CLT_INSS_RATE,
+  CLT_VT_RATE,
+  type CltReference,
+} from "@/lib/clt-reference";
 import { usePremiumPlan, PREMIUM_VISIBILITY_MULTIPLIER } from "@/lib/premium-plan";
 import { cn, currency } from "@/lib/utils";
 
 const TARGET = 1_000_000;
-const MIN_WAGE = 1512;
-const CLT_INSS_RATE = 0.075;
-const CLT_VT_RATE = 0.06;
-const CLT_FGTS_RATE = 0.08;
 
-function buildCltReference() {
-  const gross = MIN_WAGE;
-  const inss = gross * CLT_INSS_RATE;
-  const transport = gross * CLT_VT_RATE;
-  const fgtsEmployer = gross * CLT_FGTS_RATE;
-  const net = gross - inss - transport;
-  return { gross, inss, transport, fgtsEmployer, net };
-}
-
-function CltPayrollBreakdown({
-  gross,
-  inss,
-  transport,
-  fgtsEmployer,
-  net,
-}: {
-  gross: number;
-  inss: number;
-  transport: number;
-  fgtsEmployer: number;
-  net: number;
-}) {
+function CltPayrollBreakdown({ clt }: { clt: CltReference }) {
+  const { gross, inss, transport, fgtsEmployer, irrf, net, legalAct, effectiveFrom } = clt;
+  const [year] = effectiveFrom.split("-");
   return (
     <div className="space-y-2" data-testid="clt-payroll-breakdown">
-      <p className="font-semibold text-zinc-800">Referência CLT (salário mínimo)</p>
+      <p className="font-semibold text-zinc-800">Salário mínimo vigente ({year})</p>
       <ul className="space-y-1 text-zinc-600">
         <li className="flex justify-between gap-3">
           <span>Bruto</span>
@@ -60,7 +44,7 @@ function CltPayrollBreakdown({
         </li>
         <li className="flex justify-between gap-3">
           <span>− IRRF</span>
-          <span className="shrink-0 font-medium text-zinc-800">{currency(0)}</span>
+          <span className="shrink-0 font-medium text-zinc-800">{currency(irrf)}</span>
         </li>
         <li className="flex justify-between gap-3 border-t border-zinc-100 pt-1 font-semibold text-zinc-800">
           <span>= Líquido na comparação</span>
@@ -68,7 +52,8 @@ function CltPayrollBreakdown({
         </li>
       </ul>
       <p className="text-[11px] leading-snug text-zinc-500">
-        FGTS ({(CLT_FGTS_RATE * 100).toFixed(0)}% = {currency(fgtsEmployer)}) é depósito do empregador na conta do trabalhador — não desconta do contracheque. IRRF no mínimo costuma ser R$ 0.
+        Fonte: {legalAct}. FGTS ({(CLT_FGTS_RATE * 100).toFixed(0)}% = {currency(fgtsEmployer)}) é
+        depósito do empregador — não desconta do contracheque.
       </p>
     </div>
   );
@@ -217,9 +202,9 @@ export function FinancialIndependenceScreen() {
   const [upsellOpen, setUpsellOpen] = useState(false);
   const { isPremium } = usePremiumPlan();
   const reduceMotion = useReducedMotion();
-  const heroMotionTransition = reduceMotion
-    ? { duration: 0 }
-    : { type: "spring" as const, stiffness: 420, damping: 28 };
+  const heroTransition = reduceMotion
+    ? { duration: 0.01 }
+    : { type: "spring" as const, stiffness: 380, damping: 32, mass: 0.85 };
 
   useEffect(() => {
     if (!submitted) return;
@@ -230,7 +215,14 @@ export function FinancialIndependenceScreen() {
         return;
       }
       const y = window.scrollY || document.documentElement.scrollTop;
-      if (y > 80) setHeroCollapsed(true);
+      if (y > 88) {
+        setHeroCollapsed(true);
+        setInfoOpenId(null);
+        return;
+      }
+      if (y < 36) {
+        setHeroCollapsed(false);
+      }
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -288,6 +280,7 @@ export function FinancialIndependenceScreen() {
       monthsToMillionUser,
       monthsToMillionCLT,
       yearsSaved,
+      monthsSaved,
       equivalenceRatio,
       dreamsCalculated,
       projectedAmount,
@@ -326,11 +319,17 @@ export function FinancialIndependenceScreen() {
                   openId={infoOpenId}
                   onOpenChange={setInfoOpenId}
                 >
-                  <div className="space-y-3">
+                  <div className="space-y-2" data-testid="hint-calc-base">
+                    <p className="font-semibold text-zinc-800">Seu ritmo na calculadora</p>
                     <p>
-                      Seu ritmo mensal: valor × atendimentos × dias × 4,33 semanas.
+                      Valor por atendimento × atendimentos/dia × dias/semana × 4,33 semanas ≈ receita
+                      mensal estimada.
                     </p>
-                    <CltPayrollBreakdown {...cltReference} />
+                    <p className="text-[11px] leading-snug text-zinc-500">
+                      A comparação com CLT no painel usa o salário mínimo vigente (
+                      {currency(cltReference.gross)}, {cltReference.legalAct}) já com descontos de
+                      contracheque.
+                    </p>
                   </div>
                 </InfoHint>
               </div>
@@ -492,33 +491,35 @@ export function FinancialIndependenceScreen() {
               </AnimatePresence>
             </div>
 
-            <div
+            <motion.div
               data-testid="freedom-hero"
               data-collapsed={heroCollapsed ? "true" : "false"}
+              layout
+              transition={heroTransition}
               className={cn(
                 "z-10 w-full min-w-0 max-w-full border border-emerald-200/90 bg-emerald-50/95 backdrop-blur-md",
-                "sticky [overflow-anchor:none]",
+                "sticky overflow-hidden [overflow-anchor:none]",
                 chromeBelowHeaderStickyTop,
                 "md:top-[calc(9rem+env(safe-area-inset-top,0px))]",
                 heroCollapsed
-                  ? "rounded-xl px-3 py-2 shadow-md md:rounded-2xl md:px-4 md:py-3 md:shadow-sm"
+                  ? "rounded-xl px-3 py-2 shadow-md"
                   : "rounded-2xl p-4 shadow-sm md:p-5",
               )}
             >
-              <AnimatePresence mode="wait" initial={false}>
+              <AnimatePresence mode="popLayout" initial={false}>
                 {heroCollapsed ? (
                   <motion.div
                     key="compact"
                     data-testid="freedom-hero-compact"
-                    initial={reduceMotion ? false : { opacity: 0, y: -6 }}
+                    initial={reduceMotion ? false : { opacity: 0, y: -12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={reduceMotion ? undefined : { opacity: 0, y: -4 }}
-                    transition={heroMotionTransition}
-                    className="flex w-full min-w-0 items-center gap-2 md:hidden"
+                    exit={reduceMotion ? undefined : { opacity: 0, y: -10 }}
+                    transition={heroTransition}
+                    className="flex w-full min-w-0 items-center gap-2"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[10px] font-bold uppercase tracking-wider text-emerald-800/70">
-                        Sua liberdade
+                        Tempo a menos até R$ 1 mi
                       </p>
                       <div className="flex min-w-0 items-baseline gap-1.5">
                         <span className="shrink-0 text-sm font-bold text-emerald-700">
@@ -544,23 +545,60 @@ export function FinancialIndependenceScreen() {
                 ) : (
                   <motion.div
                     key="expanded"
-                    initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+                    initial={reduceMotion ? false : { opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={reduceMotion ? undefined : { opacity: 0, y: 4 }}
-                    transition={heroMotionTransition}
+                    exit={reduceMotion ? undefined : { opacity: 0, y: 12 }}
+                    transition={heroTransition}
                     className="space-y-3"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <h2 className="text-2xl font-bold text-zinc-900 md:text-3xl">
-                        {parsed.yearsSaved > 0 ? (
-                          <>
-                            Você está comprando{" "}
-                            <span className="text-emerald-600">{parsed.yearsSaved} anos</span> da sua vida de volta.
-                          </>
-                        ) : (
-                          <>Você já está no ritmo — refine os números.</>
-                        )}
-                      </h2>
+                      <div className="min-w-0 space-y-2">
+                        <div className="flex items-start gap-2">
+                          <h2 className="text-2xl font-bold text-zinc-900 md:text-3xl">
+                            {parsed.yearsSaved > 0 ? (
+                              <>
+                                Você está ganhando{" "}
+                                <span className="text-emerald-600">{parsed.yearsSaved} anos</span> de tempo
+                                até a meta de R$ 1 milhão.
+                              </>
+                            ) : (
+                              <>Você já está no ritmo — refine os números.</>
+                            )}
+                          </h2>
+                          {parsed.yearsSaved > 0 ? (
+                            <InfoHint
+                              id="years-back"
+                              label="O que significa ganhar esses anos"
+                              openId={infoOpenId}
+                              onOpenChange={setInfoOpenId}
+                              align="end"
+                            >
+                              <div className="space-y-2" data-testid="years-back-explanation">
+                                <p className="font-semibold text-zinc-800">O que isso quer dizer?</p>
+                                <p>
+                                  Não é expectativa de vida. É a diferença de tempo para juntar R$ 1 milhão
+                                  no seu ritmo versus poupando só o líquido de um salário mínimo CLT.
+                                </p>
+                                <p>
+                                  CLT de referência: {formatDurationDetailed(parsed.monthsToMillionCLT)}.
+                                  Seu ritmo: {formatDurationDetailed(parsed.monthsToMillionUser)}.
+                                  Diferença: ~{parsed.yearsSaved} anos ({parsed.monthsSaved} meses a menos
+                                  de trabalho/poupança até a mesma meta).
+                                </p>
+                                <p className="text-[11px] leading-snug text-zinc-500">
+                                  Simulação assume que 100% do valor mensal vai para a meta, sem gastos,
+                                  juros nem inflação. O CLT usa o mínimo líquido (após INSS e VT).
+                                </p>
+                              </div>
+                            </InfoHint>
+                          ) : null}
+                        </div>
+                        <p className="text-sm text-zinc-600">
+                          {parsed.yearsSaved > 0
+                            ? `Porque no ritmo CLT de referência levaria ${formatDurationDetailed(parsed.monthsToMillionCLT)}; no seu, ${formatDurationDetailed(parsed.monthsToMillionUser)}.`
+                            : "Ajuste os números para ver quanto tempo você economiza até a meta."}
+                        </p>
+                      </div>
                       <div className="hidden shrink-0 md:block">
                         <Button
                           onClick={handleReset}
@@ -571,9 +609,6 @@ export function FinancialIndependenceScreen() {
                         </Button>
                       </div>
                     </div>
-                    <p className="text-sm text-zinc-600 md:hidden">
-                      Esse é o poder de valorizar a sua hora de trabalho.
-                    </p>
                     <div className="flex flex-wrap items-end justify-between gap-3 border-t border-emerald-200/80 pt-3">
                       <div>
                         <div className="flex items-center gap-1.5">
@@ -594,19 +629,17 @@ export function FinancialIndependenceScreen() {
                             onOpenChange={setInfoOpenId}
                             align="end"
                           >
-                            <div className="space-y-3">
-                              <div className="space-y-1">
-                                <p className="font-semibold text-zinc-800">Como chega nesse montante</p>
-                                <p>
-                                  {currency(parsed.monthlyRevenue)} / mês × {parsed.projectionMonths}{" "}
-                                  {parsed.projectionMonths === 1 ? "mês" : "meses"} ={" "}
-                                  <span className="font-semibold text-zinc-800">{currency(parsed.projectedAmount)}</span>
-                                </p>
-                                <p className="text-[11px] text-zinc-500">
-                                  Base: valor × atendimentos × dias × 4,33 semanas.
-                                </p>
-                              </div>
-                              <CltPayrollBreakdown {...parsed.clt} />
+                            <div className="space-y-2" data-testid="hint-amount">
+                              <p className="font-semibold text-zinc-800">Montante do seu cenário</p>
+                              <p>
+                                {currency(parsed.monthlyRevenue)} / mês × {parsed.projectionMonths}{" "}
+                                {parsed.projectionMonths === 1 ? "mês" : "meses"} ={" "}
+                                <span className="font-semibold text-zinc-800">{currency(parsed.projectedAmount)}</span>
+                              </p>
+                              <p className="text-[11px] leading-snug text-zinc-500">
+                                É só a projeção do seu ritmo (bruto da simulação). Não aplica INSS/VT —
+                                esses descontos entram na comparação CLT da Corrida e da Equivalência.
+                              </p>
                             </div>
                           </InfoHint>
                         </div>
@@ -625,7 +658,7 @@ export function FinancialIndependenceScreen() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </motion.div>
 
             <div data-testid="freedom-metrics-grid" className="grid gap-3 md:grid-cols-2 md:gap-4">
               <Card className="relative overflow-hidden border-zinc-200 p-4 shadow-sm md:col-span-1 md:p-5">
@@ -637,12 +670,19 @@ export function FinancialIndependenceScreen() {
                     openId={infoOpenId}
                     onOpenChange={setInfoOpenId}
                   >
-                    <div className="space-y-3">
-                      <p>
-                        Tempo para juntar R$ 1 milhão no seu ritmo vs poupando o líquido CLT de{" "}
-                        {currency(parsed.clt.net)} / mês.
-                      </p>
-                      <CltPayrollBreakdown {...parsed.clt} />
+                    <div className="space-y-3" data-testid="hint-race">
+                      <div className="space-y-1">
+                        <p className="font-semibold text-zinc-800">Corrida até R$ 1 milhão</p>
+                        <p>
+                          Seu ritmo: {currency(parsed.monthlyRevenue)}/mês →{" "}
+                          {formatDurationDetailed(parsed.monthsToMillionUser)}.
+                        </p>
+                        <p>
+                          Ritmo CLT (líquido {currency(parsed.clt.net)}/mês):{" "}
+                          {formatDurationDetailed(parsed.monthsToMillionCLT)}.
+                        </p>
+                      </div>
+                      <CltPayrollBreakdown clt={parsed.clt} />
                     </div>
                   </InfoHint>
                 </div>
@@ -705,12 +745,20 @@ export function FinancialIndependenceScreen() {
                       onOpenChange={setInfoOpenId}
                       align="end"
                     >
-                      <div className="space-y-3">
+                      <div className="space-y-2" data-testid="hint-equivalence">
+                        <p className="font-semibold text-zinc-800">Potência do seu mês</p>
                         <p>
-                          1 mês no seu ritmo ({currency(parsed.monthlyRevenue)}) equivale a{" "}
-                          {parsed.equivalenceRatio.toFixed(1).replace(".", ",")} meses do líquido CLT.
+                          {currency(parsed.monthlyRevenue)} ÷ {currency(parsed.clt.net)} ={" "}
+                          <span className="font-semibold text-zinc-800">
+                            {parsed.equivalenceRatio.toFixed(1).replace(".", ",")}
+                          </span>{" "}
+                          meses de líquido CLT.
                         </p>
-                        <CltPayrollBreakdown {...parsed.clt} />
+                        <p className="text-[11px] leading-snug text-zinc-500">
+                          Em outras palavras: 1 mês no seu ritmo rende o que alguém no mínimo vigente
+                          ({currency(parsed.clt.gross)} bruto → {currency(parsed.clt.net)} líquido)
+                          juntaria em quase {parsed.equivalenceRatio.toFixed(1).replace(".", ",")} meses.
+                        </p>
                       </div>
                     </InfoHint>
                   </div>
@@ -732,7 +780,19 @@ export function FinancialIndependenceScreen() {
                     openId={infoOpenId}
                     onOpenChange={setInfoOpenId}
                   >
-                    Tempo estimado para cada meta mantendo o ritmo simulado.
+                    <div className="space-y-2" data-testid="hint-dreams">
+                      <p className="font-semibold text-zinc-800">Linha do tempo das metas</p>
+                      <p>
+                        Cada conquista divide o preço pelo seu ritmo atual (
+                        {currency(parsed.monthlyRevenue)}/mês). Ex.: moto a R$ 35.000 ≈{" "}
+                        {Math.ceil(35000 / parsed.monthlyRevenue)}{" "}
+                        {Math.ceil(35000 / parsed.monthlyRevenue) === 1 ? "mês" : "meses"} neste
+                        cenário.
+                      </p>
+                      <p className="text-[11px] leading-snug text-zinc-500">
+                        Assume poupança integral do valor simulado, sem juros nem gastos.
+                      </p>
+                    </div>
                   </InfoHint>
                 </div>
                 <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
