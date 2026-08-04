@@ -61,14 +61,28 @@ test.describe("Independência financeira", () => {
     await openCalculator(page, 768);
     await page.getByTestId("info-hint-trigger-calc-base").click();
     await expect(page.getByTestId("info-hint-panel-calc-base")).toBeVisible();
+    await expect(page.getByTestId("clt-payroll-breakdown")).toBeVisible();
+    await expect(page.getByText("− INSS")).toBeVisible();
+    await expect(page.getByText("− Vale-transporte")).toBeVisible();
+    await expect(page.getByText(/FGTS/)).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("info-hint-panel-calc-base")).toHaveCount(0);
     await submitPanel(page);
     await page.getByTestId("info-hint-trigger-race").click();
     await expect(page.getByTestId("info-hint-panel-race")).toBeVisible();
     await page.getByTestId("info-hint-trigger-amount").click();
-    await expect(page.getByTestId("info-hint-panel-amount")).toBeVisible();
+    const amountPanel = page.getByTestId("info-hint-panel-amount");
+    await expect(amountPanel).toBeVisible();
+    await expect(amountPanel.getByTestId("clt-payroll-breakdown")).toBeVisible();
+    await expect(amountPanel.getByText(/Como chega nesse montante/i)).toBeVisible();
     await expect(page.getByTestId("info-hint-panel-race")).toHaveCount(0);
+    const triggerBox = await page.getByTestId("info-hint-trigger-amount").boundingBox();
+    const box = await amountPanel.boundingBox();
+    expect(triggerBox).toBeTruthy();
+    expect(box).toBeTruthy();
+    const gapBelow = Math.abs(box!.y - (triggerBox!.y + triggerBox!.height));
+    const gapAbove = Math.abs(box!.y + box!.height - triggerBox!.y);
+    expect(Math.min(gapBelow, gapAbove)).toBeLessThan(32);
   });
 
   test("InfoHint no mobile não gera scroll horizontal", async ({ page }) => {
