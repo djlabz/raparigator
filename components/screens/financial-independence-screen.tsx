@@ -666,7 +666,7 @@ export function FinancialIndependenceScreen() {
               title="Hmm, esses números não fecharam"
               description="Dá uma olhadinha nos valores — por aqui a gente só aceita números positivos, combinado?"
             />
-            <Button variant="ghost" onClick={() => setSubmitted(false)} className="mt-4 w-full">Tentar novamente</Button>
+            <Button variant="ghost" onClick={handleReset} className="mt-4 w-full">Tentar novamente</Button>
           </div>
         )}
 

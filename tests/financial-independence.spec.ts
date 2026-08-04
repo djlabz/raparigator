@@ -86,4 +86,13 @@ test.describe("Independência financeira", () => {
     await page.getByRole("switch", { name: /Topo das Pesquisas/i }).click();
     await expect(amount).not.toHaveText(before);
   });
+
+  for (const width of [375, 768, 1280] as const) {
+    test(`fluxo completo em ${width}px`, async ({ page }) => {
+      await openCalculator(page, width);
+      await expect(page.getByTestId("freedom-live-preview")).toBeVisible();
+      await submitPanel(page);
+      await expect(page.getByTestId("freedom-metrics-grid")).toBeVisible();
+    });
+  }
 });
