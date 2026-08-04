@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { BarChart3, Images, Sparkles, TrendingUp, UserRound, Zap } from "lucide-react";
-import { Modal } from "@/components/ui/modal";
+import { Modal, type ModalScrollAvailability } from "@/components/ui/modal";
 import { ShinyButton } from "@/components/ui/shiny-button";
 import {
   getBillingSavingsPercent,
@@ -73,6 +73,9 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
   const [step, setStep] = useState<1 | 2>(1);
   const [wasOpen, setWasOpen] = useState(open);
   const [billingCycle, setBillingCycle] = useState<PremiumBillingCycle>("semiannual");
+  const [scrollGateMeasured, setScrollGateMeasured] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(true);
+  const [reachedEnd, setReachedEnd] = useState(false);
   const sharedGains = getSharedGains();
   const selectedPlan = getPlanOption(billingCycle);
   const savingsPercent = getBillingSavingsPercent();
@@ -82,11 +85,26 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
     if (open) {
       setStep(1);
       setBillingCycle("semiannual");
+      setScrollGateMeasured(false);
+      setCanScrollDown(true);
+      setReachedEnd(false);
     }
   }
 
+  const handleScrollAvailabilityChange = (state: ModalScrollAvailability) => {
+    setScrollGateMeasured(true);
+    setCanScrollDown(state.canScrollDown);
+    setReachedEnd(state.reachedEnd);
+  };
+
+  const step2CtaDisabled =
+    step === 2 && (!scrollGateMeasured || (canScrollDown && !reachedEnd));
+
   const handleClose = () => {
     setStep(1);
+    setScrollGateMeasured(false);
+    setCanScrollDown(true);
+    setReachedEnd(false);
     onClose();
   };
 
@@ -111,14 +129,24 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
       size="md"
       mobileCentered
       scrollResetKey={step}
+      onScrollAvailabilityChange={step === 2 ? handleScrollAvailabilityChange : undefined}
+      showScrollHint={step === 2 && canScrollDown && !reachedEnd}
       actions={
         step === 1 ? (
-          <ShinyButton fullWidth onClick={() => setStep(2)}>
+          <ShinyButton
+            fullWidth
+            onClick={() => {
+              setScrollGateMeasured(false);
+              setCanScrollDown(true);
+              setReachedEnd(false);
+              setStep(2);
+            }}
+          >
             Continuar
           </ShinyButton>
         ) : (
           <div className="flex w-full flex-col gap-2">
-            <ShinyButton fullWidth onClick={handleGoCheckout}>
+            <ShinyButton fullWidth disabled={step2CtaDisabled} onClick={handleGoCheckout}>
               Continuar para assinatura
             </ShinyButton>
             <button
