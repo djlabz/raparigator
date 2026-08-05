@@ -613,22 +613,22 @@ export function FinancialIndependenceScreen() {
                   data-testid="freedom-premium-switch"
                   onClick={() => setTopSearchBoost((prev) => !prev)}
                   className={cn(
-                    "relative h-7 w-13 shrink-0 rounded-full p-[2px]",
-                    topSearchBoost ? "bg-[#DAA520] transition-colors" : "shiny-switch-border",
+                    "relative h-8 w-14 shrink-0 rounded-full p-[2.5px] transition-colors",
+                    topSearchBoost ? "bg-[#DAA520]" : "shiny-switch-border",
                   )}
                 >
                   <span
                     className={cn(
                       "relative block h-full w-full rounded-full",
-                      topSearchBoost ? "bg-[#DAA520]" : "bg-zinc-50",
+                      topSearchBoost ? "bg-[#DAA520]" : "bg-zinc-300",
                     )}
                   >
                     <motion.span
                       layout
                       transition={{ type: "spring", stiffness: 500, damping: 30 }}
                       className={cn(
-                        "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow",
-                        topSearchBoost ? "left-[calc(100%-1.375rem)]" : "left-0.5",
+                        "absolute top-0.5 h-5.5 w-5.5 rounded-full bg-white shadow-md ring-1 ring-zinc-200/80",
+                        topSearchBoost ? "left-[calc(100%-1.5rem)] ring-[#DAA520]/30" : "left-0.5",
                       )}
                     />
                   </span>

@@ -205,15 +205,20 @@ a {
 
 .shiny-switch-border {
   background: conic-gradient(from var(--shine-angle),
-      rgba(218, 165, 32, 0.45) 0%,
-      rgba(255, 223, 0, 0.95) 12%,
-      rgba(218, 165, 32, 0.4) 28%,
-      rgba(182, 0, 49, 0.45) 50%,
-      rgba(218, 165, 32, 0.4) 72%,
-      rgba(255, 223, 0, 0.95) 88%,
-      rgba(218, 165, 32, 0.45) 100%);
-  box-shadow: 0 0 0 1px rgba(218, 165, 32, 0.35), 0 0 8px rgba(255, 223, 0, 0.28);
-  animation: shiny-border-rotate 2.8s linear infinite;
+      rgba(182, 0, 49, 0.7) 0%,
+      #FFDF00 12%,
+      #DAA520 24%,
+      rgba(182, 0, 49, 0.75) 40%,
+      #FFDF00 55%,
+      #DAA520 68%,
+      rgba(194, 24, 79, 0.8) 82%,
+      #FFDF00 92%,
+      rgba(182, 0, 49, 0.7) 100%);
+  box-shadow:
+    0 0 0 1px rgba(218, 165, 32, 0.4),
+    0 0 10px rgba(255, 223, 0, 0.35),
+    0 0 14px rgba(182, 0, 49, 0.25);
+  animation: shiny-border-rotate 2.6s linear infinite;
 }
 
 @keyframes premium-glow-pulse {
