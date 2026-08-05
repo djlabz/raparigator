@@ -35,7 +35,7 @@ export const PREMIUM_PLAN_OPTIONS: PremiumPlanOption[] = [
 export const PREMIUM_EXCLUSIVE_FEATURES = [
   "Visualização única",
   "Apelido por cliente/conversa",
-  "Acesso prioritário",
+  "Acesso prioritário a novos recursos e benefícios",
 ] as const;
 
 export function getPlanOption(cycle: PremiumBillingCycle): PremiumPlanOption {
@@ -78,7 +78,7 @@ export function getImmediateGains(): PremiumImmediateGain[] {
     },
     {
       id: "early-access",
-      label: "Acesso prioritário",
+      label: "Acesso prioritário a novos recursos e benefícios",
       from: "Não incluso",
       to: "Exclusivo Premium",
       exclusive: true,

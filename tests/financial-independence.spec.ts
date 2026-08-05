@@ -134,6 +134,19 @@ test.describe("Independência financeira", () => {
     await expect(page.getByRole("heading", { name: /chega a R\$ 1 milhão em/i })).toBeVisible();
   });
 
+  test("com Premium expandido o hero aguarda mais scroll antes de colapsar", async ({ page }) => {
+    await openPremiumJustification(page, 375);
+    const hero = page.getByTestId("freedom-hero");
+    await expect(hero).toHaveAttribute("data-collapsed", "false");
+    await expect(hero).toHaveAttribute("data-premium", "true");
+    await page.evaluate(() => window.scrollBy(0, 120));
+    await page.waitForTimeout(400);
+    await expect(hero).toHaveAttribute("data-collapsed", "false");
+    await expect(page.getByTestId("freedom-premium-justification")).toBeVisible();
+    await page.evaluate(() => window.scrollBy(0, 220));
+    await expect(hero).toHaveAttribute("data-collapsed", "true", { timeout: 5000 });
+  });
+
   test("colapsa no scroll e também no fim da página", async ({ page }) => {
     await openCalculator(page, 375, 720);
     await submitPanel(page);
