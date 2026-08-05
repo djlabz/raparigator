@@ -153,7 +153,7 @@ export function Modal({
           {showScrollHint ? (
             <div
               data-testid="modal-scroll-hint"
-              className="pointer-events-none absolute inset-x-0 bottom-0 flex h-14 items-end justify-center bg-gradient-to-t from-white via-white/80 to-transparent pb-1"
+              className="pointer-events-none absolute inset-x-0 bottom-0 flex h-14 items-end justify-center bg-linear-to-t from-white via-white/80 to-transparent pb-1"
               aria-hidden="true"
             >
               <motion.span
