@@ -5,8 +5,6 @@ Desktop
 
 Mobile
 
-1 - Ajustar FAB q troca de posição (daniel)
-
 2 - Ajustar o layout dos elementos na pagina (daniel)
 
 3 - tentar ver como por as imagens nas paginas de cadastro (daniel)
