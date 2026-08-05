@@ -261,6 +261,7 @@ export function FinancialIndependenceScreen() {
   const expandedLayerRef = useRef<HTMLDivElement>(null);
   const compactLayerRef = useRef<HTMLDivElement>(null);
   const heroCollapsedRef = useRef(false);
+  const topSearchBoostRef = useRef(topSearchBoost);
   const collapseLockUntilRef = useRef(0);
   const lastScrollYRef = useRef(0);
   const [heroLayerHeights, setHeroLayerHeights] = useState({ expanded: 0, compact: 0 });
@@ -270,9 +271,26 @@ export function FinancialIndependenceScreen() {
   }, [heroCollapsed]);
 
   useEffect(() => {
+    topSearchBoostRef.current = topSearchBoost;
+  }, [topSearchBoost]);
+
+  useEffect(() => {
     if (!submitted) return;
 
     lastScrollYRef.current = window.scrollY || document.documentElement.scrollTop;
+
+    const resolveCollapseThresholds = () => {
+      const baseCollapseY = 88;
+      const baseExpandY = 48;
+      if (!topSearchBoostRef.current) {
+        return { collapseY: baseCollapseY, expandY: baseExpandY };
+      }
+      const premiumEl = document.querySelector('[data-testid="freedom-premium-card"]');
+      const premiumHeight = premiumEl instanceof HTMLElement ? premiumEl.offsetHeight : 0;
+      const collapseY = Math.max(baseCollapseY + 140, Math.round(premiumHeight * 0.9));
+      const expandY = Math.max(baseExpandY, Math.round(collapseY * 0.4));
+      return { collapseY, expandY };
+    };
 
     const onScroll = () => {
       const isMobile = window.matchMedia("(max-width: 767px)").matches;
@@ -288,7 +306,8 @@ export function FinancialIndependenceScreen() {
         (document.documentElement.scrollHeight || 0) - window.innerHeight,
       );
       const nearBottom = maxScroll > 48 && y >= maxScroll - 16;
-      const shouldCollapse = y > 88 || nearBottom;
+      const { collapseY, expandY } = resolveCollapseThresholds();
+      const shouldCollapse = y > collapseY || nearBottom;
       if (shouldCollapse) {
         if (!heroCollapsedRef.current) {
           collapseLockUntilRef.current = performance.now() + 400;
@@ -299,7 +318,7 @@ export function FinancialIndependenceScreen() {
       }
       if (
         heroCollapsedRef.current &&
-        y < 48 &&
+        y < expandY &&
         performance.now() >= collapseLockUntilRef.current &&
         (scrollingUp || y <= 2)
       ) {
@@ -314,7 +333,7 @@ export function FinancialIndependenceScreen() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [submitted]);
+  }, [submitted, topSearchBoost]);
 
   const parsed = useMemo(() => {
     const value = Number(valuePerService);
@@ -591,20 +610,28 @@ export function FinancialIndependenceScreen() {
                   role="switch"
                   aria-checked={topSearchBoost}
                   aria-label="Simular com Topo das Pesquisas"
+                  data-testid="freedom-premium-switch"
                   onClick={() => setTopSearchBoost((prev) => !prev)}
                   className={cn(
-                    "relative h-7 w-13 shrink-0 rounded-full transition-colors",
-                    topSearchBoost ? "bg-[#DAA520]" : "bg-zinc-200",
+                    "relative h-7 w-13 shrink-0 rounded-full p-[2px]",
+                    topSearchBoost ? "bg-[#DAA520] transition-colors" : "shiny-switch-border",
                   )}
                 >
-                  <motion.span
-                    layout
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  <span
                     className={cn(
-                      "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow",
-                      topSearchBoost ? "left-[calc(100%-1.625rem)]" : "left-0.5",
+                      "relative block h-full w-full rounded-full",
+                      topSearchBoost ? "bg-[#DAA520]" : "bg-zinc-50",
                     )}
-                  />
+                  >
+                    <motion.span
+                      layout
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      className={cn(
+                        "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow",
+                        topSearchBoost ? "left-[calc(100%-1.375rem)]" : "left-0.5",
+                      )}
+                    />
+                  </span>
                 </button>
               </div>
               <AnimatePresence>
