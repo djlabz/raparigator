@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { BarChart3, Images, Sparkles, TrendingUp, UserRound, Zap } from "lucide-react";
-import { Modal } from "@/components/ui/modal";
+import { BarChart3, Images, Rocket, Sparkles, TrendingUp, UserRound, Zap } from "lucide-react";
+import { Modal, type ModalScrollAvailability } from "@/components/ui/modal";
 import { ShinyButton } from "@/components/ui/shiny-button";
 import {
   getBillingSavingsPercent,
@@ -16,7 +16,7 @@ import {
 import type { PremiumBillingCycle } from "@/lib/types";
 import { cn, currency } from "@/lib/utils";
 
-export type PremiumHighlight = "topSearch" | "traffic" | "portfolio" | "media" | "alias";
+export type PremiumHighlight = "topSearch" | "traffic" | "portfolio" | "media" | "alias" | "earlyAccess";
 
 interface PremiumConversionModalProps {
   open: boolean;
@@ -61,6 +61,12 @@ const BENEFIT_CELLS: Array<{
     description: "Defina apelido por cliente/conversa — exclusivo Premium.",
     icon: UserRound,
   },
+  {
+    id: "earlyAccess",
+    title: "Acesso prioritário",
+    description: "Acesso prioritário a novos recursos e benefícios",
+    icon: Rocket,
+  },
 ];
 
 const BILLING_LABELS: Record<PremiumBillingCycle, string> = {
@@ -73,6 +79,9 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
   const [step, setStep] = useState<1 | 2>(1);
   const [wasOpen, setWasOpen] = useState(open);
   const [billingCycle, setBillingCycle] = useState<PremiumBillingCycle>("semiannual");
+  const [scrollGateMeasured, setScrollGateMeasured] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(true);
+  const [reachedEnd, setReachedEnd] = useState(false);
   const sharedGains = getSharedGains();
   const selectedPlan = getPlanOption(billingCycle);
   const savingsPercent = getBillingSavingsPercent();
@@ -82,11 +91,26 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
     if (open) {
       setStep(1);
       setBillingCycle("semiannual");
+      setScrollGateMeasured(false);
+      setCanScrollDown(true);
+      setReachedEnd(false);
     }
   }
 
+  const handleScrollAvailabilityChange = (state: ModalScrollAvailability) => {
+    setScrollGateMeasured(true);
+    setCanScrollDown(state.canScrollDown);
+    setReachedEnd(state.reachedEnd);
+  };
+
+  const step2CtaDisabled =
+    step === 2 && (!scrollGateMeasured || (canScrollDown && !reachedEnd));
+
   const handleClose = () => {
     setStep(1);
+    setScrollGateMeasured(false);
+    setCanScrollDown(true);
+    setReachedEnd(false);
     onClose();
   };
 
@@ -111,14 +135,24 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
       size="md"
       mobileCentered
       scrollResetKey={step}
+      onScrollAvailabilityChange={step === 2 ? handleScrollAvailabilityChange : undefined}
+      showScrollHint={step === 2 && canScrollDown && !reachedEnd}
       actions={
         step === 1 ? (
-          <ShinyButton fullWidth onClick={() => setStep(2)}>
+          <ShinyButton
+            fullWidth
+            onClick={() => {
+              setScrollGateMeasured(false);
+              setCanScrollDown(true);
+              setReachedEnd(false);
+              setStep(2);
+            }}
+          >
             Continuar
           </ShinyButton>
         ) : (
           <div className="flex w-full flex-col gap-2">
-            <ShinyButton fullWidth onClick={handleGoCheckout}>
+            <ShinyButton fullWidth disabled={step2CtaDisabled} onClick={handleGoCheckout}>
               Continuar para assinatura
             </ShinyButton>
             <button
@@ -263,11 +297,11 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
                       <p className={cn("text-sm font-semibold", selected ? "text-[#FFDF00]" : "text-zinc-900")}>
                         {option.label}
                       </p>
-                      <p className={cn("mt-1 text-base font-bold", selected ? "text-white" : "text-zinc-800")}>
-                        {currency(option.monthlyEquivalent)}
-                        <span className={cn("ml-0.5 text-xs font-medium", selected ? "text-zinc-400" : "text-zinc-500")}>
-                          /mês
-                        </span>
+                      <p className={cn("mt-1 text-base font-bold leading-none", selected ? "text-white" : "text-zinc-800")}>
+                        {currency(option.price)}
+                      </p>
+                      <p className={cn("mt-1 text-xs font-medium", selected ? "text-zinc-400" : "text-zinc-500")}>
+                        {option.cycle === "monthly" ? "por mês" : "por semestre"}
                       </p>
                     </button>
                   );
