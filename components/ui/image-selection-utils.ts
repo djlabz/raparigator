@@ -3,6 +3,15 @@ import type { Crop } from "react-image-crop";
 const PRESET_LANDSCAPE = { width: 56, height: 40 };
 const PRESET_PORTRAIT = { width: 56, height: 52 };
 const PRESET_SQUARE = { width: 52, height: 52 };
+export const ASPECT_MATCH_TOLERANCE = 0.04;
+
+export function aspectsMatch(imageAspect: number, targetAspect: number, tolerance = ASPECT_MATCH_TOLERANCE) {
+  if (!Number.isFinite(imageAspect) || !Number.isFinite(targetAspect) || targetAspect <= 0) {
+    return false;
+  }
+
+  return Math.abs(imageAspect - targetAspect) / targetAspect <= tolerance;
+}
 
 type Size = {
   width: number;
@@ -45,10 +54,76 @@ export function createAdaptivePresetCrop(width: number, height: number): Crop {
 
 export function resolveMinSelectionSize(displaySize: Size): Size {
   const minEdge = Math.min(displaySize.width, displaySize.height);
-  const minSize = Math.max(72, Math.round(minEdge * 0.18));
+  const minSize = Math.max(48, Math.round(minEdge * 0.12));
 
   return {
     width: Math.min(displaySize.width, minSize),
     height: Math.min(displaySize.height, minSize),
   };
+}
+
+export function buildMaxAspectCrop(
+  mediaWidth: number,
+  mediaHeight: number,
+  aspect: number,
+): Crop {
+  if (!mediaWidth || !mediaHeight || !Number.isFinite(aspect) || aspect <= 0) {
+    return {
+      unit: "%",
+      width: 100,
+      height: 100,
+      x: 0,
+      y: 0,
+    };
+  }
+
+  const imageAspect = mediaWidth / mediaHeight;
+
+  if (aspectsMatch(imageAspect, aspect)) {
+    return {
+      unit: "%",
+      width: 100,
+      height: 100,
+      x: 0,
+      y: 0,
+    };
+  }
+
+  if (imageAspect > aspect) {
+    const widthPercent = (aspect / imageAspect) * 100;
+    return {
+      unit: "%",
+      width: widthPercent,
+      height: 100,
+      x: (100 - widthPercent) / 2,
+      y: 0,
+    };
+  }
+
+  const heightPercent = (imageAspect / aspect) * 100;
+  return {
+    unit: "%",
+    width: 100,
+    height: heightPercent,
+    x: 0,
+    y: (100 - heightPercent) / 2,
+  };
+}
+
+export function buildCenteredSelection(
+  mediaWidth: number,
+  mediaHeight: number,
+  aspect?: number,
+): Crop {
+  if (!aspect) {
+    return {
+      unit: "%",
+      width: 100,
+      height: 100,
+      x: 0,
+      y: 0,
+    };
+  }
+
+  return buildMaxAspectCrop(mediaWidth, mediaHeight, aspect);
 }

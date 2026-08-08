@@ -227,10 +227,30 @@ export function buildInitialState(ad: AnnouncementAdPreview): AnnouncementDraftS
     active: true,
   };
 
+  const imageCount = ad.images.length;
+  const emptyPreviews = imageCount > 0 ? ad.images.map(() => "") : [];
+  let profileIndex: number | null = null;
+  const profilePreviews = [...emptyPreviews];
+
+  if (imageCount > 0 && typeof ad.profileImageIndex === "number") {
+    const safeProfileIndex = Math.min(Math.max(ad.profileImageIndex, 0), imageCount - 1);
+    profileIndex = safeProfileIndex;
+    if (ad.profileImage) {
+      profilePreviews[safeProfileIndex] = ad.profileImage;
+    }
+  } else if (imageCount > 0 && ad.profileImage) {
+    const exactIndex = ad.images.indexOf(ad.profileImage);
+    if (exactIndex >= 0) {
+      profileIndex = exactIndex;
+    }
+  }
+
   return {
-    images: ad.images.length > 0 ? ad.images : [],
+    images: imageCount > 0 ? ad.images : [],
     coverIndex: 0,
-    coverPreviews: ad.images.length > 0 ? ad.images.map(() => "") : [],
+    coverPreviews: [...emptyPreviews],
+    profileIndex,
+    profilePreviews,
     shortDescription: ad.shortDescription ?? "",
     description: ad.description ?? "",
     characteristics: {
@@ -416,7 +436,7 @@ function getMissingCharacteristics(characteristics: AnnouncementCharacteristics)
   });
 }
 
-function syncDraftToMockAd(slug: string, form: AnnouncementDraftState) {
+export function syncDraftToMockAd(slug: string, form: AnnouncementDraftState) {
   const target = ads.find((item) => item.slug === slug);
 
   if (!target) {
@@ -424,6 +444,20 @@ function syncDraftToMockAd(slug: string, form: AnnouncementDraftState) {
   }
 
   target.images = [...form.images];
+
+  if (
+    form.profileIndex !== null
+    && form.profileIndex >= 0
+    && form.profileIndex < form.images.length
+  ) {
+    const preview = form.profilePreviews[form.profileIndex];
+    target.profileImage = preview || form.images[form.profileIndex];
+    target.profileImageIndex = form.profileIndex;
+  } else {
+    target.profileImage = undefined;
+    target.profileImageIndex = undefined;
+  }
+
   target.shortDescription = form.shortDescription;
   target.description = form.description;
 

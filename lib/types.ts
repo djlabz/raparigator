@@ -73,6 +73,8 @@ export interface ProfessionalAd {
   status: AvailabilityStatus;
   adTier: AdCategory;
   images: string[];
+  profileImage?: string;
+  profileImageIndex?: number;
   rating: number;
   reviewsCount: number;
   profileViews: number;

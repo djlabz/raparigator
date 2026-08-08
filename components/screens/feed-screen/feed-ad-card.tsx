@@ -13,6 +13,7 @@ import {
 } from "react";
 import { motion, useMotionTemplate, useSpring } from "motion/react";
 import type { ProfessionalAd } from "@/lib/types";
+import { isLocalImageSrc } from "@/lib/ad-profile-image";
 import { cn, currency } from "@/lib/utils";
 import { FEED_CARD_SIZE_CLASS } from "./constants";
 
@@ -332,7 +333,8 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
     };
   }, []);
 
-  const premiumImage = ad.images[0];
+  const premiumImage = ad.profileImage || ad.images[0];
+  const premiumUnoptimized = isLocalImageSrc(premiumImage);
   const waveSeconds = (ripple?.durationMs ?? WAVE_DURATION_MS) / 1000;
 
   return (
@@ -374,6 +376,7 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
               priority={priority}
               className="object-cover opacity-90 transition-transform duration-700 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 33vw"
+              unoptimized={premiumUnoptimized}
             />
 
             <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/20 to-transparent" />
@@ -499,7 +502,11 @@ export function FeedAdCard({ ad, priority = false }: { ad: ProfessionalAd; prior
     return () => window.clearInterval(interval);
   }, [isPremium, ad.images.length]);
 
-  const currentImage = ad.images[imageIndex] ?? ad.images[0];
+  const currentImage =
+    (imageIndex === 0 ? ad.profileImage : undefined)
+    || ad.images[imageIndex]
+    || ad.profileImage
+    || ad.images[0];
 
   if (isPremium) {
     return <PremiumFeedCard ad={ad} priority={priority} />;
@@ -526,6 +533,7 @@ export function FeedAdCard({ ad, priority = false }: { ad: ProfessionalAd; prior
           alt={`${ad.artisticName} em ${ad.city}`}
           fill
           priority={priority}
+          unoptimized={isLocalImageSrc(currentImage)}
           className="object-cover object-center opacity-90 transition-transform duration-700 group-hover:scale-105"
           sizes="(max-width: 640px) 100vw, 320px"
         />

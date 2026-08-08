@@ -24,20 +24,27 @@ Gostaria de verificar a sua disponibilidade e conhecer mais detalhes sobre o seu
 Aguardo o seu retorno!`;
 }
 
+export function getWhatsAppShareUrl(name: string, slug: string): string {
+  const text = getShareCopyText(name, slug);
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
+export function getTelegramShareUrl(name: string, slug: string): string {
+  const url = getShareProfileUrl(slug);
+  const text = `Confira o perfil de ${name} na Sigillus.`;
+  return `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+}
+
 export function getWhatsAppChatUrl(name: string, slug: string, phone: string): string {
   const text = getChatText(name, slug);
-  const encodedText = encodeURIComponent(text);
-  // Garante que o número está limpo de caracteres especiais
   const cleanPhone = phone.replace(/\D/g, "");
-  return `https://wa.me/${cleanPhone}?text=${encodedText}`;
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
 }
 
 export function getTelegramChatUrl(name: string, slug: string, username: string): string {
   const text = getChatText(name, slug);
-  const encodedText = encodeURIComponent(text);
-  // Remove '@' se o username vier com ele
   const cleanUsername = username.replace(/^@/, "");
-  return `https://t.me/${cleanUsername}?text=${encodedText}`;
+  return `https://t.me/${cleanUsername}?text=${encodeURIComponent(text)}`;
 }
 
 export function vibrate(ms: number = 50): void {
@@ -57,7 +64,6 @@ export async function copyToClipboard(text: string): Promise<boolean> {
       return true;
     } catch (e) {
       console.error("Failed to copy text: ", e);
-      return false;
     }
   }
   return false;

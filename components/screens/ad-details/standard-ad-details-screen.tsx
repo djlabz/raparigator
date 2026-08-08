@@ -19,6 +19,7 @@ import {
 } from "@/components/screens/feed-screen/constants";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RiskWarningModal } from "@/components/ui/risk-warning-modal";
+import { getTelegramChatUrl, getWhatsAppChatUrl } from "@/lib/share-utils";
 import { cn } from "@/lib/utils";
 
 interface StandardAdDetailsScreenProps {
@@ -61,6 +62,23 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
     );
   }
 
+  const handleExternalContact = (target: "WhatsApp" | "Telegram") => {
+    setRiskTarget(target);
+    if (target === "WhatsApp") {
+      setExternalTargetUrl(
+        ad.whatsappNumber
+          ? getWhatsAppChatUrl(ad.artisticName, ad.slug, ad.whatsappNumber)
+          : null,
+      );
+      return;
+    }
+    setExternalTargetUrl(
+      ad.telegramUsername
+        ? getTelegramChatUrl(ad.artisticName, ad.slug, ad.telegramUsername)
+        : null,
+    );
+  };
+
   return (
     <AppShell location={`${ad.city}, ${ad.state}`}>
       <div className={FEED_CONTENT_GRID_CLASS}>
@@ -69,13 +87,7 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
           data-ad-content-column
           className={cn("min-w-0 space-y-7 pb-24 md:pb-12", FEED_CARDS_COLUMN_OFFSET_CLASS)}
         >
-          <StandardProfileHeader 
-            ad={ad} 
-            onExternalLink={(target, url) => {
-              setRiskTarget(target);
-              setExternalTargetUrl(url);
-            }} 
-          />
+          <StandardProfileHeader ad={ad} />
           <PhotoGallerySection
             ad={ad}
             galleryMode={galleryMode}
@@ -98,13 +110,13 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
                 calculatedExtrasCost={calculatedExtrasCost}
                 totalCalculatedValue={totalCalculatedValue}
                 role={role}
-                setRiskTarget={setRiskTarget}
+                setRiskTarget={handleExternalContact}
               />
               <StandardReviewsSection ad={ad} reviews={adReviews} />
             </div>
 
             <aside className="hidden lg:block">
-              <StandardSidebarCta role={role} setRiskTarget={setRiskTarget} />
+              <StandardSidebarCta role={role} setRiskTarget={handleExternalContact} />
             </aside>
           </section>
         </div>
@@ -121,7 +133,7 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
 
       <StandardMobileContactFab
         ad={ad}
-        setRiskTarget={setRiskTarget}
+        setRiskTarget={handleExternalContact}
         role={
           role === "cliente"
             ? "client"
@@ -142,9 +154,6 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
           setRiskTarget(null);
           if (typeof window !== "undefined" && externalTargetUrl) {
             window.open(externalTargetUrl, "_blank", "noopener,noreferrer");
-          } else if (typeof window !== "undefined") {
-             // Fallback para clicks do simulador
-             window.open(riskTarget === "WhatsApp" ? "https://wa.me/" : "https://t.me/", "_blank", "noopener,noreferrer");
           }
           setExternalTargetUrl(null);
         }}

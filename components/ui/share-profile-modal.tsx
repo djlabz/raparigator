@@ -7,12 +7,13 @@ import { Link, X, MapPin } from "lucide-react";
 import { Modal } from "./modal";
 import { WhatsAppIcon, TelegramIcon } from "./contact-icons";
 import { ProfessionalAd } from "@/lib/types";
+import { isLocalImageSrc, resolveAdProfileImage } from "@/lib/ad-profile-image";
 import { useModalLock } from "@/lib/modal-lock";
 import {
   copyToClipboard,
   getShareCopyText,
-  getWhatsAppChatUrl,
-  getTelegramChatUrl,
+  getWhatsAppShareUrl,
+  getTelegramShareUrl,
   vibrate,
 } from "@/lib/share-utils";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,6 @@ interface ShareProfileModalProps {
   onClose: () => void;
   ad: ProfessionalAd;
   isPremium?: boolean;
-  onExternalLink: (target: "WhatsApp" | "Telegram", url: string) => void;
 }
 
 function useIsClient() {
@@ -38,7 +38,6 @@ export function ShareProfileModal({
   onClose,
   ad,
   isPremium = false,
-  onExternalLink,
 }: ShareProfileModalProps) {
   const [copied, setCopied] = useState(false);
   const isClient = useIsClient();
@@ -46,6 +45,14 @@ export function ShareProfileModal({
   useModalLock(open && isPremium);
 
   if (!open) return null;
+
+  const openShareUrl = (url: string) => {
+    vibrate(50);
+    onClose();
+    if (typeof window !== "undefined") {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
 
   const handleCopy = async () => {
     vibrate(50);
@@ -58,29 +65,16 @@ export function ShareProfileModal({
   };
 
   const handleWhatsApp = () => {
-    vibrate(50);
-    if (ad.whatsappNumber) {
-      const url = getWhatsAppChatUrl(ad.artisticName, ad.slug, ad.whatsappNumber);
-      onExternalLink("WhatsApp", url);
-    } else {
-      // Fallback genérico se não tiver número
-      onExternalLink("WhatsApp", "https://wa.me/");
-    }
+    openShareUrl(getWhatsAppShareUrl(ad.artisticName, ad.slug));
   };
 
   const handleTelegram = () => {
-    vibrate(50);
-    if (ad.telegramUsername) {
-      const url = getTelegramChatUrl(ad.artisticName, ad.slug, ad.telegramUsername);
-      onExternalLink("Telegram", url);
-    } else {
-      // Fallback genérico se não tiver username
-      onExternalLink("Telegram", "https://t.me/");
-    }
+    openShareUrl(getTelegramShareUrl(ad.artisticName, ad.slug));
   };
 
   const adCover = ad.images[0];
-  const adProfile = ad.images[1] || ad.images[0];
+  const adProfile = resolveAdProfileImage(ad);
+  const profileUnoptimized = isLocalImageSrc(adProfile);
 
   if (isPremium) {
     if (!isClient) return null;
@@ -126,6 +120,7 @@ export function ShareProfileModal({
                     fill
                     className="object-cover"
                     sizes="80px"
+                    unoptimized={profileUnoptimized}
                   />
                 </div>
 
@@ -220,6 +215,7 @@ export function ShareProfileModal({
               fill
               className="object-cover"
               sizes="80px"
+              unoptimized={profileUnoptimized}
             />
           </div>
           
