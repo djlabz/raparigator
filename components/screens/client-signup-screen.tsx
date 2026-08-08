@@ -21,9 +21,9 @@ import {
 } from "@/lib/identity";
 
 const clientImages = [
-  "/images/personas/persona2/persona2-client-signup-1.png",
-  "/images/personas/persona3/persona3-client-signup-2.png",
-  "/images/personas/persona4/persona4-client-signup-3.png"
+  "/images/personas/persona2/persona2-client-signup-1.webp",
+  "/images/personas/persona3/persona3-client-signup-2.webp",
+  "/images/personas/persona4/persona4-client-signup-3.webp"
 ];
 
 export function ClientSignupScreen() {
@@ -191,7 +191,7 @@ export function ClientSignupScreen() {
               alt={`Modelo para criacao de conta cliente ${index + 1}`}
               fill
               priority={index === 0}
-              quality={100}
+              quality={90}
               className={`object-cover object-center transition-opacity duration-1000 ease-in-out ${index === activeImageIndex ? "opacity-90" : "opacity-0"
                 }`}
               sizes="(max-width: 768px) 100vw, 50vw"
