@@ -11,11 +11,11 @@ export function SignupSelectionScreen() {
       <section className="hidden h-screen bg-black md:sticky md:top-0 md:block">
         <div className="relative h-full w-full overflow-hidden">
           <Image
-            src="/images/personas/persona3/persona3-selection-hero.png"
+            src="/images/personas/persona3/persona3-selection-hero.webp"
             alt="Modelo Sigillus"
             fill
             priority
-            quality={100}
+            quality={90}
             className="object-cover opacity-80 [object-position:center_30%]"
             sizes="(max-width: 768px) 100vw, 50vw"
           />
@@ -35,7 +35,7 @@ export function SignupSelectionScreen() {
       <section className="relative flex min-h-svh min-h-screen flex-col justify-between px-4 pt-6 pb-8 sm:px-6 md:items-center md:justify-center md:px-10 md:py-10">
         <div className="absolute inset-0 overflow-hidden md:hidden">
           <Image
-            src="/images/personas/persona3/persona3-selection-hero.png"
+            src="/images/personas/persona3/persona3-selection-hero.webp"
             alt=""
             fill
             className="object-cover opacity-65"

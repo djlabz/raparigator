@@ -82,14 +82,14 @@ export function OnboardingScreen() {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/hero/homepage-main-photo-2.png"
+            src="/images/hero/homepage-main-photo-2.webp"
             alt="Sigillus Premium Background"
             fill
             className={`object-cover ${styles.heroImage}`}
             priority
             sizes="100vw"
             unoptimized
-            quality={100}
+            quality={90}
           />
           <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/40 to-black/60"></div>
         </div>
