@@ -15,7 +15,6 @@
     "check": "npm run lint && npm run typecheck",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:ui": "playwright test --project=chromium --ui",
-    "test:e2e:chromium": "playwright test --project=chromium",
     "test:e2e:report": "playwright show-report",
     "share": "npx cloudflared tunnel --url http://localhost:3000"
   },
