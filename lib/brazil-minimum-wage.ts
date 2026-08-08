@@ -28,7 +28,3 @@ export function getBrazilMinimumWage(asOf: Date = new Date()): BrazilMinimumWage
   }
   return current;
 }
-
-export function getBrazilMinimumWageAmount(asOf: Date = new Date()) {
-  return getBrazilMinimumWage(asOf).amount;
-}

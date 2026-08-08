@@ -77,7 +77,7 @@ export function DesktopNav({ items, className }: DesktopNavProps) {
   }, [activeHref]);
 
   useLayoutEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     updateIndicator();
   }, [updateIndicator]);
 
