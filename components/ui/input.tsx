@@ -1,4 +1,5 @@
-﻿import { InputHTMLAttributes, ReactNode } from "react";
+﻿import { ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
+import { formatPhone } from "@/lib/identity";
 import { cn } from "@/lib/utils";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -10,6 +11,16 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export function Input({ id, label, hint, error, className, leadingIcon, premium = false, ...props }: InputProps) {
+  const shouldMaskPhone = props.type === "tel" || id?.toLowerCase().includes("phone");
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (shouldMaskPhone) {
+      event.target.value = formatPhone(event.target.value);
+    }
+
+    props.onChange?.(event);
+  };
+
   return (
     <div className="space-y-1.5">
       <label htmlFor={id} className="text-sm font-medium text-zinc-700">
@@ -29,6 +40,7 @@ export function Input({ id, label, hint, error, className, leadingIcon, premium 
             className,
           )}
           {...props}
+          onChange={handleChange}
         />
       </div>
       {error ? <p className="text-xs text-red-600">{error}</p> : hint ? <p className="text-xs text-zinc-500">{hint}</p> : null}

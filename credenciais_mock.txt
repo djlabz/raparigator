@@ -1,0 +1,9 @@
+Credenciais mock da Sigillus
+
+Cliente Sigillus
+E-mail: cliente@sigillus.dev
+Senha: Cliente@123
+
+Profissional Sigillus
+E-mail: profissional@sigillus.dev
+Senha: Profissional@123

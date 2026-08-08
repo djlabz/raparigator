@@ -1,0 +1,16 @@
+export const LG_QUERY = "(min-width: 1024px)";
+export const REVEAL_START_MOBILE_PX = 108;
+export const REVEAL_END_MOBILE_PX = 6;
+export const REVEAL_SCROLL_FADE_PX = 28;
+export const FLIGHT_SNAP_REVEAL = 0.96;
+export const IN_PAGE_TITLE_HEIGHT = 40;
+export const REVEAL_LAMBDA_DESKTOP = 16;
+export const REVEAL_LAMBDA_MOBILE = 4.6;
+export const SPACER_LAMBDA = 8;
+export const SNAP_EPS = 0.0005;
+export const TITLE_STACK_PX = 28;
+export const LOGO_SWAP_REVEAL_INPUT = [0, 0.16, 0.34] as const;
+export const LOGO_SWAP_OPACITY_OUTPUT = [1, 1, 0] as const;
+export const IN_PAGE_OPACITY_REVEAL_DIVISOR = 0.22;
+export const SPACER_COLLAPSE_START = 0.82;
+export const SPACER_COLLAPSE_SPAN = 0.18;

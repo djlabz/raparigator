@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run build)",
+      "Bash(npx tsc:*)",
+      "Read(**)",
+      "Edit(**)"
+    ],
+    "deny": [
+      "Bash(npm run share)",
+      "Read(.env*)",
+      "Edit(.env*)",
+      "Edit(.next/**)",
+      "Edit(node_modules/**)",
+      "Edit(package-lock.json)"
+    ]
+  }
+}
