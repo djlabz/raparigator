@@ -4,16 +4,17 @@ import { useState } from "react";
 import Image from "next/image";
 import { MapPin, ShieldCheck, Heart, Upload } from "lucide-react";
 import type { ProfessionalAd } from "@/lib/types";
+import { isLocalImageSrc, resolveAdProfileImage } from "@/lib/ad-profile-image";
 import { ShareProfileModal } from "@/components/ui/share-profile-modal";
 import { motion } from "motion/react";
 
 interface PremiumHeroSectionProps {
   ad: ProfessionalAd;
-  onExternalLink?: (target: "WhatsApp" | "Telegram", url: string) => void;
 }
 
-export function PremiumHeroSection({ ad, onExternalLink }: PremiumHeroSectionProps) {
+export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const profileImageSrc = resolveAdProfileImage(ad);
   const premiumAttributes = [
     { label: "Altura", value: `${ad.heightCm} cm`, icon: "/icons/attributes/size-woman.svg" },
     { label: "Cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: "/icons/attributes/hair-woman.svg" },
@@ -84,13 +85,14 @@ export function PremiumHeroSection({ ad, onExternalLink }: PremiumHeroSectionPro
                 <div className="relative z-10 h-20 w-20 rounded-full bg-linear-to-tr from-amber-300 via-[#a88222] to-amber-300 p-1 shadow-[0_0_20px_rgba(218,165,32,0.35)] sm:h-28 sm:w-28 md:h-36 md:w-36">
                   <div className="relative h-full w-full overflow-hidden rounded-full border-[3px] border-[#121212]">
                     <Image
-                      src={ad.images[1] || ad.images[0]}
+                      src={profileImageSrc}
                       alt={ad.artisticName}
                       fill
                       className="object-cover pointer-events-none select-none"
                       sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, 144px"
                       referrerPolicy="no-referrer"
                       draggable={false}
+                      unoptimized={isLocalImageSrc(profileImageSrc)}
                     />
                   </div>
                 </div>
@@ -154,10 +156,6 @@ export function PremiumHeroSection({ ad, onExternalLink }: PremiumHeroSectionPro
         onClose={() => setShareModalOpen(false)}
         ad={ad}
         isPremium={true}
-        onExternalLink={(target, url) => {
-          setShareModalOpen(false);
-          onExternalLink?.(target, url);
-        }}
       />
     </section>
   );

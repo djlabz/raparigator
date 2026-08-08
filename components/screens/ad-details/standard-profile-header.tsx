@@ -4,16 +4,17 @@ import { useState } from "react";
 import Image from "next/image";
 import { ShieldCheck, MapPin, Heart, Ruler, Weight, Eye, User, Cigarette, Scissors, Upload } from "lucide-react";
 import type { ProfessionalAd } from "@/lib/types";
+import { isLocalImageSrc, resolveAdProfileImage } from "@/lib/ad-profile-image";
 import { ShareProfileModal } from "@/components/ui/share-profile-modal";
 import { motion } from "motion/react";
 
 interface StandardProfileHeaderProps {
   ad: ProfessionalAd;
-  onExternalLink?: (target: "WhatsApp" | "Telegram", url: string) => void;
 }
 
-export function StandardProfileHeader({ ad, onExternalLink }: StandardProfileHeaderProps) {
+export function StandardProfileHeader({ ad }: StandardProfileHeaderProps) {
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const profileImageSrc = resolveAdProfileImage(ad);
   const attributes = [
     { label: "Altura", value: `${ad.heightCm} cm`, icon: Ruler },
     { label: "Cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: Scissors },
@@ -71,13 +72,14 @@ export function StandardProfileHeader({ ad, onExternalLink }: StandardProfileHea
               <div className="relative inline-block shrink-0 align-bottom">
                 <div className="relative z-10 h-20 w-20 overflow-hidden rounded-full border-4 border-white bg-zinc-100 shadow-md sm:h-28 sm:w-28 md:h-36 md:w-36">
                   <Image
-                    src={ad.images[1] || ad.images[0]}
+                    src={profileImageSrc}
                     alt={ad.artisticName}
                     fill
                     className="object-cover pointer-events-none select-none"
                     sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, 144px"
                     referrerPolicy="no-referrer"
                     draggable={false}
+                    unoptimized={isLocalImageSrc(profileImageSrc)}
                   />
                 </div>
                 <div className="absolute right-[14.6%] bottom-[14.6%] z-10 translate-x-1/2 translate-y-1/2">
@@ -150,10 +152,6 @@ export function StandardProfileHeader({ ad, onExternalLink }: StandardProfileHea
         onClose={() => setShareModalOpen(false)}
         ad={ad}
         isPremium={false}
-        onExternalLink={(target, url) => {
-          setShareModalOpen(false);
-          onExternalLink?.(target, url);
-        }}
       />
     </section>
   );

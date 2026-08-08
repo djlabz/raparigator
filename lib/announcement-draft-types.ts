@@ -13,6 +13,8 @@ export type AnnouncementAdPreview = {
   state: string;
   startingPrice: number;
   images: string[];
+  profileImage?: string;
+  profileImageIndex?: number;
   rating: number;
   reviewsCount: number;
   profileViews: number;
@@ -78,6 +80,8 @@ export type AnnouncementDraftState = {
   images: string[];
   coverIndex: number;
   coverPreviews: string[];
+  profileIndex: number | null;
+  profilePreviews: string[];
   shortDescription: string;
   description: string;
   characteristics: AnnouncementCharacteristics;

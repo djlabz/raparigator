@@ -1,13 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { motion, useMotionValue } from "motion/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
-import { BadgeDollarSign, Clock3, Edit, Image as ImageIcon, Lock, CreditCard, Undo, Redo } from "lucide-react";
+import { BadgeDollarSign, ChevronDown, Clock3, Edit, Image as ImageIcon, Lock, CreditCard, Undo, Redo } from "lucide-react";
 import { PixIcon } from "@/components/ui/pix-icon";
 import { CashIcon } from "@/components/ui/cash-icon";
 import { useOptionalDashboardHeaderTitleMotion } from "./dashboard-header-title-context";
@@ -20,6 +21,7 @@ import {
   isSelectUnselected,
   OPTIMIZE_SECTION_ORDER,
   SECTION_LABELS,
+  syncDraftToMockAd,
 } from "@/lib/announcement-draft";
 import type {
   AnnouncementCharacteristics,
@@ -32,6 +34,7 @@ import type {
 } from "@/lib/announcement-draft-types";
 import { ImageCropperModal, type Area } from "@/components/ui/image-cropper-modal";
 import { ImageBlurModal, type ImageBlurResult } from "@/components/ui/image-blur-modal";
+import { aspectsMatch } from "@/components/ui/image-selection-utils";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ShinyButton } from "@/components/ui/shiny-button";
@@ -61,11 +64,12 @@ type VisibilityStatus = "Ativo" | "Pausado" | "Invisível";
 const MAX_LOCATION_ADDRESSES = 10;
 const GROUP_WARNING_AUTO_DISMISS_MS = 3200;
 type LocationStatusTone = "success" | "error" | "info";
-type PhotoCropMode = "edit" | "cover";
+type PhotoCropMode = "edit" | "cover" | "profile";
 type PhotoCropTarget = {
   index: number;
   mode: PhotoCropMode;
 };
+type MediaRole = "cover" | "profile";
 
 type LocationDraft = {
   label: string;
@@ -313,6 +317,34 @@ function resolveCoverIndex(coverIndex: number, imageCount: number) {
   return Math.min(Math.max(coverIndex, 0), imageCount - 1);
 }
 
+function resolveProfileIndex(profileIndex: number | null, imageCount: number) {
+  if (profileIndex === null || imageCount <= 0) {
+    return null;
+  }
+
+  if (profileIndex < 0 || profileIndex >= imageCount) {
+    return null;
+  }
+
+  return profileIndex;
+}
+
+function remapIndexAfterMoveToFront(index: number | null, movedIndex: number) {
+  if (index === null) {
+    return null;
+  }
+
+  if (index === movedIndex) {
+    return 0;
+  }
+
+  if (index < movedIndex) {
+    return index + 1;
+  }
+
+  return index;
+}
+
 function removeIndexedCoverPreview(previews: string[], removedIndex: number) {
   return previews.filter((_, index) => index !== removedIndex);
 }
@@ -326,6 +358,28 @@ function moveItemToFront<T>(items: T[], index: number) {
   const [selectedItem] = nextItems.splice(index, 1);
   nextItems.unshift(selectedItem);
   return nextItems;
+}
+
+function padPreviews(previews: string[], length: number) {
+  const next = [...previews];
+  while (next.length < length) {
+    next.push("");
+  }
+  return next;
+}
+
+function subscribeSmUp(onStoreChange: () => void) {
+  const mediaQuery = window.matchMedia("(min-width: 640px)");
+  mediaQuery.addEventListener("change", onStoreChange);
+  return () => mediaQuery.removeEventListener("change", onStoreChange);
+}
+
+function getSmUpSnapshot() {
+  return window.matchMedia("(min-width: 640px)").matches;
+}
+
+function useSmUp() {
+  return useSyncExternalStore(subscribeSmUp, getSmUpSnapshot, () => true);
 }
 
 export function AnnouncementTab({
@@ -354,6 +408,7 @@ export function AnnouncementTab({
     publish,
     isSectionReadyForOptimization,
   } = useAnnouncementDraft(ad);
+  const router = useRouter();
   const { isPremium, photoLimit, videoLimit } = usePremiumPlan();
   const motionValues = useOptionalDashboardHeaderTitleMotion();
   const fallbackInPageOpacity = useMotionValue(1);
@@ -512,6 +567,7 @@ export function AnnouncementTab({
   const hasReachedLocationLimit = form.locationAddresses.length >= MAX_LOCATION_ADDRESSES;
   const activeLocation = form.locationAddresses.find((location) => location.active) ?? null;
   const resolvedCoverIndex = resolveCoverIndex(form.coverIndex, form.images.length);
+  const resolvedProfileIndex = resolveProfileIndex(form.profileIndex, form.images.length);
   const coverPreviewSrc = form.coverPreviews[resolvedCoverIndex] || form.images[resolvedCoverIndex] || "";
 
   const openPhotoCropper = (index: number, mode: PhotoCropMode) => {
@@ -524,29 +580,52 @@ export function AnnouncementTab({
 
   const updateCoverPreview = (index: number, previewSrc: string, mode: PhotoCropMode) => {
     updateForm((current) => {
-      const nextPreviews = [...current.coverPreviews];
-
-      while (nextPreviews.length < current.images.length) {
-        nextPreviews.push("");
-      }
+      const nextPreviews = padPreviews(current.coverPreviews, current.images.length);
+      const nextProfilePreviews = padPreviews(current.profilePreviews, current.images.length);
 
       nextPreviews[index] = previewSrc;
 
       if (mode === "cover") {
         const safeIndex = resolveCoverIndex(index, current.images.length);
 
-        return {
+        const next = {
           ...current,
           images: moveItemToFront(current.images, safeIndex),
           coverPreviews: moveItemToFront(nextPreviews, safeIndex),
+          profilePreviews: moveItemToFront(nextProfilePreviews, safeIndex),
           coverIndex: current.images.length > 0 ? 0 : current.coverIndex,
+          profileIndex: remapIndexAfterMoveToFront(current.profileIndex, safeIndex),
         };
+        syncDraftToMockAd(ad.slug, next);
+        return next;
       }
 
       return {
         ...current,
         coverPreviews: nextPreviews,
       };
+    });
+
+    setPhotoCropTarget(null);
+  };
+
+  const updateProfilePreview = (index: number, previewSrc: string) => {
+    updateForm((current) => {
+      if (current.images.length === 0) {
+        return current;
+      }
+
+      const safeIndex = resolveCoverIndex(index, current.images.length);
+      const nextProfilePreviews = padPreviews(current.profilePreviews, current.images.length);
+      nextProfilePreviews[safeIndex] = previewSrc;
+
+      const next = {
+        ...current,
+        profilePreviews: nextProfilePreviews,
+        profileIndex: safeIndex,
+      };
+      syncDraftToMockAd(ad.slug, next);
+      return next;
     });
 
     setPhotoCropTarget(null);
@@ -560,12 +639,31 @@ export function AnnouncementTab({
 
       const safeIndex = resolveCoverIndex(index, current.images.length);
 
-      return {
+      const next = {
         ...current,
         images: moveItemToFront(current.images, safeIndex),
-        coverPreviews: moveItemToFront(current.coverPreviews, safeIndex),
+        coverPreviews: moveItemToFront(padPreviews(current.coverPreviews, current.images.length), safeIndex),
+        profilePreviews: moveItemToFront(padPreviews(current.profilePreviews, current.images.length), safeIndex),
         coverIndex: 0,
+        profileIndex: remapIndexAfterMoveToFront(current.profileIndex, safeIndex),
       };
+      syncDraftToMockAd(ad.slug, next);
+      return next;
+    });
+  };
+
+  const setProfileIndex = (index: number) => {
+    updateForm((current) => {
+      if (current.images.length === 0) {
+        return current;
+      }
+
+      const next = {
+        ...current,
+        profileIndex: resolveCoverIndex(index, current.images.length),
+      };
+      syncDraftToMockAd(ad.slug, next);
+      return next;
     });
   };
 
@@ -573,6 +671,7 @@ export function AnnouncementTab({
     updateForm((current) => {
       const nextImages = current.images.filter((_, imageIndex) => imageIndex !== index);
       const nextPreviews = removeIndexedCoverPreview(current.coverPreviews, index);
+      const nextProfilePreviews = removeIndexedCoverPreview(current.profilePreviews, index);
 
       let nextCoverIndex = current.coverIndex;
 
@@ -584,11 +683,23 @@ export function AnnouncementTab({
         nextCoverIndex = Math.min(index, nextImages.length - 1);
       }
 
+      let nextProfileIndex = current.profileIndex;
+
+      if (nextImages.length === 0 || nextProfileIndex === null) {
+        nextProfileIndex = null;
+      } else if (index === nextProfileIndex) {
+        nextProfileIndex = null;
+      } else if (index < nextProfileIndex) {
+        nextProfileIndex = nextProfileIndex - 1;
+      }
+
       return {
         ...current,
         images: nextImages,
         coverPreviews: nextPreviews,
+        profilePreviews: nextProfilePreviews,
         coverIndex: resolveCoverIndex(nextCoverIndex, nextImages.length),
+        profileIndex: resolveProfileIndex(nextProfileIndex, nextImages.length),
       };
     });
   };
@@ -604,6 +715,12 @@ export function AnnouncementTab({
       if (photoCropTarget.mode === "cover") {
         const croppedUrl = await getCroppedImg(currentSrc, croppedAreaPixels);
         updateCoverPreview(photoCropTarget.index, croppedUrl, photoCropTarget.mode);
+        return;
+      }
+
+      if (photoCropTarget.mode === "profile") {
+        const croppedUrl = await getCroppedImg(currentSrc, croppedAreaPixels);
+        updateProfilePreview(photoCropTarget.index, croppedUrl);
         return;
       }
 
@@ -849,7 +966,8 @@ export function AnnouncementTab({
   } as const;
 
   const handleViewPublicAd = () => {
-    window.location.href = `/anuncio/${ad.slug}`;
+    syncDraftToMockAd(ad.slug, form);
+    router.push(`/anuncio/${ad.slug}`);
   };
 
   const handlePublish = async () => {
@@ -934,7 +1052,7 @@ export function AnnouncementTab({
     <div className="space-y-8 pb-12 px-1 lg:px-0">
       {/* ── 1. Header & Bento Grid Fotos ──────────────────────────── */}
       <section>
-        <div className="relative z-30 mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-start">
+        <div className="relative mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-start">
           <div className="min-w-0">
             <motion.div
               data-dashboard-desktop-title-source
@@ -973,7 +1091,7 @@ export function AnnouncementTab({
 
             ) : null}
           </div>
-          <div className="relative z-30 flex w-full gap-2 sm:w-auto sm:gap-3">
+          <div className="relative flex w-full gap-2 sm:w-auto sm:gap-3">
             <button type="button" onClick={handleViewPublicAd} className="px-3 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base rounded-lg border border-zinc-200 bg-white font-bold text-zinc-700 hover:bg-zinc-50 transition-colors">
               Ver Anúncio Público
             </button>
@@ -998,7 +1116,9 @@ export function AnnouncementTab({
           onClose={() => setActivePhotoIndex(null)}
           onChange={(idx) => setActivePhotoIndex(idx)}
           onSetCover={(idx) => setCoverIndex(idx)}
+          onSetProfile={(idx) => setProfileIndex(idx)}
           coverIndex={resolvedCoverIndex}
+          profileIndex={resolvedProfileIndex}
           onEditPhoto={(idx, mode) => openPhotoCropper(idx, mode)}
           onUpdateImage={(idx, blurredSrc: ImageBlurResult) => {
             const currentSrc = form.images[idx];
@@ -1081,6 +1201,7 @@ export function AnnouncementTab({
                     ...current,
                     images: [...current.images, result],
                     coverPreviews: [...current.coverPreviews, ""],
+                    profilePreviews: [...current.profilePreviews, ""],
                   }));
                 };
                 reader.readAsDataURL(file);
@@ -1148,7 +1269,13 @@ export function AnnouncementTab({
           imageSrc={form.images[photoCropTarget.index]}
           onClose={() => setPhotoCropTarget(null)}
           onCropComplete={handleCropComplete}
-          aspect={photoCropTarget.mode === "cover" ? 21 / 9 : undefined}
+          aspect={
+            photoCropTarget.mode === "cover"
+              ? 21 / 9
+              : photoCropTarget.mode === "profile"
+                ? 3 / 4
+                : undefined
+          }
           canRevert={photoCropTarget.mode === "edit" && hasOperation(form.images[photoCropTarget.index], "edit")}
           onRevert={
             photoCropTarget.mode === "edit"
@@ -1252,6 +1379,7 @@ export function AnnouncementTab({
             <BentoPhotoGallery
               images={form.images}
               coverIndex={resolvedCoverIndex}
+              profileIndex={resolvedProfileIndex}
               coverPreview={coverPreviewSrc}
               coverPreviews={form.coverPreviews}
               photoLimit={photoLimit}
@@ -1294,6 +1422,7 @@ export function AnnouncementTab({
                         ...current,
                         images: [...current.images, result],
                         coverPreviews: [...current.coverPreviews, ""],
+                        profilePreviews: [...current.profilePreviews, ""],
                       }));
                     };
                     reader.readAsDataURL(file);
@@ -1574,8 +1703,8 @@ function SectionCard({
     <div ref={sectionRef} className={cn(
       "relative scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-32 bg-white rounded-2xl shadow-sm border transition-all duration-300",
       highlighted
-        ? "border-red-500 ring-4 ring-red-500/10 z-20 scale-[1.002]"
-        : (dirty ? "border-amber-400 ring-2 ring-amber-400/10 z-10" : "border-zinc-200 z-0"),
+        ? "border-red-500 ring-4 ring-red-500/10 scale-[1.002]"
+        : (dirty ? "border-amber-400 ring-2 ring-amber-400/10" : "border-zinc-200"),
       "overflow-hidden"
     )}>
       {showHighlightOverlay ? (
@@ -1643,9 +1772,45 @@ function SectionCard({
   )
 }
 
+function MediaRoleBadges({
+  isCover,
+  isProfile,
+  compact = false,
+}: {
+  isCover: boolean;
+  isProfile: boolean;
+  compact?: boolean;
+}) {
+  if (!isCover && !isProfile) {
+    return null;
+  }
+
+  return (
+    <div className={cn("absolute top-2 left-2 z-10 flex flex-wrap gap-1", !compact && "top-4 left-4 gap-1.5")}>
+      {isCover ? (
+        <div className={cn(
+          "bg-white/95 backdrop-blur rounded font-black uppercase tracking-widest text-wine-700 shadow-lg",
+          compact ? "px-2 py-1 text-[8px]" : "px-3 py-1.5 text-[10px]",
+        )}>
+          Capa do Perfil
+        </div>
+      ) : null}
+      {isProfile ? (
+        <div className={cn(
+          "bg-white/95 backdrop-blur rounded font-black uppercase tracking-widest text-teal-700 shadow-lg",
+          compact ? "px-2 py-1 text-[8px]" : "px-3 py-1.5 text-[10px]",
+        )}>
+          Foto de Perfil
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function BentoPhotoGallery({
   images,
   coverIndex,
+  profileIndex,
   coverPreview,
   coverPreviews,
   onPhotoClick,
@@ -1658,6 +1823,7 @@ function BentoPhotoGallery({
 }: {
   images: string[];
   coverIndex: number;
+  profileIndex: number | null;
   coverPreview: string;
   coverPreviews: string[];
   onPhotoClick: (idx: number) => void;
@@ -1685,6 +1851,7 @@ function BentoPhotoGallery({
   const atStandardLimit = !isPremium && !canAddMore;
   const lockedSlots = atStandardLimit ? 2 : 0;
   const resolvedCoverIndex = resolveCoverIndex(coverIndex, images.length);
+  const resolvedProfileIndex = resolveProfileIndex(profileIndex, images.length);
   const resolvedCoverSrc = coverPreview || images[resolvedCoverIndex] || "";
   const mediaSources = useMemo(() => images.map((src, idx) => coverPreviews[idx] || src), [coverPreviews, images]);
   const [mediaAspectRatios, setMediaAspectRatios] = useState<Record<number, number>>({});
@@ -1794,9 +1961,10 @@ function BentoPhotoGallery({
                 sizes="(max-width: 1023px) calc(100vw - 2rem), min(80rem, calc(100vw - 20rem))"
               />
 
-              <div className="absolute top-4 left-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest text-wine-700 shadow-lg">
-                Capa do Perfil
-              </div>
+              <MediaRoleBadges
+                isCover
+                isProfile={resolvedProfileIndex === resolvedCoverIndex}
+              />
 
               <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                 <svg className="w-8 h-8 text-white relative z-10 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1829,6 +1997,12 @@ function BentoPhotoGallery({
                   onClick={() => onPhotoClick(item.idx)}
                 >
                   <Image src={item.src} alt={`Foto ${item.idx}`} fill className="object-contain transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 640px) 50vw, 33vw" />
+
+                  <MediaRoleBadges
+                    isCover={false}
+                    isProfile={resolvedProfileIndex === item.idx}
+                    compact
+                  />
 
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <svg className="w-8 h-8 text-white relative z-10 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1902,9 +2076,10 @@ function BentoPhotoGallery({
               onClick={() => onPhotoClick(resolvedCoverIndex)}
             >
               <Image src={resolvedCoverSrc} alt={`Foto ${resolvedCoverIndex}`} fill priority className="object-cover object-center transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 1023px) calc(100vw - 2rem), min(80rem, calc(100vw - 20rem))" />
-              <div className="absolute top-4 left-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest text-wine-700 shadow-lg">
-                Capa do Perfil
-              </div>
+              <MediaRoleBadges
+                isCover
+                isProfile={resolvedProfileIndex === resolvedCoverIndex}
+              />
               <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
               </div>
@@ -1926,6 +2101,11 @@ function BentoPhotoGallery({
             {galleryItems.map((item) => (
               <div key={item.idx} className="relative aspect-square cursor-pointer overflow-hidden group rounded-xl bg-zinc-100" onClick={() => onPhotoClick(item.idx)}>
                 <Image src={item.src} alt={`Foto ${item.idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 640px) 33vw, 200px" />
+                <MediaRoleBadges
+                  isCover={false}
+                  isProfile={resolvedProfileIndex === item.idx}
+                  compact
+                />
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                   <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
                 </div>
@@ -1978,8 +2158,48 @@ function BentoPhotoGallery({
   )
 }
 
-function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange, onSetCover, onEditPhoto, onUpdateImage, canRevertBlur, canRevertEdit, onRevertBlur, onRevertEdit, onDelete, onAddPhoto }: { images: string[], activeIndex: number, coverIndex: number, onClose: () => void, onChange: (idx: number) => void, onSetCover: (idx: number) => void, onEditPhoto: (idx: number, mode: PhotoCropMode) => void, onUpdateImage: (idx: number, result: ImageBlurResult) => void, canRevertBlur: boolean, canRevertEdit: boolean, onRevertBlur: (idx: number) => void, onRevertEdit: (idx: number) => void, onDelete: (idx: number) => void, onAddPhoto: () => void }) {
+function PhotoGalleryModal({
+  images,
+  activeIndex,
+  coverIndex,
+  profileIndex,
+  onClose,
+  onChange,
+  onSetCover,
+  onSetProfile,
+  onEditPhoto,
+  onUpdateImage,
+  canRevertBlur,
+  canRevertEdit,
+  onRevertBlur,
+  onRevertEdit,
+  onDelete,
+  onAddPhoto,
+}: {
+  images: string[];
+  activeIndex: number;
+  coverIndex: number;
+  profileIndex: number | null;
+  onClose: () => void;
+  onChange: (idx: number) => void;
+  onSetCover: (idx: number) => void;
+  onSetProfile: (idx: number) => void;
+  onEditPhoto: (idx: number, mode: PhotoCropMode) => void;
+  onUpdateImage: (idx: number, result: ImageBlurResult) => void;
+  canRevertBlur: boolean;
+  canRevertEdit: boolean;
+  onRevertBlur: (idx: number) => void;
+  onRevertEdit: (idx: number) => void;
+  onDelete: (idx: number) => void;
+  onAddPhoto: () => void;
+}) {
   const [isBlurring, setIsBlurring] = useState(false);
+  const [roleMenuForIndex, setRoleMenuForIndex] = useState<number | null>(null);
+  const roleMenuRef = useRef<HTMLDivElement>(null);
+  const isSmUp = useSmUp();
+  const roleMenuOpen = roleMenuForIndex === activeIndex;
+  const isCoverActive = activeIndex === coverIndex;
+  const isProfileActive = profileIndex !== null && activeIndex === profileIndex;
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -1988,16 +2208,60 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
     };
   }, []);
 
-  const handleSetCover = async () => {
-    const src = images[activeIndex];
+  useEffect(() => {
+    if (!roleMenuOpen || !isSmUp) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!roleMenuRef.current?.contains(event.target as Node)) {
+        setRoleMenuForIndex(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [isSmUp, roleMenuOpen]);
+
+  const loadImageRatio = async (src: string) => {
     const img = new window.Image();
     img.src = src;
-    await new Promise(r => img.onload = r);
-    const ratio = img.width / img.height;
-    if (Math.abs(ratio - 21 / 9) > 0.1) {
-      onEditPhoto(activeIndex, "cover");
-    } else {
-      onSetCover(activeIndex);
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("Falha ao carregar imagem"));
+    });
+    return img.width / img.height;
+  };
+
+  const handleSelectRole = async (role: MediaRole) => {
+    setRoleMenuForIndex(null);
+    const src = images[activeIndex];
+    if (!src) {
+      return;
+    }
+
+    const alreadyActive = role === "cover" ? isCoverActive : isProfileActive;
+    if (alreadyActive) {
+      onEditPhoto(activeIndex, role);
+      return;
+    }
+
+    try {
+      const ratio = await loadImageRatio(src);
+      const targetAspect = role === "cover" ? 21 / 9 : 3 / 4;
+
+      if (!aspectsMatch(ratio, targetAspect)) {
+        onEditPhoto(activeIndex, role);
+        return;
+      }
+
+      if (role === "cover") {
+        onSetCover(activeIndex);
+      } else {
+        onSetProfile(activeIndex);
+      }
+    } catch {
+      onEditPhoto(activeIndex, role);
     }
   };
 
@@ -2006,9 +2270,63 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
     onUpdateImage(activeIndex, result);
   };
 
+  const roleOptions = (
+    <div className="flex flex-col gap-2">
+      <p className="px-1 text-[10px] font-bold uppercase tracking-wider text-zinc-500">Usar esta mídia como</p>
+      <button
+        type="button"
+        data-testid="set-role-cover"
+        onClick={() => void handleSelectRole("cover")}
+        className={cn(
+          "flex w-full items-center justify-between rounded-xl px-3 py-3 text-left transition-colors",
+          isCoverActive
+            ? "bg-zinc-800/80 text-zinc-500"
+            : "bg-zinc-800 text-white hover:bg-zinc-700",
+        )}
+      >
+        <span>
+          <span className="block text-sm font-bold">Capa do perfil</span>
+          <span className="block text-[11px] text-zinc-500">Header · crop 21:9</span>
+        </span>
+        <span className="text-[10px] font-black uppercase tracking-wider">
+          {isCoverActive ? "Definido" : "Escolher"}
+        </span>
+      </button>
+      <button
+        type="button"
+        data-testid="set-role-profile"
+        onClick={() => void handleSelectRole("profile")}
+        className={cn(
+          "flex w-full items-center justify-between rounded-xl px-3 py-3 text-left transition-colors",
+          isProfileActive
+            ? "bg-zinc-800/80 text-zinc-500"
+            : "bg-zinc-800 text-white hover:bg-zinc-700",
+        )}
+      >
+        <span>
+          <span className="block text-sm font-bold">Foto de perfil (feed)</span>
+          <span className="block text-[11px] text-zinc-500">Card do feed · crop 3:4</span>
+        </span>
+        <span className="text-[10px] font-black uppercase tracking-wider">
+          {isProfileActive ? "Definido" : "Escolher"}
+        </span>
+      </button>
+      {isCoverActive && !isProfileActive ? (
+        <p className="px-1 text-[11px] leading-snug text-zinc-500">
+          Capa já usa esta foto. Pode definir também como perfil (crops separados).
+        </p>
+      ) : null}
+      {isProfileActive && !isCoverActive ? (
+        <p className="px-1 text-[11px] leading-snug text-zinc-500">
+          Perfil já usa esta foto. Pode definir também como capa (crops separados).
+        </p>
+      ) : null}
+    </div>
+  );
+
   return (
     <>
-      <div className="fixed inset-0 z-100 h-dvh bg-black flex flex-col items-center justify-center backdrop-blur-sm">
+      <div className="fixed inset-0 z-[110] h-dvh bg-black flex flex-col items-center justify-center backdrop-blur-sm">
         <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 flex items-start gap-3 sm:gap-4 z-20 bg-linear-to-b from-black/90 via-black/40 to-transparent">
           <div className="grid flex-1 min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center pointer-events-auto">
             <div className="col-span-1 flex flex-col gap-2 sm:contents">
@@ -2058,16 +2376,47 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
               </button>
             </div>
 
-            {activeIndex !== coverIndex && (
+            <div ref={roleMenuRef} className="relative col-span-2 sm:col-span-1">
               <button
-                onClick={handleSetCover}
-                className="col-span-2 inline-flex h-9 sm:h-10 w-full sm:w-auto items-center justify-center gap-2 px-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-white/20 shadow-lg"
-                title="Definir como primeira imagem (capa do anúncio)"
+                type="button"
+                data-testid="define-as-role-trigger"
+                onClick={() => setRoleMenuForIndex((current) => (current === activeIndex ? null : activeIndex))}
+                className={cn(
+                  "inline-flex h-9 sm:h-10 w-full sm:w-auto items-center justify-center gap-2 px-4 backdrop-blur-md rounded-full text-xs sm:text-sm font-black uppercase tracking-wider transition-all border shadow-lg",
+                  roleMenuOpen
+                    ? "bg-white/20 border-white/40 text-white"
+                    : "bg-white/10 hover:bg-white/20 border-white/20 text-white",
+                )}
+                title="Definir papel da mídia"
+                aria-expanded={roleMenuOpen}
               >
-                <span className="hidden sm:inline">Definir como Capa</span>
-                <span className="sm:hidden">Definir como Capa</span>
+                <span>Definir como…</span>
+                <ChevronDown className={cn("w-4 h-4 transition-transform", roleMenuOpen && "rotate-180")} />
               </button>
-            )}
+
+              {roleMenuOpen && isSmUp ? (
+                <div
+                  data-testid="define-as-role-popover"
+                  className="absolute left-0 top-full z-30 mt-2 min-w-[280px] rounded-2xl border border-white/10 bg-zinc-950/95 p-3 shadow-2xl backdrop-blur-md"
+                >
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="text-sm font-bold text-white">Definir como…</p>
+                    <button
+                      type="button"
+                      data-testid="define-as-role-close"
+                      onClick={() => setRoleMenuForIndex(null)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/90 transition-colors hover:bg-white/20 hover:text-white"
+                      aria-label="Fechar"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  {roleOptions}
+                </div>
+              ) : null}
+            </div>
 
           </div>
 
@@ -2076,13 +2425,44 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
           </button>
         </div>
 
+        {roleMenuOpen && !isSmUp ? (
+          <div className="absolute inset-0 z-50 flex flex-col justify-end">
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/60"
+              aria-label="Fechar menu"
+              onClick={() => setRoleMenuForIndex(null)}
+            />
+            <div
+              data-testid="define-as-role-sheet"
+              className="relative rounded-t-3xl border-t border-white/10 bg-zinc-950 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl"
+            >
+              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-zinc-700" />
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-sm font-bold text-white">Definir como…</p>
+                <button
+                  type="button"
+                  data-testid="define-as-role-close"
+                  onClick={() => setRoleMenuForIndex(null)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/90 transition-colors hover:bg-white/20 hover:text-white"
+                  aria-label="Fechar"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              {roleOptions}
+            </div>
+          </div>
+        ) : null}
+
         <div className="relative w-full max-w-5xl flex-1 px-4 mt-24 mb-4 min-h-0 flex items-center justify-center">
           <div className="relative max-w-full max-h-full inline-block">
-            {activeIndex === coverIndex && (
-              <div className="absolute top-3 left-3 z-10 bg-white/95 backdrop-blur px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest text-wine-700 shadow-lg">
-                Capa do Perfil
-              </div>
-            )}
+            <MediaRoleBadges
+              isCover={isCoverActive}
+              isProfile={isProfileActive}
+            />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={images[activeIndex]}
@@ -2131,7 +2511,6 @@ function PhotoGalleryModal({ images, activeIndex, coverIndex, onClose, onChange,
               </button>
             )}
 
-            {/* spacer for scrolling */}
             <div className="w-2 sm:w-4 shrink-0" />
           </div>
         </div>
