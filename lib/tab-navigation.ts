@@ -18,11 +18,6 @@ let state: TabNavigationState = {
   shellActive: false,
 };
 
-const serverSnapshot: TabNavigationState = {
-  mobileNavHidden: false,
-  shellActive: false,
-};
-
 function emit() {
   listeners.forEach((listener) => listener());
 }
@@ -32,14 +27,6 @@ export function subscribeTabNavigation(listener: () => void) {
   return () => {
     listeners.delete(listener);
   };
-}
-
-export function getTabNavigationSnapshot(): TabNavigationState {
-  return state;
-}
-
-export function getTabNavigationServerSnapshot(): TabNavigationState {
-  return serverSnapshot;
 }
 
 export function getShellActiveSnapshot(): boolean {
@@ -148,10 +135,6 @@ export function getTabIndex(pathname: string, items: NavigationItem[]): number {
   }
 
   return -1;
-}
-
-export function isTabRoute(pathname: string, items: NavigationItem[]): boolean {
-  return getTabIndex(pathname, items) >= 0;
 }
 
 export function isAdminRoute(pathname: string): boolean {

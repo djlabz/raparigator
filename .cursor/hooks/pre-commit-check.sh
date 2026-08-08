@@ -10,19 +10,16 @@ if [[ -n "${CURSOR_AGENT:-}" ]]; then
   echo
   echo "Se quiser liberar commit do agente no futuro:"
   echo "1. Remova/comente este bloqueio por CURSOR_AGENT"
-  echo "2. Reative o quality gate (npm run check) comentado mais abaixo"
-  echo "3. Ajuste .cursor/hooks/block-dirty-commit.sh (deny absoluto -> quality gate)"
+  echo "2. Ajuste .cursor/hooks/block-dirty-commit.sh (deny absoluto -> quality gate)"
   exit 1
 fi
 
-# echo "pre-commit: rodando npm run check (eslint + typecheck)..."
-# if ! npm run check; then
-#   echo
-#   echo "pre-commit: commit bloqueado. Corrija eslint/typecheck e tente de novo."
-#   echo "Comando: npm run check"
-#   exit 1
-# fi
-# echo "pre-commit: ok"
-
-echo "pre-commit: ok (commit manual permitido; quality gate desativado por enquanto)"
+echo "pre-commit: rodando npm run check (eslint + typecheck)..."
+if ! npm run check; then
+  echo
+  echo "pre-commit: commit bloqueado. Corrija eslint/typecheck e tente de novo."
+  echo "Comando: npm run check"
+  exit 1
+fi
+echo "pre-commit: ok"
 exit 0

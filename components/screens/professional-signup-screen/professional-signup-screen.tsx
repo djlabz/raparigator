@@ -14,9 +14,9 @@ import { Stepper, StepItem } from "@/components/ui/stepper";
 import { useAuthSession } from "@/lib/auth-session";
 
 const professionalImages = [
-  "/images/professional-signup/stacked-cards-1.png",
-  "/images/professional-signup/stacked-cards-2.png",
-  "/images/personas/persona2/persona2-professional-card.png",
+  "/images/professional-signup/stacked-cards-1.webp",
+  "/images/professional-signup/stacked-cards-2.webp",
+  "/images/personas/persona2/persona2-professional-card.webp",
 ];
 
 export function ProfessionalSignupScreen() {
@@ -235,7 +235,7 @@ export function ProfessionalSignupScreen() {
               alt={`Modelo para cadastro profissional ${index + 1}`}
               fill
               priority={index === 0}
-              quality={100}
+              quality={90}
               className={`object-cover object-center transition-opacity duration-1000 ease-in-out ${index === activeCardIndex ? "opacity-90" : "opacity-0"}`}
               sizes="(max-width: 768px) 100vw, 50vw"
             />

@@ -189,11 +189,11 @@ export function LoginScreen() {
       <section className="hidden h-screen bg-black md:sticky md:top-0 md:block">
         <div className="relative h-full w-full overflow-hidden">
           <Image
-            src="/images/personas/persona2/persona2-elegant-look.png"
+            src="/images/personas/persona2/persona2-elegant-look.webp"
             alt="Sigillus — plataforma exclusiva"
             fill
             priority
-            quality={100}
+            quality={90}
             unoptimized
             className="object-cover object-center opacity-85"
             sizes="50vw"

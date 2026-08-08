@@ -83,11 +83,6 @@ export async function reinstateProfessional(id: string, _adminId: string): Promi
   }
 }
 
-export async function getPendingProfiles(): Promise<ProfessionalAd[]> {
-  // BACKEND: GET /api/admin/profiles?status=pending_review
-  return profileStore.filter((p) => p.verificationStatus === "pending_review");
-}
-
 export async function getAllProfiles(
   status?: VerificationStatus,
 ): Promise<ProfessionalAd[]> {

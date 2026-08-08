@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   },
   // Allow access to remote image placeholder.
   images: {
-    qualities: [100, 75],
+    qualities: [90, 75],
     remotePatterns: [
       {
         protocol: 'https',
@@ -32,18 +32,6 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   transpilePackages: ['motion'],
   allowedDevOrigins: ['*.trycloudflare.com'],
-  turbopack: {},
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  webpack: (config: any, {dev}: {dev: boolean}) => {
-    // HMR is disabled in AI Studio via DISABLE_HMR env var.
-    // Do not modifyâ€”file watching is disabled to prevent flickering during agent edits.
-    if (dev && process.env.DISABLE_HMR === 'true') {
-      config.watchOptions = {
-        ignored: /.*/,
-      };
-    }
-    return config;
-  },
 };
 
 export default nextConfig;
