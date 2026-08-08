@@ -120,10 +120,6 @@ export function isFeedPremiumSelected(criteria: FeedFiltersCriteria): boolean {
   return criteria.adTiers.includes("premium");
 }
 
-export function isFeedNormalSelected(criteria: FeedFiltersCriteria): boolean {
-  return criteria.adTiers.includes("normal");
-}
-
 export function filterAds(
   ads: ProfessionalAd[],
   criteria: FeedFiltersCriteria,

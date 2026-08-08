@@ -35,9 +35,6 @@ export const chromePillDark = `${chromePillBase} border-zinc-700 bg-zinc-900/80 
 export const chromeCircle =
   `inline-flex h-10 w-10 shrink-0 items-center justify-center text-zinc-900 ${chromePill}`;
 
-export const chromeCircleDark =
-  `inline-flex h-10 w-10 shrink-0 items-center justify-center text-zinc-100 ${chromePillDark}`;
-
 export const chromeHeaderOffset =
   "pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pt-[calc(5rem+env(safe-area-inset-top,0px))]";
 
@@ -61,9 +58,6 @@ export const chromeBelowHeaderStickyMaxH =
 
 export const chromeBelowHeaderStickyMinH =
   "lg:min-h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-1.5rem)]";
-
-export const chromeScrollNone =
-  "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
 
 export const chromeSafeTop = "pt-[max(0.75rem,env(safe-area-inset-top,0px))]";
 
