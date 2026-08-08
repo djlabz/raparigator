@@ -1,37 +1,76 @@
-﻿import Link from "next/link";
-// 1. Importar o botão novo
+"use client";
+
+import { usePathname } from "next/navigation";
 import { BackButton } from "@/components/ui/back-button";
+import { isDashboardPath } from "@/lib/account-notifications";
+import type { AuthRole, MockUser } from "@/lib/types";
+import {
+  chromeControlsRow,
+  chromeGlassFixed,
+  chromeSafeTop,
+  shellContainerClass,
+} from "@/lib/chrome-styles";
+import { cn } from "@/lib/utils";
+import { AccountMenu } from "./account-menu";
+import { ChromeScrim } from "./chrome-scrim";
+import {
+  FeedHeaderDesktopTitle,
+  HeaderTitleSlot,
+} from "@/components/layout/header-title-flight/header-title-slot";
+import { useActiveTitleFlightSurface } from "@/components/layout/header-title-flight/use-title-flight-surface";
+import { DashboardHeaderDesktopTitle } from "@/components/screens/professional-dashboard/dashboard-header-desktop-title";
+import { GuestAuthControls } from "./guest-auth-controls";
+import { NotificationBellButton } from "./notification-bell-button";
 
 interface TopHeaderProps {
-  location: string;
+  role: AuthRole;
+  user: MockUser | null;
+  isLoggedIn: boolean;
+  onLogout: () => void;
+  onBack?: () => void;
 }
 
-export function TopHeader({ location }: TopHeaderProps) {
+export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeaderProps) {
+  const pathname = usePathname();
+  const active = useActiveTitleFlightSurface(pathname);
+  const feedDesktop =
+    active?.id === "feed" && active.flags.enabled && active.flags.mode === "desktop";
+  const dashboardDesktop =
+    active?.id === "dashboard" && active.flags.enabled && active.flags.mode === "desktop";
+  const showDashboardBell =
+    isLoggedIn && role !== "visitor" && isDashboardPath(pathname, role);
+
   return (
-    <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className={cn(chromeGlassFixed, "pointer-events-none")}>
+      <ChromeScrim />
 
-        {/* 2. Criei esta DIV para agrupar o Botão Voltar + Logo juntos na esquerda */}
-        <div className="flex items-center gap-2 md:gap-4">
-          <BackButton />
-          <Link href="/" className="font-display text-xl tracking-wide text-wine-800">
-            Sigillus
-          </Link>
+      <div
+        className={cn(
+          chromeControlsRow,
+          chromeSafeTop,
+          "relative flex items-center gap-3 pb-3 sm:gap-4 md:pb-4",
+          shellContainerClass
+        )}
+      >
+        {feedDesktop ? <FeedHeaderDesktopTitle /> : null}
+        {dashboardDesktop ? <DashboardHeaderDesktopTitle /> : null}
+
+        <div className="relative z-20 flex min-w-0 flex-1 items-center gap-3 md:gap-5">
+          <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
+            <BackButton onBack={onBack} />
+            <HeaderTitleSlot />
+          </div>
         </div>
 
-        {/* O restante permanece igual */}
-        <div className="hidden items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700 md:flex">
-          <span>Local:</span>
-          <strong>{location}</strong>
-        </div>
-
-        <div className="flex items-center gap-3 text-sm">
-          <Link href="/chat" className="rounded-lg px-3 py-2 text-zinc-700 hover:bg-zinc-100">
-            Chat
-          </Link>
-          <Link href="/auth/login" className="rounded-lg bg-wine-700 px-3 py-2 font-medium text-white! hover:bg-wine-800" style={{ color: "#fff" }}>
-            Entrar
-          </Link>
+        <div className="relative z-20 flex shrink-0 items-center gap-2">
+          {isLoggedIn ? (
+            <>
+              {showDashboardBell ? <NotificationBellButton role={role} /> : null}
+              <AccountMenu role={role} user={user} onLogout={onLogout} />
+            </>
+          ) : (
+            <GuestAuthControls />
+          )}
         </div>
       </div>
     </header>

@@ -1,5 +1,7 @@
-﻿import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
+import { AgeGateGate } from "@/components/layout/age-gate-gate";
+import { MobileNavHost } from "@/components/layout/mobile-nav-host";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -13,6 +15,14 @@ const cormorant = Cormorant_Garamond({
   weight: ["500", "600", "700"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#fafafa",
+  colorScheme: "light",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://sigillus.app"),
   title: {
@@ -24,6 +34,17 @@ export const metadata: Metadata = {
   applicationName: "Sigillus",
   keywords: ["sigillus", "plataforma", "anuncios verificados", "seguranca", "discricao"],
   manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Sigillus",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    apple: [{ url: "/pwa/icon-192.png", sizes: "192x192", type: "image/png" }],
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
@@ -32,8 +53,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body className={`${manrope.variable} ${cormorant.variable} antialiased`}>{children}</body>
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body className={`${manrope.variable} ${cormorant.variable} antialiased`}>
+        <AgeGateGate>
+          {children}
+          <MobileNavHost />
+        </AgeGateGate>
+      </body>
     </html>
   );
 }

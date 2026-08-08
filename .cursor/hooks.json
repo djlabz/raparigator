@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/block-dirty-commit.sh",
+        "matcher": "git(\\s+|\\s+.*\\s+)commit(\\s|$)",
+        "failClosed": true,
+        "timeout": 180
+      }
+    ]
+  }
+}
