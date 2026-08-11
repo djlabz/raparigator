@@ -36,7 +36,7 @@ export function ProfessionalAdsScreen() {
 function ProfessionalAdListCard({ ad }: { ad: ProfessionalAd }) {
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = (event: React.MouseEvent<HTMLElement>) => {
     if (!cardRef.current) return;
 
     const rect = cardRef.current.getBoundingClientRect();
@@ -66,6 +66,8 @@ function ProfessionalAdListCard({ ad }: { ad: ProfessionalAd }) {
       <Link
         href={`/anuncio/${ad.slug}`}
         className="group block perspective-1000 h-100 w-full cursor-pointer"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
       >
         <article
           ref={cardRef}
@@ -73,8 +75,6 @@ function ProfessionalAdListCard({ ad }: { ad: ProfessionalAd }) {
           style={{
             transform: "rotateX(var(--rot-x, 0deg)) rotateY(var(--rot-y, 0deg))",
           }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
         >
           <div className="absolute inset-0 rounded-2xl overflow-hidden p-[1.5px] bg-linear-to-b from-[#3a3018] to-[#1a150a] shadow-2xl">
             <div

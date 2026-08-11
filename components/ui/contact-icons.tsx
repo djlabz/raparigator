@@ -7,7 +7,6 @@ import type { HTMLAttributes } from "react";
 export function WhatsAppIcon({ className = "", style, ...props }: HTMLAttributes<HTMLSpanElement>) {
   return (
     <span
-      role="img"
       aria-hidden="true"
       className={className}
       style={{
@@ -37,7 +36,6 @@ export function WhatsAppIcon({ className = "", style, ...props }: HTMLAttributes
 export function TelegramIcon({ className = "", style, ...props }: HTMLAttributes<HTMLSpanElement>) {
   return (
     <span
-      role="img"
       aria-hidden="true"
       className={className}
       style={{

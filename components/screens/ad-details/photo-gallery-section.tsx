@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Award, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ProfessionalAd } from "@/lib/types";
+import { activateOnKey } from "@/lib/a11y";
 import { cn } from "@/lib/utils";
 
 interface PhotoGallerySectionProps {
@@ -60,6 +61,7 @@ export function PhotoGallerySection({
                     ? "bg-white text-wine-700 shadow-xs"
                     : "text-zinc-400 hover:text-zinc-700",
                 )}
+                aria-label="Destaque / Alternativo"
                 title="Destaque / Alternativo"
               >
                 <svg
@@ -89,6 +91,7 @@ export function PhotoGallerySection({
                     ? "bg-white text-wine-700 shadow-xs"
                     : "text-zinc-400 hover:text-zinc-700",
                 )}
+                aria-label="Grade"
                 title="Grade"
               >
                 <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -135,6 +138,7 @@ export function PhotoGallerySection({
                     ? "bg-white text-wine-700 shadow-xs"
                     : "text-zinc-400 hover:text-zinc-700",
                 )}
+                aria-label="Destaque / Alternativo"
                 title="Destaque / Alternativo"
               >
                 <svg
@@ -164,6 +168,7 @@ export function PhotoGallerySection({
                     ? "bg-white text-wine-700 shadow-xs"
                     : "text-zinc-400 hover:text-zinc-700",
                 )}
+                aria-label="Grade"
                 title="Grade"
               >
                 <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -192,7 +197,11 @@ export function PhotoGallerySection({
           {ad.images.map((img, idx) => (
             <div
               key={img}
+              role="button"
+              tabIndex={0}
+              aria-label={`Abrir foto ${idx + 1}`}
               onClick={() => setSelectedPhotoIndex(idx)}
+              onKeyDown={activateOnKey(() => setSelectedPhotoIndex(idx))}
               className="group relative aspect-3/4 cursor-pointer overflow-hidden rounded-2xl border border-zinc-200/50 bg-zinc-100 shadow-xs transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
             >
               <Image
@@ -324,7 +333,11 @@ export function PhotoGallerySection({
             return (
               <div
                 key={item.src}
+                role="button"
+                tabIndex={0}
+                aria-label={`Abrir foto ${item.originalIndex + 1}`}
                 onClick={() => setSelectedPhotoIndex(item.originalIndex)}
+                onKeyDown={activateOnKey(() => setSelectedPhotoIndex(item.originalIndex))}
                 className={cn(
                   "group relative cursor-pointer overflow-hidden rounded-2xl border border-zinc-100 bg-zinc-900 shadow-xs transition-all duration-300 hover:shadow-md",
                   spanClass,
@@ -369,8 +382,12 @@ export function PhotoGallerySection({
 
       {ad.images.length > 5 && galleryMode === "alternative" && (
         <div
+          role="button"
+          tabIndex={0}
+          aria-label="Ver mais fotos"
           className="group relative mt-3 h-28 w-full cursor-pointer overflow-hidden rounded-2xl sm:h-32 lg:hidden"
           onClick={() => setSelectedPhotoIndex(5)}
+          onKeyDown={activateOnKey(() => setSelectedPhotoIndex(5))}
         >
           <Image
             src={ad.images[5]}
