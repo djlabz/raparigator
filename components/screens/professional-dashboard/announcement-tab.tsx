@@ -2110,7 +2110,6 @@ function SectionCard({
           type="button"
           onClick={() => handleOpenChange(!isOpen)}
           aria-expanded={isOpen}
-          aria-label={title}
           className="w-full p-5 sm:p-6 bg-zinc-50/50 border-b border-zinc-100 flex items-center justify-between gap-4 text-left cursor-pointer hover:bg-zinc-100/60 transition-colors"
         >
           <div className="flex items-start gap-3 min-w-0">
@@ -4481,21 +4480,23 @@ function AvailabilitySection({
   onDayToggle: (idx: number, enabled: boolean) => void;
   onTimeChange: (idx: number, field: "start" | "end", value: string) => void;
 }) {
+  const showAvailabilityId = useId();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between p-5 rounded-xl border border-zinc-200 bg-zinc-50/50">
-        <div>
+        <label htmlFor={showAvailabilityId} className="cursor-pointer">
           <span className="text-base font-bold text-zinc-900 block">
             Exibir grade de horários pública
           </span>
           <span className="text-xs text-zinc-500">
             Deixe os clientes saberem exatamente quando você atende.
           </span>
-        </div>
+        </label>
         <Switch
+          id={showAvailabilityId}
           checked={showAvailability}
           onCheckedChange={(checked) => onToggleShow(checked)}
-          aria-label="Exibir grade de horários pública"
         />
       </div>
 
