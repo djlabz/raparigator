@@ -229,7 +229,8 @@ function AvailabilityStatusSheet({
               </button>
             </div>
 
-            <div className="grid grid-cols-1 gap-2" role="group" aria-label="Disponibilidade">
+            <fieldset className="grid grid-cols-1 gap-2">
+              <legend className="sr-only">Disponibilidade</legend>
               {professionalAvailabilityOptions.map((option) => {
                 const isActive = value === option.value;
 
@@ -257,7 +258,7 @@ function AvailabilityStatusSheet({
                   </button>
                 );
               })}
-            </div>
+            </fieldset>
           </motion.div>
         </motion.div>
       ) : null}
