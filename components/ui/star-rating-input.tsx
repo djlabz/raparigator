@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import { useId } from "react";
 import { cn } from "@/lib/utils";
 
 interface StarRatingInputProps {
@@ -9,30 +10,38 @@ interface StarRatingInputProps {
 }
 
 export function StarRatingInput({ value, onChange, disabled }: StarRatingInputProps) {
+  const groupName = useId();
+
   return (
-    <div className="flex items-center gap-1" role="radiogroup" aria-label="Nota do atendimento">
+    <fieldset className="flex items-center gap-1 border-0 p-0" disabled={disabled}>
+      <legend className="sr-only">Nota do atendimento</legend>
       {Array.from({ length: 5 }).map((_, index) => {
         const star = index + 1;
         const active = star <= value;
         return (
-          <button
+          <label
             key={star}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            aria-label={`${star} estrela${star > 1 ? "s" : ""}`}
-            disabled={disabled}
-            onClick={() => onChange(star)}
             className={cn(
-              "h-9 w-9 rounded-lg text-2xl leading-none transition",
+              "inline-flex h-9 w-9 items-center justify-center rounded-lg text-2xl leading-none transition focus-within:ring-2 focus-within:ring-wine-500",
               active ? "bg-amber-50 text-amber-500" : "bg-zinc-100 text-zinc-400",
-              !disabled && "hover:bg-amber-100",
+              disabled ? "cursor-not-allowed" : "cursor-pointer hover:bg-amber-100",
             )}
           >
-            ★
-          </button>
+            <input
+              type="radio"
+              name={groupName}
+              value={star}
+              checked={star === value}
+              onChange={() => onChange(star)}
+              className="sr-only"
+            />
+            <span aria-hidden="true">★</span>
+            <span className="sr-only">
+              {star} estrela{star > 1 ? "s" : ""}
+            </span>
+          </label>
         );
       })}
-    </div>
+    </fieldset>
   );
 }

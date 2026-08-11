@@ -28,16 +28,50 @@
     "typescript/no-require-imports": "error",
 
     // Next.js usa o JSX runtime automatico
-    "react/react-in-jsx-scope": "off",
-
-    // Unica regra a11y desligada. Ela nao distingue "usou role por preguica"
-    // de "usou role porque a tag nativa nao serve", e neste projeto e sempre
-    // o segundo caso: combobox custom (select.tsx), 5 modais animados em
-    // portal, radiogroup de rating, editor contentEditable e cards clicaveis
-    // com botao aninhado. Satisfazer a regra exigiria reescrever esses
-    // componentes e perder os padroes ARIA corretos que eles ja implementam.
-    "jsx-a11y/prefer-tag-over-role": "off"
+    "react/react-in-jsx-scope": "off"
   },
+  // jsx-a11y/prefer-tag-over-role fica ligada em todo o projeto. Estes
+  // arquivos sao as unicas excecoes: a tag nativa que a regra pede nao
+  // atende ao caso, e o role usado e o padrao ARIA correto.
+  //
+  // Vale saber que o eslint-plugin-jsx-a11y nao inclui essa regra nem em
+  // `recommended` nem em `strict` (e opt-in); o oxlint a classificou em
+  // `correctness`, que e ligada por default. Por isso ela conflita com
+  // no-static-element-interactions em alguns casos.
+  "overrides": [
+    {
+      // role="dialog" + aria-modal em portal com animacao. O <dialog>
+      // nativo exige showModal() imperativo, top layer e ::backdrop
+      // proprio - trocar reescreve o sistema de modais.
+      "files": [
+        "components/ui/modal.tsx",
+        "components/ui/info-hint.tsx",
+        "components/ui/share-profile-modal.tsx",
+        "components/screens/ad-details/photo-lightbox.tsx",
+        "components/screens/chat-screen.tsx"
+      ],
+      "rules": {
+        "jsx-a11y/prefer-tag-over-role": "off"
+      }
+    },
+    {
+      // Combobox custom que implementa o padrao WAI-ARIA (combobox +
+      // listbox + option). A regra pede <select>/<option> nativos, o que
+      // significa apagar o componente.
+      "files": ["components/ui/select.tsx"],
+      "rules": {
+        "jsx-a11y/prefer-tag-over-role": "off"
+      }
+    },
+    {
+      // Editor de descricao e um contentEditable com formatacao rica;
+      // role="textbox" e o correto, <textarea> nao suporta bold/listas.
+      "files": ["components/screens/professional-dashboard/announcement-tab.tsx"],
+      "rules": {
+        "jsx-a11y/prefer-tag-over-role": "off"
+      }
+    }
+  ],
   "ignorePatterns": [
     ".next/**",
     "out/**",

@@ -4,7 +4,6 @@ import Image from "next/image";
 import { Award, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ProfessionalAd } from "@/lib/types";
-import { activateOnKey } from "@/lib/a11y";
 import { cn } from "@/lib/utils";
 
 interface PhotoGallerySectionProps {
@@ -195,14 +194,12 @@ export function PhotoGallerySection({
       {galleryMode === "grid" && (
         <div className="grid animate-fade-in grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {ad.images.map((img, idx) => (
-            <div
+            <button
               key={img}
-              role="button"
-              tabIndex={0}
+              type="button"
               aria-label={`Abrir foto ${idx + 1}`}
               onClick={() => setSelectedPhotoIndex(idx)}
-              onKeyDown={activateOnKey(() => setSelectedPhotoIndex(idx))}
-              className="group relative aspect-3/4 cursor-pointer overflow-hidden rounded-2xl border border-zinc-200/50 bg-zinc-100 shadow-xs transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
+              className="group relative block w-full aspect-3/4 cursor-pointer overflow-hidden rounded-2xl border border-zinc-200/50 bg-zinc-100 shadow-xs transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
             >
               <Image
                 src={img}
@@ -229,7 +226,7 @@ export function PhotoGallerySection({
                   />
                 </svg>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -331,15 +328,13 @@ export function PhotoGallerySection({
             }
 
             return (
-              <div
+              <button
                 key={item.src}
-                role="button"
-                tabIndex={0}
+                type="button"
                 aria-label={`Abrir foto ${item.originalIndex + 1}`}
                 onClick={() => setSelectedPhotoIndex(item.originalIndex)}
-                onKeyDown={activateOnKey(() => setSelectedPhotoIndex(item.originalIndex))}
                 className={cn(
-                  "group relative cursor-pointer overflow-hidden rounded-2xl border border-zinc-100 bg-zinc-900 shadow-xs transition-all duration-300 hover:shadow-md",
+                  "group relative block w-full h-full cursor-pointer overflow-hidden rounded-2xl border border-zinc-100 bg-zinc-900 shadow-xs transition-all duration-300 hover:shadow-md",
                   spanClass,
                 )}
               >
@@ -374,20 +369,18 @@ export function PhotoGallerySection({
                     />
                   </svg>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
       )}
 
       {ad.images.length > 5 && galleryMode === "alternative" && (
-        <div
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
           aria-label="Ver mais fotos"
-          className="group relative mt-3 h-28 w-full cursor-pointer overflow-hidden rounded-2xl sm:h-32 lg:hidden"
+          className="group relative mt-3 block h-28 w-full cursor-pointer overflow-hidden rounded-2xl sm:h-32 lg:hidden"
           onClick={() => setSelectedPhotoIndex(5)}
-          onKeyDown={activateOnKey(() => setSelectedPhotoIndex(5))}
         >
           <Image
             src={ad.images[5]}
@@ -405,7 +398,7 @@ export function PhotoGallerySection({
               Ver mais fotos
             </span>
           </div>
-        </div>
+        </button>
       )}
 
       {galleryMode === "alternative" && (
