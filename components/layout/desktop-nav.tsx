@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import type { NavigationItem } from "@/lib/navigation";
 import {
@@ -77,7 +71,6 @@ export function DesktopNav({ items, className }: DesktopNavProps) {
   }, [activeHref]);
 
   useLayoutEffect(() => {
-     
     updateIndicator();
   }, [updateIndicator]);
 
@@ -103,7 +96,7 @@ export function DesktopNav({ items, className }: DesktopNavProps) {
       aria-label="Navegação principal"
       className={cn(
         "relative ml-0 h-12 w-64 max-w-64 shrink-0 overflow-hidden rounded-full border border-zinc-200 bg-white p-1 shadow-[0_2px_12px_rgba(15,23,42,0.08)]",
-        className
+        className,
       )}
     >
       <ul
@@ -166,9 +159,7 @@ export function DesktopNav({ items, className }: DesktopNavProps) {
                   }}
                   className={cn(
                     "inline-flex h-full min-w-0 w-full items-center justify-center gap-1.5 rounded-full px-2.5 text-[0.9375rem] font-semibold tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-500 focus-visible:ring-offset-2",
-                    active
-                      ? "text-white"
-                      : "text-zinc-700 hover:text-zinc-900"
+                    active ? "text-white" : "text-zinc-700 hover:text-zinc-900",
                   )}
                   style={active ? { color: "#fff" } : undefined}
                   aria-current={active ? "page" : undefined}
@@ -178,7 +169,7 @@ export function DesktopNav({ items, className }: DesktopNavProps) {
                     <span
                       className={cn(
                         "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold",
-                        active ? "bg-white text-wine-700" : "bg-wine-700 text-white"
+                        active ? "bg-white text-wine-700" : "bg-wine-700 text-white",
                       )}
                     >
                       {notificationBadge > 99 ? "99+" : notificationBadge}

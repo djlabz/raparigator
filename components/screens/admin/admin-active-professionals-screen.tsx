@@ -55,7 +55,9 @@ export function AdminActiveProfessionalsScreen() {
   }, []);
 
   useEffect(() => {
-    void (async () => { await load(); })();
+    void (async () => {
+      await load();
+    })();
   }, [load]);
 
   const showToast = (msg: string, type: "success" | "error") => {
@@ -115,7 +117,9 @@ export function AdminActiveProfessionalsScreen() {
                 : "border-red-800/60 bg-zinc-900 text-red-300"
             }`}
           >
-            <span className={`h-2 w-2 rounded-full animate-ping ${toast.type === "success" ? "bg-emerald-400" : "bg-red-400"}`} />
+            <span
+              className={`h-2 w-2 rounded-full animate-ping ${toast.type === "success" ? "bg-emerald-400" : "bg-red-400"}`}
+            />
             {toast.msg}
           </motion.div>
         )}
@@ -129,7 +133,8 @@ export function AdminActiveProfessionalsScreen() {
               Profissionais & Anúncios Ativos
             </h1>
             <p className="text-xs sm:text-sm text-zinc-400">
-              {counts.all} profissionais registrados · {counts.premium} com destaque VIP Gold · {counts.suspended} suspensos
+              {counts.all} profissionais registrados · {counts.premium} com destaque VIP Gold ·{" "}
+              {counts.suspended} suspensos
             </p>
           </div>
         </div>
@@ -180,14 +185,18 @@ export function AdminActiveProfessionalsScreen() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 space-y-3">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-800 border-t-wine-500" />
-            <p className="text-xs font-medium text-zinc-500">Carregando acompanhantes aprovadas...</p>
+            <p className="text-xs font-medium text-zinc-500">
+              Carregando acompanhantes aprovadas...
+            </p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-3xl border border-zinc-800/60 bg-zinc-900/20 py-24 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800 mb-3 text-zinc-600">
               <Users className="h-7 w-7" />
             </div>
-            <p className="text-base font-bold text-zinc-300">Nenhum perfil profissional encontrado</p>
+            <p className="text-base font-bold text-zinc-300">
+              Nenhum perfil profissional encontrado
+            </p>
             <p className="mt-1 text-xs text-zinc-500">Tente buscar por outro termo.</p>
           </div>
         ) : (
@@ -271,7 +280,9 @@ export function AdminActiveProfessionalsScreen() {
                           <span className="flex items-center gap-1 font-bold text-amber-400">
                             <Star className="h-3.5 w-3.5 fill-amber-400" />
                             {profile.rating.toFixed(1)}
-                            <span className="text-[10px] font-normal text-zinc-500">({profile.reviewsCount})</span>
+                            <span className="text-[10px] font-normal text-zinc-500">
+                              ({profile.reviewsCount})
+                            </span>
                           </span>
                         )}
                         <span className="flex items-center gap-1 text-zinc-500">
@@ -283,7 +294,9 @@ export function AdminActiveProfessionalsScreen() {
                       {/* Suspension Reason if exists */}
                       {profile.isSuspended && profile.rejectionReason && (
                         <div className="rounded-xl border border-red-900/40 bg-red-950/30 p-2.5 text-xs text-red-300">
-                          <p className="font-bold text-[11px] uppercase tracking-wider mb-0.5">Motivo do Bloqueio:</p>
+                          <p className="font-bold text-[11px] uppercase tracking-wider mb-0.5">
+                            Motivo do Bloqueio:
+                          </p>
                           <p className="line-clamp-2 text-[11px]">{profile.rejectionReason}</p>
                         </div>
                       )}
@@ -355,8 +368,12 @@ export function AdminActiveProfessionalsScreen() {
                       <ShieldX className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-bold text-zinc-100 text-base">Suspender Perfil Profissional</h2>
-                      <p className="text-xs text-zinc-500">Oculta o anúncio de buscas e feed público</p>
+                      <h2 className="font-bold text-zinc-100 text-base">
+                        Suspender Perfil Profissional
+                      </h2>
+                      <p className="text-xs text-zinc-500">
+                        Oculta o anúncio de buscas e feed público
+                      </p>
                     </div>
                   </div>
                   <button
@@ -368,7 +385,8 @@ export function AdminActiveProfessionalsScreen() {
                 </div>
 
                 <p className="mb-1 text-xs font-bold text-zinc-200">
-                  Acompanhante: <span className="text-wine-300">{suspendModal.profile.artisticName}</span>
+                  Acompanhante:{" "}
+                  <span className="text-wine-300">{suspendModal.profile.artisticName}</span>
                 </p>
                 <p className="mb-4 text-xs text-zinc-400">
                   Descreva o motivo do bloqueio do anúncio para registro nos logs de moderação.
@@ -410,4 +428,3 @@ export function AdminActiveProfessionalsScreen() {
     </AdminLayoutShell>
   );
 }
-

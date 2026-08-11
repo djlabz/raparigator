@@ -40,12 +40,12 @@ function setStoredRole(role: AuthRole) {
 
 export function pathRequiresAuth(pathname: string) {
   return (
-    pathname.startsWith("/conta")
-    || pathname.startsWith("/chat")
-    || pathname.startsWith("/acompanhamento")
-    || pathname.startsWith("/profissional")
-    || pathname.startsWith("/checkout")
-    || pathname.startsWith("/admin")
+    pathname.startsWith("/conta") ||
+    pathname.startsWith("/chat") ||
+    pathname.startsWith("/acompanhamento") ||
+    pathname.startsWith("/profissional") ||
+    pathname.startsWith("/checkout") ||
+    pathname.startsWith("/admin")
   );
 }
 

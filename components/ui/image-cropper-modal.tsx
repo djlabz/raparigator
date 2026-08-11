@@ -1,7 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
-import { buildCenteredSelection, resolveMinSelectionSize } from "@/components/ui/image-selection-utils";
+import {
+  buildCenteredSelection,
+  resolveMinSelectionSize,
+} from "@/components/ui/image-selection-utils";
 import { mediaFitStyle, useMediaFrameSize } from "@/components/ui/use-media-frame-size";
 
 export interface Area {
@@ -50,26 +53,32 @@ export function ImageCropperModal({
   const [crop, setCrop] = useState<Crop>();
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<PixelCrop | null>(null);
   const [initialCrop, setInitialCrop] = useState<Crop>();
-  const [minSelection, setMinSelection] = useState({ width: MIN_SELECTION_PX, height: MIN_SELECTION_PX });
+  const [minSelection, setMinSelection] = useState({
+    width: MIN_SELECTION_PX,
+    height: MIN_SELECTION_PX,
+  });
   const imageRef = useRef<HTMLImageElement | null>(null);
   const { mediaFrameRef, mediaMaxSize } = useMediaFrameSize();
 
-  const applyMaxSelection = useCallback((img: HTMLImageElement) => {
-    const naturalWidth = img.naturalWidth;
-    const naturalHeight = img.naturalHeight;
-    const displayWidth = img.width;
-    const displayHeight = img.height;
+  const applyMaxSelection = useCallback(
+    (img: HTMLImageElement) => {
+      const naturalWidth = img.naturalWidth;
+      const naturalHeight = img.naturalHeight;
+      const displayWidth = img.width;
+      const displayHeight = img.height;
 
-    if (!naturalWidth || !naturalHeight || !displayWidth || !displayHeight) {
-      return;
-    }
+      if (!naturalWidth || !naturalHeight || !displayWidth || !displayHeight) {
+        return;
+      }
 
-    setMinSelection(resolveMinSelectionSize({ width: displayWidth, height: displayHeight }));
-    const nextCrop = buildCenteredSelection(naturalWidth, naturalHeight, aspect);
-    setCrop(nextCrop);
-    setInitialCrop(nextCrop);
-    setCroppedAreaPixels(toNaturalPixelCrop(img, nextCrop));
-  }, [aspect]);
+      setMinSelection(resolveMinSelectionSize({ width: displayWidth, height: displayHeight }));
+      const nextCrop = buildCenteredSelection(naturalWidth, naturalHeight, aspect);
+      setCrop(nextCrop);
+      setInitialCrop(nextCrop);
+      setCroppedAreaPixels(toNaturalPixelCrop(img, nextCrop));
+    },
+    [aspect],
+  );
 
   const onCropCompleteCallback = useCallback((pixelCrop: PixelCrop) => {
     if (!imageRef.current) {
@@ -89,17 +98,20 @@ export function ImageCropperModal({
     });
   }, []);
 
-  const handleImageLoad = useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = event.currentTarget;
-    imageRef.current = img;
-    applyMaxSelection(img);
+  const handleImageLoad = useCallback(
+    (event: React.SyntheticEvent<HTMLImageElement>) => {
+      const img = event.currentTarget;
+      imageRef.current = img;
+      applyMaxSelection(img);
 
-    requestAnimationFrame(() => {
-      if (imageRef.current) {
-        applyMaxSelection(imageRef.current);
-      }
-    });
-  }, [applyMaxSelection]);
+      requestAnimationFrame(() => {
+        if (imageRef.current) {
+          applyMaxSelection(imageRef.current);
+        }
+      });
+    },
+    [applyMaxSelection],
+  );
 
   useEffect(() => {
     const img = imageRef.current;
@@ -160,10 +172,14 @@ export function ImageCropperModal({
             type="button"
             onClick={handleRevert}
             className="h-9 min-w-0 truncate rounded-full border border-white/20 bg-white/10 px-3 text-xs font-bold tracking-wide text-white transition-colors hover:bg-white/20 sm:h-10 sm:px-4 sm:text-sm"
-            title={canRevert ? "Reverter recorte/enquadramento aplicado" : "Restaurar seleção máxima"}
+            title={
+              canRevert ? "Reverter recorte/enquadramento aplicado" : "Restaurar seleção máxima"
+            }
           >
             <span className="sm:hidden">{canRevert ? "Reverter" : "Resetar"}</span>
-            <span className="hidden sm:inline">{canRevert ? "Reverter Enquadramento" : "Reverter Seleção"}</span>
+            <span className="hidden sm:inline">
+              {canRevert ? "Reverter Enquadramento" : "Reverter Seleção"}
+            </span>
           </button>
           <button
             type="button"
@@ -177,7 +193,10 @@ export function ImageCropperModal({
       </div>
 
       <div className="relative w-full max-w-5xl flex-1 bg-black/50 rounded-lg overflow-hidden border border-white/10 min-h-0 select-none p-2 sm:p-4">
-        <div ref={mediaFrameRef} className="flex h-full w-full min-h-0 items-center justify-center overflow-hidden">
+        <div
+          ref={mediaFrameRef}
+          className="flex h-full w-full min-h-0 items-center justify-center overflow-hidden"
+        >
           <ReactCrop
             crop={crop}
             onChange={(nextCrop) => setCrop(nextCrop)}
@@ -206,9 +225,7 @@ export function ImageCropperModal({
 
       <div className="mt-3 px-2 text-center text-[11px] leading-snug text-zinc-400 sm:mt-4 sm:text-xs">
         Arraste e redimensione a caixa para definir o novo enquadramento.
-        {aspect
-          ? " A seleção começa no máximo possível para a proporção."
-          : null}
+        {aspect ? " A seleção começa no máximo possível para a proporção." : null}
       </div>
     </div>
   );

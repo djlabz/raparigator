@@ -87,12 +87,7 @@ export function FeedMobileTitleFlight() {
             style={{ y: premiumY, opacity: premiumOpacity }}
             className="flex h-10 w-full min-w-0 items-center will-change-transform"
           >
-            <FeedSectionTitle
-              variant="premium"
-              fit
-              fitToTarget
-              className="w-full justify-center"
-            />
+            <FeedSectionTitle variant="premium" fit fitToTarget className="w-full justify-center" />
           </motion.div>
         ) : null}
         {hasStandard ? (

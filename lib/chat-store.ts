@@ -82,7 +82,10 @@ export function subscribeChatStore(listener: () => void) {
 
 export function getChatUnreadCount(): number {
   const current = getChatStoreSnapshot();
-  return current.conversations.reduce((total, conversation) => total + (conversation.unread || 0), 0);
+  return current.conversations.reduce(
+    (total, conversation) => total + (conversation.unread || 0),
+    0,
+  );
 }
 
 export function markConversationAsRead(conversationId: string) {
@@ -99,7 +102,11 @@ export function markConversationAsRead(conversationId: string) {
   });
 }
 
-function syncPreview(current: ChatSnapshot, conversationId: string, lastMessage: string): Conversation[] {
+function syncPreview(
+  current: ChatSnapshot,
+  conversationId: string,
+  lastMessage: string,
+): Conversation[] {
   return current.conversations.map((conversation) =>
     conversation.id === conversationId
       ? { ...conversation, lastMessage, lastMessageAt: "agora", unread: 0 }
@@ -153,7 +160,9 @@ export async function sendChatText(
     const latest = ensureChatStore();
     replaceSnapshot({
       ...latest,
-      messages: latest.messages.map((message) => (message.id === optimisticId ? confirmed : message)),
+      messages: latest.messages.map((message) =>
+        message.id === optimisticId ? confirmed : message,
+      ),
     });
     return { ok: true, messageId: confirmed.id };
   } catch {
@@ -214,7 +223,9 @@ export async function sendChatViewOnceMedia(
     const latest = ensureChatStore();
     replaceSnapshot({
       ...latest,
-      messages: latest.messages.map((message) => (message.id === optimisticId ? confirmed : message)),
+      messages: latest.messages.map((message) =>
+        message.id === optimisticId ? confirmed : message,
+      ),
     });
     return { ok: true, messageId: confirmed.id };
   } catch {

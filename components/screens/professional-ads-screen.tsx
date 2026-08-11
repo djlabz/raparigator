@@ -15,8 +15,12 @@ export function ProfessionalAdsScreen() {
     <AppShell>
       <div className="space-y-6">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Anúncios</p>
-          <h1 className="mt-2 text-2xl font-semibold text-zinc-900">Gerencie seus perfis e destaques</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
+            Anúncios
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold text-zinc-900">
+            Gerencie seus perfis e destaques
+          </h1>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
@@ -59,7 +63,10 @@ function ProfessionalAdListCard({ ad }: { ad: ProfessionalAd }) {
 
   if (ad.adTier === "premium") {
     return (
-      <Link href={`/anuncio/${ad.slug}`} className="group block perspective-1000 h-100 w-full cursor-pointer">
+      <Link
+        href={`/anuncio/${ad.slug}`}
+        className="group block perspective-1000 h-100 w-full cursor-pointer"
+      >
         <article
           ref={cardRef}
           className="preserve-3d relative h-full w-full transition-transform duration-200 ease-out active:scale-[0.97]"
@@ -94,13 +101,16 @@ function ProfessionalAdListCard({ ad }: { ad: ProfessionalAd }) {
                 <h3 className="font-display text-3xl font-semibold leading-tight text-[#FFDF00] drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
                   {ad.artisticName}
                 </h3>
-                <p className="mt-1 text-xs uppercase tracking-[0.2em] text-white/75">Experiência exclusiva</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.2em] text-white/75">
+                  Experiência exclusiva
+                </p>
               </div>
 
               <div
                 className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                 style={{
-                  background: "radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255,223,0,0.18) 0%, transparent 55%)",
+                  background:
+                    "radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255,223,0,0.18) 0%, transparent 55%)",
                   mixBlendMode: "overlay",
                 }}
               />
@@ -120,7 +130,9 @@ function ProfessionalAdListCard({ ad }: { ad: ProfessionalAd }) {
             {ad.city}, {ad.state} · A partir de {currency(ad.startingPrice)}
           </p>
         </div>
-        <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700">{ad.status}</span>
+        <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700">
+          {ad.status}
+        </span>
       </div>
       <p className="text-sm text-zinc-600">{ad.shortDescription}</p>
       <Link href={`/anuncio/${ad.slug}`}>

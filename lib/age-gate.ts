@@ -75,11 +75,7 @@ export function denyUnderage() {
 }
 
 export function useAgeGate() {
-  const status = useSyncExternalStore<AgeGateStatus>(
-    subscribe,
-    readStatus,
-    () => "pending",
-  );
+  const status = useSyncExternalStore<AgeGateStatus>(subscribe, readStatus, () => "pending");
 
   return {
     status,

@@ -11,11 +11,7 @@ export function TabActivityProvider({
   active: boolean;
   children: React.ReactNode;
 }) {
-  return (
-    <TabActivityContext.Provider value={active}>
-      {children}
-    </TabActivityContext.Provider>
-  );
+  return <TabActivityContext.Provider value={active}>{children}</TabActivityContext.Provider>;
 }
 
 export function useIsTabActive() {

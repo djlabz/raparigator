@@ -17,7 +17,11 @@ export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
   const profileImageSrc = resolveAdProfileImage(ad);
   const premiumAttributes = [
     { label: "Altura", value: `${ad.heightCm} cm`, icon: "/icons/attributes/size-woman.svg" },
-    { label: "Cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: "/icons/attributes/hair-woman.svg" },
+    {
+      label: "Cabelo",
+      value: `${ad.hairType} • ${ad.hairColor}`,
+      icon: "/icons/attributes/hair-woman.svg",
+    },
     { label: "Etnia", value: ad.ethnicity, icon: "/icons/attributes/person.svg" },
     { label: "Olhos", value: ad.eyeColor, icon: "/icons/attributes/eye.svg" },
     { label: "Fumante?", value: "Não", icon: "/icons/attributes/smoking.svg" },
@@ -41,30 +45,38 @@ export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
         />
 
         <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] px-3 py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md select-none cursor-default transition-all duration-300 hover:scale-105 hover:shadow-[0_0_12px_rgba(251,191,36,0.45)]">
-          <span className="text-xs text-[#FFDF00] drop-shadow-[0_0_4px_rgba(255,223,0,0.9)]">★</span>
+          <span className="text-xs text-[#FFDF00] drop-shadow-[0_0_4px_rgba(255,223,0,0.9)]">
+            ★
+          </span>
           <span className="bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-xs font-extrabold tracking-[0.2em] text-transparent uppercase drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
             Premium
           </span>
         </div>
 
         <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-          <motion.button 
+          <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.85 }}
-            onClick={() => setShareModalOpen(true)} 
+            onClick={() => setShareModalOpen(true)}
             className="flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] p-2 sm:px-3 sm:py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md cursor-pointer"
           >
-            <Upload className="h-4 w-4 text-[#FFEA00] drop-shadow-[0_0_6px_rgba(255,234,0,1)]" strokeWidth={2.5} />
+            <Upload
+              className="h-4 w-4 text-[#FFEA00] drop-shadow-[0_0_6px_rgba(255,234,0,1)]"
+              strokeWidth={2.5}
+            />
             <span className="hidden sm:inline-block bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-xs font-bold tracking-wider text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
               Compartilhar
             </span>
           </motion.button>
-          <motion.button 
+          <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.85 }}
             className="flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] p-2 sm:px-3 sm:py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md cursor-pointer"
           >
-            <Heart className="h-4 w-4 text-[#FFEA00] drop-shadow-[0_0_6px_rgba(255,234,0,1)]" strokeWidth={2.5} />
+            <Heart
+              className="h-4 w-4 text-[#FFEA00] drop-shadow-[0_0_6px_rgba(255,234,0,1)]"
+              strokeWidth={2.5}
+            />
             <span className="hidden sm:inline-block bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-xs font-bold tracking-wider text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
               Salvar
             </span>
@@ -118,7 +130,15 @@ export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
                   </span>
 
                   <span className="flex items-center gap-1.5 font-medium leading-none">
-                    <Image src="/icons/attributes/age.svg" alt="Idade" width={16} height={16} className="h-3.5 w-3.5 object-contain sm:h-4 sm:w-4 pointer-events-none select-none" referrerPolicy="no-referrer" draggable={false} />
+                    <Image
+                      src="/icons/attributes/age.svg"
+                      alt="Idade"
+                      width={16}
+                      height={16}
+                      className="h-3.5 w-3.5 object-contain sm:h-4 sm:w-4 pointer-events-none select-none"
+                      referrerPolicy="no-referrer"
+                      draggable={false}
+                    />
                     {ad.age} anos
                   </span>
 
@@ -138,12 +158,24 @@ export function PremiumHeroSection({ ad }: PremiumHeroSectionProps) {
                 className="flex min-h-20 cursor-pointer items-center gap-2 rounded-2xl border border-white/8 bg-[#0c0c0c]/90 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-sm transition-transform duration-300 hover:scale-[1.02] sm:min-h-24 sm:gap-3 sm:px-4 sm:py-4"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-black/55 sm:h-12 sm:w-12">
-                  <Image src={attribute.icon} alt={attribute.label} width={34} height={34} className="h-7 w-7 object-contain sm:h-8 sm:w-8 pointer-events-none select-none" referrerPolicy="no-referrer" draggable={false} />
+                  <Image
+                    src={attribute.icon}
+                    alt={attribute.label}
+                    width={34}
+                    height={34}
+                    className="h-7 w-7 object-contain sm:h-8 sm:w-8 pointer-events-none select-none"
+                    referrerPolicy="no-referrer"
+                    draggable={false}
+                  />
                 </div>
 
                 <div className="min-w-0 space-y-1">
-                  <p className="text-xs font-bold tracking-[0.16em] text-amber-300/85 uppercase sm:text-xs sm:tracking-[0.18em]">{attribute.label}</p>
-                  <p className="wrap-break-word text-xs font-semibold text-zinc-100 sm:text-base">{attribute.value}</p>
+                  <p className="text-xs font-bold tracking-[0.16em] text-amber-300/85 uppercase sm:text-xs sm:tracking-[0.18em]">
+                    {attribute.label}
+                  </p>
+                  <p className="wrap-break-word text-xs font-semibold text-zinc-100 sm:text-base">
+                    {attribute.value}
+                  </p>
                 </div>
               </div>
             ))}

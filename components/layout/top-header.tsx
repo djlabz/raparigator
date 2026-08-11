@@ -37,8 +37,7 @@ export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeade
     active?.id === "feed" && active.flags.enabled && active.flags.mode === "desktop";
   const dashboardDesktop =
     active?.id === "dashboard" && active.flags.enabled && active.flags.mode === "desktop";
-  const showDashboardBell =
-    isLoggedIn && role !== "visitor" && isDashboardPath(pathname, role);
+  const showDashboardBell = isLoggedIn && role !== "visitor" && isDashboardPath(pathname, role);
 
   return (
     <header className={cn(chromeGlassFixed, "pointer-events-none")}>
@@ -49,7 +48,7 @@ export function TopHeader({ role, user, isLoggedIn, onLogout, onBack }: TopHeade
           chromeControlsRow,
           chromeSafeTop,
           "relative flex items-center gap-3 pb-3 sm:gap-4 md:pb-4",
-          shellContainerClass
+          shellContainerClass,
         )}
       >
         {feedDesktop ? <FeedHeaderDesktopTitle /> : null}

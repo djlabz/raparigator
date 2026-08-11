@@ -1,6 +1,6 @@
 export async function getCroppedImg(
   imageSrc: string,
-  pixelCrop: { x: number; y: number; width: number; height: number }
+  pixelCrop: { x: number; y: number; width: number; height: number },
 ): Promise<string> {
   const image = await new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
@@ -30,17 +30,7 @@ export async function getCroppedImg(
     return "";
   }
 
-  ctx.drawImage(
-    image,
-    safeX,
-    safeY,
-    safeWidth,
-    safeHeight,
-    0,
-    0,
-    safeWidth,
-    safeHeight
-  );
+  ctx.drawImage(image, safeX, safeY, safeWidth, safeHeight, 0, 0, safeWidth, safeHeight);
 
   return canvas.toDataURL("image/jpeg", 0.92);
 }

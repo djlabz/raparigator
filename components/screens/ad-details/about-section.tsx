@@ -23,7 +23,9 @@ export function AboutSection({ ad }: AboutSectionProps) {
           <div className="hidden h-1 rounded-full bg-zinc-100 sm:block lg:grow" />
         </div>
 
-        <h3 className="font-display text-xl font-bold tracking-tight text-zinc-900">Atendimento Premium com discrição absoluta</h3>
+        <h3 className="font-display text-xl font-bold tracking-tight text-zinc-900">
+          Atendimento Premium com discrição absoluta
+        </h3>
 
         <blockquote className="border-l-4 border-[#96001e] py-1 pl-4 font-serif text-sm leading-relaxed text-zinc-600 italic sm:text-base">
           &ldquo;{ad.shortDescription}&rdquo;
@@ -46,7 +48,9 @@ export function AboutSection({ ad }: AboutSectionProps) {
           </div>
           <div>
             <p className="leading-none font-extrabold text-zinc-900">Avaliações Positivas</p>
-            <p className="mt-0.5 text-xs text-zinc-500">{ad.rating.toFixed(1)} / 5 ({ad.reviewsCount} votos)</p>
+            <p className="mt-0.5 text-xs text-zinc-500">
+              {ad.rating.toFixed(1)} / 5 ({ad.reviewsCount} votos)
+            </p>
           </div>
         </div>
       </div>

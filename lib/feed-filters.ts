@@ -6,7 +6,11 @@ import type {
   FeedSelectionField,
 } from "@/lib/feed-filters-types";
 
-export const FEED_QUICK_FILTER_LABELS: FeedQuickFilterLabel[] = ["Premium", "Livre Agora", "Com local"];
+export const FEED_QUICK_FILTER_LABELS: FeedQuickFilterLabel[] = [
+  "Premium",
+  "Livre Agora",
+  "Com local",
+];
 export const FEED_DEFAULT_LOCATION_LABEL = "São Paulo, SP";
 export const FEED_DEFAULT_GENDER = "Todas";
 export const FEED_DEFAULT_MAX_PRICE = 1500;
@@ -19,7 +23,11 @@ export const FEED_CATEGORY_BY_GENDER: Record<string, string> = {
 };
 
 export function normalizeFeedText(value: string): string {
-  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
 }
 
 function toggleInArray<T>(items: T[], value: T): T[] {
@@ -120,10 +128,7 @@ export function isFeedPremiumSelected(criteria: FeedFiltersCriteria): boolean {
   return criteria.adTiers.includes("premium");
 }
 
-export function filterAds(
-  ads: ProfessionalAd[],
-  criteria: FeedFiltersCriteria,
-): ProfessionalAd[] {
+export function filterAds(ads: ProfessionalAd[], criteria: FeedFiltersCriteria): ProfessionalAd[] {
   return ads.filter((ad) => {
     const cityMatch = criteria.selectedCity === "all" || ad.city === criteria.selectedCity;
     const priceMatch = ad.startingPrice <= criteria.maxPrice;
@@ -131,8 +136,7 @@ export function filterAds(
     const categoryMatch =
       criteria.selectedGender === FEED_DEFAULT_GENDER || ad.category === selectedCategory;
 
-    const adTypeMatch =
-      criteria.adTiers.length === 0 || criteria.adTiers.includes(ad.adTier);
+    const adTypeMatch = criteria.adTiers.length === 0 || criteria.adTiers.includes(ad.adTier);
 
     const quickStatusMatch =
       !criteria.quickFilters.includes("Livre Agora") || ad.status === "livre";

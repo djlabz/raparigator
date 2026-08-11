@@ -38,11 +38,7 @@ function setStoredEmail(email: string | null) {
  * Chave localStorage: "sigillus-admin-session"
  */
 export function useAdminSession() {
-  const email = useSyncExternalStore<string | null>(
-    subscribe,
-    readStoredEmail,
-    () => null,
-  );
+  const email = useSyncExternalStore<string | null>(subscribe, readStoredEmail, () => null);
 
   const admin = useMemo<AdminUser | null>(() => {
     if (!email) return null;

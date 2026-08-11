@@ -22,7 +22,7 @@ export function useFeedTitleFlightFlags(): FeedTitleFlightFlags {
   return useSyncExternalStore(
     store.subscribe,
     store.getSnapshot,
-    () => DEFAULT_FEED_TITLE_FLIGHT_FLAGS
+    () => DEFAULT_FEED_TITLE_FLIGHT_FLAGS,
   );
 }
 
@@ -31,7 +31,7 @@ export function useDashboardTitleFlightFlags(): DashboardTitleFlightFlags {
   return useSyncExternalStore(
     store.subscribe,
     store.getSnapshot,
-    () => DEFAULT_DASHBOARD_TITLE_FLIGHT_FLAGS
+    () => DEFAULT_DASHBOARD_TITLE_FLIGHT_FLAGS,
   );
 }
 
@@ -55,9 +55,7 @@ export type ActiveTitleFlightSurface =
       motion: DashboardTitleFlightMotion;
     };
 
-export function useActiveTitleFlightSurface(
-  pathname: string
-): ActiveTitleFlightSurface | null {
+export function useActiveTitleFlightSurface(pathname: string): ActiveTitleFlightSurface | null {
   const id = resolveTitleFlightSurfaceId(pathname);
   const feedFlags = useFeedTitleFlightFlags();
   const dashboardFlags = useDashboardTitleFlightFlags();

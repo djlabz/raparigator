@@ -44,7 +44,9 @@ export function PremiumSubscriptionCheckoutScreen() {
   const { isPremium, activatePremium } = usePremiumPlan();
 
   const billingParam = searchParams.get("billing");
-  const initialBilling: PremiumBillingCycle = isBillingCycle(billingParam) ? billingParam : "semiannual";
+  const initialBilling: PremiumBillingCycle = isBillingCycle(billingParam)
+    ? billingParam
+    : "semiannual";
   const [billingCycle, setBillingCycle] = useState<PremiumBillingCycle>(initialBilling);
   const [paymentMethod, setPaymentMethod] = useState<"pix" | "card">("pix");
   const [cardName, setCardName] = useState("");
@@ -81,7 +83,9 @@ export function PremiumSubscriptionCheckoutScreen() {
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FFDF00]/15 premium-glow-pulse">
               <Crown className="h-7 w-7 text-[#FFDF00]" aria-hidden="true" />
             </span>
-            <h1 className="font-display text-3xl font-semibold text-[#FFDF00]">Você já é Premium</h1>
+            <h1 className="font-display text-3xl font-semibold text-[#FFDF00]">
+              Você já é Premium
+            </h1>
             <p className="text-sm leading-relaxed text-zinc-400">
               Sua assinatura está ativa. Continue no topo das pesquisas com o tráfego VIP.
             </p>
@@ -119,7 +123,9 @@ export function PremiumSubscriptionCheckoutScreen() {
 
             <div className="space-y-6 p-5 pb-7 sm:p-7">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#DAA520]">Ciclo</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#DAA520]">
+                  Ciclo
+                </p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {PREMIUM_PLAN_OPTIONS.map((option) => {
                     const selected = billingCycle === option.cycle;
@@ -139,13 +145,20 @@ export function PremiumSubscriptionCheckoutScreen() {
                           <span
                             className={cn(
                               "absolute -top-2.5 right-3 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                              selected ? "bg-[#FFDF00] text-[#121212]" : "bg-zinc-800 text-[#FFDF00]",
+                              selected
+                                ? "bg-[#FFDF00] text-[#121212]"
+                                : "bg-zinc-800 text-[#FFDF00]",
                             )}
                           >
                             {option.badge}
                           </span>
                         ) : null}
-                        <p className={cn("text-sm font-semibold", selected ? "text-[#FFDF00]" : "text-zinc-300")}>
+                        <p
+                          className={cn(
+                            "text-sm font-semibold",
+                            selected ? "text-[#FFDF00]" : "text-zinc-300",
+                          )}
+                        >
                           {option.label}
                         </p>
                         <p
@@ -157,7 +170,9 @@ export function PremiumSubscriptionCheckoutScreen() {
                           {currency(option.price)}
                         </p>
                         {option.cycle === "semiannual" ? (
-                          <p className="mt-1 text-xs text-zinc-500">{currency(option.monthlyEquivalent)}/mês</p>
+                          <p className="mt-1 text-xs text-zinc-500">
+                            {currency(option.monthlyEquivalent)}/mês
+                          </p>
                         ) : (
                           <p className="mt-1 text-xs text-zinc-500">por mês</p>
                         )}
@@ -168,7 +183,9 @@ export function PremiumSubscriptionCheckoutScreen() {
               </div>
 
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#DAA520]">Pagamento</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#DAA520]">
+                  Pagamento
+                </p>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -209,9 +226,14 @@ export function PremiumSubscriptionCheckoutScreen() {
                       className="overflow-hidden"
                     >
                       <div className="mt-4 space-y-3 rounded-2xl border border-white/10 bg-[#1a1a1a]/80 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-[#DAA520]">Dados do cartão</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-[#DAA520]">
+                          Dados do cartão
+                        </p>
                         <div className="space-y-1.5">
-                          <label htmlFor="premium-card-name" className="text-sm font-medium text-zinc-300">
+                          <label
+                            htmlFor="premium-card-name"
+                            className="text-sm font-medium text-zinc-300"
+                          >
                             Nome no cartão
                           </label>
                           <input
@@ -225,7 +247,10 @@ export function PremiumSubscriptionCheckoutScreen() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <label htmlFor="premium-card-number" className="text-sm font-medium text-zinc-300">
+                          <label
+                            htmlFor="premium-card-number"
+                            className="text-sm font-medium text-zinc-300"
+                          >
                             Número do cartão
                           </label>
                           <input
@@ -235,13 +260,18 @@ export function PremiumSubscriptionCheckoutScreen() {
                             autoComplete="cc-number"
                             placeholder="0000 0000 0000 0000"
                             value={cardNumber}
-                            onChange={(event) => setCardNumber(formatCardNumber(event.target.value))}
+                            onChange={(event) =>
+                              setCardNumber(formatCardNumber(event.target.value))
+                            }
                             className={fieldClassName}
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1.5">
-                            <label htmlFor="premium-card-expiry" className="text-sm font-medium text-zinc-300">
+                            <label
+                              htmlFor="premium-card-expiry"
+                              className="text-sm font-medium text-zinc-300"
+                            >
                               Validade
                             </label>
                             <input
@@ -251,12 +281,17 @@ export function PremiumSubscriptionCheckoutScreen() {
                               autoComplete="cc-exp"
                               placeholder="MM/AA"
                               value={cardExpiry}
-                              onChange={(event) => setCardExpiry(formatCardExpiry(event.target.value))}
+                              onChange={(event) =>
+                                setCardExpiry(formatCardExpiry(event.target.value))
+                              }
                               className={fieldClassName}
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <label htmlFor="premium-card-cvv" className="text-sm font-medium text-zinc-300">
+                            <label
+                              htmlFor="premium-card-cvv"
+                              className="text-sm font-medium text-zinc-300"
+                            >
                               CVV
                             </label>
                             <input
@@ -290,12 +325,20 @@ export function PremiumSubscriptionCheckoutScreen() {
                 </AnimatePresence>
               </div>
 
-              <ShinyButton fullWidth onClick={handleConfirm} className="tabular-nums tracking-tight">
+              <ShinyButton
+                fullWidth
+                onClick={handleConfirm}
+                className="tabular-nums tracking-tight"
+              >
                 {isPaying ? "Processando..." : `Confirmar · ${currency(selectedPlan.price)}`}
               </ShinyButton>
 
               {showSuccess ? (
-                <Toast type="success" title="Premium ativado" message="Assinatura confirmada. Redirecionando ao painel..." />
+                <Toast
+                  type="success"
+                  title="Premium ativado"
+                  message="Assinatura confirmada. Redirecionando ao painel..."
+                />
               ) : null}
             </div>
           </motion.section>
@@ -316,7 +359,9 @@ export function PremiumSubscriptionCheckoutScreen() {
                   </strong>
                 </div>
                 {selectedPlan.cycle === "semiannual" ? (
-                  <p className="text-xs text-zinc-500">Equivale a {currency(selectedPlan.monthlyEquivalent)}/mês</p>
+                  <p className="text-xs text-zinc-500">
+                    Equivale a {currency(selectedPlan.monthlyEquivalent)}/mês
+                  </p>
                 ) : null}
                 <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-3 text-base text-white">
                   <span>Total</span>
@@ -335,7 +380,9 @@ export function PremiumSubscriptionCheckoutScreen() {
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#FFDF00]" aria-hidden="true" />
                     <span className="min-w-0 wrap-break-word">
                       <span className="block font-medium text-white">{gain.label}</span>
-                      <span className="mt-1 block text-xs leading-relaxed text-[#E8C547]">{gain.to}</span>
+                      <span className="mt-1 block text-xs leading-relaxed text-[#E8C547]">
+                        {gain.to}
+                      </span>
                     </span>
                   </li>
                 ))}

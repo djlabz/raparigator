@@ -94,7 +94,7 @@ export function GuestAuthControls() {
                 href="/auth/login"
                 className={cn(
                   chromePill,
-                  "flex w-full items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold text-zinc-900"
+                  "flex w-full items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold text-zinc-900",
                 )}
                 onClick={() => setOpen(false)}
               >
@@ -104,7 +104,7 @@ export function GuestAuthControls() {
                 href="/auth/cadastro"
                 className={cn(
                   chromePillActive,
-                  "mt-1.5 flex w-full items-center justify-center px-3 py-2.5 text-sm font-semibold"
+                  "mt-1.5 flex w-full items-center justify-center px-3 py-2.5 text-sm font-semibold",
                 )}
                 style={{ color: "#fff" }}
                 onClick={() => setOpen(false)}
@@ -112,7 +112,7 @@ export function GuestAuthControls() {
                 Criar conta
               </Link>
             </div>,
-            document.body
+            document.body,
           )
         : null}
 

@@ -55,7 +55,4 @@ export {
   useTitleFlightSurfaceId,
   type ActiveTitleFlightSurface,
 } from "./use-title-flight-surface";
-export {
-  writeFlightFromReveal,
-  type TitleFlightMotionChannels,
-} from "./write-flight";
+export { writeFlightFromReveal, type TitleFlightMotionChannels } from "./write-flight";

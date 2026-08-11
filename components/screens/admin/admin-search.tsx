@@ -17,23 +17,33 @@ function ResultIcon({ type }: { type: GlobalSearchResult["type"] }) {
 
 function statusLabel(status?: string): string {
   switch (status) {
-    case "pending_review": return "Em análise";
-    case "published": return "Aprovado";
-    case "rejected": return "Recusado";
-    case "active": return "Ativo";
-    case "suspended": return "Suspenso";
-    default: return "";
+    case "pending_review":
+      return "Em análise";
+    case "published":
+      return "Aprovado";
+    case "rejected":
+      return "Recusado";
+    case "active":
+      return "Ativo";
+    case "suspended":
+      return "Suspenso";
+    default:
+      return "";
   }
 }
 
 function statusColor(status?: string): string {
   switch (status) {
-    case "pending_review": return "bg-amber-950/60 text-amber-400 border-amber-800/50";
+    case "pending_review":
+      return "bg-amber-950/60 text-amber-400 border-amber-800/50";
     case "published":
-    case "active": return "bg-emerald-950/60 text-emerald-400 border-emerald-800/50";
+    case "active":
+      return "bg-emerald-950/60 text-emerald-400 border-emerald-800/50";
     case "rejected":
-    case "suspended": return "bg-red-950/60 text-red-400 border-red-800/50";
-    default: return "bg-zinc-800/60 text-zinc-400 border-zinc-700/50";
+    case "suspended":
+      return "bg-red-950/60 text-red-400 border-red-800/50";
+    default:
+      return "bg-zinc-800/60 text-zinc-400 border-zinc-700/50";
   }
 }
 
@@ -72,7 +82,10 @@ export function AdminSearch() {
   }, [open]);
 
   const doSearch = useCallback(async (q: string) => {
-    if (!q.trim()) { setResults([]); return; }
+    if (!q.trim()) {
+      setResults([]);
+      return;
+    }
     setLoading(true);
     const data = await globalSearch(q);
     setResults(data);
@@ -80,7 +93,9 @@ export function AdminSearch() {
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => { void doSearch(query); }, 200);
+    const t = setTimeout(() => {
+      void doSearch(query);
+    }, 200);
     return () => clearTimeout(t);
   }, [query, doSearch]);
 
@@ -200,7 +215,8 @@ export function AdminSearch() {
 
                 {!loading && query && filteredResults.length === 0 && (
                   <div className="py-12 text-center text-xs text-zinc-500">
-                    Nenhum resultado encontrado para &ldquo;<span className="text-zinc-300">{query}</span>&rdquo;
+                    Nenhum resultado encontrado para &ldquo;
+                    <span className="text-zinc-300">{query}</span>&rdquo;
                   </div>
                 )}
 
@@ -213,7 +229,8 @@ export function AdminSearch() {
                       Busca Rápida de Administrador
                     </p>
                     <p className="text-[11px] text-zinc-600 max-w-xs mx-auto">
-                      Digite o nome, email, telefone ou ID do cliente ou profissional para encontrar o registro instantaneamente.
+                      Digite o nome, email, telefone ou ID do cliente ou profissional para encontrar
+                      o registro instantaneamente.
                     </p>
                   </div>
                 )}
@@ -244,7 +261,9 @@ export function AdminSearch() {
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             {r.status && (
-                              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusColor(r.status)}`}>
+                              <span
+                                className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusColor(r.status)}`}
+                              >
                                 {statusLabel(r.status)}
                               </span>
                             )}
@@ -282,7 +301,9 @@ export function AdminSearch() {
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             {r.status && (
-                              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusColor(r.status)}`}>
+                              <span
+                                className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusColor(r.status)}`}
+                              >
                                 {statusLabel(r.status)}
                               </span>
                             )}
@@ -307,4 +328,3 @@ export function AdminSearch() {
     </>
   );
 }
-

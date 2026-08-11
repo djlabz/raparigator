@@ -2,9 +2,6 @@
   "name": "raparigator",
   "version": "0.1.0",
   "private": true,
-  "engines": {
-    "node": "^20.19.0 || ^22.13.0 || >=24"
-  },
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:legacy": "next dev",
@@ -44,5 +41,8 @@
     "brace-expansion@1": "1.1.18",
     "postcss": "^8.5.18",
     "sharp": "^0.35.3"
+  },
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || >=24"
   }
 }

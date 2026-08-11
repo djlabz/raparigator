@@ -96,7 +96,10 @@ export function validateEmailPair(email: string, confirmEmail: string): EmailPai
   return errors;
 }
 
-export function validatePasswordPair(password: string, confirmPassword: string): PasswordPairErrors {
+export function validatePasswordPair(
+  password: string,
+  confirmPassword: string,
+): PasswordPairErrors {
   const errors: PasswordPairErrors = {};
   const trimmedPassword = password.trim();
   const passwordEmpty = !trimmedPassword;
@@ -120,8 +123,7 @@ export function validatePasswordPair(password: string, confirmPassword: string):
 
 export function validatePhone(value: string): string | null {
   const digits = value.replace(/\D/g, "");
-  const national =
-    digits.startsWith("55") && digits.length >= 12 ? digits.slice(2) : digits;
+  const national = digits.startsWith("55") && digits.length >= 12 ? digits.slice(2) : digits;
 
   if (national.length < MIN_PHONE_DIGITS) {
     return "Informe um telefone válido com DDD.";
@@ -160,6 +162,9 @@ export function getProfileFieldErrors(
   return errors;
 }
 
-export function isProfileFormComplete(role: ProfileIdentityRole, form: ProfileIdentityForm): boolean {
+export function isProfileFormComplete(
+  role: ProfileIdentityRole,
+  form: ProfileIdentityForm,
+): boolean {
   return Object.keys(getProfileFieldErrors(role, form)).length === 0;
 }

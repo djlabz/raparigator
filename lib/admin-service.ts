@@ -1,5 +1,20 @@
-import type { AdminReviewAction, DashboardStats, GlobalSearchResult, MockClient, ProfessionalAd, Report, ReportStatus, VerificationStatus } from "@/lib/types";
-import { ads, adminActivityLog, mockClients, mockReports, weeklySignupsData } from "@/lib/mock-data";
+import type {
+  AdminReviewAction,
+  DashboardStats,
+  GlobalSearchResult,
+  MockClient,
+  ProfessionalAd,
+  Report,
+  ReportStatus,
+  VerificationStatus,
+} from "@/lib/types";
+import {
+  ads,
+  adminActivityLog,
+  mockClients,
+  mockReports,
+  weeklySignupsData,
+} from "@/lib/mock-data";
 
 // ── In-memory stores (mock only) ─────────────────────────────────────────────
 const profileStore: ProfessionalAd[] = ads.map((ad) => ({
@@ -13,7 +28,9 @@ const reportStore: Report[] = mockReports.map((r) => ({ ...r }));
 
 export async function getDashboardStats(): Promise<DashboardStats> {
   // BACKEND: GET /api/admin/dashboard
-  const published = profileStore.filter((p) => p.verificationStatus === "published" && !p.isSuspended);
+  const published = profileStore.filter(
+    (p) => p.verificationStatus === "published" && !p.isSuspended,
+  );
   const pending = profileStore.filter((p) => p.verificationStatus === "pending_review");
   const newThisWeek = clientStore.filter((c) => {
     const registered = new Date(c.registeredAt);
@@ -36,11 +53,7 @@ export async function getClients(status?: "active" | "suspended"): Promise<MockC
   return clientStore.filter((c) => c.status === status);
 }
 
-export async function suspendClient(
-  id: string,
-  adminId: string,
-  reason: string,
-): Promise<void> {
+export async function suspendClient(id: string, adminId: string, reason: string): Promise<void> {
   // BACKEND: POST /api/admin/clients/:id/suspend { adminId, reason }
   const idx = clientStore.findIndex((c) => c.id === id);
   if (idx !== -1) {
@@ -81,17 +94,13 @@ export async function reinstateProfessional(id: string, _adminId: string): Promi
   }
 }
 
-export async function getAllProfiles(
-  status?: VerificationStatus,
-): Promise<ProfessionalAd[]> {
+export async function getAllProfiles(status?: VerificationStatus): Promise<ProfessionalAd[]> {
   // BACKEND: GET /api/admin/profiles?status={status}
   if (!status) return [...profileStore];
   return profileStore.filter((p) => p.verificationStatus === status);
 }
 
-export async function getProfileById(
-  id: string,
-): Promise<ProfessionalAd | null> {
+export async function getProfileById(id: string): Promise<ProfessionalAd | null> {
   // BACKEND: GET /api/admin/profiles/:id
   return profileStore.find((p) => p.id === id) ?? null;
 }
@@ -223,4 +232,3 @@ export async function globalSearch(query: string): Promise<GlobalSearchResult[]>
 
   return [...clientResults, ...professionalResults];
 }
-

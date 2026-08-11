@@ -45,7 +45,7 @@ export function OnboardingScreen() {
       ([entry]) => {
         setIsPopularVisible(entry.intersectionRatio >= 0.2);
       },
-      { threshold: 0.2 }
+      { threshold: 0.2 },
     );
 
     const target = lowerSectionRef.current;
@@ -96,20 +96,35 @@ export function OnboardingScreen() {
 
         <header className="absolute inset-x-0 top-0 z-30 isolate overflow-visible pointer-events-none">
           <ChromeScrim variant="dark" />
-          <div className={cn(chromeControlsRow, chromeSafeTop, "mx-auto box-border flex w-full max-w-384 items-center justify-between gap-3 px-6 pb-4 md:px-12 md:pb-5")}>
-            <Link href="/" className="text-2xl font-black tracking-tighter text-white! visited:text-white! hover:opacity-90 transition-opacity">
+          <div
+            className={cn(
+              chromeControlsRow,
+              chromeSafeTop,
+              "mx-auto box-border flex w-full max-w-384 items-center justify-between gap-3 px-6 pb-4 md:px-12 md:pb-5",
+            )}
+          >
+            <Link
+              href="/"
+              className="text-2xl font-black tracking-tighter text-white! visited:text-white! hover:opacity-90 transition-opacity"
+            >
               Sigillus
             </Link>
             {isLoggedIn ? (
               <AccountMenu role={role} user={user} onLogout={logout} />
             ) : (
               <div className="flex items-center gap-2">
-                <Link href="/auth/login" className={cn(chromePill, "px-4 text-sm font-bold text-zinc-900")}>
+                <Link
+                  href="/auth/login"
+                  className={cn(chromePill, "px-4 text-sm font-bold text-zinc-900")}
+                >
                   Entrar
                 </Link>
                 <Link
                   href="/auth/cadastro"
-                  className={cn(chromePill, "border-white/40 bg-white px-5 text-sm font-extrabold tracking-tight text-[#800020] hover:bg-zinc-100")}
+                  className={cn(
+                    chromePill,
+                    "border-white/40 bg-white px-5 text-sm font-extrabold tracking-tight text-[#800020] hover:bg-zinc-100",
+                  )}
                 >
                   Cadastrar
                 </Link>
@@ -119,21 +134,26 @@ export function OnboardingScreen() {
         </header>
 
         {/* Conteúdo Principal do Hero */}
-        <div className={`relative z-10 box-border max-w-384 mx-auto px-6 md:px-12 w-full flex-1 flex flex-col lg:flex-row lg:items-center lg:justify-between ${styles.heroContent}`}>
+        <div
+          className={`relative z-10 box-border max-w-384 mx-auto px-6 md:px-12 w-full flex-1 flex flex-col lg:flex-row lg:items-center lg:justify-between ${styles.heroContent}`}
+        >
           {/* Texto (Esquerda) */}
           <div className="w-full lg:flex-1 lg:min-w-0 text-white max-w-xl xl:max-w-2xl">
             <h1 className="text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight tracking-tight mb-6 drop-shadow-md">
               Sigillus: conexões com discrição, segurança e experiência premium.
             </h1>
             <p className="text-lg md:text-xl text-white/90 font-medium leading-relaxed max-w-lg xl:max-w-xl">
-              Escolha sua região e a categoria para acessar anúncios de acompanhantes verificados com suporte da plataforma.
+              Escolha sua região e a categoria para acessar anúncios de acompanhantes verificados
+              com suporte da plataforma.
             </p>
           </div>
 
           {/* Card de Formulário (Direita) */}
           <div className={`w-full lg:ml-auto lg:min-w-0 ${styles.cardWrapper}`}>
             <Card className="p-6 md:p-7 lg:p-8 xl:p-10 shadow-2xl rounded-2xl bg-white space-y-6">
-              <h2 className="text-2xl font-extrabold text-zinc-900 mb-2 tracking-tight">Comece sua experiência:</h2>
+              <h2 className="text-2xl font-extrabold text-zinc-900 mb-2 tracking-tight">
+                Comece sua experiência:
+              </h2>
 
               <div className="space-y-4">
                 {/* Novo Campo de Localização Unificado */}
@@ -142,7 +162,19 @@ export function OnboardingScreen() {
                     Localização
                   </label>
                   <div className="relative">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute inset-y-0 left-3 my-auto text-wine-700 pointer-events-none" aria-hidden="true">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="absolute inset-y-0 left-3 my-auto text-wine-700 pointer-events-none"
+                      aria-hidden="true"
+                    >
                       <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                       <circle cx="12" cy="10" r="3" />
                     </svg>
@@ -174,11 +206,25 @@ export function OnboardingScreen() {
                               setShowSuggestions(false);
                             }}
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-wine-700" aria-hidden="true">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="shrink-0 text-wine-700"
+                              aria-hidden="true"
+                            >
                               <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                               <circle cx="12" cy="10" r="3" />
                             </svg>
-                            <span>{loc.state}, {loc.city}</span>
+                            <span>
+                              {loc.state}, {loc.city}
+                            </span>
                           </li>
                         ))
                       ) : (
@@ -207,25 +253,52 @@ export function OnboardingScreen() {
                     setTimeout(() => setShowLocationToast(false), 3000);
                   }}
                 >
-                  <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <svg
+                    className="w-5 h-5 group-hover:scale-110 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
                   </svg>
                   Usar minha localização atual
                 </button>
               </div>
 
-              <Link href={`/feed?location=${encodeURIComponent(locationQuery)}`} className="block pt-2">
-                <Button fullWidth size="lg" className="bg-[#800020] hover:bg-[#600018] text-white py-6 text-base rounded-lg shadow-lg">
+              <Link
+                href={`/feed?location=${encodeURIComponent(locationQuery)}`}
+                className="block pt-2"
+              >
+                <Button
+                  fullWidth
+                  size="lg"
+                  className="bg-[#800020] hover:bg-[#600018] text-white py-6 text-base rounded-lg shadow-lg"
+                >
                   Entrar no feed
                 </Button>
               </Link>
 
-              {showLocationToast && <Toast title="Localização atual aplicada" message="São Paulo, SP foi definida automaticamente." type="success" />}
+              {showLocationToast && (
+                <Toast
+                  title="Localização atual aplicada"
+                  message="São Paulo, SP foi definida automaticamente."
+                  type="success"
+                />
+              )}
             </Card>
           </div>
         </div>
-
       </section>
 
       {shouldShowScrollButton && (
@@ -235,7 +308,13 @@ export function OnboardingScreen() {
           onClick={scrollToPopularSection}
         >
           <span>Role para ver mais</span>
-          <svg className="h-4 w-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <svg
+            className="h-4 w-4 animate-bounce"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>

@@ -61,10 +61,7 @@ function NavArrowButton({
         event.stopPropagation();
         onClick();
       }}
-      className={cn(
-        navArrowClass,
-        side === "left" ? "left-2 md:left-4" : "right-2 md:right-4"
-      )}
+      className={cn(navArrowClass, side === "left" ? "left-2 md:left-4" : "right-2 md:right-4")}
     >
       {children}
     </button>
@@ -217,7 +214,7 @@ export function PhotoLightbox({
                 "relative h-16 w-16 shrink-0 overflow-hidden rounded-xl transition-all duration-300",
                 selectedIndex === idx
                   ? "scale-105 opacity-100 shadow-[0_0_15px_rgba(150,0,30,0.5)] ring-2 ring-wine-500"
-                  : "opacity-40 ring-1 ring-white/20 hover:opacity-100"
+                  : "opacity-40 ring-1 ring-white/20 hover:opacity-100",
               )}
             >
               <Image

@@ -30,7 +30,7 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
                     ? "bg-wine-700 text-white ring-4 ring-wine-700/10"
                     : isCompleted
                       ? "bg-wine-700 text-white"
-                      : "bg-white border border-zinc-200 text-zinc-400"
+                      : "bg-white border border-zinc-200 text-zinc-400",
                 )}
               >
                 {step.icon}
@@ -38,7 +38,7 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
               <span
                 className={cn(
                   "text-[9px] font-bold uppercase tracking-widest transition-colors duration-300",
-                  isActive || isCompleted ? "text-wine-700" : "text-zinc-400"
+                  isActive || isCompleted ? "text-wine-700" : "text-zinc-400",
                 )}
               >
                 {step.label}
@@ -51,7 +51,7 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
                 <div
                   className={cn(
                     "absolute left-0 top-0 h-full bg-wine-700 transition-all duration-500 ease-in-out",
-                    isCompleted ? "w-full" : "w-0"
+                    isCompleted ? "w-full" : "w-0",
                   )}
                 />
               </div>

@@ -59,7 +59,10 @@ export async function fetchViewOnceMediaMessage(
   };
 }
 
-export async function fetchSetConversationBlocked(_conversationId: string, _isBlocked: boolean): Promise<void> {
+export async function fetchSetConversationBlocked(
+  _conversationId: string,
+  _isBlocked: boolean,
+): Promise<void> {
   // BACKEND: PATCH /api/chat/conversations/:conversationId/block
   await delay(200);
 }
@@ -69,12 +72,18 @@ export async function fetchDeleteConversationFromInbox(_conversationId: string):
   await delay(200);
 }
 
-export async function fetchReportConversation(_conversationId: string, _reason: string): Promise<void> {
+export async function fetchReportConversation(
+  _conversationId: string,
+  _reason: string,
+): Promise<void> {
   // BACKEND: POST /api/chat/conversations/:conversationId/report
   await delay(300);
 }
 
-export async function fetchUpdateParticipantAlias(_conversationId: string, _alias: string | null): Promise<void> {
+export async function fetchUpdateParticipantAlias(
+  _conversationId: string,
+  _alias: string | null,
+): Promise<void> {
   // BACKEND: PATCH /api/chat/conversations/:conversationId/alias
   await delay(200);
 }

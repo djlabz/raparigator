@@ -43,18 +43,22 @@ tests/           # Suite E2E Playwright (logins de teste em tests/helpers/creden
 ## 💻 Como Rodar o Projeto Localmente
 
 1. **Clone o repositório e acesse o diretório:**
+
    ```bash
    git clone --filter=blob:none https://github.com/djlabz/raparigator.git
    cd raparigator
    ```
+
    > A flag `--filter=blob:none` baixa apenas os arquivos da versão atual (clone bem mais rápido). Um `git clone` normal também funciona.
 
 2. **Instale as dependências:**
+
    ```bash
    npm install
    ```
 
 3. **Inicie o Servidor de Desenvolvimento:**
+
    ```bash
    npm run dev
    ```
@@ -85,4 +89,4 @@ tests/           # Suite E2E Playwright (logins de teste em tests/helpers/creden
 
 ---
 
-*Desenvolvido focado em Alta Performance e Interfaces Ricas.*
+_Desenvolvido focado em Alta Performance e Interfaces Ricas._

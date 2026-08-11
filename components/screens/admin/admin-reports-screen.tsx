@@ -22,11 +22,16 @@ import type { Report, ReportStatus, ReportType } from "@/lib/types";
 
 function typeLabel(t: ReportType): string {
   switch (t) {
-    case "fake_profile": return "Perfil Falso";
-    case "scam": return "Golpe / Fraude";
-    case "harassment": return "Assédio";
-    case "inappropriate_content": return "Conteúdo Inapropriado";
-    case "other": return "Outro";
+    case "fake_profile":
+      return "Perfil Falso";
+    case "scam":
+      return "Golpe / Fraude";
+    case "harassment":
+      return "Assédio";
+    case "inappropriate_content":
+      return "Conteúdo Inapropriado";
+    case "other":
+      return "Outro";
   }
 }
 
@@ -44,20 +49,38 @@ function typeBadge(t: ReportType) {
 function statusBadge(s: ReportStatus) {
   switch (s) {
     case "pending":
-      return { label: "Pendente", cls: "border-amber-500/40 bg-amber-950/60 text-amber-300", icon: Clock };
+      return {
+        label: "Pendente",
+        cls: "border-amber-500/40 bg-amber-950/60 text-amber-300",
+        icon: Clock,
+      };
     case "under_review":
-      return { label: "Em análise", cls: "border-blue-500/40 bg-blue-950/60 text-blue-300", icon: Eye };
+      return {
+        label: "Em análise",
+        cls: "border-blue-500/40 bg-blue-950/60 text-blue-300",
+        icon: Eye,
+      };
     case "resolved":
-      return { label: "Resolvida", cls: "border-emerald-500/40 bg-emerald-950/60 text-emerald-300", icon: CheckCircle2 };
+      return {
+        label: "Resolvida",
+        cls: "border-emerald-500/40 bg-emerald-950/60 text-emerald-300",
+        icon: CheckCircle2,
+      };
     case "dismissed":
-      return { label: "Arquivada", cls: "border-zinc-700 bg-zinc-900/60 text-zinc-500", icon: Archive };
+      return {
+        label: "Arquivada",
+        cls: "border-zinc-700 bg-zinc-900/60 text-zinc-500",
+        icon: Archive,
+      };
   }
 }
 
 function roleIcon(role: "cliente" | "profissional") {
-  return role === "cliente"
-    ? <User className="h-3.5 w-3.5 text-blue-400" />
-    : <Users className="h-3.5 w-3.5 text-wine-400" />;
+  return role === "cliente" ? (
+    <User className="h-3.5 w-3.5 text-blue-400" />
+  ) : (
+    <Users className="h-3.5 w-3.5 text-wine-400" />
+  );
 }
 
 function timeAgo(iso: string): string {
@@ -128,13 +151,17 @@ function ResolveModal({ report, onClose, onResolve }: ResolveModalProps) {
               <p className="text-xs text-zinc-500">Decisão final do moderador</p>
             </div>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200">
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <p className="mb-4 text-xs text-zinc-400 leading-relaxed bg-zinc-900/50 p-3 rounded-xl border border-zinc-800/60">
-          Denúncia registrada por <span className="font-bold text-zinc-200">{report.reporterName}</span> contra{" "}
+          Denúncia registrada por{" "}
+          <span className="font-bold text-zinc-200">{report.reporterName}</span> contra{" "}
           <span className="font-bold text-zinc-200">{report.reportedName}</span>.
         </p>
 
@@ -220,7 +247,9 @@ export function AdminReportsScreen() {
   }, []);
 
   useEffect(() => {
-    void (async () => { await load(); })();
+    void (async () => {
+      await load();
+    })();
   }, [load]);
 
   const counts: Record<TabFilter, number> = {
@@ -278,7 +307,8 @@ export function AdminReportsScreen() {
               Central de Denúncias
             </h1>
             <p className="text-xs sm:text-sm text-zinc-400">
-              Gerencie infrações relativas a fraudes, assédios ou conteúdos inapropriados relatados por usuários.
+              Gerencie infrações relativas a fraudes, assédios ou conteúdos inapropriados relatados
+              por usuários.
             </p>
           </div>
         </div>
@@ -357,7 +387,9 @@ export function AdminReportsScreen() {
                       </div>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className={`inline-flex items-center rounded-full border px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${typeBadge(report.type)}`}>
+                          <span
+                            className={`inline-flex items-center rounded-full border px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${typeBadge(report.type)}`}
+                          >
                             {typeLabel(report.type)}
                           </span>
                           <span className="text-[11px] text-zinc-500 font-mono">
@@ -367,7 +399,9 @@ export function AdminReportsScreen() {
                       </div>
                     </div>
 
-                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider ${badge.cls}`}>
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider ${badge.cls}`}
+                    >
                       <badge.icon className="h-3 w-3" />
                       {badge.label}
                     </span>
@@ -378,13 +412,17 @@ export function AdminReportsScreen() {
                     <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5">
                       {roleIcon(report.reporterRole)}
                       <span className="font-bold text-zinc-200">{report.reporterName}</span>
-                      <span className="text-[10px] text-zinc-500 font-medium">({report.reporterRole})</span>
+                      <span className="text-[10px] text-zinc-500 font-medium">
+                        ({report.reporterRole})
+                      </span>
                     </div>
                     <span className="text-zinc-600 font-bold">→ denunciou →</span>
                     <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5">
                       {roleIcon(report.reportedRole)}
                       <span className="font-bold text-zinc-200">{report.reportedName}</span>
-                      <span className="text-[10px] text-zinc-500 font-medium">({report.reportedRole})</span>
+                      <span className="text-[10px] text-zinc-500 font-medium">
+                        ({report.reportedRole})
+                      </span>
                     </div>
                   </div>
 
@@ -441,4 +479,3 @@ export function AdminReportsScreen() {
     </AdminLayoutShell>
   );
 }
-

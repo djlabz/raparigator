@@ -43,7 +43,11 @@ export function ProfessionalSignupScreen() {
     password?: string;
     confirmPassword?: string;
   }>({});
-  const [toast, setToast] = useState<{ title: string; message: string; type: "success" | "error" | "info" } | null>(null);
+  const [toast, setToast] = useState<{
+    title: string;
+    message: string;
+    type: "success" | "error" | "info";
+  } | null>(null);
 
   const professionalSteps: StepItem[] = [
     { id: 1, label: "Identidade", icon: <User size={20} strokeWidth={2.5} /> },
@@ -53,7 +57,11 @@ export function ProfessionalSignupScreen() {
 
   const iconClassName = "h-4 w-4";
 
-  const showToast = (payload: { title: string; message: string; type: "success" | "error" | "info" }) => {
+  const showToast = (payload: {
+    title: string;
+    message: string;
+    type: "success" | "error" | "info";
+  }) => {
     setToast(payload);
     setTimeout(() => setToast(null), 3000);
   };
@@ -79,7 +87,10 @@ export function ProfessionalSignupScreen() {
 
   const triggerShake = (targetStep: 1 | 2) => {
     setShakeStep(targetStep);
-    window.setTimeout(() => setShakeStep((current) => (current === targetStep ? null : current)), 320);
+    window.setTimeout(
+      () => setShakeStep((current) => (current === targetStep ? null : current)),
+      320,
+    );
   };
 
   const validateStepOne = () => {
@@ -243,8 +254,12 @@ export function ProfessionalSignupScreen() {
           <div className="absolute inset-0 bg-linear-to-br from-black/55 via-black/25 to-transparent" />
           <div className="absolute inset-0 bg-linear-to-t from-wine-900/35 via-transparent to-transparent" />
           <div className="relative z-10 flex h-full flex-col justify-end px-10 pb-14 text-white lg:px-14">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">Independent &amp; Verified</p>
-            <h2 className="mt-4 max-w-lg font-display text-5xl leading-[0.95] text-white lg:text-6xl">Você decide quanto ganha.</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
+              Independent &amp; Verified
+            </p>
+            <h2 className="mt-4 max-w-lg font-display text-5xl leading-[0.95] text-white lg:text-6xl">
+              Você decide quanto ganha.
+            </h2>
             <div className="mt-7 h-px w-24 bg-white/45" />
             <p className="mt-6 max-w-md text-base leading-relaxed text-white/80">
               Controle total da sua agenda, preços e privacidade — tudo em um lugar.
@@ -263,7 +278,9 @@ export function ProfessionalSignupScreen() {
               </Link>
             </div>
             <h1 className="mt-4 text-3xl font-semibold text-zinc-900">Criar conta profissional</h1>
-            <p className="mt-1 text-base text-zinc-700">Inicie seu perfil e faça parte da seleção exclusiva Sigillus.</p>
+            <p className="mt-1 text-base text-zinc-700">
+              Inicie seu perfil e faça parte da seleção exclusiva Sigillus.
+            </p>
           </header>
 
           <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-300/40 md:p-6">
@@ -272,14 +289,19 @@ export function ProfessionalSignupScreen() {
             </div>
 
             <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-
               {/* PASSO 1 */}
               {step === 1 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-1 mb-4">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">Executive Profile</span>
-                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">Dados Iniciais</h2>
-                    <p className="text-sm text-zinc-700">Seu perfil inicia com CPF, nome civil e nome artístico opcional.</p>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">
+                      Executive Profile
+                    </span>
+                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">
+                      Dados Iniciais
+                    </h2>
+                    <p className="text-sm text-zinc-700">
+                      Seu perfil inicia com CPF, nome civil e nome artístico opcional.
+                    </p>
                   </div>
 
                   <Input
@@ -295,7 +317,15 @@ export function ProfessionalSignupScreen() {
                     error={stepOneErrors.cpf}
                     className={shakeStep === 1 && stepOneErrors.cpf ? "field-shake" : undefined}
                     leadingIcon={
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={iconClassName}
+                      >
                         <rect x="3" y="4" width="18" height="16" rx="2" />
                         <path d="M8 8h8" />
                         <path d="M8 12h5" />
@@ -309,10 +339,20 @@ export function ProfessionalSignupScreen() {
                     value={civilName}
                     onChange={(event) => setCivilName(event.target.value)}
                     error={stepOneErrors.civilName}
-                    className={shakeStep === 1 && stepOneErrors.civilName ? "field-shake" : undefined}
+                    className={
+                      shakeStep === 1 && stepOneErrors.civilName ? "field-shake" : undefined
+                    }
                     premium
                     leadingIcon={
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={iconClassName}
+                      >
                         <circle cx="12" cy="8" r="4" />
                         <path d="M5 20a7 7 0 0 1 14 0" />
                       </svg>
@@ -321,8 +361,12 @@ export function ProfessionalSignupScreen() {
                   <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-3">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-zinc-900">Nome artístico (opcional)</p>
-                        <p className="text-xs text-zinc-600">Ative caso deseje ser chamada(o) pelo seu nome artístico.</p>
+                        <p className="text-sm font-semibold text-zinc-900">
+                          Nome artístico (opcional)
+                        </p>
+                        <p className="text-xs text-zinc-600">
+                          Ative caso deseje ser chamada(o) pelo seu nome artístico.
+                        </p>
                       </div>
                       <label className="relative inline-flex cursor-pointer items-center">
                         <input
@@ -345,7 +389,15 @@ export function ProfessionalSignupScreen() {
                           onChange={(event) => setArtisticName(event.target.value)}
                           premium
                           leadingIcon={
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className={iconClassName}
+                            >
                               <path d="m12 3 2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5Z" />
                             </svg>
                           }
@@ -360,9 +412,15 @@ export function ProfessionalSignupScreen() {
               {step === 2 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-1 mb-4">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">Secure Vault</span>
-                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">Credenciais de Acesso</h2>
-                    <p className="text-sm text-zinc-700">Informe telefone, e-mail e senha para proteger o acesso da conta.</p>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">
+                      Secure Vault
+                    </span>
+                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">
+                      Credenciais de Acesso
+                    </h2>
+                    <p className="text-sm text-zinc-700">
+                      Informe telefone, e-mail e senha para proteger o acesso da conta.
+                    </p>
                   </div>
 
                   <Input
@@ -376,7 +434,15 @@ export function ProfessionalSignupScreen() {
                     className={shakeStep === 2 && stepTwoErrors.phone ? "field-shake" : undefined}
                     premium
                     leadingIcon={
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={iconClassName}
+                      >
                         <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.7 19.7 0 0 1-8.6-3.1 19.3 19.3 0 0 1-6-6A19.7 19.7 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.8 2.6a2 2 0 0 1-.4 2.1L8.2 9.8a16 16 0 0 0 6 6l1.4-1.3a2 2 0 0 1 2.1-.4c.8.4 1.7.7 2.6.8A2 2 0 0 1 22 16.9Z" />
                       </svg>
                     }
@@ -393,7 +459,15 @@ export function ProfessionalSignupScreen() {
                     className={shakeStep === 2 && stepTwoErrors.email ? "field-shake" : undefined}
                     premium
                     leadingIcon={
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={iconClassName}
+                      >
                         <rect x="3" y="5" width="18" height="14" rx="2" />
                         <path d="m4 7 8 6 8-6" />
                       </svg>
@@ -409,14 +483,24 @@ export function ProfessionalSignupScreen() {
                     onChange={(event) => setConfirmEmail(event.target.value)}
                     premium
                     leadingIcon={
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={iconClassName}
+                      >
                         <rect x="3" y="5" width="18" height="14" rx="2" />
                         <path d="m4 7 8 6 8-6" />
                         <path d="m9.5 12.5 1.5 1.5 3.5-3.5" />
                       </svg>
                     }
                     error={stepTwoErrors.confirmEmail}
-                    className={shakeStep === 2 && stepTwoErrors.confirmEmail ? "field-shake" : undefined}
+                    className={
+                      shakeStep === 2 && stepTwoErrors.confirmEmail ? "field-shake" : undefined
+                    }
                   />
 
                   <Input
@@ -427,10 +511,20 @@ export function ProfessionalSignupScreen() {
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     error={stepTwoErrors.password}
-                    className={shakeStep === 2 && stepTwoErrors.password ? "field-shake" : undefined}
+                    className={
+                      shakeStep === 2 && stepTwoErrors.password ? "field-shake" : undefined
+                    }
                     premium
                     leadingIcon={
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={iconClassName}
+                      >
                         <rect x="4" y="11" width="16" height="10" rx="2" />
                         <path d="M8 11V8a4 4 0 0 1 8 0v3" />
                       </svg>
@@ -445,10 +539,20 @@ export function ProfessionalSignupScreen() {
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}
                     error={stepTwoErrors.confirmPassword}
-                    className={shakeStep === 2 && stepTwoErrors.confirmPassword ? "field-shake" : undefined}
+                    className={
+                      shakeStep === 2 && stepTwoErrors.confirmPassword ? "field-shake" : undefined
+                    }
                     premium
                     leadingIcon={
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={iconClassName}
+                      >
                         <rect x="4" y="11" width="16" height="10" rx="2" />
                         <path d="M8 11V8a4 4 0 0 1 8 0v3" />
                         <path d="M9 16h6" />
@@ -462,7 +566,15 @@ export function ProfessionalSignupScreen() {
                       description="As demais informações do perfil serão solicitadas após o login, na área de gerenciamento da conta."
                       tone="secure"
                       icon={
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className={iconClassName}
+                        >
                           <path d="M12 2a10 10 0 0 0-7 3v6c0 6 7 11 7 11s7-5 7-11V5a10 10 0 0 0-7-3Z" />
                           <path d="M8.5 11a3.5 3.5 0 0 1 7 0" />
                           <path d="M9 14h6" />
@@ -470,9 +582,15 @@ export function ProfessionalSignupScreen() {
                       }
                     />
                     <div className="mt-2 flex gap-2 pl-11 text-[11px] font-semibold uppercase tracking-[0.12em] text-wine-800">
-                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">Seguro</span>
-                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">Login</span>
-                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">Conta</span>
+                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">
+                        Seguro
+                      </span>
+                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">
+                        Login
+                      </span>
+                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">
+                        Conta
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -481,9 +599,15 @@ export function ProfessionalSignupScreen() {
               {step === 3 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-1 mb-2">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">Quase lá</span>
-                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">Revisão Final</h2>
-                    <p className="text-sm text-zinc-700">Confira os dados obrigatórios validados e finalize seu cadastro.</p>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">
+                      Quase lá
+                    </span>
+                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">
+                      Revisão Final
+                    </h2>
+                    <p className="text-sm text-zinc-700">
+                      Confira os dados obrigatórios validados e finalize seu cadastro.
+                    </p>
                   </div>
 
                   <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
@@ -513,7 +637,15 @@ export function ProfessionalSignupScreen() {
                     onClick={prevStep}
                     className="w-1/3"
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 h-4 w-4">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="mr-1.5 h-4 w-4"
+                    >
                       <path d="m12 19-7-7 7-7" />
                       <path d="M19 12H5" />
                     </svg>
@@ -522,23 +654,55 @@ export function ProfessionalSignupScreen() {
                 )}
 
                 {step === 1 ? (
-                  <Button type="button" fullWidth size="lg" onClick={nextFromStepOne} className="shadow-md shadow-wine-700/20">
+                  <Button
+                    type="button"
+                    fullWidth
+                    size="lg"
+                    onClick={nextFromStepOne}
+                    className="shadow-md shadow-wine-700/20"
+                  >
                     Continuar
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5 h-4 w-4">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="ml-1.5 h-4 w-4"
+                    >
                       <path d="M5 12h14" />
                       <path d="m12 5 7 7-7 7" />
                     </svg>
                   </Button>
                 ) : step === 2 ? (
-                  <Button type="button" size="lg" onClick={nextFromStepTwo} className="w-2/3 shadow-md shadow-wine-700/20">
+                  <Button
+                    type="button"
+                    size="lg"
+                    onClick={nextFromStepTwo}
+                    className="w-2/3 shadow-md shadow-wine-700/20"
+                  >
                     Continuar para verificacao
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5 h-4 w-4">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="ml-1.5 h-4 w-4"
+                    >
                       <path d="M5 12h14" />
                       <path d="m12 5 7 7-7 7" />
                     </svg>
                   </Button>
                 ) : (
-                  <Button type="button" size="lg" onClick={handleCreateAccount} className="w-2/3 shadow-md shadow-wine-700/20">
+                  <Button
+                    type="button"
+                    size="lg"
+                    onClick={handleCreateAccount}
+                    className="w-2/3 shadow-md shadow-wine-700/20"
+                  >
                     Criar conta profissional
                   </Button>
                 )}
@@ -546,7 +710,10 @@ export function ProfessionalSignupScreen() {
 
               <p className="text-center text-sm text-zinc-600">
                 Ainda não tem conta cliente?{" "}
-                <Link href="/auth/cadastro" className="font-semibold text-wine-800 hover:text-wine-900 hover:underline">
+                <Link
+                  href="/auth/cadastro"
+                  className="font-semibold text-wine-800 hover:text-wine-900 hover:underline"
+                >
                   Criar conta grátis
                 </Link>
               </p>

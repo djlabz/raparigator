@@ -59,7 +59,7 @@ export function ShellChromeProvider({ children }: PropsWithChildren) {
       setChrome,
       resetChrome,
     }),
-    [chrome, setChrome, resetChrome]
+    [chrome, setChrome, resetChrome],
   );
 
   return <ShellChromeContext.Provider value={value}>{children}</ShellChromeContext.Provider>;

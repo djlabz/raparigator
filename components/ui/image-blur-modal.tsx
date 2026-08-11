@@ -2,7 +2,10 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import ReactCrop, { type Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { Button } from "@/components/ui/button";
-import { createAdaptivePresetCrop, resolveMinSelectionSize } from "@/components/ui/image-selection-utils";
+import {
+  createAdaptivePresetCrop,
+  resolveMinSelectionSize,
+} from "@/components/ui/image-selection-utils";
 import type { Area } from "@/components/ui/image-cropper-modal";
 import { mediaFitStyle, useMediaFrameSize } from "@/components/ui/use-media-frame-size";
 
@@ -29,7 +32,7 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
-  const lastPos = useRef<{ x: number, y: number } | null>(null);
+  const lastPos = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const syncCanvas = () => {
@@ -64,7 +67,7 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
     if (!maskCanvasRef.current) return null;
     const rect = maskCanvasRef.current.getBoundingClientRect();
     let clientX, clientY;
-    if ('touches' in e) {
+    if ("touches" in e) {
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
     } else {
@@ -73,7 +76,7 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
     }
     return {
       x: clientX - rect.left,
-      y: clientY - rect.top
+      y: clientY - rect.top,
     };
   };
 
@@ -90,14 +93,14 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
     if (!isDrawing || mode !== "brush" || !maskCanvasRef.current) return;
     const pos = getCoordinates(e);
     if (pos && lastPos.current) {
-      const ctx = maskCanvasRef.current.getContext('2d');
+      const ctx = maskCanvasRef.current.getContext("2d");
       if (ctx) {
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
         ctx.lineWidth = 40;
-        ctx.strokeStyle = 'white';
+        ctx.strokeStyle = "white";
         ctx.shadowBlur = 10;
-        ctx.shadowColor = 'white';
+        ctx.shadowColor = "white";
         ctx.beginPath();
         ctx.moveTo(lastPos.current.x, lastPos.current.y);
         ctx.lineTo(pos.x, pos.y);
@@ -183,15 +186,19 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
       maskDataUrl = maskCanvasRef.current?.toDataURL("image/png");
     }
 
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      onBlurComplete({
-        src: URL.createObjectURL(blob),
-        mode,
-        cropArea,
-        maskDataUrl,
-      });
-    }, "image/jpeg", 0.95);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        onBlurComplete({
+          src: URL.createObjectURL(blob),
+          mode,
+          cropArea,
+          maskDataUrl,
+        });
+      },
+      "image/jpeg",
+      0.95,
+    );
   }, [crop, mode, hasDrawn, onBlurComplete]);
 
   const handleImageLoad = useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
@@ -233,12 +240,15 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
       </div>
 
       <div className="relative w-full max-w-5xl flex-1 bg-black/50 rounded-lg overflow-hidden border border-white/10 min-h-0 select-none p-4">
-        <div ref={mediaFrameRef} className="flex h-full w-full min-h-0 items-center justify-center overflow-hidden">
+        <div
+          ref={mediaFrameRef}
+          className="flex h-full w-full min-h-0 items-center justify-center overflow-hidden"
+        >
           {mode === "crop" ? (
             <ReactCrop
               key={`blur-crop-${imageSrc}`}
               crop={crop}
-              onChange={c => setCrop(c)}
+              onChange={(c) => setCrop(c)}
               minWidth={minSelection.width}
               minHeight={minSelection.height}
               keepSelection
@@ -258,7 +268,10 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
               />
             </ReactCrop>
           ) : (
-            <div className="relative inline-block max-w-full max-h-full overflow-hidden" style={mediaBoxStyle}>
+            <div
+              className="relative inline-block max-w-full max-h-full overflow-hidden"
+              style={mediaBoxStyle}
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 ref={imageRef}
@@ -287,11 +300,20 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
       </div>
 
       <div className="my-6 flex gap-4 w-full max-w-sm shrink-0">
-        <Button variant="secondary" className="w-full text-white border-white/20 hover:bg-white/10" onClick={onClose}>Cancelar</Button>
+        <Button
+          variant="secondary"
+          className="w-full text-white border-white/20 hover:bg-white/10"
+          onClick={onClose}
+        >
+          Cancelar
+        </Button>
         <Button
           className="w-full bg-wine-700 hover:bg-wine-600 text-white disabled:opacity-50"
           onClick={applyBlur}
-          disabled={(mode === "crop" && (!crop || !crop.width || !crop.height)) || (mode === "brush" && !hasDrawn)}
+          disabled={
+            (mode === "crop" && (!crop || !crop.width || !crop.height)) ||
+            (mode === "brush" && !hasDrawn)
+          }
         >
           Aplicar Borrão
         </Button>

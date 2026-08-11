@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 export function useDampedScrollLoop(
   active: boolean,
   onFrame: (dt: number, seeded: boolean) => boolean,
-  restartToken?: unknown
+  restartToken?: unknown,
 ) {
   const onFrameRef = useRef(onFrame);
 

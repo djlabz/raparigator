@@ -140,7 +140,12 @@ export type AnnouncementSaveSectionFailure =
   | {
       ok: false;
       reason: "characteristics";
-      missing: Array<keyof Pick<AnnouncementCharacteristics, "gender" | "ethnicity" | "height" | "weight" | "hairColor" | "smoker">>;
+      missing: Array<
+        keyof Pick<
+          AnnouncementCharacteristics,
+          "gender" | "ethnicity" | "height" | "weight" | "hairColor" | "smoker"
+        >
+      >;
       message: string;
     }
   | {
@@ -158,7 +163,9 @@ export type AnnouncementSaveSectionSuccess = {
   saveResult: AnnouncementSaveResult;
 };
 
-export type AnnouncementSaveSectionResult = AnnouncementSaveSectionSuccess | AnnouncementSaveSectionFailure;
+export type AnnouncementSaveSectionResult =
+  | AnnouncementSaveSectionSuccess
+  | AnnouncementSaveSectionFailure;
 
 export type AnnouncementPublishResult =
   | { ok: true }

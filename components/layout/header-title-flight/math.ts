@@ -74,10 +74,7 @@ export function sampleMobileTitleReveal({
   };
 }
 
-export function inPageSpacerFromReveal(
-  reveal: number,
-  inPageTitleHeight = IN_PAGE_TITLE_HEIGHT
-) {
+export function inPageSpacerFromReveal(reveal: number, inPageTitleHeight = IN_PAGE_TITLE_HEIGHT) {
   return reveal < SPACER_COLLAPSE_START
     ? inPageTitleHeight
     : inPageTitleHeight * clamp01(1 - (reveal - SPACER_COLLAPSE_START) / SPACER_COLLAPSE_SPAN);

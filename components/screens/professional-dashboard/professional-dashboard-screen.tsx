@@ -17,7 +17,13 @@ import { DashboardMobileTitleFlight } from "./dashboard-mobile-title-flight";
 import { SummaryTab } from "./summary-tab";
 import type { AdStatus } from "./types";
 import { useDashboardTitleScroll } from "./use-dashboard-title-scroll";
-import { confirmVerificationCode, getVerificationState, sendVerificationCode, type VerificationChannel, type VerificationState } from "@/lib/verification";
+import {
+  confirmVerificationCode,
+  getVerificationState,
+  sendVerificationCode,
+  type VerificationChannel,
+  type VerificationState,
+} from "@/lib/verification";
 
 function DashboardTabSkeleton() {
   return <div className="min-h-80 rounded-2xl border border-zinc-100 bg-zinc-50/80" aria-hidden />;
@@ -25,20 +31,64 @@ function DashboardTabSkeleton() {
 
 const AnnouncementTab = dynamic(
   () => import("./announcement-tab").then((mod) => mod.AnnouncementTab),
-  { loading: () => <DashboardTabSkeleton /> }
+  { loading: () => <DashboardTabSkeleton /> },
 );
 
-const HistoryTab = dynamic(
-  () => import("./history-tab").then((mod) => mod.HistoryTab),
-  { loading: () => <DashboardTabSkeleton /> }
-);
+const HistoryTab = dynamic(() => import("./history-tab").then((mod) => mod.HistoryTab), {
+  loading: () => <DashboardTabSkeleton />,
+});
 
 const TABS = [
-  { id: "Resumo", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /> },
-  { id: "Anúncio", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /> },
-  { id: "Avaliações", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /> },
-  { id: "Histórico", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /> },
-  { id: "Verificação", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /> },
+  {
+    id: "Resumo",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+      />
+    ),
+  },
+  {
+    id: "Anúncio",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+      />
+    ),
+  },
+  {
+    id: "Avaliações",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+      />
+    ),
+  },
+  {
+    id: "Histórico",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    ),
+  },
+  {
+    id: "Verificação",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    ),
+  },
 ] as const;
 
 export function ProfessionalDashboardScreen() {
@@ -78,7 +128,7 @@ export function ProfessionalDashboardScreen() {
         <aside
           className={cn(
             "sticky hidden h-fit flex-col self-start rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm lg:flex",
-            chromeBelowDesktopNavStickyTop
+            chromeBelowDesktopNavStickyTop,
           )}
         >
           <nav className="space-y-1.5">
@@ -91,10 +141,16 @@ export function ProfessionalDashboardScreen() {
                   "flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-bold transition-all",
                   activeTab === tab.id
                     ? "border-r-4 border-wine-700 bg-wine-700/10 text-wine-700"
-                    : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+                    : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900",
                 )}
               >
-                <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg
+                  className="h-5 w-5 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
                   {tab.icon}
                 </svg>
                 <span>{tab.id}</span>
@@ -108,10 +164,10 @@ export function ProfessionalDashboardScreen() {
 
           {!bannerClosed && (
             <div className="mb-4">
-              <InfoBanner 
-                title="Configure seu anúncio" 
-                description="Para começar sua nova independência, configure seu anúncio e complete as informações do seu perfil na guia correspondente." 
-                tone="info" 
+              <InfoBanner
+                title="Configure seu anúncio"
+                description="Para começar sua nova independência, configure seu anúncio e complete as informações do seu perfil na guia correspondente."
+                tone="info"
                 onClose={() => setBannerClosed(true)}
               />
             </div>
@@ -120,7 +176,7 @@ export function ProfessionalDashboardScreen() {
           <div
             className={cn(
               "mb-2 -mx-1 flex gap-2 overflow-x-auto overscroll-x-contain touch-pan-x px-1 py-2 lg:hidden",
-              "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
             )}
           >
             {TABS.map((tab) => (
@@ -131,10 +187,16 @@ export function ProfessionalDashboardScreen() {
                   "inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-bold shadow-[0_2px_10px_rgba(15,23,42,0.08)] transition-colors",
                   activeTab === tab.id
                     ? "border-wine-700 bg-wine-700 text-white"
-                    : "border-zinc-200/80 bg-white text-zinc-600"
+                    : "border-zinc-200/80 bg-white text-zinc-600",
                 )}
               >
-                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg
+                  className="h-4 w-4 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
                   {tab.icon}
                 </svg>
                 {tab.id}
@@ -148,10 +210,14 @@ export function ProfessionalDashboardScreen() {
               ad={currentAd}
               adSlug={adSlug}
               status={adStatus}
-              onToggleStatus={() => setAdStatus(prev => prev === "Ativo" ? "Pausado" : "Ativo")}
+              onToggleStatus={() => setAdStatus((prev) => (prev === "Ativo" ? "Pausado" : "Ativo"))}
             />
           )}
-          {activeTab === "Avaliações" && <div className="p-4 bg-white rounded-xl shadow-sm"><h2 className="text-lg font-bold">Avaliações em breve</h2></div>}
+          {activeTab === "Avaliações" && (
+            <div className="p-4 bg-white rounded-xl shadow-sm">
+              <h2 className="text-lg font-bold">Avaliações em breve</h2>
+            </div>
+          )}
           {activeTab === "Histórico" && <HistoryTab />}
           {activeTab === "Verificação" && <VerificationTab />}
         </div>
@@ -168,12 +234,21 @@ function VerificationTab() {
     phone: user?.phone ?? "",
   };
   const verificationSyncKey = `${userId}|${verificationTargets.email}|${verificationTargets.phone}`;
-  const [verificationState, setVerificationState] = useState<VerificationState>(() => getVerificationState(userId, verificationTargets));
-  const [codeInputs, setCodeInputs] = useState<Record<VerificationChannel, string>>({ email: "", phone: "" });
+  const [verificationState, setVerificationState] = useState<VerificationState>(() =>
+    getVerificationState(userId, verificationTargets),
+  );
+  const [codeInputs, setCodeInputs] = useState<Record<VerificationChannel, string>>({
+    email: "",
+    phone: "",
+  });
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [infoTone, setInfoTone] = useState<"success" | "error" | "info">("info");
-  const [revealedCodes, setRevealedCodes] = useState<Record<VerificationChannel, string | null>>({ email: null, phone: null });
-  const [previousVerificationSyncKey, setPreviousVerificationSyncKey] = useState(verificationSyncKey);
+  const [revealedCodes, setRevealedCodes] = useState<Record<VerificationChannel, string | null>>({
+    email: null,
+    phone: null,
+  });
+  const [previousVerificationSyncKey, setPreviousVerificationSyncKey] =
+    useState(verificationSyncKey);
 
   if (verificationSyncKey !== previousVerificationSyncKey) {
     setPreviousVerificationSyncKey(verificationSyncKey);
@@ -195,15 +270,21 @@ function VerificationTab() {
     return (
       <Card className="border-zinc-200 bg-white shadow-sm shadow-zinc-200/70">
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Verificação da conta</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
+            Verificação da conta
+          </p>
           <h2 className="text-2xl font-semibold text-zinc-900">Acesse sua conta profissional</h2>
-          <p className="text-sm text-zinc-600">Entre com uma conta de profissional para validar e-mail e telefone.</p>
+          <p className="text-sm text-zinc-600">
+            Entre com uma conta de profissional para validar e-mail e telefone.
+          </p>
         </div>
       </Card>
     );
   }
 
-  const verifiedItems = [verificationState.email.verified, verificationState.phone.verified].filter(Boolean).length;
+  const verifiedItems = [verificationState.email.verified, verificationState.phone.verified].filter(
+    Boolean,
+  ).length;
   const verificationProgress = Math.round((verifiedItems / 2) * 100);
 
   const pushInfo = (message: string, tone: "success" | "error" | "info") => {
@@ -215,11 +296,22 @@ function VerificationTab() {
     const result = sendVerificationCode(userId, verificationTargets, channel, verificationState);
     setVerificationState(result.state);
     setRevealedCodes((current) => ({ ...current, [channel]: result.code }));
-    pushInfo(channel === "email" ? `Código de teste enviado para ${verificationTargets.email}.` : `Código de teste enviado para ${verificationTargets.phone}.`, "info");
+    pushInfo(
+      channel === "email"
+        ? `Código de teste enviado para ${verificationTargets.email}.`
+        : `Código de teste enviado para ${verificationTargets.phone}.`,
+      "info",
+    );
   };
 
   const handleConfirmCode = (channel: VerificationChannel) => {
-    const result = confirmVerificationCode(userId, verificationTargets, channel, codeInputs[channel], verificationState);
+    const result = confirmVerificationCode(
+      userId,
+      verificationTargets,
+      channel,
+      codeInputs[channel],
+      verificationState,
+    );
     setVerificationState(result.state);
     pushInfo(result.message, result.success ? "success" : "error");
 
@@ -233,9 +325,13 @@ function VerificationTab() {
     <Card className="space-y-5 border-zinc-200 bg-white shadow-sm shadow-zinc-200/70 sm:p-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Verificação da conta</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
+            Verificação da conta
+          </p>
           <h2 className="mt-1 text-2xl font-semibold text-zinc-900">Confiança do perfil</h2>
-          <p className="mt-1 text-sm text-zinc-600">Conclua as etapas de e-mail e telefone para elevar a segurança da conta.</p>
+          <p className="mt-1 text-sm text-zinc-600">
+            Conclua as etapas de e-mail e telefone para elevar a segurança da conta.
+          </p>
         </div>
         <span className="self-start rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
           {verifiedItems}/2 concluídas
@@ -244,9 +340,14 @@ function VerificationTab() {
 
       <div className="mt-5 space-y-2">
         <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
-          <div className="h-full rounded-full bg-emerald-500 transition-all duration-300" style={{ width: `${verificationProgress}%` }} />
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+            style={{ width: `${verificationProgress}%` }}
+          />
         </div>
-        <p className="text-xs font-medium text-zinc-500">Progresso de verificação: {verificationProgress}%</p>
+        <p className="text-xs font-medium text-zinc-500">
+          Progresso de verificação: {verificationProgress}%
+        </p>
       </div>
 
       {infoMessage ? (
@@ -269,7 +370,13 @@ function VerificationTab() {
           title="E-mail"
           description={`Confirme o contato principal em ${verificationTargets.email}.`}
           done={verificationState.email.verified}
-          actionLabel={verificationState.email.verified ? "Validado" : verificationState.email.pendingCode ? "Reenviar código" : "Enviar código"}
+          actionLabel={
+            verificationState.email.verified
+              ? "Validado"
+              : verificationState.email.pendingCode
+                ? "Reenviar código"
+                : "Enviar código"
+          }
           codeLabel="Código de e-mail"
           codeValue={codeInputs.email}
           revealedCode={revealedCodes.email}
@@ -281,7 +388,13 @@ function VerificationTab() {
           title="Telefone"
           description={`Valide o número com DDD ${verificationTargets.phone}.`}
           done={verificationState.phone.verified}
-          actionLabel={verificationState.phone.verified ? "Validado" : verificationState.phone.pendingCode ? "Reenviar código" : "Enviar SMS"}
+          actionLabel={
+            verificationState.phone.verified
+              ? "Validado"
+              : verificationState.phone.pendingCode
+                ? "Reenviar código"
+                : "Enviar SMS"
+          }
           codeLabel="Código de SMS"
           codeValue={codeInputs.phone}
           revealedCode={revealedCodes.phone}
@@ -327,40 +440,72 @@ function VerificationItem({
   disabled?: boolean;
 }) {
   return (
-    <div className={cn("flex h-full min-h-65 flex-col rounded-xl border p-4 sm:min-h-70", done ? "border-emerald-200 bg-emerald-50/70" : "border-zinc-200 bg-zinc-50", disabled && "opacity-70")}> 
+    <div
+      className={cn(
+        "flex h-full min-h-65 flex-col rounded-xl border p-4 sm:min-h-70",
+        done ? "border-emerald-200 bg-emerald-50/70" : "border-zinc-200 bg-zinc-50",
+        disabled && "opacity-70",
+      )}
+    >
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">{title}</p>
       <p className="mt-2 min-h-12 text-sm text-zinc-600">{description}</p>
       {revealedCode && codeLabel ? (
         <div className="mt-3 rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-2 text-xs text-zinc-700">
           <span className="font-semibold text-zinc-500">{codeLabel}:</span>{" "}
-          <span className="font-mono font-semibold tracking-[0.18em] text-zinc-900">{revealedCode}</span>
+          <span className="font-mono font-semibold tracking-[0.18em] text-zinc-900">
+            {revealedCode}
+          </span>
         </div>
       ) : null}
       {codeValue !== undefined && onCodeChange && onConfirm ? (
         <div className="mt-3 flex flex-1 flex-col">
           <div className="space-y-2">
-          <Input
-            id={`${title.toLowerCase()}-code`}
-            label={codeLabel ?? "Código"}
-            placeholder="Digite o código"
-            value={codeValue}
-            onChange={(event) => onCodeChange(event.target.value)}
-            disabled={disabled || done}
-          />
+            <Input
+              id={`${title.toLowerCase()}-code`}
+              label={codeLabel ?? "Código"}
+              placeholder="Digite o código"
+              value={codeValue}
+              onChange={(event) => onCodeChange(event.target.value)}
+              disabled={disabled || done}
+            />
           </div>
           <div className="mt-auto flex items-center gap-2 pt-3">
-            <Button type="button" size="sm" variant="secondary" onClick={onAction} disabled={disabled || done} className="min-w-27">
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={onAction}
+              disabled={disabled || done}
+              className="min-w-27"
+            >
               {actionLabel}
             </Button>
-            <Button type="button" size="sm" onClick={onConfirm} disabled={disabled || done || !codeValue.trim()} className="min-w-24">
+            <Button
+              type="button"
+              size="sm"
+              onClick={onConfirm}
+              disabled={disabled || done || !codeValue.trim()}
+              className="min-w-24"
+            >
               Confirmar
             </Button>
           </div>
         </div>
       ) : (
         <div className="mt-auto flex items-center justify-between gap-3 pt-4">
-          <span className={cn("text-sm font-semibold", done ? "text-emerald-700" : "text-zinc-700")}>{done ? "Concluído" : disabled ? "Futuro" : "Pendente"}</span>
-          <Button type="button" size="sm" variant={done ? "secondary" : "primary"} onClick={onAction} disabled={disabled || done} className="min-w-27">
+          <span
+            className={cn("text-sm font-semibold", done ? "text-emerald-700" : "text-zinc-700")}
+          >
+            {done ? "Concluído" : disabled ? "Futuro" : "Pendente"}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant={done ? "secondary" : "primary"}
+            onClick={onAction}
+            disabled={disabled || done}
+            className="min-w-27"
+          >
             {actionLabel}
           </Button>
         </div>

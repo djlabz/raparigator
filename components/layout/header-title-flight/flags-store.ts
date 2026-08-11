@@ -8,7 +8,7 @@ export type FlagsStore<T> = {
 
 export function createFlagsStore<T>(
   defaultFlags: T,
-  equals: (prev: T, next: T) => boolean
+  equals: (prev: T, next: T) => boolean,
 ): FlagsStore<T> {
   const listeners = new Set<() => void>();
   const store: FlagsStore<T> = {

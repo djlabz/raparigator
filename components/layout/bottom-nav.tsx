@@ -41,13 +41,7 @@ const pillTransition = {
   mass: 0.7,
 };
 
-function NavIconSvg({
-  active,
-  children,
-}: {
-  active: boolean;
-  children: ReactNode;
-}) {
+function NavIconSvg({ active, children }: { active: boolean; children: ReactNode }) {
   return (
     <svg
       className={cn("transition-colors duration-200", active ? "text-white" : "text-zinc-700")}
@@ -85,7 +79,7 @@ function getNavIcon(
   href: string,
   active: boolean,
   chatUnreadCount: number = 0,
-  notificationBadgeCount: number = 0
+  notificationBadgeCount: number = 0,
 ) {
   if (label === "Feed" || href === "/feed") {
     return (
@@ -214,7 +208,6 @@ export function BottomNav({ items }: BottomNavProps) {
   }, [activeHref]);
 
   useLayoutEffect(() => {
-     
     updateIndicator();
   }, [updateIndicator]);
 
@@ -232,10 +225,11 @@ export function BottomNav({ items }: BottomNavProps) {
   }, [updateIndicator]);
 
   const hasChat = items.some((item) => item.label === "Chat" || item.href === "/chat");
-  const unreadCount = useSyncExternalStore(
-    subscribeChatStore,
-    getChatUnreadCount,
-    () => getServerChatStoreSnapshot().conversations.reduce((total, conversation) => total + (conversation.unread || 0), 0),
+  const unreadCount = useSyncExternalStore(subscribeChatStore, getChatUnreadCount, () =>
+    getServerChatStoreSnapshot().conversations.reduce(
+      (total, conversation) => total + (conversation.unread || 0),
+      0,
+    ),
   );
 
   useEffect(() => {
@@ -256,7 +250,10 @@ export function BottomNav({ items }: BottomNavProps) {
     >
       <div className="pointer-events-auto relative isolate w-max overflow-hidden rounded-full border border-white/40 bg-white/30 shadow-[0_12px_32px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,0.7)] backdrop-blur-3xl backdrop-saturate-200 supports-backdrop-filter:bg-white/20">
         <div className="pointer-events-none absolute inset-0 z-0 rounded-full bg-linear-to-b from-white/50 via-white/10 to-transparent mix-blend-overlay" />
-        <ul ref={listRef} className="relative z-10 flex items-center justify-center gap-2 px-2 py-2">
+        <ul
+          ref={listRef}
+          className="relative z-10 flex items-center justify-center gap-2 px-2 py-2"
+        >
           <motion.div
             aria-hidden="true"
             className="pointer-events-none absolute top-2 z-0 h-12 rounded-full bg-wine-700/90 shadow-[0_4px_20px_rgba(159,18,57,0.5),inset_0_1px_1px_rgba(255,255,255,0.4)]"
@@ -274,7 +271,8 @@ export function BottomNav({ items }: BottomNavProps) {
           {items.map((item) => {
             const active = activeHref === item.href;
             const isDashboardTab = item.href === dashboardHref;
-            const notificationBadge = safeRole && isDashboardTab ? notifications.navbarBadgeCount : 0;
+            const notificationBadge =
+              safeRole && isDashboardTab ? notifications.navbarBadgeCount : 0;
             return (
               <li
                 key={item.href}
@@ -313,7 +311,7 @@ export function BottomNav({ items }: BottomNavProps) {
                     }}
                     className={cn(
                       "relative z-20 flex h-full w-full items-center justify-center rounded-full",
-                      active ? "text-white [&_svg]:text-white" : "text-zinc-600"
+                      active ? "text-white [&_svg]:text-white" : "text-zinc-600",
                     )}
                     style={active ? { color: "#fff" } : undefined}
                     aria-current={active ? "page" : undefined}

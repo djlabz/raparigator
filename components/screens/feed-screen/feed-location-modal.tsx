@@ -30,10 +30,24 @@ export function FeedLocationModal({
   return (
     <Modal open={open} onClose={onClose} title="Localidade" description="" actions={null}>
       <div className="space-y-4">
-        <label className="block text-sm font-semibold text-zinc-900">Selecionar nova localização</label>
+        <label className="block text-sm font-semibold text-zinc-900">
+          Selecionar nova localização
+        </label>
 
         <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-wine-700" aria-hidden="true">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="shrink-0 text-wine-700"
+            aria-hidden="true"
+          >
             <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
             <circle cx="12" cy="10" r="3" />
           </svg>
@@ -71,8 +85,22 @@ export function FeedLocationModal({
           </div>
         ) : null}
 
-        <Button onClick={onAutomaticLocation} className="flex w-full items-center justify-center gap-2 bg-wine-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-wine-800 active:bg-wine-900">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <Button
+          onClick={onAutomaticLocation}
+          className="flex w-full items-center justify-center gap-2 bg-wine-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-wine-800 active:bg-wine-900"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <path d="M12 2v4" />
             <path d="M12 18v4" />
             <path d="m4.93 4.93 2.83 2.83" />
@@ -85,7 +113,13 @@ export function FeedLocationModal({
           <span className="whitespace-nowrap">Usar localização automática</span>
         </Button>
 
-        {showSuccessToast ? <Toast title="Localização atual aplicada" message="São Paulo, SP foi definida automaticamente." type="success" /> : null}
+        {showSuccessToast ? (
+          <Toast
+            title="Localização atual aplicada"
+            message="São Paulo, SP foi definida automaticamente."
+            type="success"
+          />
+        ) : null}
       </div>
     </Modal>
   );

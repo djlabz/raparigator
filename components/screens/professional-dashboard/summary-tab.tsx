@@ -5,7 +5,19 @@ import { TrafficDiscoveryCard } from "@/components/screens/professional-dashboar
 import { dashboardSummary } from "@/lib/mock-data";
 import { currency, cn } from "@/lib/utils";
 
-function MetricCardComDica({ title, value, change, icon, tip }: { title: string; value: string; change: number; icon: string; tip: string }) {
+function MetricCardComDica({
+  title,
+  value,
+  change,
+  icon,
+  tip,
+}: {
+  title: string;
+  value: string;
+  change: number;
+  icon: string;
+  tip: string;
+}) {
   const isPositive = change >= 0;
   return (
     <Card className="p-4 hover:border-wine-200 transition-colors">
@@ -15,7 +27,9 @@ function MetricCardComDica({ title, value, change, icon, tip }: { title: string;
       </div>
       <p className="text-2xl font-bold text-zinc-900">{value}</p>
       <div className="flex items-center gap-2 mt-2">
-        <span className={cn("text-xs font-semibold", isPositive ? "text-emerald-600" : "text-red-600")}>
+        <span
+          className={cn("text-xs font-semibold", isPositive ? "text-emerald-600" : "text-red-600")}
+        >
           {isPositive ? "↑" : "↓"} {Math.abs(change)}%
         </span>
         <span className="text-xs text-zinc-500">vs. mês anterior</span>
@@ -68,8 +82,13 @@ export function SummaryTab() {
           <div className="text-3xl">💡</div>
           <div className="flex-1">
             <h3 className="font-bold text-lg text-wine-900 mb-2">Dica para aumentar conversão</h3>
-            <p className="text-sm text-wine-800">Adicione mais fotos de alta qualidade à sua galeria. Perfis com +5 fotos têm 35% mais conversões!</p>
-            <button className="mt-3 text-wine-700 font-semibold text-sm hover:underline">→ Ir para galeria</button>
+            <p className="text-sm text-wine-800">
+              Adicione mais fotos de alta qualidade à sua galeria. Perfis com +5 fotos têm 35% mais
+              conversões!
+            </p>
+            <button className="mt-3 text-wine-700 font-semibold text-sm hover:underline">
+              → Ir para galeria
+            </button>
           </div>
         </div>
       </Card>
