@@ -19,6 +19,14 @@
     "no-useless-assignment": "error",
     "preserve-caught-error": "error",
 
+    // Paridade com o eslint-config-next: eram error la e nao estao na
+    // categoria `correctness` do oxlint, entao precisam ser explicitas.
+    "react-hooks/rules-of-hooks": "error",
+    "react/no-unescaped-entities": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/ban-ts-comment": "error",
+    "typescript/no-require-imports": "error",
+
     // Next.js usa o JSX runtime automatico
     "react/react-in-jsx-scope": "off",
 
