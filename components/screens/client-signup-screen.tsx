@@ -330,6 +330,7 @@ export function ClientSignupScreen() {
                           className="peer sr-only"
                           checked={nicknameEnabled}
                           onChange={handleNicknameToggle}
+                          aria-label="Usar apelido"
                         />
                         <div className="h-5 w-9 rounded-full bg-zinc-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:border after:border-zinc-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-wine-700 peer-checked:after:translate-x-full peer-checked:after:border-white" />
                       </label>

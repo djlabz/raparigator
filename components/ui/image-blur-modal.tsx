@@ -287,6 +287,7 @@ export function ImageBlurModal({ imageSrc, onBlurComplete, onClose }: ImageBlurM
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
                 onMouseOut={stopDrawing}
+                onBlur={stopDrawing}
                 onTouchStart={startDrawing}
                 onTouchMove={draw}
                 onTouchEnd={stopDrawing}

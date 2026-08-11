@@ -12,7 +12,6 @@ import type { HTMLAttributes } from "react";
 export function CashIcon({ className = "", style, ...props }: HTMLAttributes<HTMLSpanElement>) {
   return (
     <span
-      role="img"
       aria-hidden="true"
       className={className}
       style={{

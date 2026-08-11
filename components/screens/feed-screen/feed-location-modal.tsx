@@ -30,9 +30,7 @@ export function FeedLocationModal({
   return (
     <Modal open={open} onClose={onClose} title="Localidade" description="" actions={null}>
       <div className="space-y-4">
-        <label className="block text-sm font-semibold text-zinc-900">
-          Selecionar nova localização
-        </label>
+        <h3 className="block text-sm font-semibold text-zinc-900">Selecionar nova localização</h3>
 
         <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2">
           <svg
