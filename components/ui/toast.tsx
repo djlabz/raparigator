@@ -17,16 +17,15 @@ const tone = {
 
 export function Toast({ title, message, type = "info" }: ToastProps) {
   return (
-    <motion.div
+    <motion.output
       initial={{ opacity: 0, y: -8, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-      className={cn("rounded-xl border p-3 shadow-sm", tone[type])}
-      role="status"
+      className={cn("block rounded-xl border p-3 shadow-sm", tone[type])}
       aria-live="polite"
     >
       <p className="text-sm font-semibold">{title}</p>
       <p className="text-xs leading-relaxed opacity-90">{message}</p>
-    </motion.div>
+    </motion.output>
   );
 }

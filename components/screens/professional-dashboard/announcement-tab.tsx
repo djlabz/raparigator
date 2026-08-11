@@ -7,7 +7,6 @@ import { motion, useMotionValue } from "motion/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { activateOnKey } from "@/lib/a11y";
 import { cn } from "@/lib/utils";
 import {
   BadgeDollarSign,
@@ -2420,14 +2419,7 @@ function BentoPhotoGallery({
       {viewMode === "bento" ? (
         <div className="space-y-3">
           {images.length > 0 ? (
-            <div
-              className="relative group w-full aspect-21/9 rounded-3xl overflow-hidden shadow-sm cursor-pointer bg-zinc-100"
-              role="button"
-              tabIndex={0}
-              aria-label="Abrir foto de capa"
-              onClick={() => onPhotoClick(resolvedCoverIndex)}
-              onKeyDown={activateOnKey(() => onPhotoClick(resolvedCoverIndex))}
-            >
+            <div className="relative group w-full aspect-21/9 rounded-3xl overflow-hidden shadow-sm cursor-pointer bg-zinc-100">
               <Image
                 src={resolvedCoverSrc}
                 alt={`Foto ${resolvedCoverIndex}`}
@@ -2454,6 +2446,13 @@ function BentoPhotoGallery({
                   />
                 </svg>
               </div>
+
+              <button
+                type="button"
+                aria-label="Abrir foto de capa"
+                onClick={() => onPhotoClick(resolvedCoverIndex)}
+                className="absolute inset-0 z-10 cursor-pointer"
+              />
 
               <button
                 type="button"
@@ -2486,13 +2485,8 @@ function BentoPhotoGallery({
             {galleryItems.map((item) => (
               <div key={item.idx} className="mb-2 sm:mb-3 break-inside-avoid">
                 <div
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Abrir foto ${item.idx}`}
                   className="relative group rounded-2xl overflow-hidden shadow-sm cursor-pointer bg-zinc-100"
                   style={{ aspectRatio: item.ratio }}
-                  onClick={() => onPhotoClick(item.idx)}
-                  onKeyDown={activateOnKey(() => onPhotoClick(item.idx))}
                 >
                   <Image
                     src={item.src}
@@ -2523,6 +2517,13 @@ function BentoPhotoGallery({
                       />
                     </svg>
                   </div>
+
+                  <button
+                    type="button"
+                    aria-label="Abrir foto"
+                    onClick={() => onPhotoClick(item.idx)}
+                    className="absolute inset-0 z-10 cursor-pointer"
+                  />
 
                   <button
                     type="button"
@@ -2615,14 +2616,7 @@ function BentoPhotoGallery({
       ) : (
         <div className="space-y-2.5">
           {images.length > 0 ? (
-            <div
-              className="relative group w-full aspect-21/9 rounded-3xl overflow-hidden shadow-sm cursor-pointer bg-zinc-100"
-              role="button"
-              tabIndex={0}
-              aria-label="Abrir foto de capa"
-              onClick={() => onPhotoClick(resolvedCoverIndex)}
-              onKeyDown={activateOnKey(() => onPhotoClick(resolvedCoverIndex))}
-            >
+            <div className="relative group w-full aspect-21/9 rounded-3xl overflow-hidden shadow-sm cursor-pointer bg-zinc-100">
               <Image
                 src={resolvedCoverSrc}
                 alt={`Foto ${resolvedCoverIndex}`}
@@ -2647,6 +2641,13 @@ function BentoPhotoGallery({
                   />
                 </svg>
               </div>
+              <button
+                type="button"
+                aria-label="Abrir foto de capa"
+                onClick={() => onPhotoClick(resolvedCoverIndex)}
+                className="absolute inset-0 z-10 cursor-pointer"
+              />
+
               <button
                 type="button"
                 onClick={(e) => {
@@ -2678,12 +2679,7 @@ function BentoPhotoGallery({
             {galleryItems.map((item) => (
               <div
                 key={item.idx}
-                role="button"
-                tabIndex={0}
-                aria-label={`Abrir foto ${item.idx}`}
                 className="relative aspect-square cursor-pointer overflow-hidden group rounded-xl bg-zinc-100"
-                onClick={() => onPhotoClick(item.idx)}
-                onKeyDown={activateOnKey(() => onPhotoClick(item.idx))}
               >
                 <Image
                   src={item.src}
@@ -2712,6 +2708,13 @@ function BentoPhotoGallery({
                     />
                   </svg>
                 </div>
+                <button
+                  type="button"
+                  aria-label="Abrir foto"
+                  onClick={() => onPhotoClick(item.idx)}
+                  className="absolute inset-0 z-10 cursor-pointer"
+                />
+
                 <button
                   type="button"
                   onClick={(e) => {
