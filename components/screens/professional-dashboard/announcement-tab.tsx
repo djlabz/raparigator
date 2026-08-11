@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { motion, useMotionValue } from "motion/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { activateOnKey } from "@/lib/a11y";
 import { cn } from "@/lib/utils";
 import {
   BadgeDollarSign,
@@ -2110,6 +2111,7 @@ function SectionCard({
           type="button"
           onClick={() => handleOpenChange(!isOpen)}
           aria-expanded={isOpen}
+          aria-label={title}
           className="w-full p-5 sm:p-6 bg-zinc-50/50 border-b border-zinc-100 flex items-center justify-between gap-4 text-left cursor-pointer hover:bg-zinc-100/60 transition-colors"
         >
           <div className="flex items-start gap-3 min-w-0">
@@ -2376,6 +2378,7 @@ function BentoPhotoGallery({
                 ? "bg-white shadow-sm text-wine-700"
                 : "text-zinc-500 hover:text-zinc-900",
             )}
+            aria-label="Destaque"
             title="Destaque"
           >
             <svg
@@ -2400,6 +2403,7 @@ function BentoPhotoGallery({
                 ? "bg-white shadow-sm text-wine-700"
                 : "text-zinc-500 hover:text-zinc-900",
             )}
+            aria-label="Grade Instagram"
             title="Grade Instagram"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -2418,7 +2422,11 @@ function BentoPhotoGallery({
           {images.length > 0 ? (
             <div
               className="relative group w-full aspect-21/9 rounded-3xl overflow-hidden shadow-sm cursor-pointer bg-zinc-100"
+              role="button"
+              tabIndex={0}
+              aria-label="Abrir foto de capa"
               onClick={() => onPhotoClick(resolvedCoverIndex)}
+              onKeyDown={activateOnKey(() => onPhotoClick(resolvedCoverIndex))}
             >
               <Image
                 src={resolvedCoverSrc}
@@ -2454,6 +2462,7 @@ function BentoPhotoGallery({
                   onDeletePhoto(resolvedCoverIndex);
                 }}
                 className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-700 text-white p-1.5 sm:p-2 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20 shadow-md"
+                aria-label="Excluir"
                 title="Excluir"
               >
                 <svg
@@ -2477,9 +2486,13 @@ function BentoPhotoGallery({
             {galleryItems.map((item) => (
               <div key={item.idx} className="mb-2 sm:mb-3 break-inside-avoid">
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Abrir foto ${item.idx}`}
                   className="relative group rounded-2xl overflow-hidden shadow-sm cursor-pointer bg-zinc-100"
                   style={{ aspectRatio: item.ratio }}
                   onClick={() => onPhotoClick(item.idx)}
+                  onKeyDown={activateOnKey(() => onPhotoClick(item.idx))}
                 >
                   <Image
                     src={item.src}
@@ -2518,6 +2531,7 @@ function BentoPhotoGallery({
                       onDeletePhoto(item.idx);
                     }}
                     className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-700 text-white p-1.5 sm:p-2 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20 shadow-md"
+                    aria-label="Excluir"
                     title="Excluir"
                   >
                     <svg
@@ -2546,9 +2560,10 @@ function BentoPhotoGallery({
 
             {canAddMore && (
               <div className="mb-2 sm:mb-3 break-inside-avoid">
-                <div
+                <button
+                  type="button"
                   onClick={onAddPhoto}
-                  className="relative rounded-2xl border-2 border-dashed border-zinc-200 bg-zinc-50 flex flex-col items-center justify-center cursor-pointer hover:border-wine-300 hover:bg-wine-50 hover:text-wine-700 text-zinc-400 transition-all group aspect-square"
+                  className="relative w-full rounded-2xl border-2 border-dashed border-zinc-200 bg-zinc-50 flex flex-col items-center justify-center cursor-pointer hover:border-wine-300 hover:bg-wine-50 hover:text-wine-700 text-zinc-400 transition-all group aspect-square"
                 >
                   <svg
                     className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform"
@@ -2560,21 +2575,22 @@ function BentoPhotoGallery({
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                   </svg>
                   <span className="text-[11px] font-bold uppercase tracking-wider">Add Foto</span>
-                </div>
+                </button>
               </div>
             )}
 
             {Array.from({ length: lockedSlots }).map((_, idx) => (
               <div key={`locked-${idx}`} className="mb-2 sm:mb-3 break-inside-avoid">
-                <div
+                <button
+                  type="button"
                   onClick={onUpgradeClick}
-                  className="relative aspect-square rounded-2xl border-2 border-dashed border-[#DAA520]/40 bg-zinc-50/60 opacity-70 flex flex-col items-center justify-center gap-1.5 cursor-pointer text-zinc-400 transition-all hover:opacity-100 hover:border-[#DAA520]"
+                  className="relative w-full aspect-square rounded-2xl border-2 border-dashed border-[#DAA520]/40 bg-zinc-50/60 opacity-70 flex flex-col items-center justify-center gap-1.5 cursor-pointer text-zinc-400 transition-all hover:opacity-100 hover:border-[#DAA520]"
                 >
                   <Lock className="w-6 h-6 text-[#DAA520]" />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#DAA520]">
                     Premium
                   </span>
-                </div>
+                </button>
               </div>
             ))}
           </div>
@@ -2601,7 +2617,11 @@ function BentoPhotoGallery({
           {images.length > 0 ? (
             <div
               className="relative group w-full aspect-21/9 rounded-3xl overflow-hidden shadow-sm cursor-pointer bg-zinc-100"
+              role="button"
+              tabIndex={0}
+              aria-label="Abrir foto de capa"
               onClick={() => onPhotoClick(resolvedCoverIndex)}
+              onKeyDown={activateOnKey(() => onPhotoClick(resolvedCoverIndex))}
             >
               <Image
                 src={resolvedCoverSrc}
@@ -2634,6 +2654,7 @@ function BentoPhotoGallery({
                   onDeletePhoto(resolvedCoverIndex);
                 }}
                 className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-700 text-white p-1.5 sm:p-2 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20 shadow-md"
+                aria-label="Excluir"
                 title="Excluir"
               >
                 <svg
@@ -2657,8 +2678,12 @@ function BentoPhotoGallery({
             {galleryItems.map((item) => (
               <div
                 key={item.idx}
+                role="button"
+                tabIndex={0}
+                aria-label={`Abrir foto ${item.idx}`}
                 className="relative aspect-square cursor-pointer overflow-hidden group rounded-xl bg-zinc-100"
                 onClick={() => onPhotoClick(item.idx)}
+                onKeyDown={activateOnKey(() => onPhotoClick(item.idx))}
               >
                 <Image
                   src={item.src}
@@ -2694,6 +2719,7 @@ function BentoPhotoGallery({
                     onDeletePhoto(item.idx);
                   }}
                   className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-700 text-white p-1.5 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20 shadow-md"
+                  aria-label="Excluir"
                   title="Excluir"
                 >
                   <svg
@@ -2714,8 +2740,10 @@ function BentoPhotoGallery({
             ))}
 
             {canAddMore && (
-              <div
+              <button
+                type="button"
                 onClick={onAddPhoto}
+                aria-label="Adicionar foto"
                 className="relative aspect-square bg-zinc-50 border border-dashed border-zinc-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-wine-50 text-zinc-400 hover:text-wine-700 hover:border-wine-300 transition-colors"
               >
                 <svg
@@ -2727,12 +2755,13 @@ function BentoPhotoGallery({
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
-              </div>
+              </button>
             )}
 
             {Array.from({ length: lockedSlots }).map((_, idx) => (
-              <div
+              <button
                 key={`locked-${idx}`}
+                type="button"
                 onClick={onUpgradeClick}
                 className="relative aspect-square rounded-xl border border-dashed border-[#DAA520]/40 bg-zinc-50/60 opacity-70 flex flex-col items-center justify-center gap-1 cursor-pointer text-zinc-400 transition-all hover:opacity-100 hover:border-[#DAA520]"
               >
@@ -2740,7 +2769,7 @@ function BentoPhotoGallery({
                 <span className="text-[9px] font-bold uppercase tracking-wider text-[#DAA520]">
                   Premium
                 </span>
-              </div>
+              </button>
             ))}
           </div>
 
@@ -3180,6 +3209,7 @@ function PhotoGalleryModal({
                     onDelete(i);
                   }}
                   className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all z-20 shadow-md border border-white/20"
+                  aria-label="Excluir"
                   title="Excluir"
                 >
                   <svg
@@ -3321,9 +3351,9 @@ function HairTypeAndColorField({
 
   return (
     <div ref={rootRef} className="space-y-1.5">
-      <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500">
+      <h3 className="block text-[11px] font-black uppercase tracking-widest text-zinc-500">
         Tipo e Cor do Cabelo
-      </label>
+      </h3>
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
@@ -4215,6 +4245,8 @@ function DescriptionSection({
   onDescChange: (value: string) => void;
 }) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const headlineId = useId();
+  const narrativeId = useId();
   const [isFocused, setIsFocused] = useState(false);
 
   // Sync initial description to editor content (only once or when externally changed significantly)
@@ -4253,10 +4285,14 @@ function DescriptionSection({
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">
+        <label
+          htmlFor={headlineId}
+          className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2"
+        >
           Resumo em uma frase (Headline)
         </label>
         <input
+          id={headlineId}
           type="text"
           value={shortDescription}
           onChange={(e) => onShortDescChange(e.target.value)}
@@ -4266,9 +4302,12 @@ function DescriptionSection({
         />
       </div>
       <div>
-        <label className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">
+        <span
+          id={narrativeId}
+          className="block text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2"
+        >
           Narrativa Profissional Completa
-        </label>
+        </span>
         <div className="mb-2 flex flex-wrap items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 p-1.5">
           <button
             type="button"
@@ -4363,6 +4402,7 @@ function DescriptionSection({
           style={{ wordBreak: "break-word" }}
           role="textbox"
           aria-multiline="true"
+          aria-labelledby={narrativeId}
         />
         <p className="mt-1 text-right text-[10px] text-zinc-400">
           {description.replace(/<[^>]*>/g, "").length} / 1000 caracteres
@@ -4440,7 +4480,7 @@ function AvailabilitySection({
 }) {
   return (
     <div className="space-y-6">
-      <label className="flex items-center justify-between cursor-pointer p-5 rounded-xl border border-zinc-200 bg-zinc-50/50">
+      <div className="flex items-center justify-between p-5 rounded-xl border border-zinc-200 bg-zinc-50/50">
         <div>
           <span className="text-base font-bold text-zinc-900 block">
             Exibir grade de horários pública
@@ -4449,8 +4489,12 @@ function AvailabilitySection({
             Deixe os clientes saberem exatamente quando você atende.
           </span>
         </div>
-        <Switch checked={showAvailability} onCheckedChange={(checked) => onToggleShow(checked)} />
-      </label>
+        <Switch
+          checked={showAvailability}
+          onCheckedChange={(checked) => onToggleShow(checked)}
+          aria-label="Exibir grade de horários pública"
+        />
+      </div>
 
       {showAvailability && (
         <div className="grid grid-cols-1 gap-2.5">

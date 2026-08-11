@@ -83,7 +83,7 @@ export function FeedFiltersContent({
       <p className="text-sm whitespace-nowrap text-zinc-500">{resultCount} perfis encontrados</p>
 
       <section>
-        <label className="mb-2.5 block text-sm font-bold text-zinc-900">Filtros rápidos</label>
+        <h3 className="mb-2.5 block text-sm font-bold text-zinc-900">Filtros rápidos</h3>
         <div className="flex flex-wrap gap-2 pt-1.5 pr-1">
           {FEED_QUICK_FILTER_LABELS.map((filter) => {
             const active = activeQuickFilters.includes(filter);
@@ -109,7 +109,7 @@ export function FeedFiltersContent({
       </section>
 
       <section>
-        <label className="mb-2.5 flex items-center gap-2 text-sm font-bold text-zinc-900">
+        <h3 className="mb-2.5 flex items-center gap-2 text-sm font-bold text-zinc-900">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -127,7 +127,7 @@ export function FeedFiltersContent({
             <circle cx="12" cy="10" r="3" />
           </svg>
           Localidade
-        </label>
+        </h3>
 
         <button
           type="button"
@@ -140,7 +140,7 @@ export function FeedFiltersContent({
       </section>
 
       <section>
-        <label className="mb-2.5 block text-sm font-bold text-zinc-900">Gênero & Categoria</label>
+        <h3 className="mb-2.5 block text-sm font-bold text-zinc-900">Gênero & Categoria</h3>
         <div className="grid grid-cols-2 gap-2">
           {["Todas", "Mulher", "Homem", "Trans", "Casal"].map((gender) => (
             <button
@@ -161,7 +161,7 @@ export function FeedFiltersContent({
 
       <section>
         <div className="mb-2.5 flex items-center justify-between">
-          <label className="text-sm font-bold text-zinc-900">Investimento (h)</label>
+          <h3 className="text-sm font-bold text-zinc-900">Investimento (h)</h3>
           <span className="text-xs font-bold text-wine-700">Até {currency(maxPrice)}</span>
         </div>
         <input
@@ -180,7 +180,7 @@ export function FeedFiltersContent({
       </section>
 
       <section>
-        <label className="mb-2.5 block text-sm font-bold text-zinc-900">Modelos</label>
+        <h3 className="mb-2.5 block text-sm font-bold text-zinc-900">Modelos</h3>
         <div className="space-y-2">
           {["Premium", "Comum"].map((type) => (
             <label
@@ -214,7 +214,7 @@ export function FeedFiltersContent({
 
       <section className="space-y-5">
         <div>
-          <label className="mb-2 block text-sm font-bold text-zinc-900">Tipo</label>
+          <h3 className="mb-2 block text-sm font-bold text-zinc-900">Tipo</h3>
           <div className="flex flex-wrap gap-2 pt-1.5 pr-1">
             {["Caucasiana", "Negra", "Asiática", "Latina", "Indígena"].map((eth) => (
               <FilterChip
@@ -227,7 +227,7 @@ export function FeedFiltersContent({
           </div>
         </div>
         <div>
-          <label className="mb-2 block text-sm font-bold text-zinc-900">Cabelo</label>
+          <h3 className="mb-2 block text-sm font-bold text-zinc-900">Cabelo</h3>
           <div className="flex flex-wrap gap-2 pt-1.5 pr-1">
             {["Loira", "Morena", "Ruiva"].map((hair) => (
               <FilterChip
@@ -242,7 +242,7 @@ export function FeedFiltersContent({
       </section>
 
       <section>
-        <label className="mb-2.5 block text-sm font-bold text-zinc-900">Serviços</label>
+        <h3 className="mb-2.5 block text-sm font-bold text-zinc-900">Serviços</h3>
         <div className="space-y-2">
           {["Viagem / Tour", "Jantares e Eventos", "Fetiches"].map((service) => (
             <label

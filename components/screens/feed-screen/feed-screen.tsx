@@ -367,6 +367,7 @@ export function FeedScreen() {
                 ref={setFiltersScrollNode}
                 data-feed-filters-scroll
                 className="min-h-0 flex-1 overflow-y-auto overscroll-contain overscroll-y-contain bg-white p-5 [overflow-anchor:none]"
+                role="presentation"
                 onMouseDown={(event) => {
                   const target = event.target as HTMLElement | null;
                   if (target?.closest("button, input, label, a, [role='button']")) {

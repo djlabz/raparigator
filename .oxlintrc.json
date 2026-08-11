@@ -30,16 +30,12 @@
     // Next.js usa o JSX runtime automatico
     "react/react-in-jsx-scope": "off",
 
-    // Regras de acessibilidade que o eslint-config-next nao aplicava.
-    // Mantidas desligadas para preservar a paridade da migracao; ligar
-    // uma a uma em tarefa dedicada de a11y.
-    "jsx-a11y/click-events-have-key-events": "off",
-    "jsx-a11y/control-has-associated-label": "off",
-    "jsx-a11y/label-has-associated-control": "off",
-    "jsx-a11y/mouse-events-have-key-events": "off",
-    "jsx-a11y/no-autofocus": "off",
-    "jsx-a11y/no-noninteractive-element-interactions": "off",
-    "jsx-a11y/no-static-element-interactions": "off",
+    // Unica regra a11y desligada. Ela nao distingue "usou role por preguica"
+    // de "usou role porque a tag nativa nao serve", e neste projeto e sempre
+    // o segundo caso: combobox custom (select.tsx), 5 modais animados em
+    // portal, radiogroup de rating, editor contentEditable e cards clicaveis
+    // com botao aninhado. Satisfazer a regra exigiria reescrever esses
+    // componentes e perder os padroes ARIA corretos que eles ja implementam.
     "jsx-a11y/prefer-tag-over-role": "off"
   },
   "ignorePatterns": [

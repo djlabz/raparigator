@@ -26,6 +26,7 @@ import Link from "next/link";
 import {
   FormEvent,
   type RefObject,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -305,6 +306,9 @@ export function ChatScreen() {
   const [previousAliasFromUser, setPreviousAliasFromUser] = useState(aliasFromUser);
   const [globalAliasDraft, setGlobalAliasDraft] = useState(globalAlias);
   const [globalAliasModalOpen, setGlobalAliasModalOpen] = useState(false);
+  const focusOnMount = useCallback((node: HTMLInputElement | null) => {
+    node?.focus();
+  }, []);
   const [presenceVisible, setPresenceVisible] = useState(true);
   const [professionalAvailability, setProfessionalAvailability] = useState<AvailabilityStatus>(() =>
     readProfessionalAvailability(),
@@ -1028,12 +1032,12 @@ export function ChatScreen() {
           </label>
           <input
             id="conversation-alias"
+            ref={focusOnMount}
             value={renameDraft}
             onChange={(event) => setRenameDraft(event.target.value)}
             placeholder="Ex: Cliente reservado"
             className="h-11 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 text-sm text-zinc-800 outline-none transition focus:border-wine-500 focus:bg-white"
             maxLength={40}
-            autoFocus
           />
           <p className="text-xs text-zinc-500">Deixe vazio para usar seu apelido geral.</p>
         </div>
@@ -1061,12 +1065,12 @@ export function ChatScreen() {
           </label>
           <input
             id="global-alias"
+            ref={focusOnMount}
             value={globalAliasDraft}
             onChange={(event) => setGlobalAliasDraft(event.target.value)}
             placeholder="Ex: Cliente reservado"
             className="h-11 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 text-sm text-zinc-800 outline-none transition focus:border-wine-500 focus:bg-white"
             maxLength={40}
-            autoFocus
           />
         </div>
       </Modal>
@@ -1314,6 +1318,7 @@ function ConversationThread({
             "absolute inset-0 z-20 bg-zinc-900/30 px-3 transition-opacity duration-200 md:px-5",
             profilePanelOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
           )}
+          role="presentation"
           onClick={onProfileClose}
         >
           <div
@@ -1323,6 +1328,7 @@ function ConversationThread({
                 ? "translate-y-0 scale-100 opacity-100"
                 : "-translate-y-4 scale-[0.98] opacity-0",
             )}
+            role="presentation"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="px-2 pb-2">
