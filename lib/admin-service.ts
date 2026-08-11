@@ -48,7 +48,6 @@ export async function suspendClient(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function reinstateClient(id: string, _adminId: string): Promise<void> {
   // BACKEND: POST /api/admin/clients/:id/reinstate { adminId }
   const idx = clientStore.findIndex((c) => c.id === id);
@@ -74,7 +73,6 @@ export async function suspendProfessional(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function reinstateProfessional(id: string, _adminId: string): Promise<void> {
   // BACKEND: POST /api/admin/professionals/:id/reinstate { adminId }
   const idx = profileStore.findIndex((p) => p.id === id);

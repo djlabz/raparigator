@@ -59,25 +59,21 @@ export async function fetchViewOnceMediaMessage(
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function fetchSetConversationBlocked(_conversationId: string, _isBlocked: boolean): Promise<void> {
   // BACKEND: PATCH /api/chat/conversations/:conversationId/block
   await delay(200);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function fetchDeleteConversationFromInbox(_conversationId: string): Promise<void> {
   // BACKEND: DELETE /api/chat/conversations/:conversationId/inbox
   await delay(200);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function fetchReportConversation(_conversationId: string, _reason: string): Promise<void> {
   // BACKEND: POST /api/chat/conversations/:conversationId/report
   await delay(300);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function fetchUpdateParticipantAlias(_conversationId: string, _alias: string | null): Promise<void> {
   // BACKEND: PATCH /api/chat/conversations/:conversationId/alias
   await delay(200);

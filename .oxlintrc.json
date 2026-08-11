@@ -1,0 +1,49 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["oxc", "typescript", "unicorn", "react", "jsx-a11y", "nextjs", "import"],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "browser": true,
+    "es2024": true,
+    "node": true
+  },
+  "settings": {
+    "react": {
+      "version": "19.2.3"
+    }
+  },
+  "rules": {
+    "no-unassigned-vars": "error",
+    "no-useless-assignment": "error",
+    "preserve-caught-error": "error",
+
+    // Next.js usa o JSX runtime automatico
+    "react/react-in-jsx-scope": "off",
+
+    // Regras de acessibilidade que o eslint-config-next nao aplicava.
+    // Mantidas desligadas para preservar a paridade da migracao; ligar
+    // uma a uma em tarefa dedicada de a11y.
+    "jsx-a11y/click-events-have-key-events": "off",
+    "jsx-a11y/control-has-associated-label": "off",
+    "jsx-a11y/label-has-associated-control": "off",
+    "jsx-a11y/mouse-events-have-key-events": "off",
+    "jsx-a11y/no-autofocus": "off",
+    "jsx-a11y/no-noninteractive-element-interactions": "off",
+    "jsx-a11y/no-static-element-interactions": "off",
+    "jsx-a11y/prefer-tag-over-role": "off"
+  },
+  "ignorePatterns": [
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    ".tmp-venv/**",
+    ".agents/**",
+    ".claude/**",
+    ".superpowers/**",
+    "playwright-report/**",
+    "test-results/**"
+  ]
+}
