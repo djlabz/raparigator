@@ -22,7 +22,6 @@ function NotificationRow({
     <button
       type="button"
       onClick={() => onSelect(notification)}
-      aria-label={notification.title}
       className={cn(
         "flex w-full items-start gap-3 rounded-2xl border px-4 py-3 text-left transition",
         notification.read

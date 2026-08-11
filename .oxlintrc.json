@@ -19,6 +19,12 @@
     "no-useless-assignment": "error",
     "preserve-caught-error": "error",
 
+    // A regra so olha 2 niveis de profundidade por padrao e acusa botoes
+    // que tem texto real, so que aninhado mais fundo. Subir para 5 evita
+    // que a saida seja por aria-label, que sobrescreveria o nome
+    // acessivel computado do conteudo e o empobreceria.
+    "jsx-a11y/control-has-associated-label": ["error", { "depth": 5 }],
+
     // Paridade com o eslint-config-next: eram error la e nao estao na
     // categoria `correctness` do oxlint, entao precisam ser explicitas.
     "react-hooks/rules-of-hooks": "error",
@@ -69,6 +75,17 @@
       "files": ["components/screens/professional-dashboard/announcement-tab.tsx"],
       "rules": {
         "jsx-a11y/prefer-tag-over-role": "off"
+      }
+    },
+    {
+      // O onMouseOut do canvas de borrao encerra um arrasto de desenho;
+      // nao revela conteudo, que e o caso que a regra existe para cobrir.
+      // Nao ha equivalente de teclado a acrescentar: um onBlur so
+      // dispararia com tabIndex, e dar foco a um canvas que nao aceita
+      // desenho por teclado criaria um tab stop inutil.
+      "files": ["components/ui/image-blur-modal.tsx"],
+      "rules": {
+        "jsx-a11y/mouse-events-have-key-events": "off"
       }
     }
   ],
