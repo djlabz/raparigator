@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useLayoutEffect,
-  useState,
-  type PropsWithChildren,
-  type ReactNode,
-} from "react";
+import { useLayoutEffect, useState, type PropsWithChildren, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { animate, motion, useMotionValue } from "motion/react";
 import { useAuthSession } from "@/lib/auth-session";
@@ -56,9 +51,7 @@ export function TabsKeepAlive({ children }: PropsWithChildren) {
       }
 
       return {
-        order: current.order.includes(activeHref)
-          ? current.order
-          : [...current.order, activeHref],
+        order: current.order.includes(activeHref) ? current.order : [...current.order, activeHref],
         nodes: {
           ...current.nodes,
           [activeHref]: children,
@@ -135,9 +128,7 @@ export function TabsKeepAlive({ children }: PropsWithChildren) {
               style={{ display: active ? "block" : "none" }}
             >
               {motionActive ? (
-                <motion.div style={{ opacity: panelOpacity }}>
-                  {node}
-                </motion.div>
+                <motion.div style={{ opacity: panelOpacity }}>{node}</motion.div>
               ) : (
                 <div>{node}</div>
               )}

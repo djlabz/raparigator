@@ -55,17 +55,17 @@ function createRegistry(): TitleFlightRegistry {
       flagsStore: createFlagsStore<FeedTitleFlightFlags>(
         DEFAULT_FEED_TITLE_FLIGHT_FLAGS,
         (prev, next) =>
-          prev.enabled === next.enabled
-          && prev.mode === next.mode
-          && prev.hasPremium === next.hasPremium
-          && prev.hasStandard === next.hasStandard
+          prev.enabled === next.enabled &&
+          prev.mode === next.mode &&
+          prev.hasPremium === next.hasPremium &&
+          prev.hasStandard === next.hasStandard,
       ),
       motion: createFeedMotion(),
     },
     dashboard: {
       flagsStore: createFlagsStore<DashboardTitleFlightFlags>(
         DEFAULT_DASHBOARD_TITLE_FLIGHT_FLAGS,
-        (prev, next) => prev.enabled === next.enabled && prev.mode === next.mode
+        (prev, next) => prev.enabled === next.enabled && prev.mode === next.mode,
       ),
       motion: createDashboardMotion(),
     },

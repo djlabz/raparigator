@@ -12,7 +12,13 @@ import type { ProfessionalAd } from "@/lib/types";
 import { cn, currency } from "@/lib/utils";
 
 const PAYMENT_METHOD_OPTIONS = [
-  { id: "pix", label: "Pix", Icon: PixIcon, iconClassName: "text-teal-500", iconSlotClassName: undefined },
+  {
+    id: "pix",
+    label: "Pix",
+    Icon: PixIcon,
+    iconClassName: "text-teal-500",
+    iconSlotClassName: undefined,
+  },
   {
     id: "dinheiro",
     label: "Dinheiro",
@@ -41,7 +47,9 @@ function PaymentMethodBadge({
       title={label}
     >
       {iconSlotClassName ? (
-        <span className={cn("inline-flex shrink-0 items-center justify-center", iconSlotClassName)}>{icon}</span>
+        <span className={cn("inline-flex shrink-0 items-center justify-center", iconSlotClassName)}>
+          {icon}
+        </span>
       ) : (
         icon
       )}
@@ -84,13 +92,16 @@ export function SchedulingSimulator({
           </h3>
           <div className="mt-0.5 shrink-0">
             <span className="flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-1.5 text-xs font-bold tracking-widest text-emerald-800 uppercase sm:text-xs">
-              <VerifiedCheckIcon className="h-3.5 w-3.5 shrink-0 text-emerald-600" /> <span className="hidden sm:inline">Serviço</span> Seguro
+              <VerifiedCheckIcon className="h-3.5 w-3.5 shrink-0 text-emerald-600" />{" "}
+              <span className="hidden sm:inline">Serviço</span> Seguro
             </span>
           </div>
         </div>
         {ad.paymentMethods && ad.paymentMethods.length > 0 && (
           <div className="pointer-events-none -mx-1 flex flex-nowrap items-center gap-x-2.5 overflow-x-auto px-1 touch-none select-none scrollbar-none sm:gap-x-3 [&::-webkit-scrollbar]:hidden">
-            <span className="shrink-0 text-[11px] font-black uppercase tracking-widest text-zinc-900">Aceita:</span>
+            <span className="shrink-0 text-[11px] font-black uppercase tracking-widest text-zinc-900">
+              Aceita:
+            </span>
             {PAYMENT_METHOD_OPTIONS.map((option) =>
               ad.paymentMethods?.includes(option.id) ? (
                 <PaymentMethodBadge
@@ -98,11 +109,13 @@ export function SchedulingSimulator({
                   label={option.label}
                   Icon={option.Icon}
                   iconClassName={option.iconClassName}
-                  iconSlotClassName={"iconSlotClassName" in option ? option.iconSlotClassName : undefined}
+                  iconSlotClassName={
+                    "iconSlotClassName" in option ? option.iconSlotClassName : undefined
+                  }
                 />
               ) : null,
             )}
-            {(ad.paymentMethods.includes("credito") && ad.paymentMethods.includes("debito")) ? (
+            {ad.paymentMethods.includes("credito") && ad.paymentMethods.includes("debito") ? (
               <PaymentMethodBadge
                 key="credito-debito"
                 label="Crédito e Débito"
@@ -149,18 +162,31 @@ export function SchedulingSimulator({
               )}
             >
               <div className="flex min-w-0 shrink flex-col pr-2">
-                <span className="text-xs font-black tracking-widest whitespace-nowrap text-zinc-400 uppercase sm:text-xs">Duração</span>
-                <span className={cn("mt-0.5 truncate text-sm font-semibold whitespace-nowrap sm:text-base", isSelected ? "font-bold text-[#96001e]" : "text-zinc-700")}>
+                <span className="text-xs font-black tracking-widest whitespace-nowrap text-zinc-400 uppercase sm:text-xs">
+                  Duração
+                </span>
+                <span
+                  className={cn(
+                    "mt-0.5 truncate text-sm font-semibold whitespace-nowrap sm:text-base",
+                    isSelected ? "font-bold text-[#96001e]" : "text-zinc-700",
+                  )}
+                >
                   {plan.label}
                 </span>
               </div>
 
               <div className="flex shrink-0 flex-nowrap items-center gap-3">
-                {isSelected && <span className="mr-1 animate-fade-in text-sm font-bold whitespace-nowrap text-zinc-900 sm:text-base">{currency(plan.price)}</span>}
+                {isSelected && (
+                  <span className="mr-1 animate-fade-in text-sm font-bold whitespace-nowrap text-zinc-900 sm:text-base">
+                    {currency(plan.price)}
+                  </span>
+                )}
                 <div
                   className={cn(
                     "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all",
-                    isSelected ? "border-[#96001e] bg-[#96001e] text-white" : "border-zinc-200 bg-zinc-50/50",
+                    isSelected
+                      ? "border-[#96001e] bg-[#96001e] text-white"
+                      : "border-zinc-200 bg-zinc-50/50",
                   )}
                 >
                   {isSelected && <Check className="h-3 w-3" />}
@@ -178,7 +204,9 @@ export function SchedulingSimulator({
       </div>
 
       <div className="space-y-3 border-t border-zinc-100 pt-5">
-        <p className="text-xs font-bold tracking-widest text-zinc-900 uppercase sm:text-xs">Deseja incluir algum adicional?</p>
+        <p className="text-xs font-bold tracking-widest text-zinc-900 uppercase sm:text-xs">
+          Deseja incluir algum adicional?
+        </p>
         <div className="grid gap-2 sm:grid-cols-2">
           {ad.services.map((svc) => {
             const hasExtra = selectedExtras.includes(svc);
@@ -194,7 +222,12 @@ export function SchedulingSimulator({
                     : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50/50",
                 )}
               >
-                <span className={cn("truncate pr-1 text-xs font-medium sm:pr-2 sm:text-sm", hasExtra ? "font-semibold text-zinc-900" : "text-zinc-700")}>
+                <span
+                  className={cn(
+                    "truncate pr-1 text-xs font-medium sm:pr-2 sm:text-sm",
+                    hasExtra ? "font-semibold text-zinc-900" : "text-zinc-700",
+                  )}
+                >
                   {svc}
                 </span>
 
@@ -207,7 +240,9 @@ export function SchedulingSimulator({
                   <div
                     className={cn(
                       "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all",
-                      hasExtra ? "border-[#96001e] bg-[#96001e] text-white" : "border-zinc-200 bg-zinc-50/50",
+                      hasExtra
+                        ? "border-[#96001e] bg-[#96001e] text-white"
+                        : "border-zinc-200 bg-zinc-50/50",
                     )}
                   >
                     {hasExtra && <Check className="h-3 w-3" />}
@@ -229,7 +264,8 @@ export function SchedulingSimulator({
             <div className="animate-slide-in flex items-center justify-between text-xs text-zinc-400">
               <span>Adicionais Personalizados ({selectedExtras.length})</span>
               <span className="flex items-center font-mono">
-                <span className="mr-1.5 font-bold text-[#96001e]">+</span> {currency(calculatedExtrasCost)}
+                <span className="mr-1.5 font-bold text-[#96001e]">+</span>{" "}
+                {currency(calculatedExtrasCost)}
               </span>
             </div>
           )}
@@ -238,7 +274,9 @@ export function SchedulingSimulator({
               <DollarSign className="h-4 w-4 text-emerald-400" />
               Valor Total:
             </span>
-            <span className="font-mono text-lg font-black text-amber-300">{currency(totalCalculatedValue)}</span>
+            <span className="font-mono text-lg font-black text-amber-300">
+              {currency(totalCalculatedValue)}
+            </span>
           </div>
         </div>
 

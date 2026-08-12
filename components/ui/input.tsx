@@ -10,7 +10,16 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   premium?: boolean;
 }
 
-export function Input({ id, label, hint, error, className, leadingIcon, premium = false, ...props }: InputProps) {
+export function Input({
+  id,
+  label,
+  hint,
+  error,
+  className,
+  leadingIcon,
+  premium = false,
+  ...props
+}: InputProps) {
   const shouldMaskPhone = props.type === "tel" || id?.toLowerCase().includes("phone");
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -28,7 +37,9 @@ export function Input({ id, label, hint, error, className, leadingIcon, premium 
       </label>
       <div className="relative">
         {leadingIcon ? (
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">{leadingIcon}</span>
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
+            {leadingIcon}
+          </span>
         ) : null}
         <input
           id={id}
@@ -43,7 +54,11 @@ export function Input({ id, label, hint, error, className, leadingIcon, premium 
           onChange={handleChange}
         />
       </div>
-      {error ? <p className="text-xs text-red-600">{error}</p> : hint ? <p className="text-xs text-zinc-500">{hint}</p> : null}
+      {error ? (
+        <p className="text-xs text-red-600">{error}</p>
+      ) : hint ? (
+        <p className="text-xs text-zinc-500">{hint}</p>
+      ) : null}
     </div>
   );
 }

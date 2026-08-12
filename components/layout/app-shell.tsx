@@ -8,11 +8,7 @@ import {
   chromeHeaderOffset,
   shellContainerClass,
 } from "@/lib/chrome-styles";
-import {
-  registerShell,
-  setMobileNavHidden,
-  unregisterShell,
-} from "@/lib/tab-navigation";
+import { registerShell, setMobileNavHidden, unregisterShell } from "@/lib/tab-navigation";
 import { cn } from "@/lib/utils";
 import { useShellChrome } from "./shell-chrome";
 import { TopHeader } from "./top-header";
@@ -72,18 +68,23 @@ export function AppShell({
       <main
         className={cn(
           shellContainerClass,
-          hideMobileBottomNav ? "pb-6 md:pb-10" : "pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:pb-10",
+          hideMobileBottomNav
+            ? "pb-6 md:pb-10"
+            : "pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:pb-10",
           !hideTopHeader && chromeHeaderOffset,
-          mainClassName
+          mainClassName,
         )}
       >
         {!hideDesktopNav && navigationItems.length > 0 ? (
-          <div className={cn(chromeDesktopNavSticky, "mb-4 hidden items-center justify-between gap-4 md:flex")}>
+          <div
+            className={cn(
+              chromeDesktopNavSticky,
+              "mb-4 hidden items-center justify-between gap-4 md:flex",
+            )}
+          >
             <DesktopNav items={navigationItems} className="min-w-0 flex-1" />
             {desktopNavRight ? (
-              <div className="flex shrink-0 items-center gap-3">
-                {desktopNavRight}
-              </div>
+              <div className="flex shrink-0 items-center gap-3">{desktopNavRight}</div>
             ) : null}
           </div>
         ) : null}

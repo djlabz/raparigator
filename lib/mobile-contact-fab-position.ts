@@ -48,8 +48,17 @@ export function saveMobileContactFabY(y: number) {
   window.localStorage.setItem(Y_STORAGE_KEY, String(y));
 }
 
-export function clampMobileContactFabY(y: number, viewportHeight = typeof window !== "undefined" ? window.innerHeight : 800) {
-  const travelUp = Math.max(0, viewportHeight - MOBILE_CONTACT_FAB_SIZE - MOBILE_CONTACT_FAB_BOTTOM_OFFSET - MOBILE_CONTACT_FAB_EDGE_INSET);
+export function clampMobileContactFabY(
+  y: number,
+  viewportHeight = typeof window !== "undefined" ? window.innerHeight : 800,
+) {
+  const travelUp = Math.max(
+    0,
+    viewportHeight -
+      MOBILE_CONTACT_FAB_SIZE -
+      MOBILE_CONTACT_FAB_BOTTOM_OFFSET -
+      MOBILE_CONTACT_FAB_EDGE_INSET,
+  );
   return Math.min(0, Math.max(-travelUp, y));
 }
 
@@ -58,8 +67,17 @@ export function getMobileContactFabTooltipSide(fabSide: MobileContactFabSide): "
 }
 
 export function getMobileContactFabDragConstraints(viewportWidth: number, viewportHeight: number) {
-  const maxUp = Math.max(0, viewportHeight - MOBILE_CONTACT_FAB_SIZE - MOBILE_CONTACT_FAB_BOTTOM_OFFSET - MOBILE_CONTACT_FAB_EDGE_INSET);
-  const maxHorizontal = Math.max(0, viewportWidth - MOBILE_CONTACT_FAB_SIZE - MOBILE_CONTACT_FAB_EDGE_INSET * 2);
+  const maxUp = Math.max(
+    0,
+    viewportHeight -
+      MOBILE_CONTACT_FAB_SIZE -
+      MOBILE_CONTACT_FAB_BOTTOM_OFFSET -
+      MOBILE_CONTACT_FAB_EDGE_INSET,
+  );
+  const maxHorizontal = Math.max(
+    0,
+    viewportWidth - MOBILE_CONTACT_FAB_SIZE - MOBILE_CONTACT_FAB_EDGE_INSET * 2,
+  );
 
   return {
     top: -maxUp,

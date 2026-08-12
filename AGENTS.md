@@ -6,16 +6,18 @@ Frontend de uma plataforma de anúncios de acompanhantes com feed, chat, checkou
 
 - TypeScript (strict) · Next.js 16 (App Router + Turbopack) · React 19
 - Tailwind CSS v4 · Motion (animações) · Lucide React (ícones)
+- Lint e formatação via oxc: `oxlint` (`.oxlintrc.json`) e `oxfmt` (`.oxfmtrc.json`) — sem ESLint nem Prettier
 - Sem banco e sem API real — dados vêm de `lib/mock-data.ts` e `lib/mock-users.ts`
 
 ## Como rodar
 
 - Instalar: `npm install`
 - Dev: `npm run dev` (porta 3000; `npm run dev:legacy` roda sem Turbopack)
-- Lint: `npm run lint` — SEMPRE rode antes de finalizar tarefa
+- Lint: `npm run lint` (oxlint) — SEMPRE rode antes de finalizar tarefa
+- Formatação: `npm run format` (oxfmt) · verificar sem escrever: `npm run format:check`
 - Build de produção: `npm run build` · servir build: `npm run start`
 - E2E: `npm run test:e2e` (Playwright em `tests/`, roda só Chromium)
-- Verificação local típica: lint + typecheck (`npm run check`) + E2E + checagem visual quando mexer em motion/UI
+- Verificação local típica: lint + format:check + typecheck (`npm run check`) + E2E + checagem visual quando mexer em motion/UI
 - Logins de teste estão em `tests/helpers/credentials.ts` (admin: `admin@sigillus.dev` / `Admin@123` em `lib/mock-users.ts`)
 - PWA / tela cheia: em aba normal do navegador a barra de endereço não pode ser escondida de forma permanente. Para experiência tipo app nativo, instale via “Adicionar à Tela de Início” / “Instalar app” (`display: standalone` em `app/manifest.ts`). Valide nesse modo, não só no tunnel Cloudflare.
 

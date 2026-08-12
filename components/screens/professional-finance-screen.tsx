@@ -10,13 +10,20 @@ export function ProfessionalFinanceScreen() {
     <AppShell>
       <div className="space-y-6">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Financeiro</p>
-          <h1 className="mt-2 text-2xl font-semibold text-zinc-900">Controle de caixa e repasses</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
+            Financeiro
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold text-zinc-900">
+            Controle de caixa e repasses
+          </h1>
         </div>
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard label="Receita do mês" value={currency(dashboardSummary.monthRevenue)} />
-          <StatCard label="Serviços concluídos" value={String(dashboardSummary.completedServices)} />
+          <StatCard
+            label="Serviços concluídos"
+            value={String(dashboardSummary.completedServices)}
+          />
           <StatCard label="Conversão" value={`${dashboardSummary.conversionRate}%`} />
           <StatCard label="Visitas ao perfil" value={String(dashboardSummary.profileViews)} />
         </section>
@@ -24,7 +31,8 @@ export function ProfessionalFinanceScreen() {
         <Card className="space-y-3">
           <h2 className="text-base font-semibold text-zinc-900">Resumo operacional</h2>
           <p className="text-sm text-zinc-600">
-            Esta área é o ponto central para acompanhar entradas, custo de custódia, saques e previsibilidade de caixa.
+            Esta área é o ponto central para acompanhar entradas, custo de custódia, saques e
+            previsibilidade de caixa.
           </p>
         </Card>
       </div>

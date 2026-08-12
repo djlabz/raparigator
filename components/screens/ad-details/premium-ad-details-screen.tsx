@@ -66,9 +66,7 @@ export function PremiumAdDetailsScreen({ slug }: PremiumAdDetailsScreenProps) {
     setRiskTarget(target);
     if (target === "WhatsApp") {
       setExternalTargetUrl(
-        ad.whatsappNumber
-          ? getWhatsAppChatUrl(ad.artisticName, ad.slug, ad.whatsappNumber)
-          : null,
+        ad.whatsappNumber ? getWhatsAppChatUrl(ad.artisticName, ad.slug, ad.whatsappNumber) : null,
       );
       return;
     }

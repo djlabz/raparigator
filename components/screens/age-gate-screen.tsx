@@ -28,13 +28,7 @@ export function AgeGateScreen() {
           <Button type="button" fullWidth size="lg" onClick={confirmAdult}>
             Sou maior de 18
           </Button>
-          <Button
-            type="button"
-            fullWidth
-            size="lg"
-            variant="secondary"
-            onClick={denyUnderage}
-          >
+          <Button type="button" fullWidth size="lg" variant="secondary" onClick={denyUnderage}>
             Tenho menos de 18
           </Button>
         </div>

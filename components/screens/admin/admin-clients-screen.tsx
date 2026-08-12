@@ -2,16 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import {
-  Search,
-  UserCheck,
-  UserX,
-  MapPin,
-  Calendar,
-  ShoppingBag,
-  X,
-  Users,
-} from "lucide-react";
+import { Search, UserCheck, UserX, MapPin, Calendar, ShoppingBag, X, Users } from "lucide-react";
 import { AdminLayoutShell } from "./admin-layout-shell";
 import { useAdminSession } from "@/lib/admin-session";
 import { getClients, suspendClient, reinstateClient } from "@/lib/admin-service";
@@ -73,7 +64,9 @@ export function AdminClientsScreen() {
   }, []);
 
   useEffect(() => {
-    void (async () => { await loadClients(); })();
+    void (async () => {
+      await loadClients();
+    })();
   }, [loadClients]);
 
   const showToast = (msg: string) => {
@@ -142,7 +135,8 @@ export function AdminClientsScreen() {
               Gestão de Clientes
             </h1>
             <p className="text-xs sm:text-sm text-zinc-400">
-              Administre cadastros de usuários contratantes, informações mascaradas e status de conta.
+              Administre cadastros de usuários contratantes, informações mascaradas e status de
+              conta.
             </p>
           </div>
         </div>
@@ -226,7 +220,9 @@ export function AdminClientsScreen() {
                   className="grid grid-cols-1 md:grid-cols-[auto_1.5fr_1.5fr_1fr_1fr_auto_auto] items-start md:items-center gap-3 md:gap-4 p-5 md:px-6 md:py-4 transition-colors hover:bg-zinc-900/80"
                 >
                   {/* Avatar */}
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border text-sm font-bold shadow-sm ${avatarColor(client.fullName)}`}>
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border text-sm font-bold shadow-sm ${avatarColor(client.fullName)}`}
+                  >
                     {client.fullName.charAt(0)}
                   </div>
 
@@ -255,7 +251,9 @@ export function AdminClientsScreen() {
                   {/* Cidade */}
                   <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium">
                     <MapPin className="h-3.5 w-3.5 text-wine-400 shrink-0" />
-                    <span>{client.city}, {client.state}</span>
+                    <span>
+                      {client.city}, {client.state}
+                    </span>
                   </div>
 
                   {/* Data */}
@@ -294,7 +292,9 @@ export function AdminClientsScreen() {
                   {/* Motivo de Suspensão */}
                   {client.status === "suspended" && client.suspensionReason && (
                     <div className="col-span-full mt-1 rounded-2xl border border-red-900/40 bg-red-950/30 p-3 text-xs text-red-300">
-                      <span className="font-bold uppercase tracking-wider text-[10px]">Motivo da Suspensão:</span>{" "}
+                      <span className="font-bold uppercase tracking-wider text-[10px]">
+                        Motivo da Suspensão:
+                      </span>{" "}
                       {client.suspensionReason}
                     </div>
                   )}
@@ -328,8 +328,12 @@ export function AdminClientsScreen() {
                       <UserX className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-bold text-zinc-100 text-base">Suspender Acesso de Cliente</h2>
-                      <p className="text-xs text-zinc-500">Bloqueio de conta temporário/definitivo</p>
+                      <h2 className="font-bold text-zinc-100 text-base">
+                        Suspender Acesso de Cliente
+                      </h2>
+                      <p className="text-xs text-zinc-500">
+                        Bloqueio de conta temporário/definitivo
+                      </p>
                     </div>
                   </div>
                   <button
@@ -383,4 +387,3 @@ export function AdminClientsScreen() {
     </AdminLayoutShell>
   );
 }
-

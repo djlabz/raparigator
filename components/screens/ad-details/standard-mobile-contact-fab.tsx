@@ -15,7 +15,11 @@ interface StandardMobileContactFabProps {
   role: "visitor" | "client" | "professional";
 }
 
-export function StandardMobileContactFab({ ad, setRiskTarget, role }: StandardMobileContactFabProps) {
+export function StandardMobileContactFab({
+  ad,
+  setRiskTarget,
+  role,
+}: StandardMobileContactFabProps) {
   const {
     isOpen,
     showTooltip,
@@ -62,7 +66,7 @@ export function StandardMobileContactFab({ ad, setRiskTarget, role }: StandardMo
               exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
               className={cn(
                 "absolute z-10 w-max max-w-35 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold leading-tight text-zinc-700 shadow-md backdrop-blur-sm",
-                tooltipSide === "right" ? "left-17" : "right-17"
+                tooltipSide === "right" ? "left-17" : "right-17",
               )}
             >
               <div
@@ -70,7 +74,7 @@ export function StandardMobileContactFab({ ad, setRiskTarget, role }: StandardMo
                   "absolute top-1/2 h-0 w-0 -translate-y-1/2 border-y-4 border-y-transparent",
                   tooltipSide === "right"
                     ? "-left-1.5 border-r-[6px] border-r-white"
-                    : "-right-1.5 border-l-[6px] border-l-white"
+                    : "-right-1.5 border-l-[6px] border-l-white",
                 )}
               />
               Falar agora.
@@ -153,7 +157,11 @@ export function StandardMobileContactFab({ ad, setRiskTarget, role }: StandardMo
             />
           </div>
           <div className="absolute right-[14.6%] bottom-[14.6%] z-20 flex h-6 w-6 translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full bg-zinc-900 border border-white/20">
-            {isOpen ? <X className="h-3.5 w-3.5 text-white" /> : <MessageSquare className="h-3.5 w-3.5 fill-white text-white" />}
+            {isOpen ? (
+              <X className="h-3.5 w-3.5 text-white" />
+            ) : (
+              <MessageSquare className="h-3.5 w-3.5 fill-white text-white" />
+            )}
           </div>
         </button>
       </div>

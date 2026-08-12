@@ -29,9 +29,7 @@ interface AdminLayoutShellProps {
 const navSections = [
   {
     label: "Visão Geral",
-    items: [
-      { label: "Dashboard", href: "/admin", icon: LayoutDashboard, exact: true },
-    ],
+    items: [{ label: "Dashboard", href: "/admin", icon: LayoutDashboard, exact: true }],
   },
   {
     label: "Gestão de Usuários",
@@ -89,9 +87,14 @@ export function AdminLayoutShell({ children, breadcrumb }: AdminLayoutShellProps
           </div>
           <div className="flex flex-col">
             <span className="font-display text-lg font-bold tracking-wide text-zinc-100">
-              Sigillus <span className="font-sans text-xs font-semibold uppercase tracking-wider text-wine-400">Admin</span>
+              Sigillus{" "}
+              <span className="font-sans text-xs font-semibold uppercase tracking-wider text-wine-400">
+                Admin
+              </span>
             </span>
-            <span className="text-[10px] text-zinc-500 font-mono tracking-tight">Command Center v2.0</span>
+            <span className="text-[10px] text-zinc-500 font-mono tracking-tight">
+              Command Center v2.0
+            </span>
           </div>
         </div>
 
@@ -116,13 +119,13 @@ export function AdminLayoutShell({ children, breadcrumb }: AdminLayoutShellProps
                         "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                         isActive
                           ? "bg-gradient-to-r from-wine-950/80 to-wine-900/40 text-wine-200 border border-wine-800/50 shadow-sm shadow-wine-950/40"
-                          : "text-zinc-400 hover:bg-zinc-900/80 hover:text-zinc-200"
+                          : "text-zinc-400 hover:bg-zinc-900/80 hover:text-zinc-200",
                       )}
                     >
                       <item.icon
                         className={cn(
                           "h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110",
-                          isActive ? "text-wine-400" : "text-zinc-500 group-hover:text-zinc-300"
+                          isActive ? "text-wine-400" : "text-zinc-500 group-hover:text-zinc-300",
                         )}
                       />
                       <span>{item.label}</span>
@@ -151,9 +154,7 @@ export function AdminLayoutShell({ children, breadcrumb }: AdminLayoutShellProps
             {admin?.fullName.charAt(0) || "A"}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-bold text-zinc-200">
-              {admin?.fullName}
-            </p>
+            <p className="truncate text-xs font-bold text-zinc-200">{admin?.fullName}</p>
             <p className="truncate text-[10px] text-zinc-500">{admin?.email}</p>
           </div>
         </div>
@@ -209,7 +210,12 @@ export function AdminLayoutShell({ children, breadcrumb }: AdminLayoutShellProps
 
       {/* ── Main Content Area ──────────────────────────────────────── */}
       <div className="relative min-h-screen min-w-0 flex-1 flex flex-col overflow-y-auto bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-wine-950/15 via-zinc-950 to-zinc-950">
-        <header className={cn(chromeGlassDark, "sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-zinc-800/60 px-4 py-3 sm:px-6 backdrop-blur-xl")}>
+        <header
+          className={cn(
+            chromeGlassDark,
+            "sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-zinc-800/60 px-4 py-3 sm:px-6 backdrop-blur-xl",
+          )}
+        >
           <div className="flex items-center gap-3">
             {/* Mobile Hamburger Button */}
             <button
@@ -221,7 +227,12 @@ export function AdminLayoutShell({ children, breadcrumb }: AdminLayoutShellProps
             </button>
 
             {/* Breadcrumb Pill */}
-            <div className={cn(chromePillDark, "inline-flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-300 font-medium")}>
+            <div
+              className={cn(
+                chromePillDark,
+                "inline-flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-300 font-medium",
+              )}
+            >
               <span className="text-zinc-500">Sigillus</span>
               <ChevronRight className="h-3 w-3 text-zinc-600" />
               <span className="text-zinc-400">Admin</span>
@@ -255,4 +266,3 @@ export function AdminLayoutShell({ children, breadcrumb }: AdminLayoutShellProps
     </div>
   );
 }
-

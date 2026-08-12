@@ -18,7 +18,9 @@ export function hasOperationInHistory(
   historyMap: AnnouncementMediaHistoryMap,
   operation: AnnouncementMediaOperationKind,
 ) {
-  return getMediaHistoryChain(currentSrc, historyMap).some((item) => item.entry.operation === operation);
+  return getMediaHistoryChain(currentSrc, historyMap).some(
+    (item) => item.entry.operation === operation,
+  );
 }
 
 export function getMediaHistoryChain(currentSrc: string, historyMap: AnnouncementMediaHistoryMap) {
@@ -42,7 +44,9 @@ export function getCurrentMediaOffset(
   historyMap: AnnouncementMediaHistoryMap,
 ): AnnouncementMediaSourceOffset {
   const chain = getMediaHistoryChain(currentSrc, historyMap);
-  const latestCrop = [...chain].reverse().find((item) => item.entry.operation === "edit" && item.entry.cropArea);
+  const latestCrop = [...chain]
+    .reverse()
+    .find((item) => item.entry.operation === "edit" && item.entry.cropArea);
 
   if (!latestCrop || !latestCrop.entry.cropArea) {
     return { x: 0, y: 0 };
@@ -54,7 +58,10 @@ export function getCurrentMediaOffset(
   };
 }
 
-export function translateAreaToSource(area: AnnouncementMediaArea, sourceOffset: AnnouncementMediaSourceOffset) {
+export function translateAreaToSource(
+  area: AnnouncementMediaArea,
+  sourceOffset: AnnouncementMediaSourceOffset,
+) {
   return {
     x: area.x - sourceOffset.x,
     y: area.y - sourceOffset.y,
@@ -75,14 +82,18 @@ export function loadImageElement(src: string) {
 
 export function canvasToObjectUrl(canvas: HTMLCanvasElement) {
   return new Promise<string>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error("Falha ao gerar imagem editada"));
-        return;
-      }
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("Falha ao gerar imagem editada"));
+          return;
+        }
 
-      resolve(URL.createObjectURL(blob));
-    }, "image/jpeg", 0.95);
+        resolve(URL.createObjectURL(blob));
+      },
+      "image/jpeg",
+      0.95,
+    );
   });
 }
 
@@ -119,7 +130,13 @@ export async function applyBlurEntry(
     blurCtx.globalCompositeOperation = "destination-in";
     if (entry.blurMaskDataUrl) {
       const maskImage = await loadImageElement(entry.blurMaskDataUrl);
-      blurCtx.drawImage(maskImage, -sourceOffset.x, -sourceOffset.y, image.naturalWidth, image.naturalHeight);
+      blurCtx.drawImage(
+        maskImage,
+        -sourceOffset.x,
+        -sourceOffset.y,
+        image.naturalWidth,
+        image.naturalHeight,
+      );
     }
 
     ctx.drawImage(blurCanvas, 0, 0);
@@ -133,8 +150,14 @@ export async function applyBlurEntry(
   const localArea = translateAreaToSource(entry.cropArea, sourceOffset);
   const safeX = Math.max(0, Math.floor(localArea.x));
   const safeY = Math.max(0, Math.floor(localArea.y));
-  const safeWidth = Math.min(Math.max(1, Math.floor(localArea.width)), Math.max(1, image.naturalWidth - safeX));
-  const safeHeight = Math.min(Math.max(1, Math.floor(localArea.height)), Math.max(1, image.naturalHeight - safeY));
+  const safeWidth = Math.min(
+    Math.max(1, Math.floor(localArea.width)),
+    Math.max(1, image.naturalWidth - safeX),
+  );
+  const safeHeight = Math.min(
+    Math.max(1, Math.floor(localArea.height)),
+    Math.max(1, image.naturalHeight - safeY),
+  );
 
   ctx.save();
   ctx.beginPath();

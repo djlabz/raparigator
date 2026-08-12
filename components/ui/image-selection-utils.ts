@@ -5,7 +5,11 @@ const PRESET_PORTRAIT = { width: 56, height: 52 };
 const PRESET_SQUARE = { width: 52, height: 52 };
 export const ASPECT_MATCH_TOLERANCE = 0.04;
 
-export function aspectsMatch(imageAspect: number, targetAspect: number, tolerance = ASPECT_MATCH_TOLERANCE) {
+export function aspectsMatch(
+  imageAspect: number,
+  targetAspect: number,
+  tolerance = ASPECT_MATCH_TOLERANCE,
+) {
   if (!Number.isFinite(imageAspect) || !Number.isFinite(targetAspect) || targetAspect <= 0) {
     return false;
   }
@@ -34,11 +38,7 @@ export function createAdaptivePresetCrop(width: number, height: number): Crop {
   }
 
   const ratio = width / height;
-  const preset = ratio > 1.15
-    ? PRESET_LANDSCAPE
-    : ratio < 0.88
-      ? PRESET_PORTRAIT
-      : PRESET_SQUARE;
+  const preset = ratio > 1.15 ? PRESET_LANDSCAPE : ratio < 0.88 ? PRESET_PORTRAIT : PRESET_SQUARE;
 
   const cropWidth = clampPercent(preset.width);
   const cropHeight = clampPercent(preset.height);
@@ -62,11 +62,7 @@ export function resolveMinSelectionSize(displaySize: Size): Size {
   };
 }
 
-export function buildMaxAspectCrop(
-  mediaWidth: number,
-  mediaHeight: number,
-  aspect: number,
-): Crop {
+export function buildMaxAspectCrop(mediaWidth: number, mediaHeight: number, aspect: number): Crop {
   if (!mediaWidth || !mediaHeight || !Number.isFinite(aspect) || aspect <= 0) {
     return {
       unit: "%",

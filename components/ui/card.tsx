@@ -6,5 +6,14 @@ interface CardProps extends PropsWithChildren {
 }
 
 export function Card({ children, className }: CardProps) {
-  return <div className={cn("rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm shadow-zinc-200/70", className)}>{children}</div>;
+  return (
+    <div
+      className={cn(
+        "rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm shadow-zinc-200/70",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
 }

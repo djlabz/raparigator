@@ -23,10 +23,13 @@ const listeners = new Set<() => void>();
 const roleStateCache = new Map<Exclude<AuthRole, "visitor">, AccountNotificationState>();
 const roleServerSnapshotCache = new Map<Exclude<AuthRole, "visitor">, AccountNotificationState>();
 
-const notificationsKey = (role: Exclude<AuthRole, "visitor">) => `sigillus-account-notifications-${role}`;
-const bannerKey = (role: Exclude<AuthRole, "visitor">) => `sigillus-account-banner-dismissed-${role}`;
+const notificationsKey = (role: Exclude<AuthRole, "visitor">) =>
+  `sigillus-account-notifications-${role}`;
+const bannerKey = (role: Exclude<AuthRole, "visitor">) =>
+  `sigillus-account-banner-dismissed-${role}`;
 const navbarAckKey = (role: Exclude<AuthRole, "visitor">) => `sigillus-account-navbar-ack-${role}`;
-const swingPausedKey = (role: Exclude<AuthRole, "visitor">) => `sigillus-account-swing-paused-${role}`;
+const swingPausedKey = (role: Exclude<AuthRole, "visitor">) =>
+  `sigillus-account-swing-paused-${role}`;
 
 export function getDashboardHref(role: AuthRole) {
   if (role === "profissional") {
@@ -173,7 +176,11 @@ function unreadIds(items: AccountNotificationItem[]) {
 }
 
 export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
-  const state = useSyncExternalStore(subscribe, () => getSnapshot(role), () => getServerSnapshot(role));
+  const state = useSyncExternalStore(
+    subscribe,
+    () => getSnapshot(role),
+    () => getServerSnapshot(role),
+  );
 
   const unreadCount = useMemo(() => state.items.filter((item) => !item.read).length, [state.items]);
 
@@ -193,7 +200,8 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
     navbarBadgeCount,
     swingPaused: state.swingPaused,
     bannerClosed: state.bannerClosed,
-    setBannerClosed: (nextValue: boolean) => writeState(role, { ...getSnapshot(role), bannerClosed: nextValue }),
+    setBannerClosed: (nextValue: boolean) =>
+      writeState(role, { ...getSnapshot(role), bannerClosed: nextValue }),
     markAllAsRead: () => {
       const current = getSnapshot(role);
       writeState(role, {
@@ -205,7 +213,9 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
     },
     markAsRead: (id: string) => {
       const current = getSnapshot(role);
-      const nextItems = current.items.map((item) => (item.id === id ? { ...item, read: true } : item));
+      const nextItems = current.items.map((item) =>
+        item.id === id ? { ...item, read: true } : item,
+      );
       writeState(role, {
         ...current,
         items: nextItems,

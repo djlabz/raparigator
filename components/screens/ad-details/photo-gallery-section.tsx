@@ -10,18 +10,40 @@ interface PhotoGallerySectionProps {
   ad: ProfessionalAd;
   galleryMode: "alternative" | "grid";
   setGalleryMode: (mode: "alternative" | "grid") => void;
-  bentoItems: Array<{ type: "image"; src: string; originalIndex: number } | { type: "info"; src: string; originalIndex: number }>;
+  bentoItems: Array<
+    | { type: "image"; src: string; originalIndex: number }
+    | { type: "info"; src: string; originalIndex: number }
+  >;
   isPremium: boolean;
   setSelectedPhotoIndex: (index: number) => void;
 }
 
-export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItems, isPremium, setSelectedPhotoIndex }: PhotoGallerySectionProps) {
+export function PhotoGallerySection({
+  ad,
+  galleryMode,
+  setGalleryMode,
+  bentoItems,
+  isPremium,
+  setSelectedPhotoIndex,
+}: PhotoGallerySectionProps) {
   return (
     <section className="space-y-5 rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex w-full flex-col gap-1.5">
-        <div className={cn("hidden w-full items-center gap-3 md:grid", ad.images.length > 5 ? "grid-cols-5" : "grid-cols-4")}>
-          <div className={cn("flex h-9 items-center gap-2", ad.images.length > 5 ? "col-span-4" : "col-span-3")}>
-            <h2 className="shrink-0 font-display text-xl font-bold text-zinc-900 md:text-2xl">Ensaio Fotográfico</h2>
+        <div
+          className={cn(
+            "hidden w-full items-center gap-3 md:grid",
+            ad.images.length > 5 ? "grid-cols-5" : "grid-cols-4",
+          )}
+        >
+          <div
+            className={cn(
+              "flex h-9 items-center gap-2",
+              ad.images.length > 5 ? "col-span-4" : "col-span-3",
+            )}
+          >
+            <h2 className="shrink-0 font-display text-xl font-bold text-zinc-900 md:text-2xl">
+              Ensaio Fotográfico
+            </h2>
             <div className="ml-2 mr-3 h-0.75 grow rounded-full bg-zinc-200/80" />
 
             <div className="flex shrink-0 rounded-lg bg-zinc-100 p-1.5">
@@ -34,12 +56,24 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                 }}
                 className={cn(
                   "cursor-pointer rounded-md p-2 transition-all duration-200 hover:scale-105 active:scale-95",
-                  galleryMode === "alternative" ? "bg-white text-wine-700 shadow-xs" : "text-zinc-400 hover:text-zinc-700",
+                  galleryMode === "alternative"
+                    ? "bg-white text-wine-700 shadow-xs"
+                    : "text-zinc-400 hover:text-zinc-700",
                 )}
                 title="Destaque / Alternativo"
               >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h10v10H4zM16 4h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h10v4H10z" />
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 4h10v10H4zM16 4h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h10v4H10z"
+                  />
                 </svg>
               </button>
               <button
@@ -51,12 +85,18 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                 }}
                 className={cn(
                   "cursor-pointer rounded-md p-2 transition-all duration-200 hover:scale-105 active:scale-95",
-                  galleryMode === "grid" ? "bg-white text-wine-700 shadow-xs" : "text-zinc-400 hover:text-zinc-700",
+                  galleryMode === "grid"
+                    ? "bg-white text-wine-700 shadow-xs"
+                    : "text-zinc-400 hover:text-zinc-700",
                 )}
                 title="Grade"
               >
                 <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path fillRule="evenodd" d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </button>
             </div>
@@ -64,14 +104,20 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
 
           <div className="col-span-1 flex h-9 w-full items-center justify-between gap-2">
             <div className="h-0.75 grow rounded-full bg-zinc-200/80" />
-            <span className="shrink-0 rounded-full bg-zinc-100 px-3 py-1.5 font-mono text-xs font-bold text-zinc-500">{ad.images.length} fotos</span>
+            <span className="shrink-0 rounded-full bg-zinc-100 px-3 py-1.5 font-mono text-xs font-bold text-zinc-500">
+              {ad.images.length} fotos
+            </span>
           </div>
         </div>
 
         <div className="flex w-full flex-row items-center justify-between gap-2 md:hidden">
           <div className="flex flex-col gap-0.5">
-            <h2 className="shrink-0 font-display text-lg font-bold text-zinc-900 sm:text-xl">Ensaio Fotográfico</h2>
-            <p className="max-w-45 text-xs leading-snug text-zinc-500 sm:max-w-none sm:text-sm">Toque nas fotos para expandir e ver mais detalhes</p>
+            <h2 className="shrink-0 font-display text-lg font-bold text-zinc-900 sm:text-xl">
+              Ensaio Fotográfico
+            </h2>
+            <p className="max-w-45 text-xs leading-snug text-zinc-500 sm:max-w-none sm:text-sm">
+              Toque nas fotos para expandir e ver mais detalhes
+            </p>
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -85,12 +131,24 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                 }}
                 className={cn(
                   "cursor-pointer rounded-md p-1.5 transition-all duration-200 hover:scale-105 active:scale-[0.93] sm:p-2",
-                  galleryMode === "alternative" ? "bg-white text-wine-700 shadow-xs" : "text-zinc-400 hover:text-zinc-700",
+                  galleryMode === "alternative"
+                    ? "bg-white text-wine-700 shadow-xs"
+                    : "text-zinc-400 hover:text-zinc-700",
                 )}
                 title="Destaque / Alternativo"
               >
-                <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h10v10H4zM16 4h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h10v4H10z" />
+                <svg
+                  className="h-5 w-5 sm:h-6 sm:w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 4h10v10H4zM16 4h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h10v4H10z"
+                  />
                 </svg>
               </button>
               <button
@@ -102,21 +160,31 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                 }}
                 className={cn(
                   "cursor-pointer rounded-md p-1.5 transition-all duration-200 hover:scale-105 active:scale-[0.93] sm:p-2",
-                  galleryMode === "grid" ? "bg-white text-wine-700 shadow-xs" : "text-zinc-400 hover:text-zinc-700",
+                  galleryMode === "grid"
+                    ? "bg-white text-wine-700 shadow-xs"
+                    : "text-zinc-400 hover:text-zinc-700",
                 )}
                 title="Grade"
               >
                 <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path fillRule="evenodd" d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </button>
             </div>
 
-            <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-1 font-mono text-xs font-bold text-zinc-500 sm:px-3 sm:py-1.5 sm:text-xs">{ad.images.length} fotos</span>
+            <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-1 font-mono text-xs font-bold text-zinc-500 sm:px-3 sm:py-1.5 sm:text-xs">
+              {ad.images.length} fotos
+            </span>
           </div>
         </div>
 
-        <p className="mt-0.5 hidden px-1 text-sm text-zinc-500 md:block">Toque nas fotos para expandir e ver mais detalhes</p>
+        <p className="mt-0.5 hidden px-1 text-sm text-zinc-500 md:block">
+          Toque nas fotos para expandir e ver mais detalhes
+        </p>
       </div>
 
       {galleryMode === "grid" && (
@@ -138,8 +206,18 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
               />
 
               <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                <svg className="w-8 h-8 text-white relative z-10 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                <svg
+                  className="w-8 h-8 text-white relative z-10 pointer-events-none"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                  />
                 </svg>
               </div>
             </div>
@@ -173,7 +251,10 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                   <div className="space-y-3 sm:space-y-4">
                     <div className="flex -space-x-2.5 overflow-hidden">
                       {ad.images.slice(0, 4).map((img, i) => (
-                        <div key={i} className="relative inline-block h-9 w-9 overflow-hidden rounded-full bg-zinc-200 ring-2 ring-white">
+                        <div
+                          key={i}
+                          className="relative inline-block h-9 w-9 overflow-hidden rounded-full bg-zinc-200 ring-2 ring-white"
+                        >
                           <Image
                             src={img}
                             alt="preview"
@@ -193,9 +274,12 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                     </div>
 
                     <div className="space-y-1.5">
-                      <h4 className="whitespace-nowrap text-left font-display text-sm font-bold tracking-widest text-[#96001e] uppercase lg:text-base">Selo Anti-Edição</h4>
+                      <h4 className="whitespace-nowrap text-left font-display text-sm font-bold tracking-widest text-[#96001e] uppercase lg:text-base">
+                        Selo Anti-Edição
+                      </h4>
                       <p className="text-left text-xs leading-relaxed text-zinc-600">
-                        Nossas profissionais são fotografadas em ensaios auditados. Proteção garantida contra o uso de fotos falsas (fake profiles).
+                        Nossas profissionais são fotografadas em ensaios auditados. Proteção
+                        garantida contra o uso de fotos falsas (fake profiles).
                       </p>
                     </div>
                   </div>
@@ -251,7 +335,11 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                   alt={`${ad.artisticName} ensaio bento ${idx}`}
                   fill
                   className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                  sizes={spanClass.includes("col-span-2") ? "(max-width: 640px) 100vw, 50vw" : "(max-width: 640px) 50vw, 25vw"}
+                  sizes={
+                    spanClass.includes("col-span-2")
+                      ? "(max-width: 640px) 100vw, 50vw"
+                      : "(max-width: 640px) 50vw, 25vw"
+                  }
                   loading={idx === 0 ? "eager" : "lazy"}
                   referrerPolicy="no-referrer"
                 />
@@ -259,8 +347,18 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
                 <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-60 transition-opacity group-hover:opacity-80" />
 
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <svg className="w-8 h-8 text-white relative z-10 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  <svg
+                    className="w-8 h-8 text-white relative z-10 pointer-events-none"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                    />
                   </svg>
                 </div>
               </div>
@@ -270,7 +368,10 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
       )}
 
       {ad.images.length > 5 && galleryMode === "alternative" && (
-        <div className="group relative mt-3 h-28 w-full cursor-pointer overflow-hidden rounded-2xl sm:h-32 lg:hidden" onClick={() => setSelectedPhotoIndex(5)}>
+        <div
+          className="group relative mt-3 h-28 w-full cursor-pointer overflow-hidden rounded-2xl sm:h-32 lg:hidden"
+          onClick={() => setSelectedPhotoIndex(5)}
+        >
           <Image
             src={ad.images[5]}
             alt="Mais fotos"
@@ -283,7 +384,9 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
             <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/20 shadow-sm backdrop-blur-md transition-transform duration-300 group-hover:scale-110 group-active:scale-95">
               <span className="mb-0.5 text-2xl leading-none font-light text-white">+</span>
             </div>
-            <span className="text-xs font-bold tracking-widest text-white/90 uppercase drop-shadow-sm sm:text-xs">Ver mais fotos</span>
+            <span className="text-xs font-bold tracking-widest text-white/90 uppercase drop-shadow-sm sm:text-xs">
+              Ver mais fotos
+            </span>
           </div>
         </div>
       )}
@@ -294,7 +397,10 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
             <div className="space-y-5 sm:space-y-6">
               <div className="flex -space-x-2.5 overflow-hidden">
                 {ad.images.slice(0, 4).map((img, i) => (
-                  <div key={i} className="relative inline-block h-10 w-10 overflow-hidden rounded-full bg-zinc-200 ring-2 ring-white sm:h-11 sm:w-11">
+                  <div
+                    key={i}
+                    className="relative inline-block h-10 w-10 overflow-hidden rounded-full bg-zinc-200 ring-2 ring-white sm:h-11 sm:w-11"
+                  >
                     <Image
                       src={img}
                       alt="preview"
@@ -314,9 +420,12 @@ export function PhotoGallerySection({ ad, galleryMode, setGalleryMode, bentoItem
               </div>
 
               <div className="space-y-2">
-                <h4 className="whitespace-nowrap text-left font-display text-base font-bold tracking-[0.12em] text-[#96001e] uppercase sm:text-lg">Selo Anti-Edição</h4>
+                <h4 className="whitespace-nowrap text-left font-display text-base font-bold tracking-[0.12em] text-[#96001e] uppercase sm:text-lg">
+                  Selo Anti-Edição
+                </h4>
                 <p className="text-left text-base leading-relaxed text-zinc-600">
-                  Nossas profissionais são fotografadas em ensaios auditados. Proteção garantida contra o uso de fotos falsas (fake profiles).
+                  Nossas profissionais são fotografadas em ensaios auditados. Proteção garantida
+                  contra o uso de fotos falsas (fake profiles).
                 </p>
               </div>
             </div>

@@ -52,7 +52,7 @@ function readStoredState(userId: string): Partial<VerificationState> | null {
 
   try {
     const raw = window.localStorage.getItem(storageKey(userId));
-    return raw ? JSON.parse(raw) as Partial<VerificationState> : null;
+    return raw ? (JSON.parse(raw) as Partial<VerificationState>) : null;
   } catch {
     return null;
   }
@@ -66,7 +66,10 @@ function writeStoredState(userId: string, state: VerificationState) {
   window.localStorage.setItem(storageKey(userId), JSON.stringify(state));
 }
 
-function hydrateChannelState(storedState: VerificationChannelState | undefined, target: string): VerificationChannelState {
+function hydrateChannelState(
+  storedState: VerificationChannelState | undefined,
+  target: string,
+): VerificationChannelState {
   if (!storedState) {
     return createChannelState(target);
   }
@@ -76,19 +79,24 @@ function hydrateChannelState(storedState: VerificationChannelState | undefined, 
   }
 
   const now = Date.now();
-  const codeExpired = Boolean(storedState.codeSentAt && now - storedState.codeSentAt > VERIFICATION_CODE_TTL_MS);
+  const codeExpired = Boolean(
+    storedState.codeSentAt && now - storedState.codeSentAt > VERIFICATION_CODE_TTL_MS,
+  );
 
   return {
     target,
     verified: storedState.verified,
     verifiedAt: storedState.verifiedAt ?? null,
-    pendingCode: codeExpired ? null : storedState.pendingCode ?? null,
-    codeSentAt: codeExpired ? null : storedState.codeSentAt ?? null,
+    pendingCode: codeExpired ? null : (storedState.pendingCode ?? null),
+    codeSentAt: codeExpired ? null : (storedState.codeSentAt ?? null),
     attempts: storedState.attempts ?? 0,
   };
 }
 
-export function getVerificationState(userId: string, targets: VerificationTargets): VerificationState {
+export function getVerificationState(
+  userId: string,
+  targets: VerificationTargets,
+): VerificationState {
   const storedState = readStoredState(userId) ?? {};
 
   return {
@@ -141,7 +149,9 @@ export function confirmVerificationCode(
   const currentChannel = hydrateChannelState(state[channel], targets[channel]);
   const enteredCode = normalizeCode(codeInput);
   const now = Date.now();
-  const isExpired = Boolean(currentChannel.codeSentAt && now - currentChannel.codeSentAt > VERIFICATION_CODE_TTL_MS);
+  const isExpired = Boolean(
+    currentChannel.codeSentAt && now - currentChannel.codeSentAt > VERIFICATION_CODE_TTL_MS,
+  );
 
   if (!currentChannel.pendingCode || !currentChannel.codeSentAt || isExpired) {
     const nextState: VerificationState = {
@@ -200,6 +210,7 @@ export function confirmVerificationCode(
   return {
     state: nextState,
     success: true,
-    message: channel === "email" ? "E-mail validado com sucesso." : "Telefone validado com sucesso.",
+    message:
+      channel === "email" ? "E-mail validado com sucesso." : "Telefone validado com sucesso.",
   };
 }

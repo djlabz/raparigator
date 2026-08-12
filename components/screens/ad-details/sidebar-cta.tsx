@@ -35,7 +35,8 @@ export function SidebarCta({ role, setRiskTarget }: SidebarCtaProps) {
         </div>
 
         <p className="text-sm text-zinc-400 leading-relaxed max-w-62.5 font-medium">
-          Sinta o privilégio de um encontro inesquecível. Entre em contato diretamente para alinhar os detalhes com total privacidade.
+          Sinta o privilégio de um encontro inesquecível. Entre em contato diretamente para alinhar
+          os detalhes com total privacidade.
         </p>
 
         <div className="w-full flex items-center justify-center gap-4 py-2 border-y border-white/5">
@@ -46,7 +47,9 @@ export function SidebarCta({ role, setRiskTarget }: SidebarCtaProps) {
           <div className="w-px h-6 bg-white/10" />
           <div className="flex flex-col items-center">
             <Star className="h-4 w-4 text-amber-400 mb-1" />
-            <span className="text-xs uppercase tracking-wider font-bold text-zinc-500">Prestígio</span>
+            <span className="text-xs uppercase tracking-wider font-bold text-zinc-500">
+              Prestígio
+            </span>
           </div>
         </div>
       </div>
@@ -84,11 +87,11 @@ export function SidebarCta({ role, setRiskTarget }: SidebarCtaProps) {
         </div>
       </div>
 
-
       <div className="rounded-xl bg-white/5 border border-white/10 p-3 text-xs text-zinc-400 text-left leading-relaxed flex items-start gap-2 shadow-inner backdrop-blur-sm relative z-10 w-full mt-2">
         <Crown className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
         <span>
-          O contato é mantido em extrema privacidade. Detalhes e disponibilidade são acordados diretamente com a profissional.
+          O contato é mantido em extrema privacidade. Detalhes e disponibilidade são acordados
+          diretamente com a profissional.
         </span>
       </div>
     </Card>

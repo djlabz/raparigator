@@ -4,11 +4,7 @@ import type { HTMLAttributes } from "react";
  * Ícone do WhatsApp usando CSS mask-image apontando para /icons/contact/whatsapp.svg.
  * Permite usar `currentColor` para se integrar ao tema do botão.
  */
-export function WhatsAppIcon({
-  className = "",
-  style,
-  ...props
-}: HTMLAttributes<HTMLSpanElement>) {
+export function WhatsAppIcon({ className = "", style, ...props }: HTMLAttributes<HTMLSpanElement>) {
   return (
     <span
       role="img"
@@ -38,11 +34,7 @@ export function WhatsAppIcon({
  * Ícone do Telegram usando CSS mask-image apontando para /icons/contact/telegram.svg.
  * Permite usar `currentColor` para se integrar ao tema do botão.
  */
-export function TelegramIcon({
-  className = "",
-  style,
-  ...props
-}: HTMLAttributes<HTMLSpanElement>) {
+export function TelegramIcon({ className = "", style, ...props }: HTMLAttributes<HTMLSpanElement>) {
   return (
     <span
       role="img"

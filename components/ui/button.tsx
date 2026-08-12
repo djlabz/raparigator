@@ -6,7 +6,8 @@ type Size = "sm" | "md" | "lg";
 
 const variantMap: Record<Variant, string> = {
   primary: "bg-wine-700 text-white hover:bg-wine-800 focus-visible:ring-wine-500",
-  secondary: "bg-white text-zinc-900 ring-1 ring-zinc-200 hover:bg-zinc-50 focus-visible:ring-zinc-300",
+  secondary:
+    "bg-white text-zinc-900 ring-1 ring-zinc-200 hover:bg-zinc-50 focus-visible:ring-zinc-300",
   ghost: "bg-transparent text-zinc-700 hover:bg-zinc-100 focus-visible:ring-zinc-300",
   danger: "bg-wine-700 text-white hover:bg-wine-800 focus-visible:ring-wine-500",
 };
@@ -23,7 +24,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
 }
 
-export function Button({ className, variant = "primary", size = "md", fullWidth, ...props }: ButtonProps) {
+export function Button({
+  className,
+  variant = "primary",
+  size = "md",
+  fullWidth,
+  ...props
+}: ButtonProps) {
   return (
     <button
       className={cn(

@@ -90,35 +90,53 @@ export function Modal({
 
   if (!open) return null;
 
-  const resolvedActions = actions === undefined ? (
-    <Button variant="secondary" fullWidth onClick={onClose}>
-      Fechar
-    </Button>
-  ) : actions;
+  const resolvedActions =
+    actions === undefined ? (
+      <Button variant="secondary" fullWidth onClick={onClose}>
+        Fechar
+      </Button>
+    ) : (
+      actions
+    );
 
   return createPortal(
-    <div className={cn(
-      "fixed inset-0 z-220 flex bg-zinc-900/50 px-3 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] touch-none sm:px-4 sm:items-center sm:justify-center",
-      mobileCentered ? "items-center" : "items-end",
-      "animate-[modal-overlay-in_200ms_ease-out_forwards]"
-    )} role="dialog" aria-modal="true">
+    <div
+      className={cn(
+        "fixed inset-0 z-220 flex bg-zinc-900/50 px-3 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] touch-none sm:px-4 sm:items-center sm:justify-center",
+        mobileCentered ? "items-center" : "items-end",
+        "animate-[modal-overlay-in_200ms_ease-out_forwards]",
+      )}
+      role="dialog"
+      aria-modal="true"
+    >
       <div
         className={cn(
           "flex w-full flex-col overflow-hidden rounded-3xl bg-white p-4 shadow-xl sm:rounded-2xl sm:p-5",
           mobileCentered ? "max-h-[min(92dvh,48rem)]" : "max-h-[min(94dvh,48rem)]",
           size === "md" ? "sm:max-w-2xl" : "sm:max-w-md",
-          "animate-[modal-content-in_300ms_ease-out_forwards]"
+          "animate-[modal-content-in_300ms_ease-out_forwards]",
         )}
         style={{
-          maxHeight: mobileCentered ? "calc(92dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))" : "calc(94dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))",
+          maxHeight: mobileCentered
+            ? "calc(92dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))"
+            : "calc(94dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))",
         }}
       >
-        <div className={cn(
-          "flex justify-between gap-3 sm:gap-4",
-          description ? "mb-4 items-start" : "mb-3 items-center"
-        )}>
+        <div
+          className={cn(
+            "flex justify-between gap-3 sm:gap-4",
+            description ? "mb-4 items-start" : "mb-3 items-center",
+          )}
+        >
           <div className={cn("min-w-0", description ? "space-y-1" : undefined)}>
-            <h3 className={cn("font-semibold leading-tight", titleClassName ?? "text-lg text-zinc-900 sm:text-lg")}>{title}</h3>
+            <h3
+              className={cn(
+                "font-semibold leading-tight",
+                titleClassName ?? "text-lg text-zinc-900 sm:text-lg",
+              )}
+            >
+              {title}
+            </h3>
             {description ? (
               typeof description === "string" ? (
                 <p className="text-sm leading-snug text-zinc-600">{description}</p>
@@ -135,7 +153,18 @@ export function Modal({
               onClick={onClose}
               className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
                 <path d="M18 6 6 18" />
                 <path d="m6 6 12 12" />
               </svg>
@@ -171,7 +200,7 @@ export function Modal({
           <div
             className={cn(
               "flex shrink-0 gap-2 border-t border-zinc-100 bg-white pt-4 mt-2",
-              mobileCentered ? "flex-col sm:flex-row" : "flex-col sm:flex-row"
+              mobileCentered ? "flex-col sm:flex-row" : "flex-col sm:flex-row",
             )}
           >
             {resolvedActions}
@@ -181,12 +210,22 @@ export function Modal({
       <button aria-label="Fechar modal" className="absolute inset-0 -z-10" onClick={onClose} />
       <style jsx>{`
         @keyframes modal-overlay-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
         @keyframes modal-content-in {
-          from { opacity: 0; transform: translateY(1rem); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(1rem);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .modal-scroll {

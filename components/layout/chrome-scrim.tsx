@@ -1,4 +1,9 @@
-import { chromeScrim, chromeScrimBlur, chromeScrimBlurDark, chromeScrimDark } from "@/lib/chrome-styles";
+import {
+  chromeScrim,
+  chromeScrimBlur,
+  chromeScrimBlurDark,
+  chromeScrimDark,
+} from "@/lib/chrome-styles";
 
 interface ChromeScrimProps {
   variant?: "light" | "dark";

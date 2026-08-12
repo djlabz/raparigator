@@ -7,9 +7,7 @@ export type ChatSnapshot = {
 
 export type ChatMutationReason = "not_found" | "blocked" | "empty" | "adapter_error";
 
-export type ChatMutationResult =
-  | { ok: true }
-  | { ok: false; reason: ChatMutationReason };
+export type ChatMutationResult = { ok: true } | { ok: false; reason: ChatMutationReason };
 
 export type ChatSendResult =
   | { ok: true; messageId: string }

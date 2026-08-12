@@ -90,7 +90,8 @@ export function isHairSelectionComplete(value: string) {
     return true;
   }
 
-  const [type = SELECT_PLACEHOLDER, color = SELECT_PLACEHOLDER] = value.split(HAIR_SELECTION_SEPARATOR);
+  const [type = SELECT_PLACEHOLDER, color = SELECT_PLACEHOLDER] =
+    value.split(HAIR_SELECTION_SEPARATOR);
 
   return !isSelectUnselected(type) && !isSelectUnselected(color);
 }
@@ -182,8 +183,16 @@ const defaultAvailability: AvailabilityDay[] = [
 export function buildInitialState(ad: AnnouncementAdPreview): AnnouncementDraftState {
   const pricing = defaultPricing.map((defaultItem) => {
     const match = ad.pricingTable?.find((p) => {
-      const normalizedDefaultLabel = defaultItem.label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-      const normalizedLabel = p.label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+      const normalizedDefaultLabel = defaultItem.label
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+      const normalizedLabel = p.label
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
 
       if (normalizedLabel === normalizedDefaultLabel) {
         return true;
@@ -218,7 +227,9 @@ export function buildInitialState(ad: AnnouncementAdPreview): AnnouncementDraftS
 
   const initialLocationAddress: AnnouncementLocationAddress = {
     id: createLocationId(),
-    label: ad.neighborhood?.trim() ? `${ad.neighborhood.trim()}, ${ad.city}` : `${ad.city}, ${ad.state}`,
+    label: ad.neighborhood?.trim()
+      ? `${ad.neighborhood.trim()}, ${ad.city}`
+      : `${ad.city}, ${ad.state}`,
     addressLine: ad.neighborhood?.trim() ?? "",
     city: ad.city,
     state: ad.state,
@@ -274,23 +285,35 @@ export function buildInitialState(ad: AnnouncementAdPreview): AnnouncementDraftS
 }
 
 export function calculateProfileScore(state: AnnouncementDraftState): AnnouncementProfileScore {
-  const photosScore = state.images.length >= 3 ? 15 : state.images.length === 2 ? 11 : state.images.length === 1 ? 6 : 0;
+  const photosScore =
+    state.images.length >= 3
+      ? 15
+      : state.images.length === 2
+        ? 11
+        : state.images.length === 1
+          ? 6
+          : 0;
 
-  const hasCharacteristics = [
-    state.characteristics.gender,
-    state.characteristics.ethnicity,
-    state.characteristics.height,
-    state.characteristics.weight,
-    state.characteristics.smoker,
-  ].every((value) => value.trim().length > 0 && value !== SELECT_PLACEHOLDER) && isHairSelectionComplete(state.characteristics.hairColor);
+  const hasCharacteristics =
+    [
+      state.characteristics.gender,
+      state.characteristics.ethnicity,
+      state.characteristics.height,
+      state.characteristics.weight,
+      state.characteristics.smoker,
+    ].every((value) => value.trim().length > 0 && value !== SELECT_PLACEHOLDER) &&
+    isHairSelectionComplete(state.characteristics.hairColor);
   const characteristicsScore = hasCharacteristics ? 20 : 0;
 
-  const definedPrices = state.pricing.filter((p) => !p.disabled && p.price.trim().length > 0).length;
+  const definedPrices = state.pricing.filter(
+    (p) => !p.disabled && p.price.trim().length > 0,
+  ).length;
   const pricingScore = definedPrices >= 1 ? 20 : 0;
 
   const hasLocation = state.locationState.trim().length > 0 && state.locationCity.trim().length > 0;
   const hasActiveAddress = state.locationAddresses.some((address) => address.active);
-  const locationScore = hasLocation && hasActiveAddress ? 15 : hasLocation || hasActiveAddress ? 7 : 0;
+  const locationScore =
+    hasLocation && hasActiveAddress ? 15 : hasLocation || hasActiveAddress ? 7 : 0;
 
   const hasShort = state.shortDescription.trim().length > 0;
   const hasLong = state.description.trim().length > 10;
@@ -300,9 +323,21 @@ export function calculateProfileScore(state: AnnouncementDraftState): Announceme
   const servicesScore = selectedServices > 0 ? 10 : 0;
 
   const hasAvailableDays = state.availability.some((day) => day.enabled);
-  const availabilityScore = state.showAvailability && hasAvailableDays ? 5 : state.showAvailability || hasAvailableDays ? 2 : 0;
+  const availabilityScore =
+    state.showAvailability && hasAvailableDays
+      ? 5
+      : state.showAvailability || hasAvailableDays
+        ? 2
+        : 0;
 
-  const total = photosScore + characteristicsScore + pricingScore + locationScore + descriptionScore + servicesScore + availabilityScore;
+  const total =
+    photosScore +
+    characteristicsScore +
+    pricingScore +
+    locationScore +
+    descriptionScore +
+    servicesScore +
+    availabilityScore;
 
   return {
     percentage: Math.min(total, 100),
@@ -320,30 +355,56 @@ export function generateSmartTips(state: AnnouncementDraftState): AnnouncementSm
   const tips: AnnouncementSmartTip[] = [];
 
   if (state.images.length < 3) {
-    tips.push({ id: "photos", text: `Adicione pelo menos 3 fotos para aumentar sua visibilidade (${state.images.length}/3)`, priority: "high" });
+    tips.push({
+      id: "photos",
+      text: `Adicione pelo menos 3 fotos para aumentar sua visibilidade (${state.images.length}/3)`,
+      priority: "high",
+    });
   }
 
   if (state.shortDescription.trim().length === 0) {
-    tips.push({ id: "short-desc", text: "Preencha uma descrição curta para aparecer melhor no feed", priority: "high" });
+    tips.push({
+      id: "short-desc",
+      text: "Preencha uma descrição curta para aparecer melhor no feed",
+      priority: "high",
+    });
   }
 
-  const definedPrices = state.pricing.filter((p) => !p.disabled && p.price.trim().length > 0).length;
+  const definedPrices = state.pricing.filter(
+    (p) => !p.disabled && p.price.trim().length > 0,
+  ).length;
   if (definedPrices < 2) {
-    tips.push({ id: "pricing", text: "Perfis com preços definidos convertem até 40% mais", priority: "high" });
+    tips.push({
+      id: "pricing",
+      text: "Perfis com preços definidos convertem até 40% mais",
+      priority: "high",
+    });
   }
 
   const selectedServices = state.services.filter((s) => s.selected).length;
   if (selectedServices === 0) {
-    tips.push({ id: "services", text: "Selecione os serviços que você realiza para atrair mais clientes", priority: "medium" });
+    tips.push({
+      id: "services",
+      text: "Selecione os serviços que você realiza para atrair mais clientes",
+      priority: "medium",
+    });
   }
 
   if (state.description.trim().length < 50 && state.description.trim().length > 0) {
-    tips.push({ id: "long-desc", text: "Complete sua descrição com pelo menos 50 caracteres para mais conversões", priority: "medium" });
+    tips.push({
+      id: "long-desc",
+      text: "Complete sua descrição com pelo menos 50 caracteres para mais conversões",
+      priority: "medium",
+    });
   }
 
   const hasAddress = state.locationAddresses.length > 0;
   if (!hasAddress && state.locationState.trim().length > 0) {
-    tips.push({ id: "venue", text: "Cadastre ao menos um endereço para facilitar o encontro com clientes", priority: "low" });
+    tips.push({
+      id: "venue",
+      text: "Cadastre ao menos um endereço para facilitar o encontro com clientes",
+      priority: "low",
+    });
   }
 
   return tips;
@@ -385,28 +446,40 @@ export function getPublishValidationErrors(form: AnnouncementDraftState): string
   const hasLocation = form.locationState.trim().length > 0 && form.locationCity.trim().length > 0;
   const hasPaymentMethods = (form.paymentMethods || []).length > 0;
 
-  if (!hasCharacteristics) errors.push("Preencha os campos obrigatórios em Características físicas.");
+  if (!hasCharacteristics)
+    errors.push("Preencha os campos obrigatórios em Características físicas.");
   if (!hasPricing) errors.push("Defina ao menos um preço ativo na Tabela de preços.");
-  if (!hasPaymentMethods) errors.push("Selecione ao menos uma forma de pagamento aceita na Tabela de preços.");
+  if (!hasPaymentMethods)
+    errors.push("Selecione ao menos uma forma de pagamento aceita na Tabela de preços.");
   if (!hasLocation) errors.push("Preencha Estado e Cidade na seção Localização.");
 
   return errors;
 }
 
-export function isSectionReadyForOptimization(form: AnnouncementDraftState, section: AnnouncementSectionKey): boolean {
+export function isSectionReadyForOptimization(
+  form: AnnouncementDraftState,
+  section: AnnouncementSectionKey,
+): boolean {
   switch (section) {
     case "characteristics":
-      return [
-        form.characteristics.gender,
-        form.characteristics.ethnicity,
-        form.characteristics.height,
-        form.characteristics.weight,
-        form.characteristics.smoker,
-      ].every((value) => value.trim().length > 0 && value !== SELECT_PLACEHOLDER) && isHairSelectionComplete(form.characteristics.hairColor);
+      return (
+        [
+          form.characteristics.gender,
+          form.characteristics.ethnicity,
+          form.characteristics.height,
+          form.characteristics.weight,
+          form.characteristics.smoker,
+        ].every((value) => value.trim().length > 0 && value !== SELECT_PLACEHOLDER) &&
+        isHairSelectionComplete(form.characteristics.hairColor)
+      );
     case "pricing":
       return form.pricing.some((item) => !item.disabled && item.price.trim().length > 0);
     case "location":
-      return form.locationState.trim().length > 0 && form.locationCity.trim().length > 0 && form.locationAddresses.some((address) => address.active);
+      return (
+        form.locationState.trim().length > 0 &&
+        form.locationCity.trim().length > 0 &&
+        form.locationAddresses.some((address) => address.active)
+      );
     case "description":
       return form.shortDescription.trim().length > 0 && form.description.trim().length > 10;
     case "services":
@@ -446,9 +519,9 @@ export function syncDraftToMockAd(slug: string, form: AnnouncementDraftState) {
   target.images = [...form.images];
 
   if (
-    form.profileIndex !== null
-    && form.profileIndex >= 0
-    && form.profileIndex < form.images.length
+    form.profileIndex !== null &&
+    form.profileIndex >= 0 &&
+    form.profileIndex < form.images.length
   ) {
     const preview = form.profilePreviews[form.profileIndex];
     target.profileImage = preview || form.images[form.profileIndex];
@@ -474,7 +547,9 @@ export function syncDraftToMockAd(slug: string, form: AnnouncementDraftState) {
     target.neighborhood = activeAddress.addressLine.trim();
   }
 
-  const selectedServices = form.services.filter((service) => service.selected).map((service) => service.label);
+  const selectedServices = form.services
+    .filter((service) => service.selected)
+    .map((service) => service.label);
   if (selectedServices.length > 0) {
     target.services = selectedServices;
   }
@@ -482,7 +557,10 @@ export function syncDraftToMockAd(slug: string, form: AnnouncementDraftState) {
   return true;
 }
 
-async function persistDraftMock(slug: string, form: AnnouncementDraftState): Promise<"saved" | "error"> {
+async function persistDraftMock(
+  slug: string,
+  form: AnnouncementDraftState,
+): Promise<"saved" | "error"> {
   await new Promise<void>((resolve) => {
     window.setTimeout(resolve, SAVE_LATENCY_MS);
   });
@@ -505,7 +583,9 @@ export function useAnnouncementDraft(ad: AnnouncementAdPreview) {
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [savedEpoch, setSavedEpoch] = useState(0);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [savedSectionSnapshots, setSavedSectionSnapshots] = useState<AnnouncementSectionSnapshots>(() => buildSectionSnapshots(form));
+  const [savedSectionSnapshots, setSavedSectionSnapshots] = useState<AnnouncementSectionSnapshots>(
+    () => buildSectionSnapshots(form),
+  );
 
   const formRef = useRef(form);
   const isSavingRef = useRef(false);
@@ -552,20 +632,29 @@ export function useAnnouncementDraft(ad: AnnouncementAdPreview) {
     [savedSectionSnapshots, sectionSnapshots],
   );
 
-  const updateField = useCallback(<K extends keyof AnnouncementDraftState>(key: K, value: AnnouncementDraftState[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const updateField = useCallback(
+    <K extends keyof AnnouncementDraftState>(key: K, value: AnnouncementDraftState[K]) => {
+      setForm((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
-  const updateNestedField = useCallback(<K extends keyof AnnouncementDraftState>(key: K, nestedKey: string, value: unknown) => {
-    setForm((prev) => ({
-      ...prev,
-      [key]: { ...(prev[key] as Record<string, unknown>), [nestedKey]: value },
-    }));
-  }, []);
+  const updateNestedField = useCallback(
+    <K extends keyof AnnouncementDraftState>(key: K, nestedKey: string, value: unknown) => {
+      setForm((prev) => ({
+        ...prev,
+        [key]: { ...(prev[key] as Record<string, unknown>), [nestedKey]: value },
+      }));
+    },
+    [],
+  );
 
-  const updateForm = useCallback((updater: (current: AnnouncementDraftState) => AnnouncementDraftState) => {
-    setForm((prev) => updater(prev));
-  }, []);
+  const updateForm = useCallback(
+    (updater: (current: AnnouncementDraftState) => AnnouncementDraftState) => {
+      setForm((prev) => updater(prev));
+    },
+    [],
+  );
 
   const persistDraft = useCallback(async (): Promise<AnnouncementSaveResult> => {
     const hasChanges = serializeAnnouncementDraft(formRef.current) !== lastSavedSnapshotRef.current;
@@ -574,7 +663,10 @@ export function useAnnouncementDraft(ad: AnnouncementAdPreview) {
       setSaveStatus("saved");
       setSavedEpoch((current) => current + 1);
       if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
-      idleStatusTimeoutRef.current = setTimeout(() => setSaveStatus("idle"), NO_CHANGES_STATUS_RESET_MS);
+      idleStatusTimeoutRef.current = setTimeout(
+        () => setSaveStatus("idle"),
+        NO_CHANGES_STATUS_RESET_MS,
+      );
       return "no_changes";
     }
 
@@ -656,7 +748,9 @@ export function useAnnouncementDraft(ad: AnnouncementAdPreview) {
 
       switch (section) {
         case "characteristics": {
-          const savedCharacteristics = JSON.parse(savedSectionSnapshots.characteristics) as AnnouncementCharacteristics;
+          const savedCharacteristics = JSON.parse(
+            savedSectionSnapshots.characteristics,
+          ) as AnnouncementCharacteristics;
           updateField("characteristics", savedCharacteristics);
           return;
         }
@@ -668,7 +762,10 @@ export function useAnnouncementDraft(ad: AnnouncementAdPreview) {
           updateForm((current) => ({
             ...current,
             pricing: isLegacy ? parsed : parsed.pricing,
-            paymentMethods: isLegacy || !parsed.paymentMethods || parsed.paymentMethods.length === 0 ? ["dinheiro"] : parsed.paymentMethods,
+            paymentMethods:
+              isLegacy || !parsed.paymentMethods || parsed.paymentMethods.length === 0
+                ? ["dinheiro"]
+                : parsed.paymentMethods,
           }));
           return;
         }
@@ -687,7 +784,10 @@ export function useAnnouncementDraft(ad: AnnouncementAdPreview) {
           return;
         }
         case "description": {
-          const savedDescription = JSON.parse(savedSectionSnapshots.description) as Pick<AnnouncementDraftState, "shortDescription" | "description">;
+          const savedDescription = JSON.parse(savedSectionSnapshots.description) as Pick<
+            AnnouncementDraftState,
+            "shortDescription" | "description"
+          >;
           updateForm((current) => ({
             ...current,
             shortDescription: savedDescription.shortDescription,
@@ -696,12 +796,17 @@ export function useAnnouncementDraft(ad: AnnouncementAdPreview) {
           return;
         }
         case "services": {
-          const savedServices = JSON.parse(savedSectionSnapshots.services) as AnnouncementServiceOption[];
+          const savedServices = JSON.parse(
+            savedSectionSnapshots.services,
+          ) as AnnouncementServiceOption[];
           updateField("services", savedServices);
           return;
         }
         case "availability": {
-          const savedAvailability = JSON.parse(savedSectionSnapshots.availability) as Pick<AnnouncementDraftState, "showAvailability" | "availability">;
+          const savedAvailability = JSON.parse(savedSectionSnapshots.availability) as Pick<
+            AnnouncementDraftState,
+            "showAvailability" | "availability"
+          >;
           updateForm((current) => ({
             ...current,
             showAvailability: savedAvailability.showAvailability,
@@ -719,7 +824,10 @@ export function useAnnouncementDraft(ad: AnnouncementAdPreview) {
   );
 
   const publish = useCallback(
-    async ({ status, onActivate }: AnnouncementPublishOptions): Promise<AnnouncementPublishResult> => {
+    async ({
+      status,
+      onActivate,
+    }: AnnouncementPublishOptions): Promise<AnnouncementPublishResult> => {
       if (saveStatus === "saving") {
         return { ok: false, reason: "error", message: PUBLISH_ERROR_MESSAGE };
       }
@@ -752,11 +860,13 @@ export function useAnnouncementDraft(ad: AnnouncementAdPreview) {
         }
       });
 
-      const requiredItems: AnnouncementPublishWarningItem[] = Array.from(requiredSections).map((section) => ({
-        kind: "required" as const,
-        section,
-        label: SECTION_LABELS[section],
-      }));
+      const requiredItems: AnnouncementPublishWarningItem[] = Array.from(requiredSections).map(
+        (section) => ({
+          kind: "required" as const,
+          section,
+          label: SECTION_LABELS[section],
+        }),
+      );
       const blockingItems = [...requiredItems, ...dirtySections];
 
       if (blockingItems.length > 0) {
@@ -801,7 +911,8 @@ export function useAnnouncementDraft(ad: AnnouncementAdPreview) {
     saveSection,
     cancelSection,
     publish,
-    isSectionReadyForOptimization: (section: AnnouncementSectionKey) => isSectionReadyForOptimization(form, section),
+    isSectionReadyForOptimization: (section: AnnouncementSectionKey) =>
+      isSectionReadyForOptimization(form, section),
   };
 }
 

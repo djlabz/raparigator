@@ -24,7 +24,7 @@ function applyProbe(
   label: HTMLElement,
   icon: HTMLElement | null,
   fontPx: number,
-  showIcon: boolean
+  showIcon: boolean,
 ) {
   label.style.fontSize = `${fontPx}px`;
   if (!icon) {
@@ -47,7 +47,7 @@ function largestFit(
   icon: HTMLElement | null,
   available: number,
   withIcon: boolean,
-  maxPx: number
+  maxPx: number,
 ) {
   let low = FIT_MIN_PX;
   let high = maxPx;
@@ -156,11 +156,7 @@ export function FeedSectionTitle({
     };
   }, [fit, fitToTarget, variant]);
 
-  const iconSize = fit
-    ? Math.max(16, Math.round(fitPx * 0.95))
-    : size === "lg"
-      ? 26
-      : 22;
+  const iconSize = fit ? Math.max(16, Math.round(fitPx * 0.95)) : size === "lg" ? 26 : 22;
 
   const premiumTextClass = fit
     ? "leading-none"
@@ -198,7 +194,7 @@ export function FeedSectionTitle({
         className={cn(
           "inline-flex max-w-full min-w-0 items-center gap-1.5 select-none",
           fit && "w-full",
-          className
+          className,
         )}
         style={ambientStyle}
       >
@@ -212,7 +208,7 @@ export function FeedSectionTitle({
           data-title-label
           className={cn(
             "whitespace-nowrap font-display font-semibold tracking-wide text-[#5C4310]",
-            premiumTextClass
+            premiumTextClass,
           )}
           style={labelStyle}
         >
@@ -228,7 +224,7 @@ export function FeedSectionTitle({
       className={cn(
         "inline-flex max-w-full min-w-0 items-center gap-1.5 select-none",
         fit && "w-full",
-        className
+        className,
       )}
       style={ambientStyle}
     >

@@ -117,7 +117,7 @@ export function useFeedSectionTitleScroll({
       } else {
         const revealTarget = hasPremium
           ? mobileHeadingRef.current
-          : mobileHeadingRef.current ?? standardSectionRef.current;
+          : (mobileHeadingRef.current ?? standardSectionRef.current);
 
         if (revealTarget) {
           reveal = sampleMobileTitleReveal({
@@ -147,13 +147,8 @@ export function useFeedSectionTitleScroll({
         target.divider = canPush ? clamp01(1 - push / 0.18) : hasStandard ? 0 : 1;
       } else {
         target.spacer = inPageSpacerFromReveal(target.reveal);
-        target.divider = !hasPremium && hasStandard
-          ? 0
-          : canPush
-            ? clamp01(1 - push / 0.22)
-            : hasStandard
-              ? 1
-              : 0;
+        target.divider =
+          !hasPremium && hasStandard ? 0 : canPush ? clamp01(1 - push / 0.22) : hasStandard ? 1 : 0;
       }
 
       const revealLambda = mode === "mobile" ? REVEAL_LAMBDA_MOBILE : REVEAL_LAMBDA_DESKTOP;
@@ -199,7 +194,7 @@ export function useFeedSectionTitleScroll({
 
       return nextSeeded;
     },
-    `${isDesktop}:${hasPremium}:${hasStandard}`
+    `${isDesktop}:${hasPremium}:${hasStandard}`,
   );
 
   return {

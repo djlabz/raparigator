@@ -17,7 +17,9 @@ export function SpecialtiesSection({ ad }: SpecialtiesSectionProps) {
 
       <div className="space-y-4 text-sm text-zinc-700">
         <div>
-          <p className="text-xs font-bold tracking-wider text-zinc-400 uppercase">Acompanhamentos Disponíveis</p>
+          <p className="text-xs font-bold tracking-wider text-zinc-400 uppercase">
+            Acompanhamentos Disponíveis
+          </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {ad.services.map((service) => (
               <span
@@ -33,10 +35,15 @@ export function SpecialtiesSection({ ad }: SpecialtiesSectionProps) {
 
         {ad.fetishOptions && ad.fetishOptions.length > 0 && (
           <div>
-            <p className="text-xs font-bold tracking-wider text-zinc-400 uppercase">Interesses Especiais / Fantasias</p>
+            <p className="text-xs font-bold tracking-wider text-zinc-400 uppercase">
+              Interesses Especiais / Fantasias
+            </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {ad.fetishOptions.map((f) => (
-                <span key={f} className="rounded-lg border border-zinc-100 bg-[#fafafa] px-2.5 py-1 text-xs font-semibold text-zinc-600 shadow-2xs">
+                <span
+                  key={f}
+                  className="rounded-lg border border-zinc-100 bg-[#fafafa] px-2.5 py-1 text-xs font-semibold text-zinc-600 shadow-2xs"
+                >
                   {f}
                 </span>
               ))}

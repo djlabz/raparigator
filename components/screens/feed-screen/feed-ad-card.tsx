@@ -62,7 +62,7 @@ function useDesktopHoverEnabled() {
   return useSyncExternalStore(
     subscribeDesktopHover,
     () => window.matchMedia(DESKTOP_HOVER_QUERY).matches,
-    () => false
+    () => false,
   );
 }
 
@@ -79,9 +79,7 @@ function getNavCommitMs() {
   if (typeof window === "undefined") {
     return NAV_COMMIT_MS;
   }
-  return window.matchMedia(REDUCED_MOTION_QUERY).matches
-    ? NAV_COMMIT_REDUCED_MS
-    : NAV_COMMIT_MS;
+  return window.matchMedia(REDUCED_MOTION_QUERY).matches ? NAV_COMMIT_REDUCED_MS : NAV_COMMIT_MS;
 }
 
 function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priority?: boolean }) {
@@ -223,7 +221,11 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
       return;
     }
 
-    if (pressSession.current && !pressSession.current.cancelled && !pressSession.current.navigating) {
+    if (
+      pressSession.current &&
+      !pressSession.current.cancelled &&
+      !pressSession.current.navigating
+    ) {
       return;
     }
 
@@ -256,7 +258,7 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
       Math.hypot(x, y),
       Math.hypot(rect.width - x, y),
       Math.hypot(x, rect.height - y),
-      Math.hypot(rect.width - x, rect.height - y)
+      Math.hypot(rect.width - x, rect.height - y),
     );
     setRipple({
       key: rippleKey.current,
@@ -283,7 +285,12 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
 
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const session = pressSession.current;
-    if (!session || session.cancelled || session.navigating || session.pointerId !== event.pointerId) {
+    if (
+      !session ||
+      session.cancelled ||
+      session.navigating ||
+      session.pointerId !== event.pointerId
+    ) {
       return;
     }
 
@@ -343,14 +350,14 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
       onClick={handleClick}
       className={cn(
         "group relative mx-auto block w-full max-w-[320px] perspective-[1000px] lg:max-w-none",
-        elevated ? "z-30" : "z-0"
+        elevated ? "z-30" : "z-0",
       )}
     >
       <motion.article
         ref={cardRef}
         className={cn(
           "relative cursor-pointer touch-manipulation transform-3d will-change-transform",
-          FEED_CARD_SIZE_CLASS
+          FEED_CARD_SIZE_CLASS,
         )}
         style={{ transform }}
         onMouseEnter={handleMouseEnter}
@@ -383,7 +390,9 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,223,0,0.06)_0%,transparent_40%,rgba(218,165,32,0.1)_100%)]" />
 
             <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] px-3 py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md">
-              <span className="text-[10px] text-[#FFDF00] drop-shadow-[0_0_4px_rgba(255,223,0,0.9)]">★</span>
+              <span className="text-[10px] text-[#FFDF00] drop-shadow-[0_0_4px_rgba(255,223,0,0.9)]">
+                ★
+              </span>
               <span className="bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-[10px] font-extrabold uppercase tracking-[0.2em] text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
                 Premium
               </span>
@@ -402,7 +411,7 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
                       ? "border border-emerald-800/50 bg-emerald-950/80 text-emerald-400"
                       : ad.status === "em_atendimento"
                         ? "border border-amber-800/50 bg-amber-950/80 text-amber-400"
-                        : "border border-zinc-700/50 bg-zinc-900/80 text-zinc-400"
+                        : "border border-zinc-700/50 bg-zinc-900/80 text-zinc-400",
                   )}
                 >
                   {ad.status === "livre"
@@ -455,7 +464,11 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
                   transition={{
                     duration: waveSeconds,
                     ease: [0.22, 0.1, 0.28, 1],
-                    opacity: { duration: waveSeconds, times: [0, 0.35, 0.62, 1], ease: "easeInOut" },
+                    opacity: {
+                      duration: waveSeconds,
+                      times: [0, 0.35, 0.62, 1],
+                      ease: "easeInOut",
+                    },
                   }}
                 />
                 <motion.div
@@ -469,7 +482,8 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
                     marginLeft: -ripple.sizePx / 2,
                     marginTop: -ripple.sizePx / 2,
                     border: "1.5px solid rgba(255,223,0,0.55)",
-                    boxShadow: "0 0 18px rgba(218,165,32,0.35), inset 0 0 22px rgba(255,223,0,0.18)",
+                    boxShadow:
+                      "0 0 18px rgba(218,165,32,0.35), inset 0 0 22px rgba(255,223,0,0.18)",
                   }}
                   initial={{ scale: 0.1, opacity: 0.75 }}
                   animate={{ scale: 1, opacity: [0.75, 0.6, 0.3, 0] }}
@@ -503,16 +517,21 @@ export function FeedAdCard({ ad, priority = false }: { ad: ProfessionalAd; prior
   }, [isPremium, ad.images.length]);
 
   const currentImage =
-    (imageIndex === 0 ? ad.profileImage : undefined)
-    || ad.images[imageIndex]
-    || ad.profileImage
-    || ad.images[0];
+    (imageIndex === 0 ? ad.profileImage : undefined) ||
+    ad.images[imageIndex] ||
+    ad.profileImage ||
+    ad.images[0];
 
   if (isPremium) {
     return <PremiumFeedCard ad={ad} priority={priority} />;
   }
 
-  const statusLabel = ad.status === "livre" ? "LIVRE" : ad.status === "em_atendimento" ? "EM ATENDIMENTO" : "INDISPONIVEL";
+  const statusLabel =
+    ad.status === "livre"
+      ? "LIVRE"
+      : ad.status === "em_atendimento"
+        ? "EM ATENDIMENTO"
+        : "INDISPONIVEL";
   const statusClassName =
     ad.status === "livre"
       ? "border-emerald-800/30 bg-emerald-900/30 text-emerald-400"
@@ -521,11 +540,14 @@ export function FeedAdCard({ ad, priority = false }: { ad: ProfessionalAd; prior
         : "border-zinc-700/50 bg-zinc-900/80 text-zinc-400";
 
   return (
-    <Link href={`/anuncio/${ad.slug}`} className="group mx-auto block w-full max-w-[320px] cursor-pointer lg:max-w-none">
+    <Link
+      href={`/anuncio/${ad.slug}`}
+      className="group mx-auto block w-full max-w-[320px] cursor-pointer lg:max-w-none"
+    >
       <article
         className={cn(
           "isolate relative overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#121212] shadow-md transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#4a4a4a] hover:shadow-xl active:scale-[0.98]",
-          FEED_CARD_SIZE_CLASS
+          FEED_CARD_SIZE_CLASS,
         )}
       >
         <Image
@@ -548,7 +570,12 @@ export function FeedAdCard({ ad, priority = false }: { ad: ProfessionalAd; prior
 
         <div className="absolute bottom-0 left-0 right-0 z-10 px-5 pb-5">
           <div className="mb-2">
-            <span className={cn("inline-block rounded-full border px-2.5 py-0.5 text-[9px] font-bold tracking-widest", statusClassName)}>
+            <span
+              className={cn(
+                "inline-block rounded-full border px-2.5 py-0.5 text-[9px] font-bold tracking-widest",
+                statusClassName,
+              )}
+            >
               {statusLabel}
             </span>
           </div>
@@ -561,7 +588,9 @@ export function FeedAdCard({ ad, priority = false }: { ad: ProfessionalAd; prior
           </p>
           <p className="mt-1.5 text-[11px] font-medium uppercase tracking-widest text-zinc-300 [text-shadow:0_2px_4px_rgba(0,0,0,0.85)]">
             A partir de{" "}
-            <span className="text-sm font-bold tracking-normal text-zinc-100">{currency(ad.startingPrice)}</span>
+            <span className="text-sm font-bold tracking-normal text-zinc-100">
+              {currency(ad.startingPrice)}
+            </span>
           </p>
         </div>
       </article>

@@ -19,20 +19,15 @@ export function MobileNavHost() {
   const shellActive = useSyncExternalStore(
     subscribeTabNavigation,
     getShellActiveSnapshot,
-    () => false
+    () => false,
   );
   const mobileNavHidden = useSyncExternalStore(
     subscribeTabNavigation,
     getMobileNavHiddenSnapshot,
-    () => false
+    () => false,
   );
 
-  if (
-    isAdminRoute(pathname) ||
-    !shellActive ||
-    mobileNavHidden ||
-    navigationItems.length === 0
-  ) {
+  if (isAdminRoute(pathname) || !shellActive || mobileNavHidden || navigationItems.length === 0) {
     return null;
   }
 

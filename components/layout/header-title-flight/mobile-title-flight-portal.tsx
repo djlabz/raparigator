@@ -54,6 +54,6 @@ export function MobileTitleFlightPortal({
     >
       {children}
     </motion.div>,
-    document.body
+    document.body,
   );
 }

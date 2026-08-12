@@ -18,11 +18,7 @@ import {
 } from "lucide-react";
 import { AdminLayoutShell } from "./admin-layout-shell";
 import { useAdminSession } from "@/lib/admin-session";
-import {
-  getProfileById,
-  approveProfile,
-  rejectProfile,
-} from "@/lib/admin-service";
+import { getProfileById, approveProfile, rejectProfile } from "@/lib/admin-service";
 import type { ProfessionalAd, VerificationStatus } from "@/lib/types";
 
 interface AdminProfileDetailScreenProps {
@@ -84,7 +80,9 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
   }, [profileId]);
 
   useEffect(() => {
-    void (async () => { await loadProfile(); })();
+    void (async () => {
+      await loadProfile();
+    })();
   }, [loadProfile]);
 
   const showToast = (message: string, type: "success" | "error") => {
@@ -173,9 +171,7 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
           </button>
           <div>
             <h1 className="text-lg font-bold text-zinc-100">{profile.artisticName}</h1>
-            <p className="text-xs text-zinc-500">
-              Submetido em {formatDate(profile.submittedAt)}
-            </p>
+            <p className="text-xs text-zinc-500">Submetido em {formatDate(profile.submittedAt)}</p>
           </div>
         </div>
 
@@ -256,9 +252,7 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
               <p className="mb-1 text-xs font-black uppercase tracking-wider text-red-500">
                 Motivo da recusa
               </p>
-              <p className="text-sm leading-relaxed text-red-300">
-                {profile.rejectionReason}
-              </p>
+              <p className="text-sm leading-relaxed text-red-300">{profile.rejectionReason}</p>
             </div>
           )}
         </div>
@@ -272,10 +266,18 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
             </p>
             <div className="grid grid-cols-2 gap-4 text-sm">
               {[
-                { icon: MapPin, label: "Localização", value: `${profile.neighborhood}, ${profile.city} — ${profile.state}` },
+                {
+                  icon: MapPin,
+                  label: "Localização",
+                  value: `${profile.neighborhood}, ${profile.city} — ${profile.state}`,
+                },
                 { icon: Tag, label: "Categoria", value: profile.category },
                 { icon: Ruler, label: "Altura", value: `${profile.heightCm} cm` },
-                { icon: DollarSign, label: "A partir de", value: `R$ ${profile.startingPrice.toLocaleString("pt-BR")}/h` },
+                {
+                  icon: DollarSign,
+                  label: "A partir de",
+                  value: `R$ ${profile.startingPrice.toLocaleString("pt-BR")}/h`,
+                },
                 { icon: Calendar, label: "Submetido em", value: formatDate(profile.submittedAt) },
                 { icon: Tag, label: "Etnia", value: profile.ethnicity },
               ].map((item) => (
@@ -296,7 +298,9 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
               Descrição do perfil
             </p>
             <p className="text-sm leading-relaxed text-zinc-300">{profile.description}</p>
-            <p className="mt-3 text-sm leading-relaxed text-zinc-400">{profile.serviceDescription}</p>
+            <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+              {profile.serviceDescription}
+            </p>
           </div>
 
           {/* Serviços */}
@@ -353,7 +357,10 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
                 <h2 className="font-semibold text-zinc-100">Recusar perfil</h2>
               </div>
               <button
-                onClick={() => { setShowRejectModal(false); setRejectReason(""); }}
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason("");
+                }}
                 className="rounded-lg p-1 text-zinc-600 hover:text-zinc-300"
               >
                 <X className="h-4 w-4" />
@@ -361,7 +368,8 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
             </div>
 
             <p className="mb-4 text-sm text-zinc-400">
-              Informe o motivo da recusa. Este texto será registrado e poderá ser comunicado à profissional.
+              Informe o motivo da recusa. Este texto será registrado e poderá ser comunicado à
+              profissional.
             </p>
 
             <textarea
@@ -374,7 +382,10 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
 
             <div className="mt-4 flex justify-end gap-3">
               <button
-                onClick={() => { setShowRejectModal(false); setRejectReason(""); }}
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason("");
+                }}
                 className="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-400 transition-all hover:text-zinc-200"
               >
                 Cancelar

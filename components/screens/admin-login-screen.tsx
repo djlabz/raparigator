@@ -65,9 +65,7 @@ export function AdminLoginScreen() {
                 Admin
               </span>
             </p>
-            <p className="mt-2 text-sm text-zinc-500">
-              Painel de Gestão Administrativa
-            </p>
+            <p className="mt-2 text-sm text-zinc-500">Painel de Gestão Administrativa</p>
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
@@ -115,11 +113,7 @@ export function AdminLoginScreen() {
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors hover:text-zinc-300"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>

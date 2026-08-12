@@ -157,7 +157,7 @@ export function useDashboardTitleScroll({
 
       return nextSeeded;
     },
-    isDesktop
+    isDesktop,
   );
 
   return {
