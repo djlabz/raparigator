@@ -33,11 +33,11 @@ interface ProfileFormState {
   preference: string;
 }
 const profileCompleteKey = (role: AuthRole) => `sigillus-account-profile-complete-${role}`;
-const profileFormKey = (role: AuthRole, userEmail: string) => `sigillus-account-profile-form-${role}-${userEmail.toLowerCase()}`;
+const profileFormKey = (role: AuthRole, userEmail: string) =>
+  `sigillus-account-profile-form-${role}-${userEmail.toLowerCase()}`;
 const SAVE_CONFIRMATION_AUTO_DISMISS_MS = 3200;
 
 type ProfileFieldErrors = Partial<Record<keyof ProfileFormState, string>>;
-
 
 function initialFormState(user: MockUser | null): ProfileFormState {
   return {
@@ -99,11 +99,14 @@ export function AccountScreen() {
 }
 
 function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; user: MockUser }) {
-  const { unreadCount, bannerClosed, setBannerClosed, markAllAsRead } = useAccountNotifications(role);
+  const { unreadCount, bannerClosed, setBannerClosed, markAllAsRead } =
+    useAccountNotifications(role);
   const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [form, setForm] = useState<ProfileFormState>(() => readStoredForm(profileFormKey(role, user.email), user));
+  const [form, setForm] = useState<ProfileFormState>(() =>
+    readStoredForm(profileFormKey(role, user.email), user),
+  );
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
@@ -122,12 +125,12 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
 
   const updateField =
     <FieldName extends keyof ProfileFormState>(fieldName: FieldName) =>
-      (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const value = event.target.value;
-        setForm((current) => ({ ...current, [fieldName]: value }));
-        setSaveMessage(null);
-        clearFieldError(fieldName);
-      };
+    (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const value = event.target.value;
+      setForm((current) => ({ ...current, [fieldName]: value }));
+      setSaveMessage(null);
+      clearFieldError(fieldName);
+    };
 
   const handleCpfChange = (event: ChangeEvent<HTMLInputElement>) => {
     const formattedValue = formatCpf(event.target.value);
@@ -194,7 +197,9 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
     markAllAsRead();
     setBannerClosed(true);
     setTimeout(() => {
-      document.getElementById("profile-workflow")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document
+        .getElementById("profile-workflow")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 120);
   };
 
@@ -234,8 +239,13 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
     window.location.href = "/profissional/dashboard?tab=Verificação";
   };
 
-  const verificationState = getVerificationState(user.id, { email: user.email, phone: user.phone ?? "" });
-  const verifiedItems = [verificationState.email.verified, verificationState.phone.verified].filter(Boolean).length;
+  const verificationState = getVerificationState(user.id, {
+    email: user.email,
+    phone: user.phone ?? "",
+  });
+  const verifiedItems = [verificationState.email.verified, verificationState.phone.verified].filter(
+    Boolean,
+  ).length;
   const verificationProgress = Math.round((verifiedItems / 2) * 100);
 
   return (
@@ -253,10 +263,15 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
         >
           <div className="flex items-start gap-3">
             <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <svg
+                className="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={3}
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
-              
             </span>
             <p className="leading-relaxed">{saveMessage}</p>
           </div>
@@ -265,7 +280,9 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
 
       <section className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-200/70">
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Configuração da conta</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
+            Configuração da conta
+          </p>
           <h1 className="text-3xl font-semibold text-zinc-900">Dados da sua conta</h1>
           <p className="max-w-2xl text-sm text-zinc-600">
             {role === "cliente"
@@ -274,15 +291,20 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
           </p>
         </div>
       </section>
-      
 
       {showBanner ? (
         <Card className="border-zinc-200 bg-white shadow-sm shadow-zinc-200/70">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Notificação</p>
-              <h2 className="mt-1 text-lg font-semibold text-zinc-900">Complete seu cadastro para liberar o restante da plataforma</h2>
-              <p className="mt-1 text-sm text-zinc-600">Você pode fechar este aviso e abrir novamente pelo sino de notificações.</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
+                Notificação
+              </p>
+              <h2 className="mt-1 text-lg font-semibold text-zinc-900">
+                Complete seu cadastro para liberar o restante da plataforma
+              </h2>
+              <p className="mt-1 text-sm text-zinc-600">
+                Você pode fechar este aviso e abrir novamente pelo sino de notificações.
+              </p>
             </div>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => setBannerClosed(true)}>
@@ -298,8 +320,12 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
         <Card className="space-y-5 border-zinc-200 bg-white shadow-sm shadow-zinc-200/70">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Cadastro essencial</p>
-              <h2 className="mt-1 text-2xl font-semibold text-zinc-900">Informações de acesso e contato</h2>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
+                Cadastro essencial
+              </p>
+              <h2 className="mt-1 text-2xl font-semibold text-zinc-900">
+                Informações de acesso e contato
+              </h2>
             </div>
             <div className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
               Perfil: {getRoleLabel(role)}
@@ -319,7 +345,9 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
               <Input
                 id="alias"
                 label={role === "cliente" ? "Apelido (opcional)" : "Nome Artístico (opcional)"}
-                placeholder={role === "cliente" ? "Como deseja ser chamado(a)" : "Como deseja ser vista(o)"}
+                placeholder={
+                  role === "cliente" ? "Como deseja ser chamado(a)" : "Como deseja ser vista(o)"
+                }
                 value={form.alias}
                 onChange={updateField("alias")}
               />
@@ -368,55 +396,72 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
               />
             </div>
 
-              
-
             {role === "cliente" ? (
               <>
                 <div className="grid gap-4 sm:grid-cols-2">
-                <Input
-                  id="city"
-                  label="Cidade"
-                  placeholder="Sua cidade principal"
-                  value={form.city}
-                  onChange={updateField("city")}
-                  error={fieldErrors.city}
-                />
-                <Select
-                  id="preference"
-                  label="Preferência principal"
-                  options={[
-                    { value: "", label: "Selecione" },
-                    { value: "chat", label: "Chat" },
-                    { value: "acompanhamento", label: "Acompanhamento" },
-                    { value: "contratacao", label: "Contratação" },
-                  ]}
-                  value={form.preference}
-                  onChange={updateField("preference")}
-                  className={fieldErrors.preference ? "border-red-500 focus:border-red-600 focus:ring-red-200" : undefined}
-                />
-                {fieldErrors.preference ? <p className="-mt-2 text-xs text-red-600 sm:col-span-2">{fieldErrors.preference}</p> : null}
+                  <Input
+                    id="city"
+                    label="Cidade"
+                    placeholder="Sua cidade principal"
+                    value={form.city}
+                    onChange={updateField("city")}
+                    error={fieldErrors.city}
+                  />
+                  <Select
+                    id="preference"
+                    label="Preferência principal"
+                    options={[
+                      { value: "", label: "Selecione" },
+                      { value: "chat", label: "Chat" },
+                      { value: "acompanhamento", label: "Acompanhamento" },
+                      { value: "contratacao", label: "Contratação" },
+                    ]}
+                    value={form.preference}
+                    onChange={updateField("preference")}
+                    className={
+                      fieldErrors.preference
+                        ? "border-red-500 focus:border-red-600 focus:ring-red-200"
+                        : undefined
+                    }
+                  />
+                  {fieldErrors.preference ? (
+                    <p className="-mt-2 text-xs text-red-600 sm:col-span-2">
+                      {fieldErrors.preference}
+                    </p>
+                  ) : null}
                 </div>
-                
+
                 <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 sm:p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Segurança</p>
-                    <p className="mt-1 font-medium text-zinc-900">Senha protegida</p>
-                    <p className="mt-0.5 text-sm text-zinc-600">••••••••</p>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                        Segurança
+                      </p>
+                      <p className="mt-1 font-medium text-zinc-900">Senha protegida</p>
+                      <p className="mt-0.5 text-sm text-zinc-600">••••••••</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => setShowPasswordModal(true)}
+                    >
+                      Alterar Senha
+                    </Button>
                   </div>
-                  <Button type="button" variant="secondary" onClick={() => setShowPasswordModal(true)}>
-                    Alterar Senha
-                  </Button>
-                </div>
                 </div>
               </>
             ) : (
               <div className="space-y-4">
                 <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 sm:p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Dados operacionais do anúncio</p>
-                  <h3 className="mt-2 text-lg font-semibold text-zinc-900">Localização, disponibilidade e resumo público</h3>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                    Dados operacionais do anúncio
+                  </p>
+                  <h3 className="mt-2 text-lg font-semibold text-zinc-900">
+                    Localização, disponibilidade e resumo público
+                  </h3>
                   <p className="mt-2 text-sm text-zinc-600">
-                    Dados de anúncio são editados no painel profissional para manter tudo centralizado.
+                    Dados de anúncio são editados no painel profissional para manter tudo
+                    centralizado.
                   </p>
                   <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                     <Button type="button" variant="secondary" onClick={openOperationalSettings}>
@@ -428,11 +473,17 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
                 <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 sm:p-5">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Segurança</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                        Segurança
+                      </p>
                       <p className="mt-1 font-medium text-zinc-900">Senha protegida</p>
                       <p className="mt-0.5 text-sm text-zinc-600">••••••••</p>
                     </div>
-                    <Button type="button" variant="secondary" onClick={() => setShowPasswordModal(true)}>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => setShowPasswordModal(true)}
+                    >
                       Alterar Senha
                     </Button>
                   </div>
@@ -442,11 +493,16 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
 
             {role === "cliente" ? (
               <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
-                Aqui você mantém dados de conta e preferências pessoais para usar a plataforma com segurança.
+                Aqui você mantém dados de conta e preferências pessoais para usar a plataforma com
+                segurança.
               </div>
             ) : null}
 
-            {formError ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{formError}</p> : null}
+            {formError ? (
+              <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                {formError}
+              </p>
+            ) : null}
             <div className="flex justify-end">
               <Button type="button" onClick={handleSaveProfile} className="w-full sm:w-auto">
                 Salvar dados da conta
@@ -461,10 +517,13 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
           <div className="space-y-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Segurança e confiança</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
+                  Segurança e confiança
+                </p>
                 <h3 className="mt-1 text-xl font-semibold text-zinc-900">Verifique sua conta</h3>
                 <p className="mt-1 text-sm text-zinc-600">
-                  Aumente a confiança do seu perfil em poucos minutos. Seus dados de validação não são compartilhados publicamente.
+                  Aumente a confiança do seu perfil em poucos minutos. Seus dados de validação não
+                  são compartilhados publicamente.
                 </p>
               </div>
               <Button type="button" variant="secondary" onClick={openVerificationSettings}>
@@ -474,22 +533,45 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
 
             <div className="space-y-2">
               <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
-                <div className="h-full rounded-full bg-emerald-500 transition-all duration-300" style={{ width: `${verificationProgress}%` }} />
+                <div
+                  className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+                  style={{ width: `${verificationProgress}%` }}
+                />
               </div>
-              <p className="text-xs font-medium text-zinc-500">{verifiedItems} de 2 etapas concluídas</p>
+              <p className="text-xs font-medium text-zinc-500">
+                {verifiedItems} de 2 etapas concluídas
+              </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className={`rounded-xl border p-3 ${verificationState.email.verified ? "border-emerald-200 bg-emerald-50/70" : "border-zinc-200 bg-zinc-50"}`}>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">E-mail</p>
-                <p className={`mt-1 text-sm font-semibold ${verificationState.email.verified ? "text-emerald-700" : "text-zinc-700"}`}>{verificationState.email.verified ? "Validado" : "Pendente"}</p>
+              <div
+                className={`rounded-xl border p-3 ${verificationState.email.verified ? "border-emerald-200 bg-emerald-50/70" : "border-zinc-200 bg-zinc-50"}`}
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                  E-mail
+                </p>
+                <p
+                  className={`mt-1 text-sm font-semibold ${verificationState.email.verified ? "text-emerald-700" : "text-zinc-700"}`}
+                >
+                  {verificationState.email.verified ? "Validado" : "Pendente"}
+                </p>
               </div>
-              <div className={`rounded-xl border p-3 ${verificationState.phone.verified ? "border-emerald-200 bg-emerald-50/70" : "border-zinc-200 bg-zinc-50"}`}>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Telefone</p>
-                <p className={`mt-1 text-sm font-semibold ${verificationState.phone.verified ? "text-emerald-700" : "text-zinc-700"}`}>{verificationState.phone.verified ? "Validado" : "Verificar"}</p>
+              <div
+                className={`rounded-xl border p-3 ${verificationState.phone.verified ? "border-emerald-200 bg-emerald-50/70" : "border-zinc-200 bg-zinc-50"}`}
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                  Telefone
+                </p>
+                <p
+                  className={`mt-1 text-sm font-semibold ${verificationState.phone.verified ? "text-emerald-700" : "text-zinc-700"}`}
+                >
+                  {verificationState.phone.verified ? "Validado" : "Verificar"}
+                </p>
               </div>
               <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 opacity-75">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Documento</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                  Documento
+                </p>
                 <p className="mt-1 text-sm font-semibold text-zinc-700">Em breve</p>
               </div>
             </div>
@@ -505,7 +587,6 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
         actions={null}
       >
         <div className="space-y-5 max-w-md">
-
           {!passwordModalSuccess ? (
             <div className="space-y-4">
               <Input
@@ -558,7 +639,13 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
           ) : (
             <div className="flex flex-col items-center gap-4 py-6">
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>

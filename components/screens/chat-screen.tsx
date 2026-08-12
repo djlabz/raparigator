@@ -23,12 +23,23 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, type RefObject, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  FormEvent,
+  type RefObject,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createPortal } from "react-dom";
 import { useSetShellChrome } from "@/components/layout/shell-chrome";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { PremiumConversionModal, type PremiumHighlight } from "@/components/ui/premium-conversion-modal";
+import {
+  PremiumConversionModal,
+  type PremiumHighlight,
+} from "@/components/ui/premium-conversion-modal";
 import { Toast } from "@/components/ui/toast";
 import { chromeCircle } from "@/lib/chrome-styles";
 import { useModalLock } from "@/lib/modal-lock";
@@ -52,10 +63,17 @@ import { useAuthSession } from "@/lib/auth-session";
 import { usePremiumPlan } from "@/lib/premium-plan";
 import { cn } from "@/lib/utils";
 
-const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+const normalizeText = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
 
-const getStatusColor = (status: Conversation["contactStatus"]) => status === "online" ? "bg-emerald-500" : "bg-zinc-400";
-const getStatusLabel = (status: Conversation["contactStatus"]) => status === "online" ? "Online" : "Offline";
+const getStatusColor = (status: Conversation["contactStatus"]) =>
+  status === "online" ? "bg-emerald-500" : "bg-zinc-400";
+const getStatusLabel = (status: Conversation["contactStatus"]) =>
+  status === "online" ? "Online" : "Offline";
 
 const PROFESSIONAL_AVAILABILITY_STORAGE_KEY = "sigillus-professional-chat-availability";
 
@@ -66,28 +84,28 @@ const professionalAvailabilityOptions: {
   dotClass: string;
   activeClass: string;
 }[] = [
-    {
-      value: "livre",
-      label: "Disponível",
-      description: "Seu status aparece disponível para novos contatos.",
-      dotClass: "bg-emerald-500",
-      activeClass: "ring-emerald-200 bg-emerald-50 text-emerald-800",
-    },
-    {
-      value: "em_atendimento",
-      label: "Ocupado",
-      description: "Seu status aparece como em atendimento.",
-      dotClass: "bg-amber-500",
-      activeClass: "ring-amber-200 bg-amber-50 text-amber-800",
-    },
-    {
-      value: "indisponivel",
-      label: "Indisponível",
-      description: "Seu status aparece como indisponível.",
-      dotClass: "bg-zinc-400",
-      activeClass: "ring-zinc-300 bg-zinc-100 text-zinc-700",
-    },
-  ];
+  {
+    value: "livre",
+    label: "Disponível",
+    description: "Seu status aparece disponível para novos contatos.",
+    dotClass: "bg-emerald-500",
+    activeClass: "ring-emerald-200 bg-emerald-50 text-emerald-800",
+  },
+  {
+    value: "em_atendimento",
+    label: "Ocupado",
+    description: "Seu status aparece como em atendimento.",
+    dotClass: "bg-amber-500",
+    activeClass: "ring-amber-200 bg-amber-50 text-amber-800",
+  },
+  {
+    value: "indisponivel",
+    label: "Indisponível",
+    description: "Seu status aparece como indisponível.",
+    dotClass: "bg-zinc-400",
+    activeClass: "ring-zinc-300 bg-zinc-100 text-zinc-700",
+  },
+];
 
 function readProfessionalAvailability(): AvailabilityStatus {
   if (typeof window === "undefined") {
@@ -109,7 +127,10 @@ function saveProfessionalAvailability(status: AvailabilityStatus) {
 }
 
 function getProfessionalAvailabilityOption(status: AvailabilityStatus) {
-  return professionalAvailabilityOptions.find((item) => item.value === status) ?? professionalAvailabilityOptions[0];
+  return (
+    professionalAvailabilityOptions.find((item) => item.value === status) ??
+    professionalAvailabilityOptions[0]
+  );
 }
 
 function subscribeNoop() {
@@ -179,7 +200,9 @@ function AvailabilityStatusSheet({
                 <p id="availability-sheet-title" className="text-lg font-semibold text-zinc-900">
                   Disponibilidade
                 </p>
-                <p className="mt-1 text-sm leading-snug text-zinc-600">{activeOption.description}</p>
+                <p className="mt-1 text-sm leading-snug text-zinc-600">
+                  {activeOption.description}
+                </p>
               </div>
               <button
                 type="button"
@@ -187,7 +210,18 @@ function AvailabilityStatusSheet({
                 onClick={onClose}
                 className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-200 text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
                   <path d="M18 6 6 18" />
                   <path d="m6 6 12 12" />
                 </svg>
@@ -214,7 +248,9 @@ function AvailabilityStatusSheet({
                     <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", option.dotClass)} />
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-bold">{option.label}</span>
-                      <span className="mt-0.5 block text-xs leading-snug text-zinc-500">{option.description}</span>
+                      <span className="mt-0.5 block text-xs leading-snug text-zinc-500">
+                        {option.description}
+                      </span>
                     </span>
                     {isActive ? <Check className="h-4 w-4 shrink-0" aria-hidden="true" /> : null}
                   </button>
@@ -232,9 +268,12 @@ function AvailabilityStatusSheet({
 const getMessageStatus = (message: Message) => {
   if (message.from !== "me") return null;
 
-  if (message.status === "sending") return { label: "Enviando", icon: Clock, className: "text-zinc-400" };
-  if (message.status === "failed") return { label: "Falhou", icon: AlertCircle, className: "text-wine-600" };
-  if (message.status === "delivered") return { label: "Entregue", icon: CheckCheck, className: "text-zinc-400" };
+  if (message.status === "sending")
+    return { label: "Enviando", icon: Clock, className: "text-zinc-400" };
+  if (message.status === "failed")
+    return { label: "Falhou", icon: AlertCircle, className: "text-wine-600" };
+  if (message.status === "delivered")
+    return { label: "Entregue", icon: CheckCheck, className: "text-zinc-400" };
   return { label: "Enviada", icon: Check, className: "text-zinc-400" };
 };
 
@@ -267,7 +306,9 @@ export function ChatScreen() {
   const [globalAliasDraft, setGlobalAliasDraft] = useState(globalAlias);
   const [globalAliasModalOpen, setGlobalAliasModalOpen] = useState(false);
   const [presenceVisible, setPresenceVisible] = useState(true);
-  const [professionalAvailability, setProfessionalAvailability] = useState<AvailabilityStatus>(() => readProfessionalAvailability());
+  const [professionalAvailability, setProfessionalAvailability] = useState<AvailabilityStatus>(() =>
+    readProfessionalAvailability(),
+  );
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [availabilitySheetOpen, setAvailabilitySheetOpen] = useState(false);
   const [attachmentMenuOpen, setAttachmentMenuOpen] = useState(false);
@@ -285,13 +326,17 @@ export function ChatScreen() {
   }
 
   const visibleConversations = useMemo(
-    () => localConversations.filter((conversation) => !conversation.deletedFromInboxAt && (!unreadOnly || conversation.unread > 0)),
-    [localConversations, unreadOnly]
+    () =>
+      localConversations.filter(
+        (conversation) =>
+          !conversation.deletedFromInboxAt && (!unreadOnly || conversation.unread > 0),
+      ),
+    [localConversations, unreadOnly],
   );
 
   const fallbackConversationId = visibleConversations[0]?.id ?? "";
   const hasActiveConversation = visibleConversations.some(
-    (conversation) => conversation.id === activeConversationId
+    (conversation) => conversation.id === activeConversationId,
   );
   const resolvedActiveConversationId = hasActiveConversation
     ? activeConversationId
@@ -303,27 +348,38 @@ export function ChatScreen() {
 
   const activeAvailabilityOption = getProfessionalAvailabilityOption(professionalAvailability);
 
-  const activeConversation = localConversations.find((conversation) => conversation.id === resolvedActiveConversationId) ?? localConversations[0];
+  const activeConversation =
+    localConversations.find((conversation) => conversation.id === resolvedActiveConversationId) ??
+    localConversations[0];
   const displayContactName = activeConversation?.contactName ?? "";
   const participantAlias = activeConversation?.currentUserAlias ?? "";
   const currentDisplayName = participantAlias || globalAlias || "Cliente reservado";
 
   const activeAd = useMemo(() => {
     if (!activeConversation) return null;
-    return ads.find((ad) => normalizeText(ad.artisticName).includes(normalizeText(activeConversation.contactName))) ?? null;
+    return (
+      ads.find((ad) =>
+        normalizeText(ad.artisticName).includes(normalizeText(activeConversation.contactName)),
+      ) ?? null
+    );
   }, [activeConversation]);
 
-  const currentMessages = useMemo(() =>
-    localMessages.filter((message) => message.conversationId === activeConversation?.id && !message.deletedAt),
-    [activeConversation?.id, localMessages]
+  const currentMessages = useMemo(
+    () =>
+      localMessages.filter(
+        (message) => message.conversationId === activeConversation?.id && !message.deletedAt,
+      ),
+    [activeConversation?.id, localMessages],
   );
 
   const conversationAvatars = useMemo(() => {
     return Object.fromEntries(
       localConversations.map((conversation) => {
-        const ad = ads.find((item) => normalizeText(item.artisticName).includes(normalizeText(conversation.contactName)));
+        const ad = ads.find((item) =>
+          normalizeText(item.artisticName).includes(normalizeText(conversation.contactName)),
+        );
         return [conversation.id, ad?.images[0] ?? null];
-      })
+      }),
     );
   }, [localConversations]);
 
@@ -442,7 +498,11 @@ export function ChatScreen() {
     const result = await sendChatViewOnceMedia(activeConversation.id, currentDisplayName);
     if (result.ok) {
       setLastSentMessageId(result.messageId);
-      showToast({ title: "Mídia temporária enviada", message: "Ela aparecerá como visualização única na conversa.", type: "success" });
+      showToast({
+        title: "Mídia temporária enviada",
+        message: "Ela aparecerá como visualização única na conversa.",
+        type: "success",
+      });
       return;
     }
     if (result.messageId) {
@@ -496,7 +556,11 @@ export function ChatScreen() {
     setGlobalAlias(sanitized);
     setGlobalAliasDraft(sanitized);
     setGlobalAliasModalOpen(false);
-    showToast({ title: "Apelido geral atualizado", message: "Novas conversas usarão esse nome de exibição.", type: "success" });
+    showToast({
+      title: "Apelido geral atualizado",
+      message: "Novas conversas usarão esse nome de exibição.",
+      type: "success",
+    });
   };
 
   const handleDeleteFromInbox = async () => {
@@ -509,7 +573,11 @@ export function ChatScreen() {
 
     const result = await deleteChatConversationFromInbox(conversationId);
     if (result.ok) {
-      showToast({ title: "Conversa removida", message: "Ela saiu da sua caixa de entrada.", type: "success" });
+      showToast({
+        title: "Conversa removida",
+        message: "Ela saiu da sua caixa de entrada.",
+        type: "success",
+      });
       return;
     }
     showToast({
@@ -527,7 +595,11 @@ export function ChatScreen() {
 
     const result = await setChatConversationBlocked(activeConversation.id, true);
     if (result.ok) {
-      showToast({ title: "Usuário bloqueado", message: "Novas mensagens ficam desativadas nesta conversa.", type: "success" });
+      showToast({
+        title: "Usuário bloqueado",
+        message: "Novas mensagens ficam desativadas nesta conversa.",
+        type: "success",
+      });
       return;
     }
     showToast({
@@ -545,7 +617,11 @@ export function ChatScreen() {
 
     const result = await setChatConversationBlocked(activeConversation.id, false);
     if (result.ok) {
-      showToast({ title: "Usuário desbloqueado", message: "O envio de mensagens foi reativado nesta conversa.", type: "success" });
+      showToast({
+        title: "Usuário desbloqueado",
+        message: "O envio de mensagens foi reativado nesta conversa.",
+        type: "success",
+      });
       return;
     }
     showToast({
@@ -565,7 +641,11 @@ export function ChatScreen() {
 
     const result = await reportChatConversation(activeConversation.id, reason);
     if (result.ok) {
-      showToast({ title: "Denúncia registrada", message: "A denúncia foi enviada para análise pela equipe.", type: "success" });
+      showToast({
+        title: "Denúncia registrada",
+        message: "A denúncia foi enviada para análise pela equipe.",
+        type: "success",
+      });
       return;
     }
     showToast({
@@ -635,7 +715,7 @@ export function ChatScreen() {
         </div>
       </div>
     ),
-    [professionalAvailability, role, unreadOnly]
+    [professionalAvailability, role, unreadOnly],
   );
 
   useSetShellChrome({
@@ -653,7 +733,10 @@ export function ChatScreen() {
             <Shield size={22} />
           </div>
           <h1 className="mt-4 text-2xl font-semibold text-zinc-900">Chat privado</h1>
-          <p className="mt-2 text-sm leading-relaxed text-zinc-600">Entre na sua conta para acessar conversas, apelidos e recursos de segurança da plataforma.</p>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-600">
+            Entre na sua conta para acessar conversas, apelidos e recursos de segurança da
+            plataforma.
+          </p>
           <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
             <Link href="/auth/login">
               <Button>Entrar</Button>
@@ -673,11 +756,13 @@ export function ChatScreen() {
         {toast ? <Toast title={toast.title} message={toast.message} type={toast.type} /> : null}
       </div>
 
-      <div className={cn(
-        "relative flex w-full min-h-0 flex-col overflow-hidden bg-zinc-50 md:grid md:grid-cols-[340px_minmax(0,1fr)] md:rounded-[28px] md:border md:border-zinc-200/80 md:bg-white md:shadow-[0_20px_60px_rgba(15,23,42,0.08)]",
-        "h-[calc(100dvh-9.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] md:min-h-128 md:h-[calc(100dvh-12.5rem)]",
-        conversationOpenMobile && "max-md:hidden"
-      )}>
+      <div
+        className={cn(
+          "relative flex w-full min-h-0 flex-col overflow-hidden bg-zinc-50 md:grid md:grid-cols-[340px_minmax(0,1fr)] md:rounded-[28px] md:border md:border-zinc-200/80 md:bg-white md:shadow-[0_20px_60px_rgba(15,23,42,0.08)]",
+          "h-[calc(100dvh-9.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] md:min-h-128 md:h-[calc(100dvh-12.5rem)]",
+          conversationOpenMobile && "max-md:hidden",
+        )}
+      >
         <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-zinc-50/80 md:shrink-0 md:border-r md:border-zinc-200">
           <div className="shrink-0 border-b border-zinc-200 bg-white/90 px-4 py-1.5 backdrop-blur-sm">
             <div className="flex items-center justify-between gap-2.5">
@@ -709,11 +794,21 @@ export function ChatScreen() {
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <p className="shrink-0 text-sm font-semibold text-zinc-800">Disponibilidade</p>
-                  <span className={cn("h-2 w-2 shrink-0 rounded-full", activeAvailabilityOption.dotClass)} />
-                  <span className="truncate text-xs font-semibold text-zinc-600">{activeAvailabilityOption.label}</span>
+                  <span
+                    className={cn(
+                      "h-2 w-2 shrink-0 rounded-full",
+                      activeAvailabilityOption.dotClass,
+                    )}
+                  />
+                  <span className="truncate text-xs font-semibold text-zinc-600">
+                    {activeAvailabilityOption.label}
+                  </span>
                 </div>
                 <ChevronDown
-                  className={cn("h-4 w-4 shrink-0 text-zinc-400 transition-transform duration-200", availabilitySheetOpen && "rotate-180")}
+                  className={cn(
+                    "h-4 w-4 shrink-0 text-zinc-400 transition-transform duration-200",
+                    availabilitySheetOpen && "rotate-180",
+                  )}
                 />
               </button>
             ) : (
@@ -761,7 +856,9 @@ export function ChatScreen() {
               <div className="flex min-h-full items-center justify-center p-6 text-center">
                 <div>
                   <p className="text-sm font-semibold text-zinc-800">Nenhuma conversa na caixa</p>
-                  <p className="mt-1 text-xs text-zinc-500">Quando uma conversa for iniciada, ela aparecerá aqui.</p>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    Quando uma conversa for iniciada, ela aparecerá aqui.
+                  </p>
                 </div>
               </div>
             ) : (
@@ -774,22 +871,39 @@ export function ChatScreen() {
                         "group flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-all duration-200",
                         activeConversationId === conversation.id
                           ? "border-wine-200 bg-white shadow-[0_10px_25px_rgba(15,23,42,0.06)] ring-1 ring-wine-500/10"
-                          : "border-transparent bg-transparent hover:border-zinc-200 hover:bg-white/80 hover:shadow-sm"
+                          : "border-transparent bg-transparent hover:border-zinc-200 hover:bg-white/80 hover:shadow-sm",
                       )}
                     >
                       <div className="relative h-12 w-12 shrink-0">
-                        <Image src={conversationAvatars[conversation.id] || "/placeholder.png"} alt={conversation.contactName} fill className="rounded-full border border-zinc-100 object-cover" sizes="48px" />
-                        <span className={cn("absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white", getStatusColor(conversation.contactStatus))} />
+                        <Image
+                          src={conversationAvatars[conversation.id] || "/placeholder.png"}
+                          alt={conversation.contactName}
+                          fill
+                          className="rounded-full border border-zinc-100 object-cover"
+                          sizes="48px"
+                        />
+                        <span
+                          className={cn(
+                            "absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white",
+                            getStatusColor(conversation.contactStatus),
+                          )}
+                        />
                       </div>
                       <div className="min-w-0 flex-1 text-left">
                         <div className="flex items-baseline justify-between gap-2">
-                          <p className="truncate font-bold text-zinc-900 group-hover:text-wine-800">{conversation.contactName}</p>
-                          <span className="text-[10px] font-medium text-zinc-400">{conversation.lastMessageAt}</span>
+                          <p className="truncate font-bold text-zinc-900 group-hover:text-wine-800">
+                            {conversation.contactName}
+                          </p>
+                          <span className="text-[10px] font-medium text-zinc-400">
+                            {conversation.lastMessageAt}
+                          </span>
                         </div>
                         <p className="truncate text-xs text-zinc-500">{conversation.lastMessage}</p>
                       </div>
                       {conversation.unread > 0 ? (
-                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-wine-700 px-1.5 text-[10px] font-bold text-white">{conversation.unread}</span>
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-wine-700 px-1.5 text-[10px] font-bold text-white">
+                          {conversation.unread}
+                        </span>
                       ) : null}
                     </button>
                   </li>
@@ -836,7 +950,10 @@ export function ChatScreen() {
               showBackButton={false}
               whatsappUrl={whatsappUrl}
               onAttachmentMenuToggle={() => setAttachmentMenuOpen((current) => !current)}
-              onBack={() => { setMobileConversationOpen(false); setProfilePanelOpen(false); }}
+              onBack={() => {
+                setMobileConversationOpen(false);
+                setProfilePanelOpen(false);
+              }}
               onBlock={() => setBlockModalOpen(true)}
               onDelete={() => setDeleteModalOpen(true)}
               onDraftChange={setDraft}
@@ -853,38 +970,41 @@ export function ChatScreen() {
 
       {conversationOpenMobile && activeConversation && typeof document !== "undefined"
         ? createPortal(
-          <div className="fixed inset-0 z-100 flex flex-col bg-zinc-100 overscroll-none md:hidden">
-            <ConversationThread
-              activeConversation={activeConversation}
-              activeConversationId={activeConversationId}
-              activeAd={activeAd}
-              attachmentMenuOpen={attachmentMenuOpen}
-              conversationAvatar={conversationAvatars[activeConversationId] || "/placeholder.png"}
-              currentMessages={currentMessages}
-              displayContactName={displayContactName}
-              draft={draft}
-              globalAlias={globalAlias}
-              lastSentMessageId={lastSentMessageId}
-              participantAlias={participantAlias}
-              profilePanelOpen={profilePanelOpen}
-              scrollRef={scrollRef}
-              showBackButton
-              whatsappUrl={whatsappUrl}
-              onAttachmentMenuToggle={() => setAttachmentMenuOpen((current) => !current)}
-              onBack={() => { setMobileConversationOpen(false); setProfilePanelOpen(false); }}
-              onBlock={() => setBlockModalOpen(true)}
-              onDelete={() => setDeleteModalOpen(true)}
-              onDraftChange={setDraft}
-              onOpenProfile={() => setProfilePanelOpen(true)}
-              onOpenRename={openRenameModal}
-              onOpenViewOnce={handleOpenViewOnceModal}
-              onProfileClose={() => setProfilePanelOpen(false)}
-              onReport={() => setReportModalOpen(true)}
-              onSubmit={handleSubmit}
-            />
-          </div>,
-          document.body
-        )
+            <div className="fixed inset-0 z-100 flex flex-col bg-zinc-100 overscroll-none md:hidden">
+              <ConversationThread
+                activeConversation={activeConversation}
+                activeConversationId={activeConversationId}
+                activeAd={activeAd}
+                attachmentMenuOpen={attachmentMenuOpen}
+                conversationAvatar={conversationAvatars[activeConversationId] || "/placeholder.png"}
+                currentMessages={currentMessages}
+                displayContactName={displayContactName}
+                draft={draft}
+                globalAlias={globalAlias}
+                lastSentMessageId={lastSentMessageId}
+                participantAlias={participantAlias}
+                profilePanelOpen={profilePanelOpen}
+                scrollRef={scrollRef}
+                showBackButton
+                whatsappUrl={whatsappUrl}
+                onAttachmentMenuToggle={() => setAttachmentMenuOpen((current) => !current)}
+                onBack={() => {
+                  setMobileConversationOpen(false);
+                  setProfilePanelOpen(false);
+                }}
+                onBlock={() => setBlockModalOpen(true)}
+                onDelete={() => setDeleteModalOpen(true)}
+                onDraftChange={setDraft}
+                onOpenProfile={() => setProfilePanelOpen(true)}
+                onOpenRename={openRenameModal}
+                onOpenViewOnce={handleOpenViewOnceModal}
+                onProfileClose={() => setProfilePanelOpen(false)}
+                onReport={() => setReportModalOpen(true)}
+                onSubmit={handleSubmit}
+              />
+            </div>,
+            document.body,
+          )
         : null}
 
       <Modal
@@ -893,13 +1013,19 @@ export function ChatScreen() {
         title="Seu apelido para essa conversa"
         actions={
           <>
-            <Button variant="secondary" fullWidth onClick={() => setRenameModalOpen(false)}>Cancelar</Button>
-            <Button fullWidth onClick={saveParticipantAlias}>Salvar</Button>
+            <Button variant="secondary" fullWidth onClick={() => setRenameModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button fullWidth onClick={saveParticipantAlias}>
+              Salvar
+            </Button>
           </>
         }
       >
         <div className="space-y-3">
-          <label htmlFor="conversation-alias" className="text-sm font-semibold text-zinc-800">Apelido</label>
+          <label htmlFor="conversation-alias" className="text-sm font-semibold text-zinc-800">
+            Apelido
+          </label>
           <input
             id="conversation-alias"
             value={renameDraft}
@@ -920,13 +1046,19 @@ export function ChatScreen() {
         description="Esse nome será usado quando uma conversa não tiver apelido próprio."
         actions={
           <>
-            <Button variant="secondary" fullWidth onClick={() => setGlobalAliasModalOpen(false)}>Cancelar</Button>
-            <Button fullWidth onClick={saveGlobalAlias}>Salvar</Button>
+            <Button variant="secondary" fullWidth onClick={() => setGlobalAliasModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button fullWidth onClick={saveGlobalAlias}>
+              Salvar
+            </Button>
           </>
         }
       >
         <div className="space-y-3">
-          <label htmlFor="global-alias" className="text-sm font-semibold text-zinc-800">Apelido</label>
+          <label htmlFor="global-alias" className="text-sm font-semibold text-zinc-800">
+            Apelido
+          </label>
           <input
             id="global-alias"
             value={globalAliasDraft}
@@ -946,8 +1078,12 @@ export function ChatScreen() {
         description="No backend real, o arquivo será enviado para storage privado e exibido uma única vez."
         actions={
           <>
-            <Button variant="secondary" fullWidth onClick={() => setViewOnceModalOpen(false)}>Cancelar</Button>
-            <Button fullWidth onClick={handleSendViewOnceMedia}>Simular envio</Button>
+            <Button variant="secondary" fullWidth onClick={() => setViewOnceModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button fullWidth onClick={handleSendViewOnceMedia}>
+              Simular envio
+            </Button>
           </>
         }
       >
@@ -958,7 +1094,10 @@ export function ChatScreen() {
             </div>
             <div>
               <p className="text-sm font-semibold text-zinc-900">Visualização única</p>
-              <p className="mt-1 text-sm leading-relaxed text-zinc-600">A mídia aparece como aberta depois da primeira visualização e não deve ficar acessível novamente para o usuário.</p>
+              <p className="mt-1 text-sm leading-relaxed text-zinc-600">
+                A mídia aparece como aberta depois da primeira visualização e não deve ficar
+                acessível novamente para o usuário.
+              </p>
             </div>
           </div>
         </div>
@@ -978,13 +1117,18 @@ export function ChatScreen() {
         description={`Remover a conversa com ${displayContactName} da sua lista?`}
         actions={
           <>
-            <Button variant="secondary" fullWidth onClick={() => setDeleteModalOpen(false)}>Cancelar</Button>
-            <Button variant="danger" fullWidth onClick={handleDeleteFromInbox}>Excluir da minha caixa</Button>
+            <Button variant="secondary" fullWidth onClick={() => setDeleteModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button variant="danger" fullWidth onClick={handleDeleteFromInbox}>
+              Excluir da minha caixa
+            </Button>
           </>
         }
       >
         <p className="rounded-2xl bg-zinc-50 p-3 text-sm leading-relaxed text-zinc-600">
-          Essa ação remove a conversa da sua visualização no app. A política de retenção e auditoria fica a cargo do backend.
+          Essa ação remove a conversa da sua visualização no app. A política de retenção e auditoria
+          fica a cargo do backend.
         </p>
       </Modal>
 
@@ -992,18 +1136,30 @@ export function ChatScreen() {
         open={blockModalOpen}
         onClose={() => setBlockModalOpen(false)}
         title={activeConversation?.isBlocked ? "Desbloquear usuário" : "Bloquear usuário"}
-        description={activeConversation?.isBlocked ? `Desbloquear ${displayContactName}?` : `Bloquear ${displayContactName}?`}
+        description={
+          activeConversation?.isBlocked
+            ? `Desbloquear ${displayContactName}?`
+            : `Bloquear ${displayContactName}?`
+        }
         actions={
           <>
-            <Button variant="secondary" fullWidth onClick={() => setBlockModalOpen(false)}>Cancelar</Button>
-            <Button variant="danger" fullWidth onClick={activeConversation?.isBlocked ? handleUnblockUser : handleBlockUser}>
+            <Button variant="secondary" fullWidth onClick={() => setBlockModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              fullWidth
+              onClick={activeConversation?.isBlocked ? handleUnblockUser : handleBlockUser}
+            >
               {activeConversation?.isBlocked ? "Desbloquear" : "Bloquear"}
             </Button>
           </>
         }
       >
         <p className="rounded-2xl bg-wine-50 p-3 text-sm leading-relaxed text-wine-800">
-          {activeConversation?.isBlocked ? "O envio de mensagens será reativado nesta conversa." : "O envio de novas mensagens será desativado nesta conversa."}
+          {activeConversation?.isBlocked
+            ? "O envio de mensagens será reativado nesta conversa."
+            : "O envio de novas mensagens será desativado nesta conversa."}
         </p>
       </Modal>
 
@@ -1014,8 +1170,17 @@ export function ChatScreen() {
         description={`Descreva o problema com ${displayContactName}.`}
         actions={
           <>
-            <Button variant="secondary" fullWidth onClick={() => setReportModalOpen(false)}>Cancelar</Button>
-            <Button variant="danger" fullWidth onClick={handleReportConversation} disabled={!reportReason.trim()}>Enviar denúncia</Button>
+            <Button variant="secondary" fullWidth onClick={() => setReportModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              fullWidth
+              onClick={handleReportConversation}
+              disabled={!reportReason.trim()}
+            >
+              Enviar denúncia
+            </Button>
           </>
         }
       >
@@ -1099,14 +1264,31 @@ function ConversationThread({
           </button>
         ) : null}
 
-        <button type="button" className="group flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left" onClick={onOpenProfile}>
+        <button
+          type="button"
+          className="group flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left"
+          onClick={onOpenProfile}
+        >
           <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-zinc-200/80 bg-white shadow-[0_2px_10px_rgba(15,23,42,0.08)]">
-            <Image src={conversationAvatar} alt="Avatar" fill className="rounded-full object-cover" sizes="40px" />
-            <span className={cn("absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white", getStatusColor(activeConversation.contactStatus))} />
+            <Image
+              src={conversationAvatar}
+              alt="Avatar"
+              fill
+              className="rounded-full object-cover"
+              sizes="40px"
+            />
+            <span
+              className={cn(
+                "absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white",
+                getStatusColor(activeConversation.contactStatus),
+              )}
+            />
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate font-bold leading-none text-zinc-900">{displayContactName}</p>
-            <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-zinc-500">{getStatusLabel(activeConversation.contactStatus)}</p>
+            <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+              {getStatusLabel(activeConversation.contactStatus)}
+            </p>
           </div>
         </button>
 
@@ -1130,61 +1312,98 @@ function ConversationThread({
         <div
           className={cn(
             "absolute inset-0 z-20 bg-zinc-900/30 px-3 transition-opacity duration-200 md:px-5",
-            profilePanelOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+            profilePanelOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
           )}
           onClick={onProfileClose}
         >
           <div
             className={cn(
               "mt-4 rounded-2xl border border-zinc-200 bg-white p-3 shadow-xl transition-all duration-250 ease-out md:ml-auto md:mr-4 md:mt-6 md:w-90",
-              profilePanelOpen ? "translate-y-0 scale-100 opacity-100" : "-translate-y-4 scale-[0.98] opacity-0"
+              profilePanelOpen
+                ? "translate-y-0 scale-100 opacity-100"
+                : "-translate-y-4 scale-[0.98] opacity-0",
             )}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="px-2 pb-2">
               <p className="truncate text-sm font-bold text-zinc-900">{displayContactName}</p>
-              <p className="mt-1 text-xs uppercase tracking-wider text-zinc-400">Ações da conversa</p>
+              <p className="mt-1 text-xs uppercase tracking-wider text-zinc-400">
+                Ações da conversa
+              </p>
             </div>
 
             <div className="space-y-1">
-              <button type="button" onClick={onOpenRename} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+              <button
+                type="button"
+                onClick={onOpenRename}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+              >
                 <MessageSquareText size={16} />
                 Alterar apelido para essa conversa
               </button>
 
               {activeAd ? (
-                <Link href={`/anuncio/${activeAd.slug}`} onClick={onProfileClose} className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+                <Link
+                  href={`/anuncio/${activeAd.slug}`}
+                  onClick={onProfileClose}
+                  className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                >
                   Ver anúncio público
                 </Link>
               ) : (
-                <button type="button" disabled className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-400">
+                <button
+                  type="button"
+                  disabled
+                  className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-400"
+                >
                   Ver anúncio público
                 </button>
               )}
 
-              <a href={whatsappUrl} target="_blank" rel="noreferrer" className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+              >
                 Ir para WhatsApp
               </a>
 
-              <button type="button" onClick={onBlock} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50">
+              <button
+                type="button"
+                onClick={onBlock}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+              >
                 <Ban size={16} />
                 {activeConversation.isBlocked ? "Desbloquear usuário" : "Bloquear usuário"}
               </button>
 
-              <button type="button" onClick={onReport} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50">
+              <button
+                type="button"
+                onClick={onReport}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+              >
                 <Flag size={16} />
                 Denunciar conversa
               </button>
 
-              <button type="button" onClick={onDelete} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-wine-700 transition hover:bg-wine-50">
+              <button
+                type="button"
+                onClick={onDelete}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-wine-700 transition hover:bg-wine-50"
+              >
                 <Trash2 size={16} />
                 Excluir da minha caixa
               </button>
             </div>
 
             <div className="mt-2 border-t border-zinc-100 px-2 pt-2">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">Seu apelido para esse contato</p>
-              <p className="mt-1 text-sm font-semibold text-zinc-700">{participantAlias || globalAlias}</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">
+                Seu apelido para esse contato
+              </p>
+              <p className="mt-1 text-sm font-semibold text-zinc-700">
+                {participantAlias || globalAlias}
+              </p>
             </div>
           </div>
         </div>
@@ -1194,56 +1413,82 @@ function ConversationThread({
             <div className="flex h-full items-center justify-center text-center">
               <div>
                 <p className="text-sm font-semibold text-zinc-800">Nenhuma mensagem ainda</p>
-                <p className="mt-1 text-xs text-zinc-500">Envie a primeira mensagem para iniciar a conversa.</p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  Envie a primeira mensagem para iniciar a conversa.
+                </p>
               </div>
             </div>
-          ) : currentMessages.map((message) => {
-            const status = getMessageStatus(message);
-            const StatusIcon = status?.icon;
+          ) : (
+            currentMessages.map((message) => {
+              const status = getMessageStatus(message);
+              const StatusIcon = status?.icon;
 
-            return (
-              <div key={message.id} className={cn(
-                "flex max-w-[85%] flex-col md:max-w-[68%]",
-                message.from === "me" ? "ml-auto items-end" : "mr-auto items-start",
-                message.from === "me" && message.id === lastSentMessageId ? "message-sent-pop" : ""
-              )}>
-                <div className={cn(
-                  "px-4 py-2.5 text-sm shadow-sm",
-                  message.from === "me" ? "rounded-2xl rounded-tr-sm bg-wine-700 text-white shadow-[0_10px_22px_rgba(182,0,49,0.18)]" : "rounded-2xl rounded-tl-sm border border-zinc-200/60 bg-white text-zinc-800"
-                )}>
-                  {message.messageType === "media" ? (
-                    <div className="flex items-center gap-3">
-                      <span className={cn("flex h-10 w-10 items-center justify-center rounded-full", message.from === "me" ? "bg-white/15" : "bg-zinc-100")}>
-                        <ImageIcon size={18} />
-                      </span>
-                      <div>
-                        <p className="font-semibold">{message.media?.name ?? "Mídia"}</p>
-                        <p className={cn("text-xs", message.from === "me" ? "text-white/75" : "text-zinc-500")}>
-                          {message.media?.openedAt ? "Aberta" : "Visualização única"}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="leading-relaxed">{message.content}</p>
+              return (
+                <div
+                  key={message.id}
+                  className={cn(
+                    "flex max-w-[85%] flex-col md:max-w-[68%]",
+                    message.from === "me" ? "ml-auto items-end" : "mr-auto items-start",
+                    message.from === "me" && message.id === lastSentMessageId
+                      ? "message-sent-pop"
+                      : "",
                   )}
+                >
+                  <div
+                    className={cn(
+                      "px-4 py-2.5 text-sm shadow-sm",
+                      message.from === "me"
+                        ? "rounded-2xl rounded-tr-sm bg-wine-700 text-white shadow-[0_10px_22px_rgba(182,0,49,0.18)]"
+                        : "rounded-2xl rounded-tl-sm border border-zinc-200/60 bg-white text-zinc-800",
+                    )}
+                  >
+                    {message.messageType === "media" ? (
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={cn(
+                            "flex h-10 w-10 items-center justify-center rounded-full",
+                            message.from === "me" ? "bg-white/15" : "bg-zinc-100",
+                          )}
+                        >
+                          <ImageIcon size={18} />
+                        </span>
+                        <div>
+                          <p className="font-semibold">{message.media?.name ?? "Mídia"}</p>
+                          <p
+                            className={cn(
+                              "text-xs",
+                              message.from === "me" ? "text-white/75" : "text-zinc-500",
+                            )}
+                          >
+                            {message.media?.openedAt ? "Aberta" : "Visualização única"}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="leading-relaxed">{message.content}</p>
+                    )}
+                  </div>
+                  <span className="mt-1 flex items-center gap-1 px-1 text-[10px] font-medium uppercase text-zinc-400">
+                    {message.sentAt}
+                    {StatusIcon ? (
+                      <>
+                        <StatusIcon size={12} className={status.className} />
+                        <span className={cn("normal-case", status.className)}>{status.label}</span>
+                      </>
+                    ) : null}
+                  </span>
                 </div>
-                <span className="mt-1 flex items-center gap-1 px-1 text-[10px] font-medium uppercase text-zinc-400">
-                  {message.sentAt}
-                  {StatusIcon ? (
-                    <>
-                      <StatusIcon size={12} className={status.className} />
-                      <span className={cn("normal-case", status.className)}>{status.label}</span>
-                    </>
-                  ) : null}
-                </span>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
           <div ref={scrollRef} />
         </div>
       </div>
 
-      <form className="shrink-0 border-t border-zinc-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]" onSubmit={onSubmit}>
+      <form
+        className="shrink-0 border-t border-zinc-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]"
+        onSubmit={onSubmit}
+      >
         <div className="relative mx-auto flex max-w-5xl items-center gap-3">
           <button
             type="button"
@@ -1257,7 +1502,11 @@ function ConversationThread({
 
           {attachmentMenuOpen ? (
             <div className="absolute bottom-14 left-0 z-30 w-64 rounded-2xl border border-zinc-200 bg-white p-2 shadow-xl">
-              <button type="button" onClick={onOpenViewOnce} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+              <button
+                type="button"
+                onClick={onOpenViewOnce}
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+              >
                 <ImageIcon size={17} />
                 Enviar mídia temporária
               </button>
@@ -1271,7 +1520,11 @@ function ConversationThread({
             disabled={activeConversation.isBlocked}
             className="h-11 flex-1 rounded-full border border-zinc-200 bg-zinc-50 px-5 text-sm shadow-sm transition-all focus:border-wine-500 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           />
-          <Button type="submit" className="h-11 rounded-full px-4 font-bold sm:px-6 gap-2" disabled={!draft.trim() || activeConversation.isBlocked}>
+          <Button
+            type="submit"
+            className="h-11 rounded-full px-4 font-bold sm:px-6 gap-2"
+            disabled={!draft.trim() || activeConversation.isBlocked}
+          >
             <Send size={17} />
             <span className="hidden sm:inline">Enviar</span>
           </Button>

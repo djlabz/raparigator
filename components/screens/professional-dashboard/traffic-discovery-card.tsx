@@ -14,7 +14,9 @@ export function TrafficDiscoveryCard() {
   const [upsellOpen, setUpsellOpen] = useState(false);
 
   const maxImpression = Math.max(...trafficDiscovery.weeklyImpressions.map((day) => day.value));
-  const position = isPremium ? trafficDiscovery.premiumSearchPosition : trafficDiscovery.searchPosition;
+  const position = isPremium
+    ? trafficDiscovery.premiumSearchPosition
+    : trafficDiscovery.searchPosition;
 
   return (
     <Card className="relative overflow-hidden p-4 sm:p-6">
@@ -36,7 +38,10 @@ export function TrafficDiscoveryCard() {
         ) : null}
       </div>
 
-      <div className={cn("space-y-5", !isPremium && "pointer-events-none select-none blur-sm")} aria-hidden={!isPremium}>
+      <div
+        className={cn("space-y-5", !isPremium && "pointer-events-none select-none blur-sm")}
+        aria-hidden={!isPremium}
+      >
         <div>
           <p className="mb-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
             Impressões nos últimos 7 dias
@@ -57,7 +62,9 @@ export function TrafficDiscoveryCard() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Origem das visitas</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+              Origem das visitas
+            </p>
             {trafficDiscovery.sources.map((source) => (
               <div key={source.label} className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
@@ -65,15 +72,25 @@ export function TrafficDiscoveryCard() {
                   <span className="font-semibold text-zinc-900">{source.value}%</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-zinc-100">
-                  <div className="h-full rounded-full bg-wine-600" style={{ width: `${source.value}%` }} />
+                  <div
+                    className="h-full rounded-full bg-wine-600"
+                    style={{ width: `${source.value}%` }}
+                  />
                 </div>
               </div>
             ))}
           </div>
 
           <div className="flex flex-col items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-center">
-            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Posição na busca</p>
-            <p className={cn("mt-1 text-4xl font-bold", isPremium ? "text-[#DAA520]" : "text-zinc-900")}>
+            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+              Posição na busca
+            </p>
+            <p
+              className={cn(
+                "mt-1 text-4xl font-bold",
+                isPremium ? "text-[#DAA520]" : "text-zinc-900",
+              )}
+            >
               {position}º
             </p>
             <p className="mt-1 text-xs text-zinc-500">
@@ -91,7 +108,8 @@ export function TrafficDiscoveryCard() {
           <div>
             <p className="text-sm font-bold text-zinc-900">Seus dados de desempenho já existem</p>
             <p className="mt-1 text-xs text-zinc-600">
-              Impressões diárias, origem das visitas e sua posição real na busca estão aqui, esperando por você.
+              Impressões diárias, origem das visitas e sua posição real na busca estão aqui,
+              esperando por você.
             </p>
           </div>
           <ShinyButton size="sm" onClick={() => setUpsellOpen(true)}>

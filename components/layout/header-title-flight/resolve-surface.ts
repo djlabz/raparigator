@@ -5,9 +5,7 @@ export function isFeedTitleFlightPath(pathname: string) {
 }
 
 export function isDashboardTitleFlightPath(pathname: string) {
-  return (
-    pathname === "/profissional/dashboard" || pathname.startsWith("/profissional/dashboard/")
-  );
+  return pathname === "/profissional/dashboard" || pathname.startsWith("/profissional/dashboard/");
 }
 
 export function resolveTitleFlightSurfaceId(pathname: string): TitleFlightSurfaceId | null {

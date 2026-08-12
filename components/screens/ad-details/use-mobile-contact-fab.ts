@@ -115,11 +115,17 @@ export function useMobileContactFab() {
     const fabRect = fabRef.current.getBoundingClientRect();
     const fabCenter = fabRect.left + fabRect.width / 2;
     const nextSide: MobileContactFabSide = fabCenter > window.innerWidth / 2 ? "right" : "left";
-    const maxHorizontal = Math.max(0, window.innerWidth - MOBILE_CONTACT_FAB_SIZE - MOBILE_CONTACT_FAB_EDGE_INSET * 2);
+    const maxHorizontal = Math.max(
+      0,
+      window.innerWidth - MOBILE_CONTACT_FAB_SIZE - MOBILE_CONTACT_FAB_EDGE_INSET * 2,
+    );
     const preserveX =
       nextSide === "left"
         ? Math.min(maxHorizontal, Math.max(0, fabRect.left - MOBILE_CONTACT_FAB_EDGE_INSET))
-        : -Math.min(maxHorizontal, Math.max(0, window.innerWidth - MOBILE_CONTACT_FAB_EDGE_INSET - fabRect.right));
+        : -Math.min(
+            maxHorizontal,
+            Math.max(0, window.innerWidth - MOBILE_CONTACT_FAB_EDGE_INSET - fabRect.right),
+          );
 
     flushSync(() => {
       setFabSide(nextSide);

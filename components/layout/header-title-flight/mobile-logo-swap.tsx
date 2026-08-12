@@ -2,11 +2,7 @@
 
 import { motion, useTransform, type MotionValue } from "motion/react";
 import type { ReactNode } from "react";
-import {
-  LOGO_SWAP_OPACITY_OUTPUT,
-  LOGO_SWAP_REVEAL_INPUT,
-  TITLE_STACK_PX,
-} from "./constants";
+import { LOGO_SWAP_OPACITY_OUTPUT, LOGO_SWAP_REVEAL_INPUT, TITLE_STACK_PX } from "./constants";
 
 type MobileLogoSwapProps = {
   enabled: boolean;
@@ -26,16 +22,10 @@ export function MobileLogoSwap({
   const logoOpacity = useTransform(
     headerReveal,
     [...LOGO_SWAP_REVEAL_INPUT],
-    [...LOGO_SWAP_OPACITY_OUTPUT]
+    [...LOGO_SWAP_OPACITY_OUTPUT],
   );
-  const logoY = useTransform(
-    headerReveal,
-    [...LOGO_SWAP_REVEAL_INPUT],
-    [0, 0, -TITLE_STACK_PX]
-  );
-  const logoPointerEvents = useTransform(headerReveal, (value) =>
-    value > 0.3 ? "none" : "auto"
-  );
+  const logoY = useTransform(headerReveal, [...LOGO_SWAP_REVEAL_INPUT], [0, 0, -TITLE_STACK_PX]);
+  const logoPointerEvents = useTransform(headerReveal, (value) => (value > 0.3 ? "none" : "auto"));
 
   if (!enabled) {
     return fallback;

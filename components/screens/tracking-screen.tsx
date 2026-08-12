@@ -26,13 +26,31 @@ export function TrackingScreen() {
             <Metric label="Previsao" value={serviceTracking.estimatedArrival} />
             <Metric label="Tempo em atendimento" value={serviceTracking.elapsed} />
           </div>
-          <InfoBanner title="Profissional pronta" description="Recebemos confirmacao de preparo. Voce pode liberar check-in ao chegar no local." tone="highlight" />
+          <InfoBanner
+            title="Profissional pronta"
+            description="Recebemos confirmacao de preparo. Voce pode liberar check-in ao chegar no local."
+            tone="highlight"
+          />
           <div className="grid gap-2 sm:grid-cols-3">
             <Button>Confirmar check-in</Button>
-            <Button variant="secondary" onClick={() => { setFeedback(null); setShowRateModal(true); }}>Finalizar servico</Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setFeedback(null);
+                setShowRateModal(true);
+              }}
+            >
+              Finalizar servico
+            </Button>
             <Button variant="danger">Botao de emergencia / panico</Button>
           </div>
-          {feedback === "success" ? <Toast type="success" title="Avaliacao enviada" message="Obrigado pelo feedback. Sua opiniao ajuda a comunidade." /> : null}
+          {feedback === "success" ? (
+            <Toast
+              type="success"
+              title="Avaliacao enviada"
+              message="Obrigado pelo feedback. Sua opiniao ajuda a comunidade."
+            />
+          ) : null}
           {feedback === "error" ? (
             <Toast
               type="error"
@@ -57,7 +75,12 @@ export function TrackingScreen() {
         description="Avalie de 1 a 5 estrelas e deixe um comentario opcional."
         actions={
           <>
-            <Button variant="secondary" fullWidth disabled={loading} onClick={() => setShowRateModal(false)}>
+            <Button
+              variant="secondary"
+              fullWidth
+              disabled={loading}
+              onClick={() => setShowRateModal(false)}
+            >
               Cancelar
             </Button>
             <Button
@@ -100,9 +123,22 @@ export function TrackingScreen() {
 }
 
 function Metric({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-xl bg-zinc-50 p-3"><p className="text-xs text-zinc-500">{label}</p><p className="text-sm font-semibold text-zinc-900">{value}</p></div>;
+  return (
+    <div className="rounded-xl bg-zinc-50 p-3">
+      <p className="text-xs text-zinc-500">{label}</p>
+      <p className="text-sm font-semibold text-zinc-900">{value}</p>
+    </div>
+  );
 }
 
 function TimelineItem({ title, subtitle }: { title: string; subtitle: string }) {
-  return <div className="flex items-center gap-3 rounded-xl border border-zinc-200 p-3"><span className="h-2.5 w-2.5 rounded-full bg-wine-700" /><div><p className="text-sm font-medium text-zinc-900">{title}</p><p className="text-xs text-zinc-500">{subtitle}</p></div></div>;
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-zinc-200 p-3">
+      <span className="h-2.5 w-2.5 rounded-full bg-wine-700" />
+      <div>
+        <p className="text-sm font-medium text-zinc-900">{title}</p>
+        <p className="text-xs text-zinc-500">{subtitle}</p>
+      </div>
+    </div>
+  );
 }

@@ -6,7 +6,12 @@ import { ads } from "@/lib/mock-data";
 export function TopRatedScreen() {
   const grouped = groupByCategory(
     [...ads].sort((a, b) => b.rating - a.rating),
-    (ad) => ({ name: ad.artisticName, category: ad.category, score: ad.rating.toFixed(1), count: ad.reviewsCount }),
+    (ad) => ({
+      name: ad.artisticName,
+      category: ad.category,
+      score: ad.rating.toFixed(1),
+      count: ad.reviewsCount,
+    }),
   );
 
   return (
@@ -23,9 +28,14 @@ export function TopRatedScreen() {
           <Card key={item.category} className="space-y-3">
             <h2 className="text-base font-semibold text-zinc-900">{item.category}</h2>
             {item.items.map((profile) => (
-              <div key={`${item.category}-${profile.name}`} className="flex items-center justify-between rounded-xl border border-zinc-200 p-3 text-sm">
+              <div
+                key={`${item.category}-${profile.name}`}
+                className="flex items-center justify-between rounded-xl border border-zinc-200 p-3 text-sm"
+              >
                 <span>{profile.name}</span>
-                <span>⭐ {profile.score} ({profile.count} avaliacoes)</span>
+                <span>
+                  ⭐ {profile.score} ({profile.count} avaliacoes)
+                </span>
               </div>
             ))}
           </Card>
@@ -37,5 +47,11 @@ export function TopRatedScreen() {
 
 function groupByCategory<T>(source: typeof ads, mapper: (item: (typeof ads)[number]) => T) {
   const categories = Array.from(new Set(source.map((item) => item.category)));
-  return categories.map((category) => ({ category, items: source.filter((ad) => ad.category === category).map(mapper).slice(0, 5) }));
+  return categories.map((category) => ({
+    category,
+    items: source
+      .filter((ad) => ad.category === category)
+      .map(mapper)
+      .slice(0, 5),
+  }));
 }

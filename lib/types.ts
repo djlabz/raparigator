@@ -196,12 +196,7 @@ export interface MediaHighlight {
 
 // ── Painel Admin — Denúncias ──────────────────────────────────────────────────
 
-export type ReportType =
-  | "fake_profile"
-  | "scam"
-  | "harassment"
-  | "inappropriate_content"
-  | "other";
+export type ReportType = "fake_profile" | "scam" | "harassment" | "inappropriate_content" | "other";
 
 export type ReportStatus = "pending" | "under_review" | "resolved" | "dismissed";
 

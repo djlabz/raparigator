@@ -23,7 +23,7 @@ import {
 const clientImages = [
   "/images/personas/persona2/persona2-client-signup-1.webp",
   "/images/personas/persona3/persona3-client-signup-2.webp",
-  "/images/personas/persona4/persona4-client-signup-3.webp"
+  "/images/personas/persona4/persona4-client-signup-3.webp",
 ];
 
 export function ClientSignupScreen() {
@@ -50,7 +50,11 @@ export function ClientSignupScreen() {
   const [fullNameError, setFullNameError] = useState<string | undefined>();
   const [shakeStep, setShakeStep] = useState<1 | 2 | null>(null);
 
-  const [toast, setToast] = useState<{ title: string; message: string; type: "success" | "error" | "info" } | null>(null);
+  const [toast, setToast] = useState<{
+    title: string;
+    message: string;
+    type: "success" | "error" | "info";
+  } | null>(null);
 
   const clientSteps: StepItem[] = [
     { id: 1, label: "Identidade", icon: <User size={20} strokeWidth={2.5} /> },
@@ -60,7 +64,11 @@ export function ClientSignupScreen() {
 
   const iconClassName = "h-4 w-4";
 
-  const showToast = (payload: { title: string; message: string; type: "success" | "error" | "info" }) => {
+  const showToast = (payload: {
+    title: string;
+    message: string;
+    type: "success" | "error" | "info";
+  }) => {
     setToast(payload);
     setTimeout(() => setToast(null), 3000);
   };
@@ -79,7 +87,10 @@ export function ClientSignupScreen() {
 
   const triggerShake = (targetStep: 1 | 2) => {
     setShakeStep(targetStep);
-    window.setTimeout(() => setShakeStep((current) => (current === targetStep ? null : current)), 320);
+    window.setTimeout(
+      () => setShakeStep((current) => (current === targetStep ? null : current)),
+      320,
+    );
   };
 
   const handleCpfChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,9 +154,9 @@ export function ClientSignupScreen() {
     if (passwordErrors.confirmPassword) setConfirmPasswordError(passwordErrors.confirmPassword);
     const hasError = Boolean(
       emailErrors.email ||
-        emailErrors.confirmEmail ||
-        passwordErrors.password ||
-        passwordErrors.confirmPassword,
+      emailErrors.confirmEmail ||
+      passwordErrors.password ||
+      passwordErrors.confirmPassword,
     );
     if (hasError) {
       triggerShake(2);
@@ -192,19 +203,25 @@ export function ClientSignupScreen() {
               fill
               priority={index === 0}
               quality={90}
-              className={`object-cover object-center transition-opacity duration-1000 ease-in-out ${index === activeImageIndex ? "opacity-90" : "opacity-0"
-                }`}
+              className={`object-cover object-center transition-opacity duration-1000 ease-in-out ${
+                index === activeImageIndex ? "opacity-90" : "opacity-0"
+              }`}
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           ))}
           <div className="absolute inset-0 bg-linear-to-br from-black/55 via-black/25 to-transparent" />
           <div className="absolute inset-0 bg-linear-to-t from-wine-900/35 via-transparent to-transparent" />
           <div className="relative z-10 flex h-full flex-col justify-end px-10 pb-14 text-white lg:px-14">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">Cadastro cliente</p>
-            <h2 className="mt-4 max-w-lg font-display text-5xl leading-[0.95] text-white lg:text-6xl">Controle premium da sua experiencia.</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
+              Cadastro cliente
+            </p>
+            <h2 className="mt-4 max-w-lg font-display text-5xl leading-[0.95] text-white lg:text-6xl">
+              Controle premium da sua experiencia.
+            </h2>
             <div className="mt-7 h-px w-24 bg-white/45" />
             <p className="mt-6 max-w-md text-base leading-relaxed text-white/80">
-              Entre em um ambiente com suporte dedicado, contratacao protegida e rastreabilidade completa em cada interacao.
+              Entre em um ambiente com suporte dedicado, contratacao protegida e rastreabilidade
+              completa em cada interacao.
             </p>
           </div>
         </div>
@@ -220,7 +237,9 @@ export function ClientSignupScreen() {
               </Link>
             </div>
             <h1 className="mt-4 text-3xl font-semibold text-zinc-900">Crie sua conta Sigillus</h1>
-            <p className="mt-1 text-base text-zinc-700">Inicie sua jornada no ecossistema e experimente o padrão de excelência.</p>
+            <p className="mt-1 text-base text-zinc-700">
+              Inicie sua jornada no ecossistema e experimente o padrão de excelência.
+            </p>
           </header>
 
           <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-300/40 md:p-6">
@@ -232,9 +251,15 @@ export function ClientSignupScreen() {
               {step === 1 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="mb-4 space-y-1">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">Premium Membership</span>
-                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">Dados Iniciais</h2>
-                    <p className="text-sm font-medium text-zinc-500 leading-relaxed">Informe seus dados civis e configure como deseja ser chamada(o).</p>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">
+                      Premium Membership
+                    </span>
+                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">
+                      Dados Iniciais
+                    </h2>
+                    <p className="text-sm font-medium text-zinc-500 leading-relaxed">
+                      Informe seus dados civis e configure como deseja ser chamada(o).
+                    </p>
                   </div>
 
                   <Input
@@ -248,7 +273,15 @@ export function ClientSignupScreen() {
                     className={shakeStep === 1 && cpfError ? "field-shake" : undefined}
                     premium
                     leadingIcon={
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={iconClassName}
+                      >
                         <rect x="3" y="4" width="18" height="16" rx="2" />
                         <path d="M8 8h8" />
                         <path d="M8 12h5" />
@@ -266,7 +299,15 @@ export function ClientSignupScreen() {
                     className={shakeStep === 1 && fullNameError ? "field-shake" : undefined}
                     premium
                     leadingIcon={
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={iconClassName}
+                      >
                         <circle cx="12" cy="8" r="4" />
                         <path d="M5 20a7 7 0 0 1 14 0" />
                       </svg>
@@ -276,11 +317,20 @@ export function ClientSignupScreen() {
                   <div className="rounded-xl border border-zinc-200 bg-white/40 p-4 shadow-sm backdrop-blur-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-zinc-900">Usar apelido (opcional)</p>
-                        <p className="text-xs text-zinc-600">Ative se quiser ser chamada(o) por um nome alternativo.</p>
+                        <p className="text-sm font-semibold text-zinc-900">
+                          Usar apelido (opcional)
+                        </p>
+                        <p className="text-xs text-zinc-600">
+                          Ative se quiser ser chamada(o) por um nome alternativo.
+                        </p>
                       </div>
                       <label className="relative inline-flex cursor-pointer items-center">
-                        <input type="checkbox" className="peer sr-only" checked={nicknameEnabled} onChange={handleNicknameToggle} />
+                        <input
+                          type="checkbox"
+                          className="peer sr-only"
+                          checked={nicknameEnabled}
+                          onChange={handleNicknameToggle}
+                        />
                         <div className="h-5 w-9 rounded-full bg-zinc-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:border after:border-zinc-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-wine-700 peer-checked:after:translate-x-full peer-checked:after:border-white" />
                       </label>
                     </div>
@@ -294,7 +344,15 @@ export function ClientSignupScreen() {
                           onChange={(event) => setNickname(event.target.value)}
                           premium
                           leadingIcon={
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className={iconClassName}
+                            >
                               <path d="m12 3 2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5Z" />
                             </svg>
                           }
@@ -308,9 +366,15 @@ export function ClientSignupScreen() {
               {step === 2 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="mb-4 space-y-1">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">Secure Vault</span>
-                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">Credenciais de Acesso</h2>
-                    <p className="text-sm font-medium text-zinc-500 leading-relaxed">Confirme e-mail e senha para proteger o acesso da sua conta.</p>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">
+                      Secure Vault
+                    </span>
+                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">
+                      Credenciais de Acesso
+                    </h2>
+                    <p className="text-sm font-medium text-zinc-500 leading-relaxed">
+                      Confirme e-mail e senha para proteger o acesso da sua conta.
+                    </p>
                   </div>
 
                   <Input
@@ -324,7 +388,15 @@ export function ClientSignupScreen() {
                     className={shakeStep === 2 && emailError ? "field-shake" : undefined}
                     premium
                     leadingIcon={
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={iconClassName}
+                      >
                         <rect x="3" y="5" width="18" height="14" rx="2" />
                         <path d="m4 7 8 6 8-6" />
                       </svg>
@@ -342,7 +414,15 @@ export function ClientSignupScreen() {
                     className={shakeStep === 2 && confirmEmailError ? "field-shake" : undefined}
                     premium
                     leadingIcon={
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={iconClassName}
+                      >
                         <path d="M4 4h16v16H4z" />
                         <path d="m4 8 8 5 8-5" />
                       </svg>
@@ -360,7 +440,15 @@ export function ClientSignupScreen() {
                     className={shakeStep === 2 && passwordError ? "field-shake" : undefined}
                     premium
                     leadingIcon={
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={iconClassName}
+                      >
                         <rect x="4" y="11" width="16" height="10" rx="2" />
                         <path d="M8 11V8a4 4 0 0 1 8 0v3" />
                       </svg>
@@ -378,7 +466,15 @@ export function ClientSignupScreen() {
                     className={shakeStep === 2 && confirmPasswordError ? "field-shake" : undefined}
                     premium
                     leadingIcon={
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={iconClassName}
+                      >
                         <rect x="4" y="11" width="16" height="10" rx="2" />
                         <path d="M8 11V8a4 4 0 0 1 8 0v3" />
                         <path d="M9 16h6" />
@@ -392,7 +488,15 @@ export function ClientSignupScreen() {
                       description="Seus dados passam por criptografia ponta a ponta e monitoramento continuo de seguranca."
                       tone="secure"
                       icon={
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClassName}>
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className={iconClassName}
+                        >
                           <path d="M12 2a10 10 0 0 0-7 3v6c0 6 7 11 7 11s7-5 7-11V5a10 10 0 0 0-7-3Z" />
                           <path d="M8.5 11a3.5 3.5 0 0 1 7 0" />
                           <path d="M9 14h6" />
@@ -400,9 +504,15 @@ export function ClientSignupScreen() {
                       }
                     />
                     <div className="mt-2 flex flex-wrap gap-2 pl-11 text-[11px] font-semibold uppercase tracking-[0.12em] text-wine-800">
-                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">Seguro</span>
-                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">SSL</span>
-                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">LGPD</span>
+                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">
+                        Seguro
+                      </span>
+                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">
+                        SSL
+                      </span>
+                      <span className="rounded-full border border-wine-300 bg-wine-50 px-2.5 py-1">
+                        LGPD
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -411,9 +521,15 @@ export function ClientSignupScreen() {
               {step === 3 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="mb-4 space-y-1">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">Quase lá</span>
-                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">Revisão Final</h2>
-                    <p className="text-sm font-medium text-zinc-500 leading-relaxed">Tudo pronto. Confira os dados obrigatórios e finalize sua conta.</p>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">
+                      Quase lá
+                    </span>
+                    <h2 className="text-xl font-bold tracking-tight text-zinc-900">
+                      Revisão Final
+                    </h2>
+                    <p className="text-sm font-medium text-zinc-500 leading-relaxed">
+                      Tudo pronto. Confira os dados obrigatórios e finalize sua conta.
+                    </p>
                   </div>
 
                   <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-700">
@@ -437,7 +553,15 @@ export function ClientSignupScreen() {
                       onClick={prevStep}
                       className="w-1/3"
                     >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 h-4 w-4">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="mr-1.5 h-4 w-4"
+                      >
                         <path d="m12 19-7-7 7-7" />
                         <path d="M19 12H5" />
                       </svg>
@@ -472,7 +596,15 @@ export function ClientSignupScreen() {
                     className="shadow-md shadow-wine-700/20"
                   >
                     Continuar
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5 h-4 w-4">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="ml-1.5 h-4 w-4"
+                    >
                       <path d="M5 12h14" />
                       <path d="m12 5 7 7-7 7" />
                     </svg>
@@ -494,7 +626,10 @@ export function ClientSignupScreen() {
               <p className="mt-4 border-t border-dashed border-zinc-200 pt-4 text-sm text-zinc-600">
                 Voce e profissional e quer se cadastrar?{" "}
                 {/* Link agora usa a cor da marca (wine-700) e font-bold */}
-                <Link href="/auth/cadastro/profissional" className="font-bold text-wine-700 hover:underline">
+                <Link
+                  href="/auth/cadastro/profissional"
+                  className="font-bold text-wine-700 hover:underline"
+                >
                   Anuncie seu perfil aqui
                 </Link>
               </p>

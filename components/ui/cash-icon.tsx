@@ -9,11 +9,7 @@ import type { HTMLAttributes } from "react";
  * Aceita className (w-5 h-5, etc.) para manter compatibilidade
  * com a interface de ícones do grid de pagamento.
  */
-export function CashIcon({
-  className = "",
-  style,
-  ...props
-}: HTMLAttributes<HTMLSpanElement>) {
+export function CashIcon({ className = "", style, ...props }: HTMLAttributes<HTMLSpanElement>) {
   return (
     <span
       role="img"

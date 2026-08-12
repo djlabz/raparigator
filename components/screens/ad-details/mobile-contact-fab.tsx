@@ -61,7 +61,7 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
               exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
               className={cn(
                 "absolute z-10 w-max max-w-35 rounded-xl border border-dashed border-stone-400/70 bg-[#f5f4ef]/85 px-3 py-1.5 text-xs font-medium leading-tight text-zinc-700 shadow-[0_4px_16px_rgba(0,0,0,0.1)] backdrop-blur-sm",
-                tooltipSide === "right" ? "left-17" : "right-17"
+                tooltipSide === "right" ? "left-17" : "right-17",
               )}
             >
               <div
@@ -69,7 +69,7 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
                   "absolute top-1/2 h-0 w-0 -translate-y-1/2 border-y-4 border-y-transparent",
                   tooltipSide === "right"
                     ? "-left-1.5 border-r-[6px] border-r-[#f5f4ef]/85"
-                    : "-right-1.5 border-l-[6px] border-l-[#f5f4ef]/85"
+                    : "-right-1.5 border-l-[6px] border-l-[#f5f4ef]/85",
                 )}
               />
               Clique para entrar em contato.
@@ -147,7 +147,11 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
             />
           </div>
           <div className="absolute right-[14.6%] bottom-[14.6%] z-20 flex h-6 w-6 translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full bg-[#96001e] ring-2 ring-white">
-            {isOpen ? <X className="h-3.5 w-3.5 text-white" /> : <MessageSquare className="h-3.5 w-3.5 fill-white text-white" />}
+            {isOpen ? (
+              <X className="h-3.5 w-3.5 text-white" />
+            ) : (
+              <MessageSquare className="h-3.5 w-3.5 fill-white text-white" />
+            )}
           </div>
         </button>
       </div>

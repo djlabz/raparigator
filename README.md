@@ -43,18 +43,22 @@ tests/           # Suite E2E Playwright (logins de teste em tests/helpers/creden
 ## 💻 Como Rodar o Projeto Localmente
 
 1. **Clone o repositório e acesse o diretório:**
+
    ```bash
    git clone --filter=blob:none https://github.com/djlabz/raparigator.git
    cd raparigator
    ```
+
    > A flag `--filter=blob:none` baixa apenas os arquivos da versão atual (clone bem mais rápido). Um `git clone` normal também funciona.
 
 2. **Instale as dependências:**
+
    ```bash
    npm install
    ```
 
 3. **Inicie o Servidor de Desenvolvimento:**
+
    ```bash
    npm run dev
    ```
@@ -67,9 +71,12 @@ tests/           # Suite E2E Playwright (logins de teste em tests/helpers/creden
 - `npm run dev:legacy`: Inicia o servidor local com o compilador padrão do Next.js.
 - `npm run build`: Faz a build otimizada da aplicação para ambiente de produção.
 - `npm run start`: Inicia o servidor Node para a versão já compilada pelo `build`.
-- `npm run lint`: Checa a qualidade de código utilizando ESLint.
+- `npm run lint`: Checa a qualidade de código utilizando **oxlint** (config em `.oxlintrc.json`).
+- `npm run lint:fix`: Aplica as correções automáticas do oxlint.
+- `npm run format`: Formata o código com **oxfmt** (config em `.oxfmtrc.json`).
+- `npm run format:check`: Verifica a formatação sem alterar arquivos.
 - `npm run typecheck`: Roda o compilador TypeScript sem emitir arquivos.
-- `npm run check`: Lint + typecheck (rode antes de abrir PR).
+- `npm run check`: Lint + format:check + typecheck (rode antes de abrir PR).
 - `npm run test:e2e`: Roda a suite E2E Playwright (Chromium). Variantes: `test:e2e:ui`, `test:e2e:report`.
 - `npm run share`: Expõe o `localhost:3000` **publicamente** via túnel Cloudflare (`cloudflared`). Use com cuidado e apenas quando precisar de testes externos.
 
@@ -82,4 +89,4 @@ tests/           # Suite E2E Playwright (logins de teste em tests/helpers/creden
 
 ---
 
-*Desenvolvido focado em Alta Performance e Interfaces Ricas.*
+_Desenvolvido focado em Alta Performance e Interfaces Ricas._

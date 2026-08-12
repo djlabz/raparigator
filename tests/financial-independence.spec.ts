@@ -101,7 +101,11 @@ test.describe("Independência financeira", () => {
     await expect
       .poll(
         async () =>
-          Number(await page.getByTestId("freedom-hero-expanded").evaluate((el) => getComputedStyle(el).opacity)),
+          Number(
+            await page
+              .getByTestId("freedom-hero-expanded")
+              .evaluate((el) => getComputedStyle(el).opacity),
+          ),
         { timeout: 5000 },
       )
       .toBeLessThan(0.15);
@@ -225,7 +229,9 @@ test.describe("Independência financeira", () => {
     await page.getByTestId("info-hint-trigger-years-back").click();
     const panel = page.getByTestId("info-hint-panel-years-back");
     await expect(panel).toBeVisible();
-    await expect(panel.getByTestId("years-back-explanation")).toContainText(/prazo até R\$ 1 milhão/i);
+    await expect(panel.getByTestId("years-back-explanation")).toContainText(
+      /prazo até R\$ 1 milhão/i,
+    );
     await expect(panel).toContainText(/quase não muda/i);
     await expect(panel).toContainText(/100%/i);
   });
@@ -404,7 +410,10 @@ test.describe("Independência financeira", () => {
     await page.evaluate(() => window.scrollTo(0, 0));
     const hero = page.getByTestId("freedom-hero");
     await expect(hero).toHaveAttribute("data-collapsed", "false", { timeout: 5000 });
-    await page.getByTestId("freedom-hero-expanded").getByRole("button", { name: /Nova Simulação/i }).click();
+    await page
+      .getByTestId("freedom-hero-expanded")
+      .getByRole("button", { name: /Nova Simulação/i })
+      .click();
     await expect(page.getByRole("heading", { name: "Calculadora de Liberdade" })).toBeVisible();
   });
 

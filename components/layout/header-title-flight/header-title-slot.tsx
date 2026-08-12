@@ -120,10 +120,10 @@ export function FeedHeaderDesktopTitle() {
   const active = useActiveTitleFlightSurface(pathname);
 
   if (
-    !isFeedTitleFlightPath(pathname)
-    || active?.id !== "feed"
-    || !active.flags.enabled
-    || active.flags.mode !== "desktop"
+    !isFeedTitleFlightPath(pathname) ||
+    active?.id !== "feed" ||
+    !active.flags.enabled ||
+    active.flags.mode !== "desktop"
   ) {
     return null;
   }

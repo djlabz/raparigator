@@ -16,7 +16,13 @@ import {
 import type { PremiumBillingCycle } from "@/lib/types";
 import { cn, currency } from "@/lib/utils";
 
-export type PremiumHighlight = "topSearch" | "traffic" | "portfolio" | "media" | "alias" | "earlyAccess";
+export type PremiumHighlight =
+  | "topSearch"
+  | "traffic"
+  | "portfolio"
+  | "media"
+  | "alias"
+  | "earlyAccess";
 
 interface PremiumConversionModalProps {
   open: boolean;
@@ -74,7 +80,12 @@ const BILLING_LABELS: Record<PremiumBillingCycle, string> = {
   semiannual: "Semestral",
 };
 
-export function PremiumConversionModal({ open, onClose, highlight, from }: PremiumConversionModalProps) {
+export function PremiumConversionModal({
+  open,
+  onClose,
+  highlight,
+  from,
+}: PremiumConversionModalProps) {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
   const [wasOpen, setWasOpen] = useState(open);
@@ -103,8 +114,7 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
     setReachedEnd(state.reachedEnd);
   };
 
-  const step2CtaDisabled =
-    step === 2 && (!scrollGateMeasured || (canScrollDown && !reachedEnd));
+  const step2CtaDisabled = step === 2 && (!scrollGateMeasured || (canScrollDown && !reachedEnd));
 
   const handleClose = () => {
     setStep(1);
@@ -185,13 +195,19 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
               {BENEFIT_CELLS.map((cell, index) => {
                 const Icon = cell.icon;
                 const highlighted = highlight === cell.id;
-                const isLastOdd = index === BENEFIT_CELLS.length - 1 && BENEFIT_CELLS.length % 2 === 1;
+                const isLastOdd =
+                  index === BENEFIT_CELLS.length - 1 && BENEFIT_CELLS.length % 2 === 1;
                 return (
                   <motion.li
                     key={cell.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ type: "spring", stiffness: 360, damping: 28, delay: index * 0.05 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 360,
+                      damping: 28,
+                      delay: index * 0.05,
+                    }}
                     className={cn(
                       "flex gap-3 rounded-xl border border-[#2a2a2a] bg-black/35 p-3.5",
                       isLastOdd && "sm:col-span-2",
@@ -205,7 +221,10 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
                       <p className="flex items-center gap-1.5 text-sm font-semibold text-[#FFDF00]">
                         {cell.title}
                         {highlighted ? (
-                          <Sparkles className="h-3.5 w-3.5 shrink-0 text-[#DAA520]" aria-hidden="true" />
+                          <Sparkles
+                            className="h-3.5 w-3.5 shrink-0 text-[#DAA520]"
+                            aria-hidden="true"
+                          />
                         ) : null}
                       </p>
                       <p className="text-xs leading-relaxed text-zinc-400">{cell.description}</p>
@@ -225,12 +244,22 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
           >
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Plano atual</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+                  Plano atual
+                </p>
                 <p className="mt-1 text-base font-semibold text-zinc-900">Comum</p>
                 <ul className="mt-4 space-y-3.5">
                   {sharedGains.map((gain, index) => (
-                    <li key={gain.id} className={cn("space-y-0.5", index === 0 && "pb-3.5 border-b border-zinc-100")}>
-                      <p className="text-[13px] font-semibold leading-snug text-zinc-800">{gain.label}</p>
+                    <li
+                      key={gain.id}
+                      className={cn(
+                        "space-y-0.5",
+                        index === 0 && "pb-3.5 border-b border-zinc-100",
+                      )}
+                    >
+                      <p className="text-[13px] font-semibold leading-snug text-zinc-800">
+                        {gain.label}
+                      </p>
                       <p className="text-sm leading-snug text-zinc-600">{gain.from}</p>
                     </li>
                   ))}
@@ -246,14 +275,24 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
                 </p>
                 <ul className="mt-4 space-y-3.5">
                   {sharedGains.map((gain, index) => (
-                    <li key={gain.id} className={cn("space-y-0.5", index === 0 && "pb-3.5 border-b border-white/10")}>
-                      <p className="text-[13px] font-semibold leading-snug text-[#FFDF00]">{gain.label}</p>
+                    <li
+                      key={gain.id}
+                      className={cn(
+                        "space-y-0.5",
+                        index === 0 && "pb-3.5 border-b border-white/10",
+                      )}
+                    >
+                      <p className="text-[13px] font-semibold leading-snug text-[#FFDF00]">
+                        {gain.label}
+                      </p>
                       <p className="text-sm leading-snug text-zinc-200">{gain.to}</p>
                     </li>
                   ))}
                 </ul>
                 <div className="mt-4 border-t border-white/10 pt-3">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#DAA520]">Exclusivo Premium</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#DAA520]">
+                    Exclusivo Premium
+                  </p>
                   <ul className="mt-2 space-y-1.5">
                     {PREMIUM_EXCLUSIVE_FEATURES.map((feature) => (
                       <li key={feature} className="text-sm leading-snug text-zinc-200">
@@ -294,13 +333,28 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
                           {option.badge}
                         </span>
                       ) : null}
-                      <p className={cn("text-sm font-semibold", selected ? "text-[#FFDF00]" : "text-zinc-900")}>
+                      <p
+                        className={cn(
+                          "text-sm font-semibold",
+                          selected ? "text-[#FFDF00]" : "text-zinc-900",
+                        )}
+                      >
                         {option.label}
                       </p>
-                      <p className={cn("mt-1 text-base font-bold leading-none", selected ? "text-white" : "text-zinc-800")}>
+                      <p
+                        className={cn(
+                          "mt-1 text-base font-bold leading-none",
+                          selected ? "text-white" : "text-zinc-800",
+                        )}
+                      >
                         {currency(option.price)}
                       </p>
-                      <p className={cn("mt-1 text-xs font-medium", selected ? "text-zinc-400" : "text-zinc-500")}>
+                      <p
+                        className={cn(
+                          "mt-1 text-xs font-medium",
+                          selected ? "text-zinc-400" : "text-zinc-500",
+                        )}
+                      >
                         {option.cycle === "monthly" ? "por mês" : "por semestre"}
                       </p>
                     </button>
@@ -309,7 +363,9 @@ export function PremiumConversionModal({ open, onClose, highlight, from }: Premi
               </div>
               <p className="text-center text-sm font-semibold text-zinc-900">
                 {currency(selectedPlan.monthlyEquivalent)}/mês
-                <span className="ml-1 font-normal text-zinc-500">· {BILLING_LABELS[billingCycle].toLowerCase()}</span>
+                <span className="ml-1 font-normal text-zinc-500">
+                  · {BILLING_LABELS[billingCycle].toLowerCase()}
+                </span>
               </p>
             </div>
           </motion.div>

@@ -7,13 +7,17 @@ type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const ad = ads.find((item) => item.slug === slug);
-  if (!ad) return { title: "Anuncio nao encontrado | Sigillus", description: "O perfil solicitado nao foi encontrado." };
-  
+  if (!ad)
+    return {
+      title: "Anuncio nao encontrado | Sigillus",
+      description: "O perfil solicitado nao foi encontrado.",
+    };
+
   const title = `${ad.artisticName} em ${ad.city} | Sigillus`;
   const description = `${ad.shortDescription} A partir de R$ ${ad.startingPrice}.`;
-  
-  return { 
-    title, 
+
+  return {
+    title,
     description,
     openGraph: {
       title,

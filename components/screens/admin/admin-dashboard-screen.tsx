@@ -82,7 +82,9 @@ export function AdminDashboardScreen() {
   }, []);
 
   useEffect(() => {
-    void (async () => { await load(); })();
+    void (async () => {
+      await load();
+    })();
   }, [load]);
 
   const maxBar = stats
@@ -156,7 +158,8 @@ export function AdminDashboardScreen() {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-amber-200">
-                    {stats.pendingReview} {stats.pendingReview === 1 ? "perfil aguarda" : "perfis aguardam"} aprovação
+                    {stats.pendingReview}{" "}
+                    {stats.pendingReview === 1 ? "perfil aguarda" : "perfis aguardam"} aprovação
                   </h3>
                   <p className="text-xs text-amber-300/80">
                     Verifique os documentos e fotos antes de liberar a publicação na plataforma.
@@ -216,7 +219,8 @@ export function AdminDashboardScreen() {
                 icon: TrendingUp,
                 color: "text-emerald-400",
                 accentBg: "from-emerald-950/40 to-zinc-900/80",
-                borderColor: "border-emerald-900/40 hover:border-emerald-700/60 focus:border-emerald-600",
+                borderColor:
+                  "border-emerald-900/40 hover:border-emerald-700/60 focus:border-emerald-600",
                 iconBg: "bg-emerald-500/10 text-emerald-400 ring-emerald-500/30",
                 href: "/admin/clientes",
               },
@@ -236,18 +240,24 @@ export function AdminDashboardScreen() {
                       <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
                         {stat.label}
                       </p>
-                      <p className={`font-display text-3xl sm:text-4xl font-bold tracking-tight ${stat.color}`}>
+                      <p
+                        className={`font-display text-3xl sm:text-4xl font-bold tracking-tight ${stat.color}`}
+                      >
                         {stat.value}
                       </p>
                     </div>
-                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1 ${stat.iconBg} transition-transform duration-200 group-hover:scale-110`}>
+                    <div
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1 ${stat.iconBg} transition-transform duration-200 group-hover:scale-110`}
+                    >
                       <stat.icon className="h-5 w-5" />
                     </div>
                   </div>
 
                   <div className="mt-4 flex items-center justify-between border-t border-zinc-800/60 pt-3 text-[11px]">
                     <span className="text-zinc-500">{stat.subtext}</span>
-                    <span className={`flex items-center gap-1 font-semibold ${stat.color} transition-all group-hover:translate-x-0.5`}>
+                    <span
+                      className={`flex items-center gap-1 font-semibold ${stat.color} transition-all group-hover:translate-x-0.5`}
+                    >
                       Acessar <ArrowRight className="h-3 w-3" />
                     </span>
                   </div>
@@ -268,7 +278,9 @@ export function AdminDashboardScreen() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-zinc-100 text-base">Cadastros na Semana</h3>
-                      <p className="text-xs text-zinc-500">Distribuição por perfil nos últimos 7 dias</p>
+                      <p className="text-xs text-zinc-500">
+                        Distribuição por perfil nos últimos 7 dias
+                      </p>
                     </div>
                   </div>
 
@@ -287,7 +299,9 @@ export function AdminDashboardScreen() {
                 {/* Total Counter Badge */}
                 <div className="mb-4 flex items-center justify-between text-xs text-zinc-400 bg-zinc-950/40 rounded-xl px-4 py-2 border border-zinc-800/40">
                   <span>Total acumulado no período:</span>
-                  <span className="font-bold text-wine-300">{totalWeeklySignups} novos usuários</span>
+                  <span className="font-bold text-wine-300">
+                    {totalWeeklySignups} novos usuários
+                  </span>
                 </div>
               </div>
 
@@ -297,11 +311,16 @@ export function AdminDashboardScreen() {
                   const clientH = Math.round((day.clients / maxBar) * 140);
                   const profH = Math.round((day.professionals / maxBar) * 140);
                   return (
-                    <div key={day.label} className="group relative flex flex-1 flex-col items-center gap-2 h-full justify-end">
+                    <div
+                      key={day.label}
+                      className="group relative flex flex-1 flex-col items-center gap-2 h-full justify-end"
+                    >
                       {/* Tooltip on Hover */}
                       <div className="absolute -top-10 z-20 hidden group-hover:flex flex-col items-center rounded-lg bg-zinc-900 border border-zinc-700 px-2 py-1 text-[10px] text-zinc-200 shadow-xl whitespace-nowrap">
                         <span className="font-bold">{day.label}</span>
-                        <span>{day.clients} Clientes • {day.professionals} Profissionais</span>
+                        <span>
+                          {day.clients} Clientes • {day.professionals} Profissionais
+                        </span>
                       </div>
 
                       <div className="flex w-full items-end justify-center gap-1">
@@ -335,7 +354,9 @@ export function AdminDashboardScreen() {
                     <Activity className="h-4 w-4 text-wine-400" />
                     <h3 className="font-semibold text-zinc-100 text-base">Atividade Recente</h3>
                   </div>
-                  <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Feed Live</span>
+                  <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+                    Feed Live
+                  </span>
                 </div>
 
                 <div className="space-y-3.5 max-h-[300px] overflow-y-auto pr-1">
@@ -381,4 +402,3 @@ export function AdminDashboardScreen() {
     </AdminLayoutShell>
   );
 }
-

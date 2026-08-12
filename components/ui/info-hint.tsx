@@ -22,10 +22,7 @@ type PanelCoords = {
   width: number;
 };
 
-function computePanelCoords(
-  trigger: DOMRect,
-  align: "start" | "center" | "end",
-): PanelCoords {
+function computePanelCoords(trigger: DOMRect, align: "start" | "center" | "end"): PanelCoords {
   const margin = 8;
   const width = Math.min(320, window.innerWidth - margin * 2);
   let left = trigger.left;
@@ -105,7 +102,9 @@ export function InfoHint({
         initial={reduceMotion ? false : { opacity: 0, scale: 0.94, y: 4 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={reduceMotion ? undefined : { opacity: 0, scale: 0.96, y: 2 }}
-        transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 28 }}
+        transition={
+          reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 28 }
+        }
         style={{ top: coords.top, left: coords.left, width: coords.width }}
         className="fixed z-[80] rounded-xl border border-zinc-200 bg-white p-3 text-left text-xs leading-relaxed text-zinc-600 shadow-lg"
       >

@@ -21,11 +21,9 @@ export function StandardSidebarCta({ role, setRiskTarget }: StandardSidebarCtaPr
           <h3 className="mb-2 font-display text-sm font-extrabold tracking-widest text-wine-700 uppercase">
             Atendimento Exclusivo
           </h3>
-          
-          <h4 className="mb-2 font-display text-2xl font-bold text-zinc-900">
-            Fale Agora
-          </h4>
-          
+
+          <h4 className="mb-2 font-display text-2xl font-bold text-zinc-900">Fale Agora</h4>
+
           <p className="mb-6 text-sm leading-relaxed text-zinc-500">
             Entre em contato direto e seguro para confirmar disponibilidade e valores.
           </p>

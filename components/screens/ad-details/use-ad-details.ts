@@ -76,10 +76,15 @@ export function useAdDetails(slug: string): UseAdDetailsReturn {
   }, [ad, selectedDuration]);
 
   const calculatedExtrasCost = useMemo(() => selectedExtras.length * 150, [selectedExtras]);
-  const totalCalculatedValue = useMemo(() => basePrice + calculatedExtrasCost, [basePrice, calculatedExtrasCost]);
+  const totalCalculatedValue = useMemo(
+    () => basePrice + calculatedExtrasCost,
+    [basePrice, calculatedExtrasCost],
+  );
 
   const toggleExtra = (extra: string) => {
-    setSelectedExtras((prev) => (prev.includes(extra) ? prev.filter((e) => e !== extra) : [...prev, extra]));
+    setSelectedExtras((prev) =>
+      prev.includes(extra) ? prev.filter((e) => e !== extra) : [...prev, extra],
+    );
   };
 
   const nextPhoto = () => {
@@ -98,7 +103,11 @@ export function useAdDetails(slug: string): UseAdDetailsReturn {
   const premiumAttributes = ad
     ? [
         { label: "Altura", value: `${ad.heightCm} cm`, icon: "/icons/attributes/size-woman.svg" },
-        { label: "Cabelo", value: `${ad.hairType} • ${ad.hairColor}`, icon: "/icons/attributes/hair-woman.svg" },
+        {
+          label: "Cabelo",
+          value: `${ad.hairType} • ${ad.hairColor}`,
+          icon: "/icons/attributes/hair-woman.svg",
+        },
         { label: "Etnia", value: ad.ethnicity, icon: "/icons/attributes/person.svg" },
         { label: "Olhos", value: ad.eyeColor, icon: "/icons/attributes/eye.svg" },
         { label: "Fumante?", value: "Não", icon: "/icons/attributes/smoking.svg" },

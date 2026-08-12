@@ -22,8 +22,12 @@ export function SignupSelectionScreen() {
           <div className="absolute inset-0 bg-linear-to-br from-black/55 via-black/25 to-transparent" />
           <div className="absolute inset-0 bg-linear-to-t from-wine-900/35 via-transparent to-transparent" />
           <div className="relative z-10 flex h-full flex-col justify-end px-10 pb-14 text-white lg:px-14">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">Junte-se à Elite</p>
-            <h2 className="mt-4 max-w-lg font-display text-5xl leading-[0.95] text-white lg:text-6xl">Sua jornada começa aqui.</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
+              Junte-se à Elite
+            </p>
+            <h2 className="mt-4 max-w-lg font-display text-5xl leading-[0.95] text-white lg:text-6xl">
+              Sua jornada começa aqui.
+            </h2>
             <div className="mt-7 h-px w-24 bg-white/45" />
             <p className="mt-6 max-w-md text-base leading-relaxed text-white/80">
               Escolha como deseja participar da plataforma mais exclusiva do mercado.
@@ -59,9 +63,16 @@ export function SignupSelectionScreen() {
           {/* Meio: Join the Experience, título, descrição e cards */}
           <div className="my-auto flex flex-col space-y-6">
             <header className="text-center">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 opacity-60">Join the Experience</p>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900 md:mt-3 md:text-4xl">Como você deseja participar?</h1>
-              <p className="mx-auto mt-2 max-w-sm text-sm font-medium text-zinc-600 md:mt-3">Selecione o caminho que melhor se adapta à sua experiência exclusiva dentro do ecossistema Sigillus.</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 opacity-60">
+                Join the Experience
+              </p>
+              <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900 md:mt-3 md:text-4xl">
+                Como você deseja participar?
+              </h1>
+              <p className="mx-auto mt-2 max-w-sm text-sm font-medium text-zinc-600 md:mt-3">
+                Selecione o caminho que melhor se adapta à sua experiência exclusiva dentro do
+                ecossistema Sigillus.
+              </p>
             </header>
 
             <div className="grid grid-cols-2 gap-3 md:gap-6">
@@ -77,10 +88,14 @@ export function SignupSelectionScreen() {
                   <div className="mb-3 md:mb-8 flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 transition-colors duration-500 group-hover:bg-wine-50 group-hover:text-wine-700">
                     <User className="size-5 md:size-7" strokeWidth={1.5} />
                   </div>
-                  <h3 className="text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800"><span className="md:hidden">Acessar a Plataforma</span><span className="hidden md:inline">Quero acessar a plataforma</span></h3>
+                  <h3 className="text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800">
+                    <span className="md:hidden">Acessar a Plataforma</span>
+                    <span className="hidden md:inline">Quero acessar a plataforma</span>
+                  </h3>
                 </div>
                 <p className="hidden md:block mb-10 flex-grow text-sm leading-relaxed text-zinc-600">
-                  Tenha acesso a perfis verificados e uma curadoria de elite com total discrição e segurança. Explore um universo de possibilidades.
+                  Tenha acesso a perfis verificados e uma curadoria de elite com total discrição e
+                  segurança. Explore um universo de possibilidades.
                 </p>
                 <div className="mt-auto flex items-center justify-start text-[10px] font-black uppercase tracking-widest text-wine-700">
                   <span className="whitespace-nowrap hidden md:inline">Iniciar Experiência</span>
@@ -101,10 +116,14 @@ export function SignupSelectionScreen() {
                   <div className="mb-3 md:mb-8 flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 transition-colors duration-500 group-hover:bg-wine-50 group-hover:text-wine-700">
                     <Sparkles className="size-5 md:size-7" strokeWidth={1.5} />
                   </div>
-                  <h3 className="text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800"><span className="md:hidden">Anunciar meu Perfil</span><span className="hidden md:inline">Quero anunciar meu perfil</span></h3>
+                  <h3 className="text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800">
+                    <span className="md:hidden">Anunciar meu Perfil</span>
+                    <span className="hidden md:inline">Quero anunciar meu perfil</span>
+                  </h3>
                 </div>
                 <p className="hidden md:block mb-10 flex-grow text-sm leading-relaxed text-zinc-600">
-                  Apresente seu perfil na plataforma mais exclusiva do mercado e tenha controle total da sua independência e audiência.
+                  Apresente seu perfil na plataforma mais exclusiva do mercado e tenha controle
+                  total da sua independência e audiência.
                 </p>
                 <div className="mt-auto flex items-center justify-start text-[9px] md:text-[10px] font-black uppercase tracking-widest text-wine-700">
                   <span className="whitespace-nowrap">Candidatar-se</span>
@@ -123,7 +142,6 @@ export function SignupSelectionScreen() {
               </Link>
             </p>
           </div>
-
         </div>
       </section>
     </div>

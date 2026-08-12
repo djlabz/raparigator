@@ -123,7 +123,7 @@ export function unregisterShell() {
 
 export function getTabIndex(pathname: string, items: NavigationItem[]): number {
   const direct = items.findIndex(
-    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
+    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
   );
 
   if (direct >= 0) {
@@ -144,7 +144,7 @@ export function isAdminRoute(pathname: string): boolean {
 export function getDirectionBetweenTabs(
   fromPathname: string,
   toHref: string,
-  items: NavigationItem[]
+  items: NavigationItem[],
 ): TabDirection {
   const fromIndex = getTabIndex(fromPathname, items);
   const toIndex = getTabIndex(toHref, items);

@@ -66,9 +66,7 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
     setRiskTarget(target);
     if (target === "WhatsApp") {
       setExternalTargetUrl(
-        ad.whatsappNumber
-          ? getWhatsAppChatUrl(ad.artisticName, ad.slug, ad.whatsappNumber)
-          : null,
+        ad.whatsappNumber ? getWhatsAppChatUrl(ad.artisticName, ad.slug, ad.whatsappNumber) : null,
       );
       return;
     }
@@ -134,13 +132,7 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
       <StandardMobileContactFab
         ad={ad}
         setRiskTarget={handleExternalContact}
-        role={
-          role === "cliente"
-            ? "client"
-            : role === "profissional"
-              ? "professional"
-              : role
-        }
+        role={role === "cliente" ? "client" : role === "profissional" ? "professional" : role}
       />
 
       <RiskWarningModal

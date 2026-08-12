@@ -2,7 +2,18 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ShieldCheck, MapPin, Heart, Ruler, Weight, Eye, User, Cigarette, Scissors, Upload } from "lucide-react";
+import {
+  ShieldCheck,
+  MapPin,
+  Heart,
+  Ruler,
+  Weight,
+  Eye,
+  User,
+  Cigarette,
+  Scissors,
+  Upload,
+} from "lucide-react";
 import type { ProfessionalAd } from "@/lib/types";
 import { isLocalImageSrc, resolveAdProfileImage } from "@/lib/ad-profile-image";
 import { ShareProfileModal } from "@/components/ui/share-profile-modal";
@@ -49,7 +60,9 @@ export function StandardProfileHeader({ ad }: StandardProfileHeaderProps) {
             className="flex cursor-pointer items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white/90 p-2 shadow-sm backdrop-blur-md sm:px-3 sm:py-1.5"
           >
             <Upload className="h-4 w-4 text-zinc-600" strokeWidth={2.5} />
-            <span className="hidden text-xs font-semibold text-zinc-700 sm:inline-block">Compartilhar</span>
+            <span className="hidden text-xs font-semibold text-zinc-700 sm:inline-block">
+              Compartilhar
+            </span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -58,7 +71,9 @@ export function StandardProfileHeader({ ad }: StandardProfileHeaderProps) {
             className="flex cursor-pointer items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white/90 p-2 shadow-sm backdrop-blur-md sm:px-3 sm:py-1.5"
           >
             <Heart className="h-4 w-4 text-zinc-600" strokeWidth={2.5} />
-            <span className="hidden text-xs font-semibold text-zinc-700 sm:inline-block">Salvar</span>
+            <span className="hidden text-xs font-semibold text-zinc-700 sm:inline-block">
+              Salvar
+            </span>
           </motion.button>
         </div>
 
@@ -137,8 +152,12 @@ export function StandardProfileHeader({ ad }: StandardProfileHeaderProps) {
                     <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                   </div>
                   <div className="min-w-0 space-y-1">
-                    <p className="text-[10px] font-bold tracking-wider text-zinc-400 uppercase sm:text-xs">{attr.label}</p>
-                    <p className="wrap-break-word text-xs font-semibold text-zinc-800 sm:text-base">{attr.value}</p>
+                    <p className="text-[10px] font-bold tracking-wider text-zinc-400 uppercase sm:text-xs">
+                      {attr.label}
+                    </p>
+                    <p className="wrap-break-word text-xs font-semibold text-zinc-800 sm:text-base">
+                      {attr.value}
+                    </p>
                   </div>
                 </div>
               );

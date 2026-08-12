@@ -10,12 +10,18 @@ export function MostViewedScreen() {
       <div className="space-y-4">
         <h1 className="text-2xl font-semibold text-zinc-900">Mais vistas</h1>
         {categories.map((category) => {
-          const items = ads.filter((ad) => ad.category === category).sort((a, b) => b.profileViews - a.profileViews).slice(0, 5);
+          const items = ads
+            .filter((ad) => ad.category === category)
+            .sort((a, b) => b.profileViews - a.profileViews)
+            .slice(0, 5);
           return (
             <Card key={category} className="space-y-3">
               <h2 className="text-base font-semibold text-zinc-900">{category}</h2>
               {items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between rounded-xl border border-zinc-200 p-3 text-sm">
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between rounded-xl border border-zinc-200 p-3 text-sm"
+                >
                   <span>{item.artisticName}</span>
                   <span>{item.profileViews.toLocaleString("pt-BR")} visualizacoes</span>
                 </div>

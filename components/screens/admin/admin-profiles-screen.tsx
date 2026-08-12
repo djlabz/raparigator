@@ -18,10 +18,7 @@ import {
 } from "lucide-react";
 import { AdminLayoutShell } from "./admin-layout-shell";
 import { useAdminSession } from "@/lib/admin-session";
-import {
-  getAllProfiles,
-  approveProfile,
-} from "@/lib/admin-service";
+import { getAllProfiles, approveProfile } from "@/lib/admin-service";
 import type { ProfessionalAd, VerificationStatus } from "@/lib/types";
 
 type TabStatus = "pending_review" | "published" | "rejected";
@@ -99,11 +96,15 @@ export function AdminProfilesScreen() {
   }, [activeTab]);
 
   useEffect(() => {
-    void (async () => { await loadAll(); })();
+    void (async () => {
+      await loadAll();
+    })();
   }, [loadAll]);
 
   useEffect(() => {
-    void (async () => { await loadTab(); })();
+    void (async () => {
+      await loadTab();
+    })();
   }, [loadTab]);
 
   const handleQuickApprove = async (id: string) => {
@@ -114,9 +115,10 @@ export function AdminProfilesScreen() {
     setApprovingId(null);
   };
 
-  const filtered = profiles.filter((p) =>
-    p.artisticName.toLowerCase().includes(search.toLowerCase()) ||
-    p.city.toLowerCase().includes(search.toLowerCase())
+  const filtered = profiles.filter(
+    (p) =>
+      p.artisticName.toLowerCase().includes(search.toLowerCase()) ||
+      p.city.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -129,7 +131,8 @@ export function AdminProfilesScreen() {
               Fila de Validação de Perfis
             </h1>
             <p className="text-xs sm:text-sm text-zinc-400">
-              Analise anúncios, fotos e documentação dos acompanhantes antes de liberar a exibição pública.
+              Analise anúncios, fotos e documentação dos acompanhantes antes de liberar a exibição
+              pública.
             </p>
           </div>
         </div>
@@ -162,14 +165,15 @@ export function AdminProfilesScreen() {
               icon: XCircle,
             },
           ].map((stat) => (
-            <div key={stat.label} className={`rounded-2xl border bg-gradient-to-r ${stat.bg} ${stat.border} p-5 shadow-lg flex items-center justify-between`}>
+            <div
+              key={stat.label}
+              className={`rounded-2xl border bg-gradient-to-r ${stat.bg} ${stat.border} p-5 shadow-lg flex items-center justify-between`}
+            >
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
                   {stat.label}
                 </p>
-                <p className={`font-display mt-1 text-3xl font-bold ${stat.color}`}>
-                  {stat.value}
-                </p>
+                <p className={`font-display mt-1 text-3xl font-bold ${stat.color}`}>{stat.value}</p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-400">
                 <stat.icon className={`h-5 w-5 ${stat.color}`} />
@@ -232,7 +236,9 @@ export function AdminProfilesScreen() {
             </div>
             <p className="text-base font-bold text-zinc-300">Nenhum perfil encontrado</p>
             <p className="mt-1 text-xs text-zinc-500 max-w-sm">
-              {search ? "Nenhum resultado corresponde aos termos da sua busca." : "Não há anúncios nesta fila no momento."}
+              {search
+                ? "Nenhum resultado corresponde aos termos da sua busca."
+                : "Não há anúncios nesta fila no momento."}
             </p>
           </div>
         ) : (
@@ -308,7 +314,9 @@ export function AdminProfilesScreen() {
                       {/* Rejection preview if rejected */}
                       {profile.verificationStatus === "rejected" && profile.rejectionReason && (
                         <div className="rounded-xl border border-red-900/40 bg-red-950/30 p-2.5 text-xs text-red-300">
-                          <p className="font-bold text-[11px] uppercase tracking-wider mb-0.5">Motivo da Recusa:</p>
+                          <p className="font-bold text-[11px] uppercase tracking-wider mb-0.5">
+                            Motivo da Recusa:
+                          </p>
                           <p className="line-clamp-2 text-[11px]">{profile.rejectionReason}</p>
                         </div>
                       )}
@@ -350,4 +358,3 @@ export function AdminProfilesScreen() {
     </AdminLayoutShell>
   );
 }
-

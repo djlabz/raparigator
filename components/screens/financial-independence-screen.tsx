@@ -66,49 +66,278 @@ const DREAMS = [
   { id: "moto", label: "Moto Esportiva", price: 35_000, icon: IconMoto },
   { id: "carro", label: "Carro SUV", price: 120_000, icon: IconCar },
   { id: "casa", label: "Casa Própria", price: 350_000, icon: IconHome },
-  { id: "milhao", label: "Liberdade (1 Milhão)", price: 1_000_000, icon: IconTrophy, highlight: true },
+  {
+    id: "milhao",
+    label: "Liberdade (1 Milhão)",
+    price: 1_000_000,
+    icon: IconTrophy,
+    highlight: true,
+  },
 ];
 
 // --- Ícones SVG Inline ---
 function IconRocket(props: React.SVGProps<SVGSVGElement>) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.1 4-1 4-1" /><path d="M12 15v5s3.03-.55 4-2c1.1-1.62 1-4 1-4" /></svg>;
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+      <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+      <path d="M9 12H4s.55-3.03 2-4c1.62-1.1 4-1 4-1" />
+      <path d="M12 15v5s3.03-.55 4-2c1.1-1.62 1-4 1-4" />
+    </svg>
+  );
 }
 function IconTurtle(props: React.SVGProps<SVGSVGElement>) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m19 7-7 5-7-5" /><path d="M12 22a10 10 0 0 1-10-10" /><path d="M22 12a10 10 0 0 1-10 10" /><circle cx="12" cy="12" r="3" /></svg>;
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m19 7-7 5-7-5" />
+      <path d="M12 22a10 10 0 0 1-10-10" />
+      <path d="M22 12a10 10 0 0 1-10 10" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
 }
 function IconCalendar(props: React.SVGProps<SVGSVGElement>) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>;
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+      <line x1="16" x2="16" y1="2" y2="6" />
+      <line x1="8" x2="8" y1="2" y2="6" />
+      <line x1="3" x2="21" y1="10" y2="10" />
+    </svg>
+  );
 }
 function IconMoto(props: React.SVGProps<SVGSVGElement>) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="5.5" cy="17.5" r="3.5" /><circle cx="18.5" cy="17.5" r="3.5" /><path d="M15 6h-5a1 1 0 0 0-1 1v4h-3v-3h2l1-4h3l2 2Z" /><path d="M12 11h7v3h-3" /></svg>;
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="5.5" cy="17.5" r="3.5" />
+      <circle cx="18.5" cy="17.5" r="3.5" />
+      <path d="M15 6h-5a1 1 0 0 0-1 1v4h-3v-3h2l1-4h3l2 2Z" />
+      <path d="M12 11h7v3h-3" />
+    </svg>
+  );
 }
 function IconCar(props: React.SVGProps<SVGSVGElement>) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" /><circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" /><path d="M14 14h6" /></svg>;
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
+      <circle cx="7" cy="17" r="2" />
+      <circle cx="17" cy="17" r="2" />
+      <path d="M14 14h6" />
+    </svg>
+  );
 }
 function IconHome(props: React.SVGProps<SVGSVGElement>) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>;
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+  );
 }
 function IconTrophy(props: React.SVGProps<SVGSVGElement>) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" /></svg>;
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+      <path d="M4 22h16" />
+      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </svg>
+  );
 }
 function IconRefresh(props: React.SVGProps<SVGSVGElement>) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>;
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+    </svg>
+  );
 }
 function IconMinus(props: React.SVGProps<SVGSVGElement>) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="0.5" y="0.5" width="23" height="23" rx="11.5" stroke="currentColor" strokeWidth="1" /><path d="M17.3334 12H6.66669" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>;
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+      <rect
+        x="0.5"
+        y="0.5"
+        width="23"
+        height="23"
+        rx="11.5"
+        stroke="currentColor"
+        strokeWidth="1"
+      />
+      <path d="M17.3334 12H6.66669" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
 }
 function IconPlus(props: React.SVGProps<SVGSVGElement>) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="0.5" y="0.5" width="23" height="23" rx="11.5" stroke="currentColor" strokeWidth="1" /><path fillRule="evenodd" clipRule="evenodd" d="M11.3334 11.3333V7.33332C11.3334 6.96666 11.6334 6.66666 12 6.66666C12.3667 6.66666 12.6667 6.96666 12.6667 7.33332V11.3333H16.6667C17.0334 11.3333 17.3334 11.6333 17.3334 12C17.3334 12.3667 17.0334 12.6667 16.6667 12.6667H12.6667V16.6667C12.6667 17.0333 12.3667 17.3333 12 17.3333C11.6334 17.3333 11.3334 17.0333 11.3334 16.6667V12.6667H7.33335C6.96669 12.6667 6.66669 12.3667 6.66669 12C6.66669 11.6333 6.96669 11.3333 7.33335 11.3333H11.3334Z" fill="currentColor" /></svg>;
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+      <rect
+        x="0.5"
+        y="0.5"
+        width="23"
+        height="23"
+        rx="11.5"
+        stroke="currentColor"
+        strokeWidth="1"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M11.3334 11.3333V7.33332C11.3334 6.96666 11.6334 6.66666 12 6.66666C12.3667 6.66666 12.6667 6.96666 12.6667 7.33332V11.3333H16.6667C17.0334 11.3333 17.3334 11.6333 17.3334 12C17.3334 12.3667 17.0334 12.6667 16.6667 12.6667H12.6667V16.6667C12.6667 17.0333 12.3667 17.3333 12 17.3333C11.6334 17.3333 11.3334 17.0333 11.3334 16.6667V12.6667H7.33335C6.96669 12.6667 6.66669 12.3667 6.66669 12C6.66669 11.6333 6.96669 11.3333 7.33335 11.3333H11.3334Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
 }
 function IconUsers(props: React.SVGProps<SVGSVGElement>) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
 }
 
 function IconDollarSign(props: React.SVGProps<SVGSVGElement>) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="1" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>;
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="12" x2="12" y1="1" y2="23" />
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+    </svg>
+  );
 }
 function IconClock(props: React.SVGProps<SVGSVGElement>) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
 }
 
 // --- Componente Counter (input com botões +/-) ---
@@ -125,7 +354,18 @@ interface CounterProps {
   highlighted?: boolean;
 }
 
-function Counter({ label, value, onChange, step = 1, min = 0, max = 9999, prefix, suffix, icon, highlighted = false }: CounterProps) {
+function Counter({
+  label,
+  value,
+  onChange,
+  step = 1,
+  min = 0,
+  max = 9999,
+  prefix,
+  suffix,
+  icon,
+  highlighted = false,
+}: CounterProps) {
   const adjust = (delta: number) => {
     const current = Number(value) || min;
     const next = Math.max(min, Math.min(max, current + delta));
@@ -138,10 +378,11 @@ function Counter({ label, value, onChange, step = 1, min = 0, max = 9999, prefix
         {icon && <span className="text-zinc-600">{icon}</span>}
         {label}
       </label>
-      <div className={`flex h-10 items-center justify-between rounded-xl border px-3 transition-all ${highlighted
-        ? 'border-wine-300 bg-wine-50/30 shadow-sm'
-        : 'border-zinc-200 bg-white'
-        }`}>
+      <div
+        className={`flex h-10 items-center justify-between rounded-xl border px-3 transition-all ${
+          highlighted ? "border-wine-300 bg-wine-50/30 shadow-sm" : "border-zinc-200 bg-white"
+        }`}
+      >
         <button
           type="button"
           onClick={() => adjust(-step)}
@@ -362,9 +603,9 @@ export function FinancialIndependenceScreen() {
 
     const equivalenceRatio = monthlyRevenue / clt.net;
 
-    const dreamsCalculated = DREAMS.map(dream => ({
+    const dreamsCalculated = DREAMS.map((dream) => ({
       ...dream,
-      monthsToAchieve: Math.ceil(dream.price / monthlyRevenue)
+      monthsToAchieve: Math.ceil(dream.price / monthlyRevenue),
     }));
 
     const effectiveTimeNum = Number(projectionTime) > 0 ? Number(projectionTime) : 1;
@@ -395,7 +636,14 @@ export function FinancialIndependenceScreen() {
       projectionMonths,
       clt,
     };
-  }, [valuePerService, servicesPerDay, workDaysPerWeek, projectionTime, projectionUnit, topSearchBoost]);
+  }, [
+    valuePerService,
+    servicesPerDay,
+    workDaysPerWeek,
+    projectionTime,
+    projectionUnit,
+    topSearchBoost,
+  ]);
 
   const cltReference = useMemo(() => buildCltReference(), []);
 
@@ -460,12 +708,13 @@ export function FinancialIndependenceScreen() {
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-5xl min-w-0 space-y-4 md:space-y-5">
-
         {!submitted && (
           <>
             <header className="space-y-1">
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold text-zinc-900 md:text-2xl">Calculadora de Liberdade</h1>
+                <h1 className="text-xl font-semibold text-zinc-900 md:text-2xl">
+                  Calculadora de Liberdade
+                </h1>
                 <InfoHint
                   id="calc-base"
                   label="Como calculamos"
@@ -475,8 +724,8 @@ export function FinancialIndependenceScreen() {
                   <div className="space-y-2" data-testid="hint-calc-base">
                     <p className="font-semibold text-zinc-800">Seu ritmo na calculadora</p>
                     <p>
-                      Valor por atendimento × atendimentos/dia × dias/semana × 4,33 semanas ≈ receita
-                      mensal estimada.
+                      Valor por atendimento × atendimentos/dia × dias/semana × 4,33 semanas ≈
+                      receita mensal estimada.
                     </p>
                     <p className="text-[11px] leading-snug text-zinc-500">
                       A comparação com CLT no painel usa o salário mínimo vigente (
@@ -486,7 +735,9 @@ export function FinancialIndependenceScreen() {
                   </div>
                 </InfoHint>
               </div>
-              <p className="text-sm text-zinc-600">Descubra o quão rápido você pode atingir sua independência financeira.</p>
+              <p className="text-sm text-zinc-600">
+                Descubra o quão rápido você pode atingir sua independência financeira.
+              </p>
             </header>
 
             <Card className="space-y-4 p-4 md:space-y-5 md:p-6">
@@ -520,7 +771,9 @@ export function FinancialIndependenceScreen() {
                   icon={<IconCalendar className="w-4 h-4" />}
                 />
 
-                <div className={`flex gap-2 transition-all duration-300 ${hasProjection ? 'opacity-100 grayscale-0' : 'opacity-50 grayscale hover:opacity-100 hover:grayscale-0'}`}>
+                <div
+                  className={`flex gap-2 transition-all duration-300 ${hasProjection ? "opacity-100 grayscale-0" : "opacity-50 grayscale hover:opacity-100 hover:grayscale-0"}`}
+                >
                   <div className="flex-1">
                     <Counter
                       label="Meta de tempo (Opcional)"
@@ -543,7 +796,11 @@ export function FinancialIndependenceScreen() {
                         { value: "months", label: "Meses" },
                         { value: "years", label: "Anos" },
                       ]}
-                      className={hasProjection ? "border-wine-300 bg-wine-50/30 text-wine-900" : "border-zinc-200 bg-white text-zinc-900"}
+                      className={
+                        hasProjection
+                          ? "border-wine-300 bg-wine-50/30 text-wine-900"
+                          : "border-zinc-200 bg-white text-zinc-900"
+                      }
                     />
                   </div>
                 </div>
@@ -591,7 +848,12 @@ export function FinancialIndependenceScreen() {
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className={cn("text-sm font-bold", topSearchBoost ? "text-[#FFDF00]" : "text-zinc-900")}>
+                    <p
+                      className={cn(
+                        "text-sm font-bold",
+                        topSearchBoost ? "text-[#FFDF00]" : "text-zinc-900",
+                      )}
+                    >
                       Topo das Pesquisas
                     </p>
                     <InfoHint
@@ -599,7 +861,11 @@ export function FinancialIndependenceScreen() {
                       label="Sobre o Topo das Pesquisas"
                       openId={infoOpenId}
                       onOpenChange={setInfoOpenId}
-                      className={topSearchBoost ? "[&_button]:border-[#DAA520]/60 [&_button]:bg-zinc-900 [&_button]:text-[#FFDF00] [&_button]:hover:border-[#DAA520] [&_button]:hover:text-[#FFDF00]" : undefined}
+                      className={
+                        topSearchBoost
+                          ? "[&_button]:border-[#DAA520]/60 [&_button]:bg-zinc-900 [&_button]:text-[#FFDF00] [&_button]:hover:border-[#DAA520] [&_button]:hover:text-[#FFDF00]"
+                          : undefined
+                      }
                     >
                       Simula o efeito da visibilidade Premium nos seus números.
                     </InfoHint>
@@ -649,7 +915,9 @@ export function FinancialIndependenceScreen() {
                       >
                         <div className="grid grid-cols-2 gap-3">
                           <div className="min-w-0">
-                            <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Sem Premium</p>
+                            <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+                              Sem Premium
+                            </p>
                             <p className="mt-1 text-sm font-bold text-zinc-200">
                               {currency(parsed.baseMonthlyRevenue)}/mês
                             </p>
@@ -658,7 +926,9 @@ export function FinancialIndependenceScreen() {
                             </p>
                           </div>
                           <div className="min-w-0">
-                            <p className="text-[10px] font-medium uppercase tracking-wide text-[#DAA520]">Com Premium</p>
+                            <p className="text-[10px] font-medium uppercase tracking-wide text-[#DAA520]">
+                              Com Premium
+                            </p>
                             <p className="mt-1 text-sm font-bold text-[#FFDF00]">
                               {currency(parsed.premiumMonthlyRevenue)}/mês
                             </p>
@@ -668,10 +938,12 @@ export function FinancialIndependenceScreen() {
                           </div>
                         </div>
                         <p className="text-sm font-semibold leading-snug text-[#FFDF00]">
-                          +{currency(parsed.premiumMonthlyRevenue - parsed.baseMonthlyRevenue)}/mês no bolso
-                          e o milhão em {formatDurationDetailed(parsed.monthsToMillionPremium)} —{" "}
+                          +{currency(parsed.premiumMonthlyRevenue - parsed.baseMonthlyRevenue)}/mês
+                          no bolso e o milhão em{" "}
+                          {formatDurationDetailed(parsed.monthsToMillionPremium)} —{" "}
                           {parsed.monthsSavedWithPremium}{" "}
-                          {parsed.monthsSavedWithPremium === 1 ? "mês" : "meses"} a menos no caminho.
+                          {parsed.monthsSavedWithPremium === 1 ? "mês" : "meses"} a menos no
+                          caminho.
                         </p>
                       </div>
                       <div data-testid="freedom-premium-cta" className="space-y-3">
@@ -753,24 +1025,25 @@ export function FinancialIndependenceScreen() {
                           <div className="space-y-2" data-testid="years-back-explanation">
                             <p className="font-semibold text-zinc-800">O número que importa</p>
                             <p>
-                              O destaque é o seu prazo até R$ 1 milhão com a receita simulada. Ele muda quando
-                              você altera valor, atendimentos ou dias.
+                              O destaque é o seu prazo até R$ 1 milhão com a receita simulada. Ele
+                              muda quando você altera valor, atendimentos ou dias.
                             </p>
                             <p>
-                              A comparação com CLT (mínimo líquido) costuma ficar perto de ~{parsed.yearsSaved}{" "}
-                              anos a menos porque o CLT sozinho levaria{" "}
-                              {formatDurationDetailed(parsed.monthsToMillionCLT)} — depois que o seu prazo já é
-                              curto, essa diferença quase não muda.
+                              A comparação com CLT (mínimo líquido) costuma ficar perto de ~
+                              {parsed.yearsSaved} anos a menos porque o CLT sozinho levaria{" "}
+                              {formatDurationDetailed(parsed.monthsToMillionCLT)} — depois que o seu
+                              prazo já é curto, essa diferença quase não muda.
                             </p>
                             <p className="text-[11px] leading-snug text-zinc-500">
-                              Simulação assume 100% do valor mensal na meta, sem gastos, juros nem inflação.
+                              Simulação assume 100% do valor mensal na meta, sem gastos, juros nem
+                              inflação.
                             </p>
                           </div>
                         </InfoHint>
                       </div>
                       <p className="text-sm text-zinc-600">
-                        No CLT de referência: {formatDurationDetailed(parsed.monthsToMillionCLT)}. Diferença
-                        aproximada: ~{parsed.yearsSaved} anos a menos até a mesma meta.
+                        No CLT de referência: {formatDurationDetailed(parsed.monthsToMillionCLT)}.
+                        Diferença aproximada: ~{parsed.yearsSaved} anos a menos até a mesma meta.
                       </p>
                     </div>
                     <div className="hidden shrink-0 md:block">
@@ -818,11 +1091,14 @@ export function FinancialIndependenceScreen() {
                             <p>
                               {currency(parsed.monthlyRevenue)} / mês × {parsed.projectionMonths}{" "}
                               {parsed.projectionMonths === 1 ? "mês" : "meses"} ={" "}
-                              <span className="font-semibold text-zinc-800">{currency(parsed.projectedAmount)}</span>
+                              <span className="font-semibold text-zinc-800">
+                                {currency(parsed.projectedAmount)}
+                              </span>
                             </p>
                             <p className="text-[11px] leading-snug text-zinc-500">
-                              É só a projeção do seu ritmo (bruto da simulação). Não aplica INSS/VT —
-                              esses descontos entram na comparação CLT da Corrida e da Equivalência.
+                              É só a projeção do seu ritmo (bruto da simulação). Não aplica INSS/VT
+                              — esses descontos entram na comparação CLT da Corrida e da
+                              Equivalência.
                             </p>
                           </div>
                         </InfoHint>
@@ -861,7 +1137,12 @@ export function FinancialIndependenceScreen() {
                   )}
                 >
                   <div className="min-w-0 flex-1 overflow-x-clip">
-                    <p className={cn("truncate text-[10px] font-bold uppercase tracking-wider", premiumSoftLabel)}>
+                    <p
+                      className={cn(
+                        "truncate text-[10px] font-bold uppercase tracking-wider",
+                        premiumSoftLabel,
+                      )}
+                    >
                       Você deixou de trabalhar
                     </p>
                     <div className="mt-0.5 grid min-w-0 grid-cols-2 gap-2">
@@ -976,7 +1257,9 @@ export function FinancialIndependenceScreen() {
                       <div className="flex items-center gap-2 font-semibold text-zinc-600">
                         <IconTurtle className="h-5 w-5" /> RITMO PADRÃO (CLT)
                       </div>
-                      <span className="font-semibold text-zinc-500">{formatDurationDetailed(parsed.monthsToMillionCLT)}</span>
+                      <span className="font-semibold text-zinc-500">
+                        {formatDurationDetailed(parsed.monthsToMillionCLT)}
+                      </span>
                     </div>
                     <div className="h-4 w-full overflow-hidden rounded-full bg-zinc-100">
                       <div className="h-full w-[15%] rounded-full bg-zinc-400"></div>
@@ -987,7 +1270,9 @@ export function FinancialIndependenceScreen() {
 
               <div className="grid gap-3 sm:grid-cols-2 md:col-span-1">
                 <Card className="flex flex-col items-center justify-center space-y-2 border-wine-100 bg-wine-50 p-4 text-center">
-                  <p className="text-xs font-bold uppercase tracking-wider text-wine-700">Sua potência</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-wine-700">
+                    Sua potência
+                  </p>
                   <div className="text-3xl font-bold text-zinc-900 md:text-4xl">1 Mês</div>
                   <div className="flex items-center justify-center gap-2 text-sm text-zinc-600">
                     <IconCalendar className="h-5 w-5" />
@@ -1032,9 +1317,10 @@ export function FinancialIndependenceScreen() {
                           meses de líquido CLT.
                         </p>
                         <p className="text-[11px] leading-snug text-zinc-500">
-                          Em outras palavras: 1 mês no seu ritmo rende o que alguém no mínimo vigente
-                          ({currency(parsed.clt.gross)} bruto → {currency(parsed.clt.net)} líquido)
-                          juntaria em quase {parsed.equivalenceRatio.toFixed(1).replace(".", ",")} meses.
+                          Em outras palavras: 1 mês no seu ritmo rende o que alguém no mínimo
+                          vigente ({currency(parsed.clt.gross)} bruto → {currency(parsed.clt.net)}{" "}
+                          líquido) juntaria em quase{" "}
+                          {parsed.equivalenceRatio.toFixed(1).replace(".", ",")} meses.
                         </p>
                       </div>
                     </InfoHint>
@@ -1059,7 +1345,9 @@ export function FinancialIndependenceScreen() {
 
               <div className="md:col-span-2">
                 <div className="mb-2 ml-1 flex items-center gap-2">
-                  <h3 className="text-base font-semibold text-zinc-900">🏆 Linha do Tempo das Conquistas</h3>
+                  <h3 className="text-base font-semibold text-zinc-900">
+                    🏆 Linha do Tempo das Conquistas
+                  </h3>
                   <InfoHint
                     id="dreams"
                     label="Sobre as conquistas"
@@ -1081,7 +1369,10 @@ export function FinancialIndependenceScreen() {
                     </div>
                   </InfoHint>
                 </div>
-                <div data-testid="freedom-dreams-grid" className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
+                <div
+                  data-testid="freedom-dreams-grid"
+                  className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3"
+                >
                   {parsed.dreamsCalculated.map((dream) => (
                     <Card
                       key={dream.id}
@@ -1124,7 +1415,9 @@ export function FinancialIndependenceScreen() {
                         </div>
                       </div>
                       <div className="mt-3 border-t border-dashed border-zinc-200 pt-2 md:mt-4 md:pt-3">
-                        <p className="mb-1 text-xs uppercase tracking-wide text-zinc-500">Você conquista em</p>
+                        <p className="mb-1 text-xs uppercase tracking-wide text-zinc-500">
+                          Você conquista em
+                        </p>
                         <motion.p
                           key={`dream-${dream.id}-${topSearchBoost}-${dream.monthsToAchieve}`}
                           initial={reduceMotion ? false : { scale: 0.85, opacity: 0 }}
@@ -1210,10 +1503,11 @@ export function FinancialIndependenceScreen() {
               title="Hmm, esses números não fecharam"
               description="Dá uma olhadinha nos valores — por aqui a gente só aceita números positivos, combinado?"
             />
-            <Button variant="ghost" onClick={handleReset} className="mt-4 w-full">Tentar novamente</Button>
+            <Button variant="ghost" onClick={handleReset} className="mt-4 w-full">
+              Tentar novamente
+            </Button>
           </div>
         )}
-
       </div>
     </AppShell>
   );

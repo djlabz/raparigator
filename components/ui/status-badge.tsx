@@ -13,5 +13,11 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const { label, classes } = statusMap[status];
-  return <span className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1", classes)}>{label}</span>;
+  return (
+    <span
+      className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1", classes)}
+    >
+      {label}
+    </span>
+  );
 }
