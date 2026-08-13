@@ -67,6 +67,14 @@ next-env.d.ts
 /.tmp-*/
 /.tmp-*-test.py
 
+# screenshots e imagens soltas na raiz (assets do projeto ficam em /public)
+/*.png
+/*.jpg
+/*.jpeg
+/*.webp
+/*.gif
+/*.avif
+
 # Playwright
 /test-results/
 /playwright-report/

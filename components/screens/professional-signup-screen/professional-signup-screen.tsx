@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { AuthHeroMobile } from "@/components/ui/auth-hero-mobile";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { InfoBanner } from "@/components/ui/info-banner";
@@ -17,6 +18,12 @@ const professionalImages = [
   "/images/professional-signup/stacked-cards-1.webp",
   "/images/professional-signup/stacked-cards-2.webp",
   "/images/personas/persona2/persona2-professional-card.webp",
+];
+
+const professionalHeroImages = [
+  { src: professionalImages[0], heroPosition: "center" },
+  { src: professionalImages[1], heroPosition: "center" },
+  { src: professionalImages[2], heroPosition: "center" },
 ];
 
 export function ProfessionalSignupScreen() {
@@ -248,7 +255,7 @@ export function ProfessionalSignupScreen() {
               priority={index === 0}
               quality={90}
               className={`object-cover object-center transition-opacity duration-1000 ease-in-out ${index === activeCardIndex ? "opacity-90" : "opacity-0"}`}
-              sizes="(max-width: 768px) 100vw, 50vw"
+              sizes="50vw"
             />
           ))}
           <div className="absolute inset-0 bg-linear-to-br from-black/55 via-black/25 to-transparent" />
@@ -268,16 +275,24 @@ export function ProfessionalSignupScreen() {
         </div>
       </section>
 
-      <section className="px-4 py-10 sm:px-6 md:flex md:h-screen md:overflow-y-auto md:items-center md:justify-center md:px-10">
-        <div className="mx-auto w-full max-w-md space-y-6">
+      <section className="px-4 pb-10 sm:px-6 md:flex md:h-screen md:overflow-y-auto md:items-center md:justify-center md:px-10 md:py-10">
+        <AuthHeroMobile
+          images={professionalHeroImages}
+          activeIndex={activeCardIndex}
+          eyebrow="Independent & Verified"
+        />
+
+        <div className="mx-auto mt-6 w-full max-w-md space-y-6 md:mt-0">
           <header>
-            <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-2 md:flex">
               <BackButton />
               <Link href="/" className="font-display text-2xl text-wine-800">
                 Sigillus
               </Link>
             </div>
-            <h1 className="mt-4 text-3xl font-semibold text-zinc-900">Criar conta profissional</h1>
+            <h1 className="text-3xl font-semibold text-zinc-900 md:mt-4">
+              Criar conta profissional
+            </h1>
             <p className="mt-1 text-base text-zinc-700">
               Inicie seu perfil e faça parte da seleção exclusiva Sigillus.
             </p>
