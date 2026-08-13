@@ -20,7 +20,7 @@ export function AuthHeroMobile({
   unoptimized = false,
 }: AuthHeroMobileProps) {
   return (
-    <div className="relative -mx-4 h-50 shrink-0 overflow-hidden bg-zinc-950 sm:-mx-6 md:hidden">
+    <div className="relative -mx-4 h-50 shrink-0 overflow-hidden rounded-b-[28px] bg-zinc-950 shadow-[0_14px_32px_-18px_rgba(9,9,11,0.55)] sm:-mx-6 md:hidden">
       <div className="absolute inset-y-0 right-0 w-1/2 [mask-image:linear-gradient(to_right,transparent_0%,black_26%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_26%)]">
         {images.map((image, index) => {
           const isActive = index === activeIndex % images.length;
@@ -44,9 +44,7 @@ export function AuthHeroMobile({
         })}
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-zinc-50 to-transparent" />
-
-      <div className="relative z-10 flex h-full flex-col justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-14 text-white sm:px-6">
+      <div className="relative z-10 flex h-full flex-col justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-7 text-white sm:px-6">
         <div className="flex items-center gap-2">
           <BackButton />
           <Link href="/" className="font-display text-2xl drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]">
