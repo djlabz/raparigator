@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { User, Sparkles, ArrowRight } from "lucide-react";
+import { User, BadgeCheck, ArrowRight } from "lucide-react";
 import { BackButton } from "@/components/ui/back-button";
+import { BrandWordmark } from "@/components/ui/brand-wordmark";
 
 export function SignupSelectionScreen() {
   return (
@@ -50,22 +51,14 @@ export function SignupSelectionScreen() {
           <div className="absolute bottom-0 left-0 right-0 h-28 bg-linear-to-t from-zinc-50 to-transparent pointer-events-none" />
         </div>
         <div className="relative z-10 mx-auto flex w-full max-w-xs flex-col flex-1 justify-between md:max-w-xl md:flex-initial md:justify-start md:space-y-6">
-          {/* Topo: Apenas a seta e o logotipo Sigillus */}
-          <div className="relative flex items-center justify-center h-8 w-full">
-            <div className="absolute left-0 top-0 flex items-center h-8">
-              <BackButton />
-            </div>
-            <Link href="/" className="font-display text-2xl font-black uppercase text-wine-800">
-              Sigillus
-            </Link>
+          <div className="flex items-center gap-2">
+            <BackButton />
+            <BrandWordmark />
           </div>
 
-          {/* Meio: Join the Experience, título, descrição e cards */}
+          {/* Meio: título, descrição e cards */}
           <div className="my-auto flex flex-col space-y-6">
             <header className="text-center">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 opacity-60">
-                Join the Experience
-              </p>
               <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900 md:mt-3 md:text-4xl">
                 Como você deseja participar?
               </h1>
@@ -110,11 +103,11 @@ export function SignupSelectionScreen() {
                 className="group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white/70 p-5 md:p-8 shadow-sm backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:border-wine-300 hover:shadow-xl hover:shadow-wine-900/10 min-h-[180px] md:min-h-0"
               >
                 <div className="absolute -right-4 -top-4 p-6 opacity-0 transition-all duration-500 group-hover:-translate-y-2 group-hover:translate-x-2 group-hover:opacity-10">
-                  <Sparkles className="h-32 w-32 text-wine-700" strokeWidth={1} />
+                  <BadgeCheck className="h-32 w-32 text-wine-700" strokeWidth={1} />
                 </div>
                 <div className="flex flex-col flex-grow">
                   <div className="mb-3 md:mb-8 flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 transition-colors duration-500 group-hover:bg-wine-50 group-hover:text-wine-700">
-                    <Sparkles className="size-5 md:size-7" strokeWidth={1.5} />
+                    <BadgeCheck className="size-5 md:size-7" strokeWidth={1.5} />
                   </div>
                   <h3 className="text-sm md:text-xl font-bold text-zinc-900 transition-colors group-hover:text-wine-800">
                     <span className="md:hidden">Anunciar meu Perfil</span>

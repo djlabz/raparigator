@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { AuthHeroMobile } from "@/components/ui/auth-hero-mobile";
+import { BrandWordmark } from "@/components/ui/brand-wordmark";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { InfoBanner } from "@/components/ui/info-banner";
@@ -245,9 +246,7 @@ export function ClientSignupScreen() {
           <header>
             <div className="hidden items-center gap-2 md:flex">
               <BackButton />
-              <Link href="/" className="font-display text-2xl text-wine-800">
-                Sigillus
-              </Link>
+              <BrandWordmark />
             </div>
             <h1 className="text-3xl font-semibold text-zinc-900 md:mt-4">
               Crie sua conta Sigillus
@@ -266,9 +265,6 @@ export function ClientSignupScreen() {
               {step === 1 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="mb-4 space-y-1">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">
-                      Premium Membership
-                    </span>
                     <h2 className="text-xl font-bold tracking-tight text-zinc-900">
                       Dados Iniciais
                     </h2>
@@ -382,9 +378,6 @@ export function ClientSignupScreen() {
               {step === 2 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="mb-4 space-y-1">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">
-                      Secure Vault
-                    </span>
                     <h2 className="text-xl font-bold tracking-tight text-zinc-900">
                       Credenciais de Acesso
                     </h2>
@@ -537,9 +530,6 @@ export function ClientSignupScreen() {
               {step === 3 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="mb-4 space-y-1">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">
-                      Quase lá
-                    </span>
                     <h2 className="text-xl font-bold tracking-tight text-zinc-900">
                       Revisão Final
                     </h2>
@@ -648,9 +638,6 @@ export function ClientSignupScreen() {
                 >
                   Anuncie seu perfil aqui
                 </Link>
-              </p>
-              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.17em] text-zinc-600">
-                Seguro. Criptografado. Exclusivo.
               </p>
             </div>
           </div>

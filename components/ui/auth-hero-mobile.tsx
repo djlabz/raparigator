@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { BackButton } from "@/components/ui/back-button";
+import { BrandWordmark } from "@/components/ui/brand-wordmark";
 
 interface AuthHeroMobileProps {
   images: Array<{ src: string; heroPosition: string }>;
@@ -20,7 +20,7 @@ export function AuthHeroMobile({
   unoptimized = false,
 }: AuthHeroMobileProps) {
   return (
-    <div className="relative -mx-4 h-50 shrink-0 overflow-hidden rounded-b-[28px] bg-zinc-950 shadow-[0_14px_32px_-18px_rgba(9,9,11,0.55)] sm:-mx-6 md:hidden">
+    <div className="relative -mx-4 h-[min(12.5rem,27svh)] shrink-0 overflow-hidden rounded-b-[28px] bg-zinc-950 shadow-[0_14px_32px_-18px_rgba(9,9,11,0.55)] sm:-mx-6 md:hidden">
       <div className="absolute inset-y-0 right-0 w-1/2 [mask-image:linear-gradient(to_right,transparent_0%,black_26%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_26%)]">
         {images.map((image, index) => {
           const isActive = index === activeIndex % images.length;
@@ -47,9 +47,7 @@ export function AuthHeroMobile({
       <div className="relative z-10 flex h-full flex-col justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-7 text-white sm:px-6">
         <div className="flex items-center gap-2">
           <BackButton />
-          <Link href="/" className="font-display text-2xl drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]">
-            Sigillus
-          </Link>
+          <BrandWordmark tone="light" className="drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]" />
         </div>
         <div className="max-w-40">
           <div className="h-px w-10 bg-wine-400/70" />
