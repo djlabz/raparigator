@@ -4,11 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ChangeEvent, type FormEvent } from "react";
+import { AuthHeroMobile } from "@/components/ui/auth-hero-mobile";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useAuthSession } from "../../lib/auth-session";
 import { mockUsers } from "../../lib/mock-users";
+
+const loginHeroImage = {
+  src: "/images/personas/persona2/persona2-elegant-look.webp",
+  heroPosition: "center",
+};
 
 export function LoginScreen() {
   const router = useRouter();
@@ -36,17 +42,10 @@ export function LoginScreen() {
   return (
     <div className="flex h-dvh flex-col bg-zinc-50 md:grid md:h-auto md:min-h-screen md:grid-cols-2 md:items-start">
       <section className="flex min-h-0 flex-1 flex-col md:min-h-screen">
-        <header className="sticky top-0 z-20 shrink-0 bg-zinc-50/95 px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-3 backdrop-blur-sm sm:px-6 md:static md:bg-transparent md:px-12 md:pt-0 md:pb-0 md:backdrop-blur-none">
-          <div className="mx-auto flex w-full max-w-md items-center gap-2 md:hidden">
-            <BackButton />
-            <Link href="/" className="font-display text-2xl text-wine-800">
-              Sigillus
-            </Link>
-          </div>
-        </header>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] sm:px-6 md:flex md:items-center md:justify-center md:overflow-y-auto md:px-12 md:py-10">
+          <AuthHeroMobile images={[loginHeroImage]} eyebrow="Plataforma exclusiva" unoptimized />
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] pt-2 sm:px-6 md:flex md:items-center md:justify-center md:overflow-y-auto md:px-12 md:py-10">
-          <div className="mx-auto w-full max-w-md space-y-5 md:space-y-8">
+          <div className="mx-auto mt-5 w-full max-w-md space-y-5 md:mt-0 md:space-y-8">
             <header>
               <div className="mb-6 hidden items-center gap-2 md:flex">
                 <BackButton />
@@ -225,7 +224,7 @@ export function LoginScreen() {
       <section className="hidden h-screen bg-black md:sticky md:top-0 md:block">
         <div className="relative h-full w-full overflow-hidden">
           <Image
-            src="/images/personas/persona2/persona2-elegant-look.webp"
+            src={loginHeroImage.src}
             alt="Sigillus — plataforma exclusiva"
             fill
             priority
