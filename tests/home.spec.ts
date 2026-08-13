@@ -8,7 +8,7 @@ test.describe("Home / onboarding", () => {
     await expect(page.getByRole("link", { name: "Sigillus" }).first()).toBeVisible();
     await expect(
       page.getByRole("heading", {
-        name: /Sigillus: conexões com discrição/i,
+        name: /O luxo de não ser visto/i,
       }),
     ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Comece sua experiência:" })).toBeVisible();

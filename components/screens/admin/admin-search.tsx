@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import { Search, User, Users, X, Command, ArrowRight, Sparkles } from "lucide-react";
+import { Search, User, Users, X, Command, ArrowRight } from "lucide-react";
 import { globalSearch } from "@/lib/admin-service";
 import type { GlobalSearchResult } from "@/lib/types";
 
@@ -223,7 +223,7 @@ export function AdminSearch() {
                 {!loading && !query && (
                   <div className="py-10 text-center space-y-2">
                     <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-2xl bg-wine-950/50 border border-wine-900/30 text-wine-400">
-                      <Sparkles className="h-5 w-5" />
+                      <Search className="h-5 w-5" />
                     </div>
                     <p className="text-xs font-medium text-zinc-400">
                       Busca Rápida de Administrador

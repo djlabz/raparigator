@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 // Importamos o novo locationsData em vez de cities e states separados
 import { categories, locationsData } from "@/lib/mock-data";
+import { BrandWordmark } from "@/components/ui/brand-wordmark";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
@@ -91,7 +92,7 @@ export function OnboardingScreen() {
             unoptimized
             quality={90}
           />
-          <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/40 to-black/60"></div>
+          <div className="absolute inset-0 bg-linear-to-r from-black/70 via-black/25 to-black/55"></div>
         </div>
 
         <header className="absolute inset-x-0 top-0 z-30 isolate overflow-visible pointer-events-none">
@@ -103,12 +104,7 @@ export function OnboardingScreen() {
               "mx-auto box-border flex w-full max-w-384 items-center justify-between gap-3 px-6 pb-4 md:px-12 md:pb-5",
             )}
           >
-            <Link
-              href="/"
-              className="text-2xl font-black tracking-tighter text-white! visited:text-white! hover:opacity-90 transition-opacity"
-            >
-              Sigillus
-            </Link>
+            <BrandWordmark tone="light" className="transition-opacity hover:opacity-90" />
             {isLoggedIn ? (
               <AccountMenu role={role} user={user} onLogout={logout} />
             ) : (
@@ -138,29 +134,64 @@ export function OnboardingScreen() {
           className={`relative z-10 box-border max-w-384 mx-auto px-6 md:px-12 w-full flex-1 flex flex-col lg:flex-row lg:items-center lg:justify-between ${styles.heroContent}`}
         >
           {/* Texto (Esquerda) */}
-          <div className="w-full lg:flex-1 lg:min-w-0 text-white max-w-xl xl:max-w-2xl">
-            <h1 className="text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight tracking-tight mb-6 drop-shadow-md">
-              Sigillus: conexões com discrição, segurança e experiência premium.
+          <div className="mx-auto w-full max-w-xl text-white lg:mx-0 lg:min-w-0 lg:flex-1 xl:max-w-2xl">
+            <h1 className="text-balance text-center text-[1.75rem] font-extrabold leading-tight tracking-tight drop-shadow-md sm:text-4xl lg:text-left lg:text-5xl xl:text-6xl">
+              O luxo de não ser visto.
             </h1>
-            <p className="text-lg md:text-xl text-white/90 font-medium leading-relaxed max-w-lg xl:max-w-xl">
-              Escolha sua região e a categoria para acessar anúncios de acompanhantes verificados
-              com suporte da plataforma.
-            </p>
           </div>
 
           {/* Card de Formulário (Direita) */}
-          <div className={`w-full lg:ml-auto lg:min-w-0 ${styles.cardWrapper}`}>
-            <Card className="p-6 md:p-7 lg:p-8 xl:p-10 shadow-2xl rounded-2xl bg-white space-y-6">
-              <h2 className="text-2xl font-extrabold text-zinc-900 mb-2 tracking-tight">
+          <div
+            className={`relative mx-auto mt-auto w-full lg:mt-0 lg:mr-0 lg:ml-auto lg:min-w-0 ${styles.cardWrapper}`}
+          >
+            {shouldShowScrollButton && (
+              <button
+                type="button"
+                onClick={scrollToPopularSection}
+                className="fixed bottom-4 left-1/2 z-40 inline-flex -translate-x-1/2 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full border border-white/60 bg-black/55 px-3.5 py-1.5 text-sm font-semibold tracking-wide text-white shadow-md backdrop-blur-sm transition-colors hover:bg-black/70"
+              >
+                <span>Role para ver mais</span>
+                <svg
+                  className="h-4 w-4 animate-bounce"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+            )}
+
+            <Card className="space-y-3 rounded-2xl bg-white p-4 shadow-2xl md:space-y-6 md:p-7 lg:p-8 xl:p-10">
+              <h2 className="mb-2 hidden text-2xl font-extrabold tracking-tight text-zinc-900 md:block">
                 Comece sua experiência:
               </h2>
 
               <div className="space-y-4">
                 {/* Novo Campo de Localização Unificado */}
                 <div className="relative space-y-1.5" ref={wrapperRef}>
-                  <label htmlFor="location" className="text-sm font-semibold text-zinc-900">
-                    Localização
-                  </label>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <label htmlFor="location" className="text-sm font-semibold text-zinc-900">
+                      Localização
+                    </label>
+                    <button
+                      type="button"
+                      className="text-xs font-bold text-wine-800 hover:underline"
+                      onClick={() => {
+                        setShowLocationToast(true);
+                        setLocationQuery("São Paulo, SP");
+                        setTimeout(() => setShowLocationToast(false), 3000);
+                      }}
+                    >
+                      Usar minha localização
+                    </button>
+                  </div>
                   <div className="relative">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -245,39 +276,6 @@ export function OnboardingScreen() {
                 />
               </div>
 
-              <div className="pt-2">
-                <button
-                  className="flex items-center gap-2 text-[#800020] font-bold text-sm hover:underline group"
-                  onClick={() => {
-                    setShowLocationToast(true);
-                    // Atualiza o input visualmente caso use a localização atual
-                    setLocationQuery("São Paulo, SP");
-                    setTimeout(() => setShowLocationToast(false), 3000);
-                  }}
-                >
-                  <svg
-                    className="w-5 h-5 group-hover:scale-110 transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                  Usar minha localização atual
-                </button>
-              </div>
-
               <Link
                 href={`/feed?location=${encodeURIComponent(locationQuery)}`}
                 className="block pt-2"
@@ -285,7 +283,7 @@ export function OnboardingScreen() {
                 <Button
                   fullWidth
                   size="lg"
-                  className="bg-[#800020] hover:bg-[#600018] text-white py-6 text-base rounded-lg shadow-lg"
+                  className="rounded-lg bg-[#800020] py-3 text-base text-white shadow-lg hover:bg-[#600018] md:py-6"
                 >
                   Entrar no feed
                 </Button>
@@ -302,25 +300,6 @@ export function OnboardingScreen() {
           </div>
         </div>
       </section>
-
-      {shouldShowScrollButton && (
-        <button
-          type="button"
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 inline-flex items-center gap-2 rounded-full border border-white/60 bg-black/55 px-3.5 py-1.5 text-sm font-semibold tracking-wide text-white shadow-md backdrop-blur-sm cursor-pointer hover:bg-black/70 transition-colors"
-          onClick={scrollToPopularSection}
-        >
-          <span>Role para ver mais</span>
-          <svg
-            className="h-4 w-4 animate-bounce"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-      )}
 
       {/* Seção Inferior */}
       <div id="popular-links-section" ref={lowerSectionRef} className="bg-white relative z-20">

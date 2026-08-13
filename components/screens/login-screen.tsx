@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { AuthHeroMobile } from "@/components/ui/auth-hero-mobile";
+import { BrandWordmark } from "@/components/ui/brand-wordmark";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -49,9 +50,7 @@ export function LoginScreen() {
             <header>
               <div className="mb-6 hidden items-center gap-2 md:flex">
                 <BackButton />
-                <Link href="/" className="font-display text-2xl text-wine-800">
-                  Sigillus
-                </Link>
+                <BrandWordmark />
               </div>
               <div className="flex items-center gap-3">
                 <div className="h-px flex-1 bg-wine-200" />
@@ -63,9 +62,6 @@ export function LoginScreen() {
               <h1 className="mt-3 text-2xl font-semibold tracking-tight text-zinc-900 sm:mt-4 sm:text-3xl">
                 Bem-vindo de volta
               </h1>
-              <p className="mt-1 text-sm text-zinc-500">
-                Acesse sua conta para continuar na plataforma.
-              </p>
             </header>
 
             <div className="space-y-3">
@@ -192,31 +188,30 @@ export function LoginScreen() {
                 </p>
               ) : null}
 
-              <Button fullWidth size="lg" className="mt-2 shadow-md shadow-wine-700/20">
-                Entrar na plataforma
-              </Button>
-            </form>
+              <div className="sticky bottom-0 z-20 pt-1 pb-1 md:static md:p-0">
+                <Button fullWidth size="lg" className="shadow-md shadow-wine-700/20">
+                  Entrar na plataforma
+                </Button>
+              </div>
 
-            <div className="space-y-3 border-t border-zinc-100 pt-5 text-center text-sm text-zinc-600 md:pt-6">
-              <p>
-                Ainda não tem conta?{" "}
-                <Link href="/auth/cadastro" className="font-bold text-wine-700 hover:underline">
-                  Criar conta grátis
-                </Link>
-              </p>
-              <p className="border-t border-dashed border-zinc-200 pt-3">
-                Você é profissional?{" "}
-                <Link
-                  href="/auth/cadastro/profissional"
-                  className="font-bold text-wine-700 hover:underline"
-                >
-                  Anuncie seu perfil aqui
-                </Link>
-              </p>
-              <p className="text-xs font-semibold uppercase tracking-[0.17em] text-zinc-400">
-                Seguro. Criptografado. Exclusivo.
-              </p>
-            </div>
+              <div className="space-y-3 border-t border-zinc-100 pt-5 text-center text-sm text-zinc-600 md:pt-6">
+                <p>
+                  Ainda não tem conta?{" "}
+                  <Link href="/auth/cadastro" className="font-bold text-wine-700 hover:underline">
+                    Criar conta grátis
+                  </Link>
+                </p>
+                <p className="border-t border-dashed border-zinc-200 pt-3">
+                  Você é profissional?{" "}
+                  <Link
+                    href="/auth/cadastro/profissional"
+                    className="font-bold text-wine-700 hover:underline"
+                  >
+                    Anuncie seu perfil aqui
+                  </Link>
+                </p>
+              </div>
+            </form>
           </div>
         </div>
       </section>
