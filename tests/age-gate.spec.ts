@@ -26,7 +26,7 @@ test.describe("Age gate", () => {
 
     await expect(
       page.getByRole("heading", {
-        name: /Sigillus: conexões com discrição/i,
+        name: /O luxo de não ser visto/i,
       }),
     ).toBeVisible();
 
@@ -38,7 +38,7 @@ test.describe("Age gate", () => {
 
     await expect(
       page.getByRole("heading", {
-        name: /Sigillus: conexões com discrição/i,
+        name: /O luxo de não ser visto/i,
       }),
     ).toBeVisible();
     await expect(

@@ -1,24 +1,16 @@
 "use client";
 
 import { motion, useTransform, type MotionValue } from "motion/react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FeedSectionTitle } from "@/components/screens/feed-screen/feed-section-title";
-import { cn } from "@/lib/utils";
+import { BrandWordmark } from "@/components/ui/brand-wordmark";
 import { TITLE_STACK_PX } from "./constants";
 import { MobileLogoSwap } from "./mobile-logo-swap";
 import { isFeedTitleFlightPath } from "./resolve-surface";
 import { useActiveTitleFlightSurface } from "./use-title-flight-surface";
 
-const BRAND_LOGO_CLASS =
-  "inline-flex h-10 shrink-0 items-center font-display text-2xl font-medium leading-none tracking-wide text-wine-800";
-
 function BrandLogoLink({ className }: { className?: string }) {
-  return (
-    <Link href="/" className={cn(BRAND_LOGO_CLASS, className)}>
-      Sigillus
-    </Link>
-  );
+  return <BrandWordmark className={className} />;
 }
 
 function DesktopTitleStack({

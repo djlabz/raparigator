@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { AuthHeroMobile } from "@/components/ui/auth-hero-mobile";
+import { BrandWordmark } from "@/components/ui/brand-wordmark";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { InfoBanner } from "@/components/ui/info-banner";
@@ -286,9 +287,7 @@ export function ProfessionalSignupScreen() {
           <header>
             <div className="hidden items-center gap-2 md:flex">
               <BackButton />
-              <Link href="/" className="font-display text-2xl text-wine-800">
-                Sigillus
-              </Link>
+              <BrandWordmark />
             </div>
             <h1 className="text-3xl font-semibold text-zinc-900 md:mt-4">
               Criar conta profissional
@@ -308,9 +307,6 @@ export function ProfessionalSignupScreen() {
               {step === 1 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-1 mb-4">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">
-                      Executive Profile
-                    </span>
                     <h2 className="text-xl font-bold tracking-tight text-zinc-900">
                       Dados Iniciais
                     </h2>
@@ -428,9 +424,6 @@ export function ProfessionalSignupScreen() {
               {step === 2 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-1 mb-4">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">
-                      Secure Vault
-                    </span>
                     <h2 className="text-xl font-bold tracking-tight text-zinc-900">
                       Credenciais de Acesso
                     </h2>
@@ -736,10 +729,6 @@ export function ProfessionalSignupScreen() {
             </form>
 
             {toast ? <Toast title={toast.title} message={toast.message} type={toast.type} /> : null}
-
-            <p className="mt-6 text-center text-xs font-semibold uppercase tracking-[0.17em] text-zinc-600">
-              Seguro. Criptografado. Exclusivo.
-            </p>
           </div>
         </div>
       </section>
