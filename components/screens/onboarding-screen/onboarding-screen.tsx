@@ -136,7 +136,8 @@ export function OnboardingScreen() {
           {/* Texto (Esquerda) */}
           <div className="mx-auto w-full max-w-xl text-white lg:mx-0 lg:min-w-0 lg:flex-1 xl:max-w-2xl">
             <h1 className="text-balance text-center text-[1.75rem] font-extrabold leading-tight tracking-tight drop-shadow-md sm:text-4xl lg:text-left lg:text-5xl xl:text-6xl">
-              O luxo de não ser visto.
+              Nem todo luxo <br className="hidden lg:block" />
+              se anuncia.
             </h1>
           </div>
 
