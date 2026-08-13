@@ -26,7 +26,7 @@ test.describe("Age gate", () => {
 
     await expect(
       page.getByRole("heading", {
-        name: /O luxo de não ser visto/i,
+        name: /Nem todo luxo se anuncia/i,
       }),
     ).toBeVisible();
 
@@ -38,7 +38,7 @@ test.describe("Age gate", () => {
 
     await expect(
       page.getByRole("heading", {
-        name: /O luxo de não ser visto/i,
+        name: /Nem todo luxo se anuncia/i,
       }),
     ).toBeVisible();
     await expect(
