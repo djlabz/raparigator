@@ -228,8 +228,8 @@ export function ClientSignupScreen() {
             </h2>
             <div className="mt-7 h-px w-24 bg-white/45" />
             <p className="mt-6 max-w-md text-base leading-relaxed text-white/80">
-              Entre em um ambiente com suporte dedicado, contratacao protegida e rastreabilidade
-              completa em cada interacao.
+              Entre em um ambiente com suporte dedicado, perfis publicados pelas proprias
+              profissionais e chat seguro.
             </p>
           </div>
         </div>

@@ -29,7 +29,6 @@ interface PremiumAdDetailsScreenProps {
 export function PremiumAdDetailsScreen({ slug }: PremiumAdDetailsScreenProps) {
   const {
     ad,
-    adReviews,
     role,
     riskTarget,
     setRiskTarget,
@@ -112,7 +111,7 @@ export function PremiumAdDetailsScreen({ slug }: PremiumAdDetailsScreenProps) {
                 setRiskTarget={handleExternalContact}
               />
               <SpecialtiesSection ad={ad} />
-              <ReviewsSection ad={ad} reviews={adReviews} />
+              <ReviewsSection ad={ad} />
             </div>
             <aside className="flex flex-col gap-4">
               <SidebarCta role={role} setRiskTarget={handleExternalContact} />

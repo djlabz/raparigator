@@ -205,7 +205,7 @@ export function AdminClientsScreen() {
               <span>Contato Mascarado</span>
               <span>Cidade</span>
               <span>Registro</span>
-              <span>Agendamentos</span>
+              <span>Contatos</span>
               <span className="text-right">Ações</span>
             </div>
 
@@ -262,10 +262,10 @@ export function AdminClientsScreen() {
                     <span>{formatDate(client.registeredAt)}</span>
                   </div>
 
-                  {/* Agendamentos */}
+                  {/* Contatos */}
                   <div className="flex items-center gap-1.5 text-xs font-bold text-wine-300 bg-wine-950/40 border border-wine-900/40 px-2.5 py-1 rounded-xl w-fit">
                     <ShoppingBag className="h-3.5 w-3.5 text-wine-400" />
-                    <span>{client.totalBookings} reservas</span>
+                    <span>{client.totalContacts} contatos</span>
                   </div>
 
                   {/* Botão de Ação */}
@@ -348,7 +348,7 @@ export function AdminClientsScreen() {
                   Cliente: <span className="text-wine-300">{suspendModal.client.fullName}</span>
                 </p>
                 <p className="mb-4 text-xs text-zinc-400">
-                  O cliente não poderá realizar novos agendamentos nem acessar a plataforma.
+                  O cliente não poderá acessar a plataforma.
                 </p>
 
                 <textarea

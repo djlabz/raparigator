@@ -182,7 +182,7 @@ export function AdminDashboardScreen() {
               {
                 label: "Total de Clientes",
                 value: stats.totalClients,
-                subtext: "Usuários contratantes",
+                subtext: "Clientes cadastrados",
                 icon: User,
                 color: "text-blue-400",
                 accentBg: "from-blue-950/40 to-zinc-900/80",

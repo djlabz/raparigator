@@ -412,9 +412,9 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
                     label="Preferência principal"
                     options={[
                       { value: "", label: "Selecione" },
-                      { value: "chat", label: "Chat" },
-                      { value: "acompanhamento", label: "Acompanhamento" },
-                      { value: "contratacao", label: "Contratação" },
+                      { value: "feed", label: "Explorar o feed" },
+                      { value: "chat", label: "Conversar pelo chat" },
+                      { value: "premium", label: "Acompanhar perfis premium" },
                     ]}
                     value={form.preference}
                     onChange={updateField("preference")}

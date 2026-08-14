@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     template: "%s",
   },
   description:
-    "Sigillus e uma plataforma para conectar clientes e profissionais com seguranca, discricao, custodia financeira e experiencia premium.",
+    "Sigillus e uma plataforma de anuncios onde cada profissional monta e publica o proprio perfil, com seguranca e discricao.",
   applicationName: "Sigillus",
   keywords: ["sigillus", "plataforma", "anuncios verificados", "seguranca", "discricao"],
   manifest: "/manifest.webmanifest",
