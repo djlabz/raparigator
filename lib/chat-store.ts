@@ -1,4 +1,5 @@
 import {
+  fetchBriefMessage,
   fetchDeleteConversationFromInbox,
   fetchReportConversation,
   fetchSetConversationBlocked,
@@ -6,9 +7,10 @@ import {
   fetchUpdateParticipantAlias,
   fetchViewOnceMediaMessage,
 } from "@/lib/chat-service";
-import { conversations as mockConversations, messages as mockMessages } from "@/lib/mock-data";
+import { getConversationAd } from "@/lib/conversation-ad";
+import { ads, conversations as mockConversations, messages as mockMessages } from "@/lib/mock-data";
 import type { ChatMutationResult, ChatSendResult, ChatSnapshot } from "@/lib/chat-store-types";
-import type { Conversation, Message } from "@/lib/types";
+import type { Conversation, EncounterBrief, Message } from "@/lib/types";
 
 const EMPTY_SNAPSHOT: ChatSnapshot = { conversations: [], messages: [] };
 
@@ -21,7 +23,11 @@ function cloneConversation(conversation: Conversation): Conversation {
 }
 
 function cloneMessage(message: Message): Message {
-  return { ...message, media: message.media ? { ...message.media } : undefined };
+  return {
+    ...message,
+    media: message.media ? { ...message.media } : undefined,
+    brief: message.brief ? { ...message.brief, extras: [...message.brief.extras] } : undefined,
+  };
 }
 
 function buildSeedSnapshot(): ChatSnapshot {
@@ -112,6 +118,107 @@ function syncPreview(
       ? { ...conversation, lastMessage, lastMessageAt: "agora", unread: 0 }
       : conversation,
   );
+}
+
+/**
+ * Devolve o id da conversa vinculada a um anúncio, criando-a quando o cliente ainda
+ * não falou com aquela profissional.
+ */
+export function ensureConversationForAd(adSlug: string): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const current = ensureChatStore();
+  const existing = current.conversations.find(
+    (conversation) => getConversationAd(conversation)?.slug === adSlug,
+  );
+  if (existing) {
+    return existing.id;
+  }
+
+  const ad = ads.find((item) => item.slug === adSlug);
+  if (!ad) {
+    return null;
+  }
+
+  const conversation: Conversation = {
+    id: `local-conv-${adSlug}`,
+    participantId: ad.id,
+    contactName: ad.artisticName,
+    contactStatus: ad.status === "indisponivel" ? "offline" : "online",
+    lastMessage: "Conversa iniciada pelo anúncio",
+    lastMessageAt: "agora",
+    unread: 0,
+    adSlug,
+  };
+
+  replaceSnapshot({
+    ...current,
+    conversations: [conversation, ...current.conversations],
+  });
+
+  return conversation.id;
+}
+
+export async function sendChatBrief(
+  conversationId: string,
+  brief: EncounterBrief,
+  greeting: string,
+  senderDisplayName: string,
+): Promise<ChatSendResult> {
+  const current = ensureChatStore();
+  const conversation = current.conversations.find((item) => item.id === conversationId);
+  if (!conversation) {
+    return { ok: false, reason: "not_found" };
+  }
+  if (conversation.isBlocked) {
+    return { ok: false, reason: "blocked" };
+  }
+
+  const optimisticId = `local-brief-${Date.now()}`;
+  const optimisticMessage: Message = {
+    id: optimisticId,
+    conversationId,
+    senderId: "current-user",
+    senderRole: "cliente",
+    senderDisplayName,
+    from: "me",
+    content: greeting,
+    messageType: "brief",
+    status: "sending",
+    brief: { ...brief, extras: [...brief.extras] },
+    sentAt: "agora",
+    deliveredAt: null,
+    editedAt: null,
+    deletedAt: null,
+  };
+
+  replaceSnapshot({
+    conversations: syncPreview(current, conversationId, `Interesse enviado · ${brief.duration}`),
+    messages: [...current.messages, optimisticMessage],
+  });
+
+  try {
+    const confirmed = await fetchBriefMessage(conversationId, brief, greeting, senderDisplayName);
+    const latest = ensureChatStore();
+    replaceSnapshot({
+      ...latest,
+      messages: latest.messages.map((message) =>
+        message.id === optimisticId ? confirmed : message,
+      ),
+    });
+    return { ok: true, messageId: confirmed.id };
+  } catch {
+    const latest = ensureChatStore();
+    replaceSnapshot({
+      ...latest,
+      messages: latest.messages.map((message) =>
+        message.id === optimisticId ? { ...message, status: "failed" } : message,
+      ),
+    });
+    return { ok: false, reason: "adapter_error", messageId: optimisticId };
+  }
 }
 
 export async function sendChatText(

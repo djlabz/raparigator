@@ -8,18 +8,23 @@ import type { ProfessionalAd } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { TelegramIcon, WhatsAppIcon } from "@/components/ui/contact-icons";
 import { useMobileContactFab } from "./use-mobile-contact-fab";
+import { useContactCta } from "./use-contact-cta";
+import type { EncounterBrief } from "@/lib/types";
 
 interface StandardMobileContactFabProps {
   ad: ProfessionalAd;
   setRiskTarget: (target: "WhatsApp" | "Telegram") => void;
   role: "visitor" | "client" | "professional";
+  brief: EncounterBrief | null;
 }
 
 export function StandardMobileContactFab({
   ad,
   setRiskTarget,
   role,
+  brief,
 }: StandardMobileContactFabProps) {
+  const { onLoginClick, openChatWithBrief } = useContactCta(brief);
   const {
     isOpen,
     showTooltip,
@@ -92,16 +97,25 @@ export function StandardMobileContactFab({
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 className="absolute"
               >
-                <Link
-                  href={role === "visitor" ? "/auth/login" : "/chat"}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-wine-700 text-white shadow-lg ring-1 ring-white/20"
-                >
-                  {role === "visitor" ? (
+                {role === "visitor" ? (
+                  <Link
+                    href="/auth/login"
+                    onClick={onLoginClick}
+                    aria-label="Entrar para interagir"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-wine-700 text-white shadow-lg ring-1 ring-white/20"
+                  >
                     <Lock className="h-4.5 w-4.5 text-white" />
-                  ) : (
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={openChatWithBrief}
+                    aria-label="Abrir chat direto"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-wine-700 text-white shadow-lg ring-1 ring-white/20"
+                  >
                     <MessageSquare className="h-4.5 w-4.5 fill-white text-white" />
-                  )}
-                </Link>
+                  </button>
+                )}
               </motion.div>
 
               <motion.div

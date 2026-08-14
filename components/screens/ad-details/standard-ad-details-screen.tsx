@@ -19,7 +19,12 @@ import {
 } from "@/components/screens/feed-screen/constants";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RiskWarningModal } from "@/components/ui/risk-warning-modal";
-import { getTelegramChatUrl, getWhatsAppChatUrl } from "@/lib/share-utils";
+import {
+  copyToClipboard,
+  getExternalContactText,
+  getTelegramChatUrl,
+  getWhatsAppChatUrl,
+} from "@/lib/share-utils";
 import { cn } from "@/lib/utils";
 
 interface StandardAdDetailsScreenProps {
@@ -46,9 +51,11 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
     totalCalculatedValue,
     nextPhoto,
     prevPhoto,
-  } = useAdDetails(slug);
+    brief,
+  } = useAdDetails(slug, { persistDraft: true });
 
   const [externalTargetUrl, setExternalTargetUrl] = useState<string | null>(null);
+  const [externalTextCopied, setExternalTextCopied] = useState(false);
 
   if (!ad) {
     return (
@@ -61,19 +68,28 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
     );
   }
 
-  const handleExternalContact = (target: "WhatsApp" | "Telegram") => {
+  const handleExternalContact = async (target: "WhatsApp" | "Telegram") => {
     setRiskTarget(target);
+    setExternalTextCopied(false);
+
     if (target === "WhatsApp") {
       setExternalTargetUrl(
-        ad.whatsappNumber ? getWhatsAppChatUrl(ad.artisticName, ad.slug, ad.whatsappNumber) : null,
+        ad.whatsappNumber
+          ? getWhatsAppChatUrl(ad.artisticName, ad.slug, ad.whatsappNumber, brief)
+          : null,
       );
       return;
     }
+
     setExternalTargetUrl(
       ad.telegramUsername
-        ? getTelegramChatUrl(ad.artisticName, ad.slug, ad.telegramUsername)
+        ? getTelegramChatUrl(ad.artisticName, ad.slug, ad.telegramUsername, brief)
         : null,
     );
+    // O Telegram descarta o `?text=` de links diretos, então a mensagem vai pela
+    // área de transferência e o aviso do modal explica que basta colar.
+    const copied = await copyToClipboard(getExternalContactText(ad.artisticName, ad.slug, brief));
+    setExternalTextCopied(copied);
   };
 
   return (
@@ -108,12 +124,13 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
                 totalCalculatedValue={totalCalculatedValue}
                 role={role}
                 setRiskTarget={handleExternalContact}
+                brief={brief}
               />
               <StandardReviewsSection ad={ad} />
             </div>
 
             <aside className="hidden lg:block">
-              <StandardSidebarCta role={role} setRiskTarget={handleExternalContact} />
+              <StandardSidebarCta role={role} setRiskTarget={handleExternalContact} brief={brief} />
             </aside>
           </section>
         </div>
@@ -132,6 +149,7 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
         ad={ad}
         setRiskTarget={handleExternalContact}
         role={role === "cliente" ? "client" : role === "profissional" ? "professional" : role}
+        brief={brief}
       />
 
       <RiskWarningModal
@@ -139,6 +157,7 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
         onClose={() => {
           setRiskTarget(null);
           setExternalTargetUrl(null);
+          setExternalTextCopied(false);
         }}
         targetLabel={riskTarget ?? "canal externo"}
         onConfirm={() => {
@@ -147,7 +166,9 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
             window.open(externalTargetUrl, "_blank", "noopener,noreferrer");
           }
           setExternalTargetUrl(null);
+          setExternalTextCopied(false);
         }}
+        messageCopied={externalTextCopied}
       />
     </AppShell>
   );

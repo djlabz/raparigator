@@ -160,8 +160,25 @@ export interface Conversation {
   adSlug?: string;
 }
 
+/** Seleção do Simulador de Encontro: duração escolhida + adicionais marcados */
+export interface SimulationSelection {
+  duration: string;
+  extras: string[];
+}
+
+/** Simulação de encontro pronta para virar contato — no chat ou em app externo */
+export interface EncounterBrief {
+  adSlug: string;
+  artisticName: string;
+  duration: string;
+  basePrice: number;
+  extras: string[];
+  extrasCost: number;
+  total: number;
+}
+
 export type MessageStatus = "sending" | "sent" | "delivered" | "failed";
-export type MessageType = "text" | "media";
+export type MessageType = "text" | "media" | "brief";
 
 export interface Message {
   id: string;
@@ -180,6 +197,8 @@ export interface Message {
     isViewOnce: boolean;
     openedAt?: string | null;
   };
+  /** Simulação de encontro enviada junto com a mensagem; presente em `messageType: "brief"` */
+  brief?: EncounterBrief;
   sentAt: string;
   deliveredAt?: string | null;
   editedAt?: string | null;

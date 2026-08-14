@@ -24,6 +24,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   FormEvent,
   type RefObject,
@@ -37,6 +38,7 @@ import {
 import { createPortal } from "react-dom";
 import { useSetShellChrome } from "@/components/layout/shell-chrome";
 import { Button } from "@/components/ui/button";
+import { EncounterBriefCard, EncounterBriefPreview } from "@/components/ui/encounter-brief-card";
 import { Modal } from "@/components/ui/modal";
 import {
   PremiumConversionModal,
@@ -53,6 +55,7 @@ import {
   markConversationAsRead,
   reseedChatStore,
   reportChatConversation,
+  sendChatBrief,
   sendChatText,
   sendChatViewOnceMedia,
   setChatConversationBlocked,
@@ -61,13 +64,27 @@ import {
 } from "@/lib/chat-store";
 import { getConversationAd } from "@/lib/conversation-ad";
 import {
+  buildBriefGreeting,
+  clearBriefHandoff,
+  getAdEditHref,
+  getBriefHandoff,
+  getServerBriefHandoff,
+  subscribeBriefHandoff,
+} from "@/lib/encounter-brief";
+import {
   getInviteStatus,
   hasTwoWayConversation,
   sendReviewInvite,
   useReviewInvites,
   withdrawReviewInvite,
 } from "@/lib/review-invites";
-import type { AvailabilityStatus, Conversation, Message, ProfessionalAd } from "@/lib/types";
+import type {
+  AvailabilityStatus,
+  Conversation,
+  EncounterBrief,
+  Message,
+  ProfessionalAd,
+} from "@/lib/types";
 import { useAuthSession } from "@/lib/auth-session";
 import { usePremiumPlan } from "@/lib/premium-plan";
 import { cn } from "@/lib/utils";
@@ -326,10 +343,33 @@ export function ChatScreen() {
   const [blockModalOpen, setBlockModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
+  const router = useRouter();
+  const briefHandoff = useSyncExternalStore(
+    subscribeBriefHandoff,
+    getBriefHandoff,
+    getServerBriefHandoff,
+  );
+  const [briefSending, setBriefSending] = useState(false);
+  // O chat costuma montar já com um interesse pendente (o clique em "Chat Direto" cria
+  // o handoff antes de navegar), então a saudação precisa nascer preenchida — não só ser
+  // sincronizada depois, quando "anterior" e "atual" já seriam a mesma referência.
+  const [briefGreeting, setBriefGreeting] = useState(() =>
+    briefHandoff ? buildBriefGreeting(briefHandoff.brief) : "",
+  );
+  const [previousBriefHandoff, setPreviousBriefHandoff] = useState(briefHandoff);
 
   if (aliasFromUser !== previousAliasFromUser) {
     setPreviousAliasFromUser(aliasFromUser);
     setGlobalAlias(aliasFromUser);
+  }
+
+  // Sugestão de saudação repõe apenas quando um novo interesse chega (identidade do
+  // handoff muda) — assim o texto editado pelo usuário sobrevive a re-renders.
+  if (briefHandoff !== previousBriefHandoff) {
+    setPreviousBriefHandoff(briefHandoff);
+    if (briefHandoff) {
+      setBriefGreeting(buildBriefGreeting(briefHandoff.brief));
+    }
   }
 
   const visibleConversations = useMemo(
@@ -481,6 +521,17 @@ export function ChatScreen() {
     };
   }, [isMobileViewport, mobileConversationOpen]);
 
+  // O briefing chega por um store, não pela URL: `TabsKeepAlive` mantém esta tela
+  // montada entre as abas, então um efeito de montagem só rodaria na primeira visita.
+  useEffect(() => {
+    if (!briefHandoff) {
+      return;
+    }
+
+    setActiveConversationId(briefHandoff.conversationId);
+    setMobileConversationOpen(window.matchMedia("(max-width: 767px)").matches);
+  }, [briefHandoff]);
+
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -516,6 +567,56 @@ export function ChatScreen() {
     if (result.messageId) {
       setLastSentMessageId(result.messageId);
     }
+  };
+
+  const handleSendBrief = async () => {
+    const trimmedGreeting = briefGreeting.trim();
+    if (
+      !briefHandoff ||
+      !activeConversation ||
+      activeConversation.isBlocked ||
+      briefSending ||
+      !trimmedGreeting
+    )
+      return;
+
+    const { brief } = briefHandoff;
+    setBriefSending(true);
+    const result = await sendChatBrief(
+      activeConversation.id,
+      brief,
+      trimmedGreeting,
+      currentDisplayName,
+    );
+    setBriefSending(false);
+
+    if (result.messageId) {
+      // A bolha já está no thread (confirmada ou marcada como falha), então a prévia sai
+      // de cena para não permitir um segundo envio do mesmo interesse.
+      setLastSentMessageId(result.messageId);
+      clearBriefHandoff();
+    }
+
+    if (!result.ok) {
+      showToast({
+        type: "error",
+        title: "Não deu para enviar",
+        message:
+          result.reason === "blocked"
+            ? "Esta conversa está bloqueada."
+            : "Tenta de novo em instantes.",
+      });
+    }
+  };
+
+  const handleEditBrief = () => {
+    if (!briefHandoff) {
+      return;
+    }
+    // Mantém o interesse pendente: se o usuário voltar sem mexer em nada, a prévia
+    // continua aqui do jeito que estava. A âncora leva direto ao simulador, e não ao
+    // topo do anúncio.
+    router.push(getAdEditHref(briefHandoff.brief.adSlug));
   };
 
   const openPremiumUpsell = (highlight: PremiumHighlight) => {
@@ -1014,6 +1115,13 @@ export function ChatScreen() {
               onProfileClose={() => setProfilePanelOpen(false)}
               onReport={() => setReportModalOpen(true)}
               onSubmit={handleSubmit}
+              pendingBrief={briefHandoff?.brief ?? null}
+              briefSending={briefSending}
+              briefGreeting={briefGreeting}
+              onBriefGreetingChange={setBriefGreeting}
+              onSendBrief={handleSendBrief}
+              onDiscardBrief={clearBriefHandoff}
+              onEditBrief={handleEditBrief}
             />
           )}
         </section>
@@ -1053,6 +1161,13 @@ export function ChatScreen() {
                 onProfileClose={() => setProfilePanelOpen(false)}
                 onReport={() => setReportModalOpen(true)}
                 onSubmit={handleSubmit}
+                pendingBrief={briefHandoff?.brief ?? null}
+                briefSending={briefSending}
+                briefGreeting={briefGreeting}
+                onBriefGreetingChange={setBriefGreeting}
+                onSendBrief={handleSendBrief}
+                onDiscardBrief={clearBriefHandoff}
+                onEditBrief={handleEditBrief}
               />
             </div>,
             document.body,
@@ -1275,6 +1390,13 @@ function ConversationThread({
   onProfileClose,
   onReport,
   onSubmit,
+  pendingBrief,
+  briefSending,
+  briefGreeting,
+  onBriefGreetingChange,
+  onSendBrief,
+  onDiscardBrief,
+  onEditBrief,
 }: {
   activeConversation: Conversation;
   activeConversationId: string;
@@ -1303,6 +1425,13 @@ function ConversationThread({
   onProfileClose: () => void;
   onReport: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  pendingBrief: EncounterBrief | null;
+  briefSending: boolean;
+  briefGreeting: string;
+  onBriefGreetingChange: (value: string) => void;
+  onSendBrief: () => void;
+  onDiscardBrief: () => void;
+  onEditBrief: () => void;
 }) {
   return (
     <>
@@ -1323,12 +1452,12 @@ function ConversationThread({
           className="group flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left"
           onClick={onOpenProfile}
         >
-          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-zinc-200/80 bg-white shadow-[0_2px_10px_rgba(15,23,42,0.08)]">
+          <div className="relative h-10 w-10 shrink-0">
             <Image
               src={conversationAvatar}
               alt="Avatar"
               fill
-              className="rounded-full object-cover"
+              className="rounded-full border border-zinc-200/80 bg-white object-cover shadow-[0_2px_10px_rgba(15,23,42,0.08)]"
               sizes="40px"
             />
             <span
@@ -1502,40 +1631,58 @@ function ConversationThread({
                       : "",
                   )}
                 >
-                  <div
-                    className={cn(
-                      "px-4 py-2.5 text-sm shadow-sm",
-                      message.from === "me"
-                        ? "rounded-2xl rounded-tr-sm bg-wine-700 text-white shadow-[0_10px_22px_rgba(182,0,49,0.18)]"
-                        : "rounded-2xl rounded-tl-sm border border-zinc-200/60 bg-white text-zinc-800",
-                    )}
-                  >
-                    {message.messageType === "media" ? (
-                      <div className="flex items-center gap-3">
-                        <span
+                  {message.messageType === "brief" && message.brief ? (
+                    <>
+                      {message.content ? (
+                        <div
                           className={cn(
-                            "flex h-10 w-10 items-center justify-center rounded-full",
-                            message.from === "me" ? "bg-white/15" : "bg-zinc-100",
+                            "px-4 py-2.5 text-sm shadow-sm",
+                            message.from === "me"
+                              ? "rounded-2xl rounded-tr-sm bg-wine-700 text-white shadow-[0_10px_22px_rgba(182,0,49,0.18)]"
+                              : "rounded-2xl rounded-tl-sm border border-zinc-200/60 bg-white text-zinc-800",
                           )}
                         >
-                          <ImageIcon size={18} />
-                        </span>
-                        <div>
-                          <p className="font-semibold">{message.media?.name ?? "Mídia"}</p>
-                          <p
+                          <p className="leading-relaxed">{message.content}</p>
+                        </div>
+                      ) : null}
+                      <EncounterBriefCard brief={message.brief} className="mt-1.5" />
+                    </>
+                  ) : (
+                    <div
+                      className={cn(
+                        "px-4 py-2.5 text-sm shadow-sm",
+                        message.from === "me"
+                          ? "rounded-2xl rounded-tr-sm bg-wine-700 text-white shadow-[0_10px_22px_rgba(182,0,49,0.18)]"
+                          : "rounded-2xl rounded-tl-sm border border-zinc-200/60 bg-white text-zinc-800",
+                      )}
+                    >
+                      {message.messageType === "media" ? (
+                        <div className="flex items-center gap-3">
+                          <span
                             className={cn(
-                              "text-xs",
-                              message.from === "me" ? "text-white/75" : "text-zinc-500",
+                              "flex h-10 w-10 items-center justify-center rounded-full",
+                              message.from === "me" ? "bg-white/15" : "bg-zinc-100",
                             )}
                           >
-                            {message.media?.openedAt ? "Aberta" : "Visualização única"}
-                          </p>
+                            <ImageIcon size={18} />
+                          </span>
+                          <div>
+                            <p className="font-semibold">{message.media?.name ?? "Mídia"}</p>
+                            <p
+                              className={cn(
+                                "text-xs",
+                                message.from === "me" ? "text-white/75" : "text-zinc-500",
+                              )}
+                            >
+                              {message.media?.openedAt ? "Aberta" : "Visualização única"}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <p className="leading-relaxed">{message.content}</p>
-                    )}
-                  </div>
+                      ) : (
+                        <p className="leading-relaxed">{message.content}</p>
+                      )}
+                    </div>
+                  )}
                   <span className="mt-1 flex items-center gap-1 px-1 text-[10px] font-medium uppercase text-zinc-400">
                     {message.sentAt}
                     {StatusIcon ? (
@@ -1553,8 +1700,25 @@ function ConversationThread({
         </div>
       </div>
 
+      {pendingBrief && !activeConversation.isBlocked ? (
+        <div className="shrink-0 border-t border-zinc-200 bg-white px-4 pt-3">
+          <EncounterBriefPreview
+            brief={pendingBrief}
+            greeting={briefGreeting}
+            onGreetingChange={onBriefGreetingChange}
+            sending={briefSending}
+            onSend={onSendBrief}
+            onDiscard={onDiscardBrief}
+            onEdit={onEditBrief}
+          />
+        </div>
+      ) : null}
+
       <form
-        className="shrink-0 border-t border-zinc-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]"
+        className={cn(
+          "shrink-0 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]",
+          pendingBrief && !activeConversation.isBlocked ? "" : "border-t border-zinc-200",
+        )}
         onSubmit={onSubmit}
       >
         <div className="relative mx-auto flex max-w-5xl items-center gap-3">

@@ -3,14 +3,19 @@
 import Link from "next/link";
 import { Crown, Lock, MessageSquare, Sparkles, Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useContactCta } from "./use-contact-cta";
+import type { EncounterBrief } from "@/lib/types";
 import { TelegramIcon, WhatsAppIcon } from "@/components/ui/contact-icons";
 
 interface SidebarCtaProps {
   role: string;
   setRiskTarget: (target: "WhatsApp" | "Telegram") => void;
+  brief: EncounterBrief | null;
 }
 
-export function SidebarCta({ role, setRiskTarget }: SidebarCtaProps) {
+export function SidebarCta({ role, setRiskTarget, brief }: SidebarCtaProps) {
+  const { onLoginClick, openChatWithBrief } = useContactCta(brief);
+
   return (
     <Card className="order-last lg:order-first p-5 sm:p-6 border-0 bg-linear-to-br from-[#121212] via-[#1a1a1a] to-[#0a0a0a] shadow-xl rounded-2xl text-center space-y-6 relative overflow-hidden">
       {/* Premium Background Elements */}
@@ -55,19 +60,27 @@ export function SidebarCta({ role, setRiskTarget }: SidebarCtaProps) {
 
       <div className="space-y-3 relative z-10 w-full mt-2">
         {role === "visitor" ? (
-          <Link href="/auth/login" className="group relative block w-full outline-[none]">
+          <Link
+            href="/auth/login"
+            onClick={onLoginClick}
+            className="group relative block w-full outline-[none]"
+          >
             <div className="absolute -inset-0.5 rounded-xl bg-linear-to-r from-amber-500/30 to-amber-600/30 opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100" />
             <span className="relative flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#121212] px-5 py-2 font-bold text-amber-400 shadow-sm transition-all duration-300 hover:bg-[#1a1a1a]">
               <MessageSquare className="h-5 w-5" /> Entrar para Interagir
             </span>
           </Link>
         ) : (
-          <Link href="/chat" className="group relative block w-full outline-[none]">
+          <button
+            type="button"
+            onClick={openChatWithBrief}
+            className="group relative block w-full outline-[none]"
+          >
             <div className="absolute -inset-0.5 rounded-xl bg-linear-to-r from-amber-500/30 to-amber-600/30 opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100" />
             <span className="relative flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#121212] px-5 py-2 font-bold text-amber-400 shadow-sm transition-all duration-300 hover:bg-[#1a1a1a]">
               <MessageSquare className="h-5 w-5" /> Iniciar Chat
             </span>
-          </Link>
+          </button>
         )}
 
         <div className="flex items-center gap-3 w-full">

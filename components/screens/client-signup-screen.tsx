@@ -13,6 +13,7 @@ import { InfoBanner } from "@/components/ui/info-banner";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import { Stepper, StepItem } from "@/components/ui/stepper";
+import { readRedirectTarget } from "@/lib/auth-return";
 import { useAuthSession } from "@/lib/auth-session";
 import {
   formatCpf,
@@ -193,9 +194,10 @@ export function ClientSignupScreen() {
       message: "Bem-vindo ao Sigillus.",
       type: "success",
     });
+    const destination = readRedirectTarget();
     // Dá um tempo curto para o usuário ver o toast antes de mudar de tela
     setTimeout(() => {
-      router.push("/feed");
+      router.push(destination);
     }, 1000);
   };
 

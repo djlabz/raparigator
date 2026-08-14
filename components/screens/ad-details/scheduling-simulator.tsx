@@ -8,7 +8,12 @@ import { PixIcon } from "@/components/ui/pix-icon";
 import { CashIcon } from "@/components/ui/cash-icon";
 import { VerifiedCheckIcon } from "@/components/ui/verified-check-icon";
 import { TelegramIcon, WhatsAppIcon } from "@/components/ui/contact-icons";
-import type { ProfessionalAd } from "@/lib/types";
+import {
+  ENCOUNTER_SIMULATOR_ANCHOR,
+  ENCOUNTER_SIMULATOR_SCROLL_MARGIN,
+} from "@/lib/encounter-brief";
+import { useContactCta } from "./use-contact-cta";
+import type { EncounterBrief, ProfessionalAd } from "@/lib/types";
 import { cn, currency } from "@/lib/utils";
 
 const PAYMENT_METHOD_OPTIONS = [
@@ -69,6 +74,7 @@ interface SchedulingSimulatorProps {
   totalCalculatedValue: number;
   role: string;
   setRiskTarget: (target: "WhatsApp" | "Telegram") => void;
+  brief: EncounterBrief | null;
 }
 
 export function SchedulingSimulator({
@@ -82,9 +88,18 @@ export function SchedulingSimulator({
   totalCalculatedValue,
   role,
   setRiskTarget,
+  brief,
 }: SchedulingSimulatorProps) {
+  const { onLoginClick, openChatWithBrief } = useContactCta(brief);
+
   return (
-    <Card className="relative space-y-5 overflow-hidden rounded-2xl border-y-zinc-200/80 border-r-zinc-200/80 border-l-4 border-l-[#96001e] bg-linear-to-br from-white to-zinc-50/40 p-5 shadow-md sm:p-6">
+    <Card
+      id={ENCOUNTER_SIMULATOR_ANCHOR}
+      className={cn(
+        "relative space-y-5 overflow-hidden rounded-2xl border-y-zinc-200/80 border-r-zinc-200/80 border-l-4 border-l-[#96001e] bg-linear-to-br from-white to-zinc-50/40 p-5 shadow-md sm:p-6",
+        ENCOUNTER_SIMULATOR_SCROLL_MARGIN,
+      )}
+    >
       <div className="flex flex-col gap-3">
         <div className="flex flex-nowrap items-center justify-between gap-2">
           <h3 className="flex min-w-0 shrink items-center gap-2.5 font-display text-lg font-bold tracking-tight whitespace-nowrap text-zinc-900 sm:text-xl">
@@ -284,17 +299,19 @@ export function SchedulingSimulator({
           {role === "visitor" ? (
             <Link
               href="/auth/login"
+              onClick={onLoginClick}
               className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-zinc-800 font-bold text-white shadow-sm ring-1 ring-white/5 transition-all hover:bg-zinc-700 active:scale-[0.98]"
             >
               <Lock className="h-4 w-4" /> Entrar para Interagir
             </Link>
           ) : (
-            <Link
-              href="/chat"
+            <button
+              type="button"
+              onClick={openChatWithBrief}
               className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-zinc-800 font-bold text-white shadow-sm ring-1 ring-white/5 transition-all hover:bg-zinc-700 active:scale-[0.98]"
             >
               <MessageSquare className="h-4 w-4" /> Chat Direto
-            </Link>
+            </button>
           )}
           <div className="flex items-center gap-2.5 w-full">
             <button

@@ -1,7 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuthSession } from "@/lib/auth-session";
+import {
+  buildEncounterBrief,
+  decodeBriefSelection,
+  readSimulationDraft,
+  saveSimulationDraft,
+} from "@/lib/encounter-brief";
 import { ads } from "@/lib/mock-data";
-import type { ProfessionalAd } from "@/lib/types";
+import type { EncounterBrief, ProfessionalAd, SimulationSelection } from "@/lib/types";
 
 export interface BentoItem {
   type: "image" | "info";
@@ -30,9 +36,48 @@ export interface UseAdDetailsReturn {
   prevPhoto: () => void;
   isPremium: boolean;
   premiumAttributes: Array<{ label: string; value: string; icon: string }>;
+  brief: EncounterBrief | null;
 }
 
-export function useAdDetails(slug: string): UseAdDetailsReturn {
+export interface UseAdDetailsOptions {
+  /**
+   * Grava a simulação na sessão para sobreviver a idas ao login. Só a instância que
+   * de fato renderiza o simulador deve ativar — `ad-details-screen` chama o hook
+   * apenas para escolher a variante e descarta o estado.
+   */
+  persistDraft?: boolean;
+}
+
+const DEFAULT_DURATION = "1 hora";
+
+function resolveInitialSelection(ad: ProfessionalAd | undefined): SimulationSelection {
+  const fallbackDuration =
+    ad?.pricingTable?.find((plan) => plan.label.toLowerCase().includes(DEFAULT_DURATION))?.label ??
+    ad?.pricingTable?.[0]?.label ??
+    DEFAULT_DURATION;
+
+  if (!ad || typeof window === "undefined") {
+    return { duration: fallbackDuration, extras: [] };
+  }
+
+  const fromLink = decodeBriefSelection(window.location.search, ad);
+  if (fromLink) {
+    return fromLink;
+  }
+
+  const fromDraft = readSimulationDraft(ad.slug);
+  if (fromDraft) {
+    const duration = ad.pricingTable.some((plan) => plan.label === fromDraft.duration)
+      ? fromDraft.duration
+      : fallbackDuration;
+    return { duration, extras: fromDraft.extras.filter((extra) => ad.services.includes(extra)) };
+  }
+
+  return { duration: fallbackDuration, extras: [] };
+}
+
+export function useAdDetails(slug: string, options: UseAdDetailsOptions = {}): UseAdDetailsReturn {
+  const { persistDraft = false } = options;
   const { role } = useAuthSession();
   const [riskTarget, setRiskTarget] = useState<"WhatsApp" | "Telegram" | null>(null);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
@@ -57,15 +102,16 @@ export function useAdDetails(slug: string): UseAdDetailsReturn {
     return items;
   }, [ad]);
 
-  const [selectedDuration, setSelectedDuration] = useState<string>(() => {
-    if (ad && ad.pricingTable && ad.pricingTable.length > 0) {
-      const hourOption = ad.pricingTable.find((p) => p.label.toLowerCase().includes("1 hora"));
-      if (hourOption) return hourOption.label;
-      return ad.pricingTable[0].label;
+  const [initialSelection] = useState<SimulationSelection>(() => resolveInitialSelection(ad));
+  const [selectedDuration, setSelectedDuration] = useState<string>(initialSelection.duration);
+  const [selectedExtras, setSelectedExtras] = useState<string[]>(initialSelection.extras);
+
+  useEffect(() => {
+    if (!persistDraft || !ad) {
+      return;
     }
-    return "1 hora";
-  });
-  const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
+    saveSimulationDraft(ad.slug, { duration: selectedDuration, extras: selectedExtras });
+  }, [ad, persistDraft, selectedDuration, selectedExtras]);
 
   const basePrice = useMemo(() => {
     if (!ad) return 0;
@@ -96,6 +142,21 @@ export function useAdDetails(slug: string): UseAdDetailsReturn {
       setSelectedPhotoIndex((selectedPhotoIndex - 1 + ad.images.length) % ad.images.length);
     }
   };
+
+  const brief = useMemo(
+    () =>
+      ad
+        ? buildEncounterBrief(
+            ad,
+            selectedDuration,
+            selectedExtras,
+            basePrice,
+            calculatedExtrasCost,
+            totalCalculatedValue,
+          )
+        : null,
+    [ad, basePrice, calculatedExtrasCost, selectedDuration, selectedExtras, totalCalculatedValue],
+  );
 
   const isPremium = ad?.adTier === "premium";
   const premiumAttributes = ad
@@ -134,5 +195,6 @@ export function useAdDetails(slug: string): UseAdDetailsReturn {
     prevPhoto,
     isPremium,
     premiumAttributes,
+    brief,
   };
 }

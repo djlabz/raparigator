@@ -17,7 +17,8 @@ Frontend de uma plataforma de anúncios de acompanhantes com feed, chat, checkou
 - Formatação: `npm run format` (oxfmt) · verificar sem escrever: `npm run format:check`
 - Build de produção: `npm run build` · servir build: `npm run start`
 - E2E: `npm run test:e2e` (Playwright em `tests/`, roda só Chromium)
-- Verificação local típica: lint + format:check + typecheck (`npm run check`) + E2E + checagem visual quando mexer em motion/UI
+- Verificação local típica: `npm run check` (lint + format:check + typecheck) + checagem visual quando mexer em motion/UI
+- **E2E só na hora de abrir PR.** A suíte leva ~1 min e trava o fluxo de desenvolvimento se rodar a cada ajuste. Durante a implementação, use `npm run check` + verificação visual no navegador. Rode `npm run test:e2e` quando o usuário pedir para commitar/abrir PR — e antes de abrir o PR, não depois. Se quebrar algo, conserte antes de publicar. Exceção: pode rodar um arquivo específico (`npx playwright test tests/x.spec.ts`) quando estiver mexendo justamente naquele fluxo.
 - Logins de teste estão em `tests/helpers/credentials.ts` (admin: `admin@sigillus.dev` / `Admin@123` em `lib/mock-users.ts`)
 - PWA / tela cheia: em aba normal do navegador a barra de endereço não pode ser escondida de forma permanente. Para experiência tipo app nativo, instale via “Adicionar à Tela de Início” / “Instalar app” (`display: standalone` em `app/manifest.ts`). Valide nesse modo, não só no tunnel Cloudflare.
 

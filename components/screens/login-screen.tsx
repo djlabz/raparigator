@@ -9,6 +9,7 @@ import { BrandWordmark } from "@/components/ui/brand-wordmark";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { readRedirectTarget } from "../../lib/auth-return";
 import { useAuthSession } from "../../lib/auth-session";
 import { mockUsers } from "../../lib/mock-users";
 
@@ -37,7 +38,7 @@ export function LoginScreen() {
     }
 
     setRole(user.role);
-    router.push("/feed");
+    router.push(readRedirectTarget());
   };
 
   return (
