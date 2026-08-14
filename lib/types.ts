@@ -102,7 +102,7 @@ export interface MockClient {
   registeredAt: string;
   status: "active" | "suspended";
   suspensionReason?: string;
-  totalBookings: number;
+  totalContacts: number;
 }
 
 export interface AdminActivityLog {
@@ -156,6 +156,8 @@ export interface Conversation {
   currentUserAlias?: string;
   isBlocked?: boolean;
   deletedFromInboxAt?: string | null;
+  /** Slug do anúncio da profissional desta conversa; ausente em conversas de suporte */
+  adSlug?: string;
 }
 
 export type MessageStatus = "sending" | "sent" | "delivered" | "failed";

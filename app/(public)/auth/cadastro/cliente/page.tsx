@@ -3,7 +3,7 @@ import { ClientSignupScreen } from "@/components/screens/client-signup-screen";
 
 export const metadata: Metadata = {
   title: "Cadastro de cliente | Sigillus",
-  description: "Crie sua conta de cliente para contratar com seguranca e custodia.",
+  description: "Crie sua conta de cliente para navegar nos anuncios e conversar pelo chat.",
 };
 
 export const viewport: Viewport = {

@@ -24,7 +24,7 @@ export function AboutSection({ ad }: AboutSectionProps) {
         </div>
 
         <h3 className="font-display text-xl font-bold tracking-tight text-zinc-900">
-          Atendimento Premium com discrição absoluta
+          Perfil Premium com discrição absoluta
         </h3>
 
         <blockquote className="border-l-4 border-[#96001e] py-1 pl-4 font-serif text-sm leading-relaxed text-zinc-600 italic sm:text-base">

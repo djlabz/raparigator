@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Sigillus",
     short_name: "Sigillus",
-    description: "Plataforma premium para intermediar clientes e profissionais com seguranca.",
+    description: "Plataforma de anuncios com perfis publicados pelas proprias profissionais.",
     start_url: "/",
     display: "standalone",
     background_color: "#fafafa",

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useAuthSession } from "@/lib/auth-session";
-import { ads, reviews } from "@/lib/mock-data";
-import type { ProfessionalAd, Review } from "@/lib/types";
+import { ads } from "@/lib/mock-data";
+import type { ProfessionalAd } from "@/lib/types";
 
 export interface BentoItem {
   type: "image" | "info";
@@ -11,7 +11,6 @@ export interface BentoItem {
 
 export interface UseAdDetailsReturn {
   ad: ProfessionalAd | undefined;
-  adReviews: Review[];
   role: ReturnType<typeof useAuthSession>["role"];
   riskTarget: "WhatsApp" | "Telegram" | null;
   setRiskTarget: (target: "WhatsApp" | "Telegram" | null) => void;
@@ -40,7 +39,6 @@ export function useAdDetails(slug: string): UseAdDetailsReturn {
   const [galleryMode, setGalleryMode] = useState<"alternative" | "grid">("alternative");
 
   const ad = useMemo(() => ads.find((item) => item.slug === slug), [slug]);
-  const adReviews = useMemo(() => reviews.filter((review) => review.adId === ad?.id), [ad?.id]);
 
   const bentoItems = useMemo(() => {
     if (!ad || !ad.images) return [];
@@ -117,7 +115,6 @@ export function useAdDetails(slug: string): UseAdDetailsReturn {
 
   return {
     ad,
-    adReviews,
     role,
     riskTarget,
     setRiskTarget,

@@ -116,45 +116,12 @@ function getNavIcon(
     );
   }
 
-  if (label === "Financeiro" || href.includes("financeiro")) {
-    return (
-      <NavIconSvg active={active}>
-        <path d="M4 19V5" />
-        <path d="M4 19h16" />
-        <path d="M8 15V11" />
-        <path d="M12 15V8" />
-        <path d="M16 15v-4" />
-      </NavIconSvg>
-    );
-  }
-
   if (label === "Anúncios" || href.includes("anuncios")) {
     return (
       <NavIconSvg active={active}>
         <path d="M4 11.5v1a2 2 0 0 0 2 2h2l5 4v-4h3a2 2 0 0 0 2-2v-1a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2Z" />
         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
       </NavIconSvg>
-    );
-  }
-
-  if (label === "Acompanhamento" || href.includes("acompanhamento")) {
-    return (
-      <NavIconSvg active={active}>
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 7v5l3 3" />
-      </NavIconSvg>
-    );
-  }
-
-  if (label === "Conta" || href === "/conta") {
-    return (
-      <div className="relative flex items-center justify-center">
-        <NavIconSvg active={active}>
-          <path d="M20 21a8 8 0 0 0-16 0" />
-          <circle cx="12" cy="7" r="4" />
-        </NavIconSvg>
-        <Badge count={notificationBadgeCount} />
-      </div>
     );
   }
 

@@ -29,7 +29,6 @@ interface StandardAdDetailsScreenProps {
 export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) {
   const {
     ad,
-    adReviews,
     role,
     riskTarget,
     setRiskTarget,
@@ -110,7 +109,7 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
                 role={role}
                 setRiskTarget={handleExternalContact}
               />
-              <StandardReviewsSection ad={ad} reviews={adReviews} />
+              <StandardReviewsSection ad={ad} />
             </div>
 
             <aside className="hidden lg:block">

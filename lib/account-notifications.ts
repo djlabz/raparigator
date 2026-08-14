@@ -10,6 +10,14 @@ export interface AccountNotificationItem {
   message: string;
   time: string;
   read: boolean;
+  /** Destino ao clicar; sem isso a notificação cai na página da conta */
+  href?: string;
+}
+
+const DEFAULT_NOTIFICATION_HREF = "/conta#profile-workflow";
+
+export function getNotificationHref(notification: AccountNotificationItem) {
+  return notification.href ?? DEFAULT_NOTIFICATION_HREF;
 }
 
 interface AccountNotificationState {
@@ -39,11 +47,6 @@ export function getDashboardHref(role: AuthRole) {
     return "/conta";
   }
   return "/auth/login";
-}
-
-export function isDashboardPath(pathname: string, role: AuthRole) {
-  const href = getDashboardHref(role);
-  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function subscribe(listener: () => void) {
@@ -173,6 +176,35 @@ function writeState(role: Exclude<AuthRole, "visitor">, state: AccountNotificati
 
 function unreadIds(items: AccountNotificationItem[]) {
   return items.filter((item) => !item.read).map((item) => item.id);
+}
+
+/** Insere ou substitui uma notificação no topo da lista, deduplicando por id. */
+export function pushNotification(
+  role: Exclude<AuthRole, "visitor">,
+  item: Omit<AccountNotificationItem, "read">,
+) {
+  const current = getSnapshot(role);
+  const others = current.items.filter((existing) => existing.id !== item.id);
+
+  writeState(role, {
+    ...current,
+    items: [{ ...item, read: false }, ...others],
+    navbarAckedUnreadIds: current.navbarAckedUnreadIds.filter((ackedId) => ackedId !== item.id),
+  });
+}
+
+export function removeNotification(role: Exclude<AuthRole, "visitor">, id: string) {
+  const current = getSnapshot(role);
+
+  if (!current.items.some((item) => item.id === id)) {
+    return;
+  }
+
+  writeState(role, {
+    ...current,
+    items: current.items.filter((item) => item.id !== id),
+    navbarAckedUnreadIds: current.navbarAckedUnreadIds.filter((ackedId) => ackedId !== id),
+  });
 }
 
 export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
