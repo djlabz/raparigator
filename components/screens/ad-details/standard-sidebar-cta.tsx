@@ -19,13 +19,13 @@ export function StandardSidebarCta({ role, setRiskTarget }: StandardSidebarCtaPr
           </div>
 
           <h3 className="mb-2 font-display text-sm font-extrabold tracking-widest text-wine-700 uppercase">
-            Atendimento Exclusivo
+            Contato Exclusivo
           </h3>
 
           <h4 className="mb-2 font-display text-2xl font-bold text-zinc-900">Fale Agora</h4>
 
           <p className="mb-6 text-sm leading-relaxed text-zinc-500">
-            Entre em contato direto e seguro para confirmar disponibilidade e valores.
+            Entre em contato direto e seguro. Tudo é acordado diretamente com a profissional.
           </p>
 
           <div className="flex w-full flex-col gap-3">
@@ -63,7 +63,7 @@ export function StandardSidebarCta({ role, setRiskTarget }: StandardSidebarCtaPr
 
           <div className="mt-6 flex flex-col items-center justify-center gap-2 border-t border-zinc-100 pt-5 text-xs text-zinc-500">
             <ShieldCheck className="h-5 w-5 text-emerald-600" />
-            <p className="max-w-50">Ambiente 100% seguro com moderação ativa Sigillus.</p>
+            <p className="max-w-50">Chat com apelido, bloqueio e denúncia dentro da Sigillus.</p>
           </div>
         </div>
       </div>

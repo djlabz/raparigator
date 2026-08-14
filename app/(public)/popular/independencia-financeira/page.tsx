@@ -3,7 +3,7 @@ import { FinancialIndependenceScreen } from "@/components/screens/financial-inde
 
 export const metadata: Metadata = {
   title: "Independencia Financeira | Sigillus",
-  description: "Simule ganhos, projecao de montante e compare com um cenario CLT padrao.",
+  description: "Simule projecoes com seus proprios numeros e compare com um cenario CLT padrao.",
 };
 
 export default function FinancialIndependencePage() {

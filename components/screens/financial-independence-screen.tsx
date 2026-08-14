@@ -433,8 +433,8 @@ function formatDurationDetailed(totalMonths: number) {
 }
 
 export function FinancialIndependenceScreen() {
-  const [valuePerService, setValuePerService] = useState("300");
-  const [servicesPerDay, setServicesPerDay] = useState("4");
+  const [hourlyValue, setHourlyValue] = useState("300");
+  const [contactsPerDay, setContactsPerDay] = useState("4");
   const [workDaysPerWeek, setWorkDaysPerWeek] = useState("5");
 
   const [projectionTime, setProjectionTime] = useState("");
@@ -577,16 +577,16 @@ export function FinancialIndependenceScreen() {
   }, [submitted, topSearchBoost]);
 
   const parsed = useMemo(() => {
-    const value = Number(valuePerService);
-    const services = Number(servicesPerDay);
+    const value = Number(hourlyValue);
+    const contacts = Number(contactsPerDay);
     const days = Number(workDaysPerWeek);
 
     // Validação básica
-    const valid = value > 0 && services > 0 && days > 0 && days <= 7;
+    const valid = value > 0 && contacts > 0 && days > 0 && days <= 7;
     if (!valid) return null;
 
     const boostMultiplier = topSearchBoost ? PREMIUM_VISIBILITY_MULTIPLIER : 1;
-    const baseMonthlyRevenue = value * services * days * 4.33;
+    const baseMonthlyRevenue = value * contacts * days * 4.33;
     const premiumMonthlyRevenue = baseMonthlyRevenue * PREMIUM_VISIBILITY_MULTIPLIER;
     const monthlyRevenue = baseMonthlyRevenue * boostMultiplier;
 
@@ -616,7 +616,7 @@ export function FinancialIndependenceScreen() {
 
     return {
       value,
-      services,
+      contacts,
       days,
       monthlyRevenue,
       baseMonthlyRevenue,
@@ -637,8 +637,8 @@ export function FinancialIndependenceScreen() {
       clt,
     };
   }, [
-    valuePerService,
-    servicesPerDay,
+    hourlyValue,
+    contactsPerDay,
     workDaysPerWeek,
     projectionTime,
     projectionUnit,
@@ -696,8 +696,8 @@ export function FinancialIndependenceScreen() {
   }, [
     submitted,
     topSearchBoost,
-    valuePerService,
-    servicesPerDay,
+    hourlyValue,
+    contactsPerDay,
     workDaysPerWeek,
     projectionTime,
     projectionUnit,
@@ -724,8 +724,8 @@ export function FinancialIndependenceScreen() {
                   <div className="space-y-2" data-testid="hint-calc-base">
                     <p className="font-semibold text-zinc-800">Seu ritmo na calculadora</p>
                     <p>
-                      Valor por atendimento × atendimentos/dia × dias/semana × 4,33 semanas ≈
-                      receita mensal estimada.
+                      Valor por hora × contatos/dia × dias/semana × 4,33 semanas ≈ receita mensal
+                      estimada.
                     </p>
                     <p className="text-[11px] leading-snug text-zinc-500">
                       A comparação com CLT no painel usa o salário mínimo vigente (
@@ -743,9 +743,9 @@ export function FinancialIndependenceScreen() {
             <Card className="space-y-4 p-4 md:space-y-5 md:p-6">
               <div className="grid gap-3 md:grid-cols-2 md:gap-4">
                 <Counter
-                  label="Valor por atendimento"
-                  value={valuePerService}
-                  onChange={setValuePerService}
+                  label="Valor por hora do seu anúncio"
+                  value={hourlyValue}
+                  onChange={setHourlyValue}
                   step={50}
                   min={50}
                   max={9999}
@@ -753,9 +753,9 @@ export function FinancialIndependenceScreen() {
                   icon={<IconDollarSign className="w-4 h-4" />}
                 />
                 <Counter
-                  label="Atendimentos por dia"
-                  value={servicesPerDay}
-                  onChange={setServicesPerDay}
+                  label="Contatos por dia"
+                  value={contactsPerDay}
+                  onChange={setContactsPerDay}
                   step={1}
                   min={1}
                   max={20}
@@ -1026,7 +1026,7 @@ export function FinancialIndependenceScreen() {
                             <p className="font-semibold text-zinc-800">O número que importa</p>
                             <p>
                               O destaque é o seu prazo até R$ 1 milhão com a receita simulada. Ele
-                              muda quando você altera valor, atendimentos ou dias.
+                              muda quando você altera valor, contatos ou dias.
                             </p>
                             <p>
                               A comparação com CLT (mínimo líquido) costuma ficar perto de ~

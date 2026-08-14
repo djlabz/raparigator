@@ -2,32 +2,37 @@
 
 import { Star, ThumbsUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import type { ProfessionalAd, Review } from "@/lib/types";
+import { useAdReviews } from "@/lib/ad-reviews";
+import type { ProfessionalAd } from "@/lib/types";
+import { ReviewCta } from "./review-cta";
 
 interface StandardReviewsSectionProps {
   ad: ProfessionalAd;
-  reviews: Review[];
 }
 
-export function StandardReviewsSection({ ad, reviews }: StandardReviewsSectionProps) {
+export function StandardReviewsSection({ ad }: StandardReviewsSectionProps) {
+  const { reviews, rating, reviewsCount } = useAdReviews(ad);
+
   return (
     <Card className="space-y-4 rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm">
       <div className="flex flex-col gap-2 border-b border-zinc-100 pb-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="font-display text-lg sm:text-xl font-bold tracking-tight text-zinc-900">
-            Avaliações dos Clientes ({ad.reviewsCount})
+            Avaliações dos Clientes ({reviewsCount})
           </h3>
           <p className="text-xs text-zinc-500 sm:text-sm">
-            Comentários autênticos gerados após transações com custódia resolvida
+            Só quem conversou pelo chat e recebeu convite da profissional pode avaliar
           </p>
         </div>
         <div className="self-start rounded-full border border-amber-100 bg-amber-50 px-3 py-1 sm:self-center">
           <div className="flex items-center gap-1.5">
             <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
-            <span className="text-xs font-black text-amber-700">{ad.rating.toFixed(1)} / 5</span>
+            <span className="text-xs font-black text-amber-700">{rating.toFixed(1)} / 5</span>
           </div>
         </div>
       </div>
+
+      <ReviewCta ad={ad} />
 
       <div className="space-y-3">
         {reviews.length === 0 ? (
@@ -66,7 +71,7 @@ export function StandardReviewsSection({ ad, reviews }: StandardReviewsSectionPr
 
               <div className="animate-fade-in flex items-center gap-1 pl-10 pt-1 text-xs font-bold tracking-wider text-emerald-700 uppercase">
                 <ThumbsUp className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                Atendimento Recomendado
+                Perfil Recomendado
               </div>
             </article>
           ))

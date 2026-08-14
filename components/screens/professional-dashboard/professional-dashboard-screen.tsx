@@ -34,7 +34,11 @@ const AnnouncementTab = dynamic(
   { loading: () => <DashboardTabSkeleton /> },
 );
 
-const HistoryTab = dynamic(() => import("./history-tab").then((mod) => mod.HistoryTab), {
+const ContactsTab = dynamic(() => import("./contacts-tab").then((mod) => mod.ContactsTab), {
+  loading: () => <DashboardTabSkeleton />,
+});
+
+const ReviewsTab = dynamic(() => import("./reviews-tab").then((mod) => mod.ReviewsTab), {
   loading: () => <DashboardTabSkeleton />,
 });
 
@@ -70,7 +74,7 @@ const TABS = [
     ),
   },
   {
-    id: "Histórico",
+    id: "Contatos",
     icon: (
       <path
         strokeLinecap="round"
@@ -213,12 +217,10 @@ export function ProfessionalDashboardScreen() {
               onToggleStatus={() => setAdStatus((prev) => (prev === "Ativo" ? "Pausado" : "Ativo"))}
             />
           )}
-          {activeTab === "Avaliações" && (
-            <div className="p-4 bg-white rounded-xl shadow-sm">
-              <h2 className="text-lg font-bold">Avaliações em breve</h2>
-            </div>
+          {activeTab === "Avaliações" && <ReviewsTab adSlug={adSlug} />}
+          {activeTab === "Contatos" && (
+            <ContactsTab adSlug={adSlug} professionalName={currentAd.artisticName} />
           )}
-          {activeTab === "Histórico" && <HistoryTab />}
           {activeTab === "Verificação" && <VerificationTab />}
         </div>
       </div>

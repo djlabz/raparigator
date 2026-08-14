@@ -52,8 +52,8 @@ export function SummaryTab() {
           tip="R$ 200 acima da meta"
         />
         <MetricCardComDica
-          title="Atendimentos"
-          value={String(dashboardSummary.completedServices)}
+          title="Contatos"
+          value={String(dashboardSummary.contacts)}
           change={8}
           icon="👥"
           tip="Média de 1,5 por dia"
@@ -102,8 +102,8 @@ export function SummaryTab() {
             <p className="text-lg font-bold text-emerald-900 mt-1">+12% (R$ 3.200)</p>
           </div>
           <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-            <p className="text-xs text-emerald-600 font-semibold uppercase">Atendimentos ↑</p>
-            <p className="text-lg font-bold text-emerald-900 mt-1">+8% (4 atendimentos)</p>
+            <p className="text-xs text-emerald-600 font-semibold uppercase">Contatos ↑</p>
+            <p className="text-lg font-bold text-emerald-900 mt-1">+8% (4 contatos)</p>
           </div>
           <div className="p-3 bg-red-50 rounded-lg border border-red-200">
             <p className="text-xs text-red-600 font-semibold uppercase">Visualizações ↓</p>

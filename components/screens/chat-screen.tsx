@@ -17,6 +17,7 @@ import {
   RefreshCcw,
   Send,
   Shield,
+  Star,
   Trash2,
   WifiOff,
 } from "lucide-react";
@@ -58,18 +59,18 @@ import {
   subscribeChatStore,
   updateChatParticipantAlias,
 } from "@/lib/chat-store";
-import { ads } from "@/lib/mock-data";
+import { getConversationAd } from "@/lib/conversation-ad";
+import {
+  getInviteStatus,
+  hasTwoWayConversation,
+  sendReviewInvite,
+  useReviewInvites,
+  withdrawReviewInvite,
+} from "@/lib/review-invites";
 import type { AvailabilityStatus, Conversation, Message, ProfessionalAd } from "@/lib/types";
 import { useAuthSession } from "@/lib/auth-session";
 import { usePremiumPlan } from "@/lib/premium-plan";
 import { cn } from "@/lib/utils";
-
-const normalizeText = (value: string) =>
-  value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
 
 const getStatusColor = (status: Conversation["contactStatus"]) =>
   status === "online" ? "bg-emerald-500" : "bg-zinc-400";
@@ -284,6 +285,7 @@ type ToastState = { title: string; message: string; type?: "success" | "error" |
 export function ChatScreen() {
   const { isLoggedIn, user, role } = useAuthSession();
   const { isPremium, canSendViewOnce } = usePremiumPlan();
+  const { getInvite } = useReviewInvites();
   ensureChatStore();
   const snapshot = useSyncExternalStore(
     subscribeChatStore,
@@ -360,14 +362,7 @@ export function ChatScreen() {
   const participantAlias = activeConversation?.currentUserAlias ?? "";
   const currentDisplayName = participantAlias || globalAlias || "Cliente reservado";
 
-  const activeAd = useMemo(() => {
-    if (!activeConversation) return null;
-    return (
-      ads.find((ad) =>
-        normalizeText(ad.artisticName).includes(normalizeText(activeConversation.contactName)),
-      ) ?? null
-    );
-  }, [activeConversation]);
+  const activeAd = useMemo(() => getConversationAd(activeConversation), [activeConversation]);
 
   const currentMessages = useMemo(
     () =>
@@ -380,9 +375,7 @@ export function ChatScreen() {
   const conversationAvatars = useMemo(() => {
     return Object.fromEntries(
       localConversations.map((conversation) => {
-        const ad = ads.find((item) =>
-          normalizeText(item.artisticName).includes(normalizeText(conversation.contactName)),
-        );
+        const ad = getConversationAd(conversation);
         return [conversation.id, ad?.images[0] ?? null];
       }),
     );
@@ -392,6 +385,58 @@ export function ChatScreen() {
     setToast(payload);
     window.setTimeout(() => setToast(null), 3600);
   };
+
+  const reviewInviteControl = useMemo(() => {
+    if (role !== "profissional" || !activeConversation || !activeAd) {
+      return null;
+    }
+
+    const status = getInviteStatus(getInvite(activeConversation.id));
+
+    if (status === "used") {
+      return { label: "Perfil já avaliado por este contato", disabled: true, onClick: () => {} };
+    }
+
+    if (status === "open") {
+      return {
+        label: "Retirar convite de avaliação",
+        disabled: false,
+        onClick: () => {
+          withdrawReviewInvite(activeConversation.id);
+          showToast({
+            type: "success",
+            title: "Convite retirado",
+            message: "Este contato não pode mais avaliar seu perfil.",
+          });
+        },
+      };
+    }
+
+    if (activeConversation.isBlocked || !hasTwoWayConversation(currentMessages)) {
+      return {
+        label: "Convidar para avaliar",
+        disabled: true,
+        onClick: () => {},
+      };
+    }
+
+    return {
+      label: "Convidar para avaliar",
+      disabled: false,
+      onClick: () => {
+        sendReviewInvite({
+          conversationId: activeConversation.id,
+          adSlug: activeAd.slug,
+          professionalName: activeAd.artisticName,
+        });
+        showToast({
+          type: "success",
+          title: "Convite enviado",
+          message: "O contato foi avisado e pode avaliar seu perfil.",
+        });
+      },
+    };
+  }, [activeAd, activeConversation, currentMessages, getInvite, role]);
 
   const loadChat = () => {
     try {
@@ -951,6 +996,7 @@ export function ChatScreen() {
               lastSentMessageId={lastSentMessageId}
               participantAlias={participantAlias}
               profilePanelOpen={profilePanelOpen}
+              reviewInviteControl={reviewInviteControl}
               scrollRef={scrollRef}
               showBackButton={false}
               whatsappUrl={whatsappUrl}
@@ -989,6 +1035,7 @@ export function ChatScreen() {
                 lastSentMessageId={lastSentMessageId}
                 participantAlias={participantAlias}
                 profilePanelOpen={profilePanelOpen}
+                reviewInviteControl={reviewInviteControl}
                 scrollRef={scrollRef}
                 showBackButton
                 whatsappUrl={whatsappUrl}
@@ -1213,6 +1260,7 @@ function ConversationThread({
   lastSentMessageId,
   participantAlias,
   profilePanelOpen,
+  reviewInviteControl,
   scrollRef,
   showBackButton,
   whatsappUrl,
@@ -1240,6 +1288,7 @@ function ConversationThread({
   lastSentMessageId: string | null;
   participantAlias: string;
   profilePanelOpen: boolean;
+  reviewInviteControl: { label: string; disabled: boolean; onClick: () => void } | null;
   scrollRef: RefObject<HTMLDivElement | null>;
   showBackButton: boolean;
   whatsappUrl: string;
@@ -1375,6 +1424,18 @@ function ConversationThread({
               >
                 Ir para WhatsApp
               </a>
+
+              {reviewInviteControl ? (
+                <button
+                  type="button"
+                  disabled={reviewInviteControl.disabled}
+                  onClick={reviewInviteControl.onClick}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:text-zinc-400 disabled:hover:bg-transparent"
+                >
+                  <Star size={16} />
+                  {reviewInviteControl.label}
+                </button>
+              ) : null}
 
               <button
                 type="button"

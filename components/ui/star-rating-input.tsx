@@ -14,7 +14,7 @@ export function StarRatingInput({ value, onChange, disabled }: StarRatingInputPr
 
   return (
     <fieldset className="flex items-center gap-1 border-0 p-0" disabled={disabled}>
-      <legend className="sr-only">Nota do atendimento</legend>
+      <legend className="sr-only">Nota do perfil</legend>
       {Array.from({ length: 5 }).map((_, index) => {
         const star = index + 1;
         const active = star <= value;

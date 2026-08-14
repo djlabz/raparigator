@@ -35,8 +35,7 @@ export function SidebarCta({ role, setRiskTarget }: SidebarCtaProps) {
         </div>
 
         <p className="text-sm text-zinc-400 leading-relaxed max-w-62.5 font-medium">
-          Sinta o privilégio de um encontro inesquecível. Entre em contato diretamente para alinhar
-          os detalhes com total privacidade.
+          Fale diretamente com a profissional pelo chat da plataforma, com total privacidade.
         </p>
 
         <div className="w-full flex items-center justify-center gap-4 py-2 border-y border-white/5">

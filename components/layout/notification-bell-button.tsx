@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import type { AuthRole } from "@/lib/types";
-import { useAccountNotifications } from "@/lib/account-notifications";
+import { getNotificationHref, useAccountNotifications } from "@/lib/account-notifications";
 import { chromeCircle } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
 import { NotificationsCenter } from "./notifications-center";
@@ -107,7 +107,7 @@ export function NotificationBellButton({ role, className }: NotificationBellButt
           onSelect={(notification) => {
             markAsRead(notification.id);
             setOpen(false);
-            window.location.href = "/conta#profile-workflow";
+            window.location.href = getNotificationHref(notification);
           }}
         />
       ) : null}

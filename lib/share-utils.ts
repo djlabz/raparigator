@@ -4,7 +4,7 @@ export function getShareProfileUrl(slug: string): string {
 
 export function getShareCopyText(name: string, slug: string): string {
   const url = getShareProfileUrl(slug);
-  return `Confira o perfil de ${name} na Sigillus. Acesse o link abaixo para ver o portfólio completo, fotos exclusivas e mais detalhes sobre o atendimento:\n${url}`;
+  return `Confira o perfil de ${name} na Sigillus. Acesse o link abaixo para ver o portfólio completo e as fotos exclusivas:\n${url}`;
 }
 
 function getChatText(name: string, slug: string): string {
@@ -14,11 +14,10 @@ function getChatText(name: string, slug: string): string {
 Encontrei seu perfil na Sigillus e fiquei admirado com a sua apresentação. 
 ${url}
 
-Gostaria de verificar a sua disponibilidade e conhecer mais detalhes sobre o seu atendimento.
+Gostaria de conversar e conhecer mais sobre você.
 
 ✨ *Padrão de Excelência Sigillus:*
 🛡️ *Cavalheirismo:* O respeito e a cordialidade são inegociáveis durante todo o contato.
-💎 *Valorização:* Nossas profissionais operam com tarifas fixas. Agradecemos por não insistir em negociações ou descontos.
 📸 *Privacidade:* Todo o portfólio visual já se encontra disponível no perfil.
 
 Aguardo o seu retorno!`;

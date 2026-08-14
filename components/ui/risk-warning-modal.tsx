@@ -16,7 +16,7 @@ export function RiskWarningModal({ open, onClose, onConfirm }: RiskWarningModalP
       open={open}
       onClose={onClose}
       title="🛡️ Aviso de Segurança"
-      description="Você está prestes a ser redirecionado para fora da Sigillus. Lembre-se de que, ao continuar o atendimento via WhatsApp ou Telegram, não poderemos garantir o monitoramento, o suporte e a rastreabilidade oferecidos pela nossa plataforma."
+      description="Você está prestes a ser redirecionado para fora da Sigillus. Conversas no WhatsApp ou no Telegram acontecem fora da plataforma, então os recursos de segurança do nosso chat — apelido, bloqueio e denúncia — não valem por lá."
       actions={
         <>
           <Button variant="secondary" fullWidth onClick={onClose}>
