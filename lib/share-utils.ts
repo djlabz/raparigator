@@ -1,3 +1,6 @@
+import { buildBriefMessageText } from "@/lib/encounter-brief";
+import type { EncounterBrief } from "@/lib/types";
+
 export function getShareProfileUrl(slug: string): string {
   return `https://sigillus.app/p/${slug}`;
 }
@@ -7,7 +10,11 @@ export function getShareCopyText(name: string, slug: string): string {
   return `Confira o perfil de ${name} na Sigillus. Acesse o link abaixo para ver o portfólio completo e as fotos exclusivas:\n${url}`;
 }
 
-function getChatText(name: string, slug: string): string {
+function getChatText(name: string, slug: string, brief?: EncounterBrief | null): string {
+  if (brief) {
+    return buildBriefMessageText(brief);
+  }
+
   const url = getShareProfileUrl(slug);
   return `Olá, ${name}.
 
@@ -34,14 +41,36 @@ export function getTelegramShareUrl(name: string, slug: string): string {
   return `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
 }
 
-export function getWhatsAppChatUrl(name: string, slug: string, phone: string): string {
-  const text = getChatText(name, slug);
+export function getExternalContactText(
+  name: string,
+  slug: string,
+  brief?: EncounterBrief | null,
+): string {
+  return getChatText(name, slug, brief);
+}
+
+export function getWhatsAppChatUrl(
+  name: string,
+  slug: string,
+  phone: string,
+  brief?: EncounterBrief | null,
+): string {
+  const text = getChatText(name, slug, brief);
   const cleanPhone = phone.replace(/\D/g, "");
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
 }
 
-export function getTelegramChatUrl(name: string, slug: string, username: string): string {
-  const text = getChatText(name, slug);
+/**
+ * O Telegram ignora `?text=` em links diretos de usuário — a mensagem precisa ser
+ * copiada para a área de transferência pelo chamador (ver `getExternalContactText`).
+ */
+export function getTelegramChatUrl(
+  name: string,
+  slug: string,
+  username: string,
+  brief?: EncounterBrief | null,
+): string {
+  const text = getChatText(name, slug, brief);
   const cleanUsername = username.replace(/^@/, "");
   return `https://t.me/${cleanUsername}?text=${encodeURIComponent(text)}`;
 }
