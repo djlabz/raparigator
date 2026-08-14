@@ -8,7 +8,12 @@ import { PixIcon } from "@/components/ui/pix-icon";
 import { CashIcon } from "@/components/ui/cash-icon";
 import { VerifiedCheckIcon } from "@/components/ui/verified-check-icon";
 import { TelegramIcon, WhatsAppIcon } from "@/components/ui/contact-icons";
-import type { ProfessionalAd } from "@/lib/types";
+import {
+  ENCOUNTER_SIMULATOR_ANCHOR,
+  ENCOUNTER_SIMULATOR_SCROLL_MARGIN,
+} from "@/lib/encounter-brief";
+import { useContactCta } from "./use-contact-cta";
+import type { EncounterBrief, ProfessionalAd } from "@/lib/types";
 import { cn, currency } from "@/lib/utils";
 
 const PAYMENT_METHOD_OPTIONS = [
@@ -69,6 +74,7 @@ interface StandardSchedulingSimulatorProps {
   totalCalculatedValue: number;
   role: string;
   setRiskTarget: (target: "WhatsApp" | "Telegram") => void;
+  brief: EncounterBrief | null;
 }
 
 export function StandardSchedulingSimulator({
@@ -82,9 +88,18 @@ export function StandardSchedulingSimulator({
   totalCalculatedValue,
   role,
   setRiskTarget,
+  brief,
 }: StandardSchedulingSimulatorProps) {
+  const { onLoginClick, openChatWithBrief } = useContactCta(brief);
+
   return (
-    <Card className="relative space-y-5 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm sm:p-6">
+    <Card
+      id={ENCOUNTER_SIMULATOR_ANCHOR}
+      className={cn(
+        "relative space-y-5 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm sm:p-6",
+        ENCOUNTER_SIMULATOR_SCROLL_MARGIN,
+      )}
+    >
       <div className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-2">
           <h3 className="flex min-w-0 items-center gap-2.5 font-display text-lg font-bold tracking-tight text-zinc-900 sm:text-xl">
@@ -282,17 +297,19 @@ export function StandardSchedulingSimulator({
           {role === "visitor" ? (
             <Link
               href="/auth/login"
+              onClick={onLoginClick}
               className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 font-bold text-white! shadow-sm ring-1 ring-zinc-950/5 transition-all hover:bg-zinc-800 active:scale-[0.98]"
             >
               <Lock className="h-4 w-4" /> Entrar para Interagir
             </Link>
           ) : (
-            <Link
-              href="/chat"
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-wine-700 font-bold text-white! shadow-sm transition-all hover:bg-wine-800 active:scale-[0.98]"
+            <button
+              type="button"
+              onClick={openChatWithBrief}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-wine-700 font-bold text-white shadow-sm transition-all hover:bg-wine-800 active:scale-[0.98]"
             >
               <MessageSquare className="h-4 w-4" /> Chat Direto
-            </Link>
+            </button>
           )}
           <div className="flex items-center gap-2.5 w-full">
             <button

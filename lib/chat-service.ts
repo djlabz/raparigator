@@ -1,4 +1,4 @@
-import type { Message } from "@/lib/types";
+import type { EncounterBrief, Message } from "@/lib/types";
 
 export async function delay(ms = 260): Promise<void> {
   await new Promise<void>((resolve) => {
@@ -23,6 +23,32 @@ export async function fetchTextMessage(
     content,
     messageType: "text",
     status: "sent",
+    sentAt: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+    deliveredAt: null,
+    editedAt: null,
+    deletedAt: null,
+  };
+}
+
+export async function fetchBriefMessage(
+  conversationId: string,
+  brief: EncounterBrief,
+  greeting: string,
+  senderDisplayName: string,
+): Promise<Message> {
+  // BACKEND: POST /api/chat/conversations/:conversationId/messages/brief
+  await delay(460);
+  return {
+    id: `brief-${Date.now()}`,
+    conversationId,
+    senderId: "current-user",
+    senderRole: "cliente",
+    senderDisplayName,
+    from: "me",
+    content: greeting,
+    messageType: "brief",
+    status: "sent",
+    brief: { ...brief, extras: [...brief.extras] },
     sentAt: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
     deliveredAt: null,
     editedAt: null,

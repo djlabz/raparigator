@@ -3,13 +3,18 @@
 import Link from "next/link";
 import { Lock, MessageSquare, ShieldCheck, Star } from "lucide-react";
 import { TelegramIcon, WhatsAppIcon } from "@/components/ui/contact-icons";
+import { useContactCta } from "./use-contact-cta";
+import type { EncounterBrief } from "@/lib/types";
 
 interface StandardSidebarCtaProps {
   role: string;
   setRiskTarget: (target: "WhatsApp" | "Telegram") => void;
+  brief: EncounterBrief | null;
 }
 
-export function StandardSidebarCta({ role, setRiskTarget }: StandardSidebarCtaProps) {
+export function StandardSidebarCta({ role, setRiskTarget, brief }: StandardSidebarCtaProps) {
+  const { onLoginClick, openChatWithBrief } = useContactCta(brief);
+
   return (
     <div className="sticky top-20 flex w-full flex-col gap-4">
       <div className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
@@ -32,17 +37,19 @@ export function StandardSidebarCta({ role, setRiskTarget }: StandardSidebarCtaPr
             {role === "visitor" ? (
               <Link
                 href="/auth/login"
+                onClick={onLoginClick}
                 className="group/btn relative flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 font-bold text-white! shadow-sm transition-all hover:bg-zinc-800"
               >
                 <Lock className="h-4 w-4" /> Entrar para Interagir
               </Link>
             ) : (
-              <Link
-                href="/chat"
-                className="group/btn relative flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-wine-700 font-bold text-white! shadow-sm transition-all hover:bg-wine-800"
+              <button
+                type="button"
+                onClick={openChatWithBrief}
+                className="group/btn relative flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-wine-700 font-bold text-white shadow-sm transition-all hover:bg-wine-800"
               >
                 <MessageSquare className="h-4 w-4" /> Iniciar Chat Direto
-              </Link>
+              </button>
             )}
 
             <div className="flex items-center gap-2 w-full">

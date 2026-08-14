@@ -1,20 +1,23 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { MessageSquare, X } from "lucide-react";
 import type { ProfessionalAd } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { TelegramIcon, WhatsAppIcon } from "@/components/ui/contact-icons";
 import { useMobileContactFab } from "./use-mobile-contact-fab";
+import { useContactCta } from "./use-contact-cta";
+import type { EncounterBrief } from "@/lib/types";
 
 interface MobileContactFabProps {
   ad: ProfessionalAd;
   setRiskTarget: (target: "WhatsApp" | "Telegram") => void;
+  brief: EncounterBrief | null;
 }
 
-export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
+export function MobileContactFab({ ad, setRiskTarget, brief }: MobileContactFabProps) {
+  const { openChatWithBrief } = useContactCta(brief);
   const {
     isOpen,
     showTooltip,
@@ -87,12 +90,14 @@ export function MobileContactFab({ ad, setRiskTarget }: MobileContactFabProps) {
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 className="absolute"
               >
-                <Link
-                  href="/chat"
+                <button
+                  type="button"
+                  onClick={openChatWithBrief}
+                  aria-label="Abrir chat direto"
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-[#96001e] text-white shadow-lg ring-1 ring-white/20"
                 >
                   <MessageSquare className="h-4 w-4 fill-white text-white" />
-                </Link>
+                </button>
               </motion.div>
 
               <motion.div
