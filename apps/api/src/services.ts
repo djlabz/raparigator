@@ -8,6 +8,7 @@ import type { ObjectStorage } from "./lib/storage";
 import { createAdsService } from "./modules/ads/service";
 import { createCatalogsService } from "./modules/catalogs/service";
 import { createFeedService } from "./modules/feed/service";
+import { createNotificationsService } from "./modules/notifications/service";
 import { createProfileRepository } from "./modules/profiles/repository";
 
 export type ServiceDeps = {
@@ -23,11 +24,14 @@ export type ServiceDeps = {
 export type Services = ReturnType<typeof createServices>;
 
 export function createServices(deps: ServiceDeps) {
-  const profiles = createProfileRepository(deps.db, deps.storage);
+  const { db, logger, storage, jobs, chatEvents } = deps;
+  const profiles = createProfileRepository(db, storage);
+  const notifications = createNotificationsService({ db });
   return {
     profiles,
-    catalogs: createCatalogsService(deps.db),
+    notifications,
+    catalogs: createCatalogsService(db),
     feed: createFeedService(profiles),
-    ads: createAdsService(deps.db, profiles),
+    ads: createAdsService(db, profiles),
   };
 }
