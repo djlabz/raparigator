@@ -2,31 +2,13 @@
 
 import { useMemo, useSyncExternalStore } from "react";
 import { pushNotification, removeNotification } from "@/lib/account-notifications";
-import type { Message } from "@/lib/types";
+import type { InviteStatus, Message, ReviewInvite, SubmittedReview } from "@sigillus/contracts";
+
+export type { InviteStatus, ReviewInvite, SubmittedReview };
 
 const STORAGE_KEY = "sigillus-review-invites";
 
 const INVITE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
-
-export interface ReviewInvite {
-  conversationId: string;
-  adSlug: string;
-  invitedAt: string;
-  expiresAt: string;
-  usedAt?: string | null;
-}
-
-export interface SubmittedReview {
-  id: string;
-  adSlug: string;
-  conversationId: string;
-  author: string;
-  score: number;
-  comment: string;
-  createdAt: string;
-}
-
-export type InviteStatus = "none" | "open" | "expired" | "used";
 
 interface ReviewInvitesState {
   invites: ReviewInvite[];

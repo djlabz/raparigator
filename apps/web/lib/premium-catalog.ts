@@ -1,12 +1,6 @@
-import type { PremiumBillingCycle } from "@/lib/types";
+import type { PremiumBillingCycle, PremiumPlanOption } from "@sigillus/contracts";
 
-export interface PremiumPlanOption {
-  cycle: PremiumBillingCycle;
-  label: string;
-  price: number;
-  monthlyEquivalent: number;
-  badge?: string;
-}
+export type { PremiumPlanOption };
 
 export interface PremiumImmediateGain {
   id: string;

@@ -1,18 +1,10 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
-import type { AuthRole } from "./types";
-import { getRoleLabel } from "./navigation";
+import type { AccountNotificationItem, AuthRole } from "@sigillus/contracts";
 
-export interface AccountNotificationItem {
-  id: string;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  /** Destino ao clicar; sem isso a notificação cai na página da conta */
-  href?: string;
-}
+export type { AccountNotificationItem };
+import { getRoleLabel } from "./navigation";
 
 const DEFAULT_NOTIFICATION_HREF = "/conta#profile-workflow";
 

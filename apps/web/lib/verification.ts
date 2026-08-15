@@ -1,26 +1,19 @@
+import type {
+  VerificationChannel,
+  VerificationChannelState,
+  VerificationState,
+  VerificationTargets,
+} from "@sigillus/contracts";
+
+export type {
+  VerificationChannel,
+  VerificationChannelState,
+  VerificationState,
+  VerificationTargets,
+};
+
 const STORAGE_KEY_PREFIX = "sigillus-verification-state";
 const VERIFICATION_CODE_TTL_MS = 10 * 60 * 1000;
-
-export type VerificationChannel = "email" | "phone";
-
-export interface VerificationChannelState {
-  target: string;
-  verified: boolean;
-  verifiedAt: number | null;
-  pendingCode: string | null;
-  codeSentAt: number | null;
-  attempts: number;
-}
-
-export interface VerificationState {
-  email: VerificationChannelState;
-  phone: VerificationChannelState;
-}
-
-export interface VerificationTargets {
-  email: string;
-  phone: string;
-}
 
 function createChannelState(target: string): VerificationChannelState {
   return {

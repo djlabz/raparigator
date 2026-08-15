@@ -3,13 +3,9 @@
 import { useMemo } from "react";
 import { reviews as seededReviews } from "@/lib/mock-data";
 import { useReviewInvites } from "@/lib/review-invites";
-import type { ProfessionalAd, Review } from "@/lib/types";
+import type { AdReviewsSummary, ProfessionalAd, Review } from "@sigillus/contracts";
 
-export interface AdReviewsSummary {
-  reviews: Review[];
-  rating: number;
-  reviewsCount: number;
-}
+export type { AdReviewsSummary };
 
 /**
  * Junta as avaliações semeadas com as enviadas por contatos convidados e
