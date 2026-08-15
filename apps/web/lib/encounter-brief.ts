@@ -1,11 +1,20 @@
-import { currency } from "@/lib/utils";
-import type { EncounterBrief, ProfessionalAd, SimulationSelection } from "@/lib/types";
+import {
+  ENCOUNTER_FALLBACK_ORIGIN,
+  ENCOUNTER_SIMULATOR_ANCHOR,
+  buildBriefMessageText as buildBriefMessageTextWithOrigin,
+  getSimulationUrl as getSimulationUrlWithOrigin,
+} from "@sigillus/domain";
+import type { EncounterBrief, SimulationSelection } from "@sigillus/contracts";
+
+export {
+  ENCOUNTER_SIMULATOR_ANCHOR,
+  buildBriefGreeting,
+  buildEncounterBrief,
+  decodeBriefSelection,
+  encodeBriefParams,
+} from "@sigillus/domain";
 
 const SIMULATION_DRAFT_KEY = "sigillus-sim-draft";
-const FALLBACK_ORIGIN = "https://sigillus.app";
-
-/** Âncora do Simulador de Encontro na página do anúncio */
-export const ENCOUNTER_SIMULATOR_ANCHOR = "simulador-de-encontro";
 
 /** Afasta a âncora do cabeçalho fixo (4rem no mobile, 5rem no desktop) */
 export const ENCOUNTER_SIMULATOR_SCROLL_MARGIN =
@@ -15,94 +24,16 @@ export function getAdEditHref(adSlug: string): string {
   return `/anuncio/${adSlug}#${ENCOUNTER_SIMULATOR_ANCHOR}`;
 }
 
-export function buildEncounterBrief(
-  ad: ProfessionalAd,
-  duration: string,
-  extras: string[],
-  basePrice: number,
-  extrasCost: number,
-  total: number,
-): EncounterBrief {
-  return {
-    adSlug: ad.slug,
-    artisticName: ad.artisticName,
-    duration,
-    basePrice,
-    extras: [...extras],
-    extrasCost,
-    total,
-  };
-}
-
-export function encodeBriefParams(selection: SimulationSelection): URLSearchParams {
-  const params = new URLSearchParams();
-  params.set("d", selection.duration);
-  if (selection.extras.length > 0) {
-    params.set("e", selection.extras.join("|"));
-  }
-  return params;
-}
-
-export function decodeBriefSelection(
-  search: string,
-  ad: ProfessionalAd,
-): SimulationSelection | null {
-  const params = new URLSearchParams(search);
-  const rawDuration = params.get("d");
-  const rawExtras = params.get("e");
-
-  if (!rawDuration && !rawExtras) {
-    return null;
-  }
-
-  const duration = ad.pricingTable.find((plan) => plan.label === rawDuration)?.label;
-  const extras = (rawExtras ? rawExtras.split("|") : []).filter((extra) =>
-    ad.services.includes(extra),
-  );
-
-  if (!duration && extras.length === 0) {
-    return null;
-  }
-
-  return {
-    duration: duration ?? ad.pricingTable[0]?.label ?? "",
-    extras,
-  };
+function currentOrigin(): string {
+  return typeof window === "undefined" ? ENCOUNTER_FALLBACK_ORIGIN : window.location.origin;
 }
 
 export function getSimulationUrl(brief: EncounterBrief): string {
-  const origin = typeof window === "undefined" ? FALLBACK_ORIGIN : window.location.origin;
-  const params = encodeBriefParams({ duration: brief.duration, extras: brief.extras });
-  return `${origin}/p/${brief.adSlug}?${params.toString()}`;
+  return getSimulationUrlWithOrigin(brief, currentOrigin());
 }
 
 export function buildBriefMessageText(brief: EncounterBrief): string {
-  const lines = [
-    `Olá, ${brief.artisticName}! ✨`,
-    "",
-    "Vi seu anúncio na Sigillus e me interessei pela sua apresentação.",
-    "",
-    "📋 *O que tenho em mente:*",
-    `⏳ Duração: ${brief.duration}`,
-  ];
-
-  if (brief.extras.length > 0) {
-    lines.push(`➕ Adicionais: ${brief.extras.join(", ")}`);
-  }
-
-  lines.push(
-    `💰 Estimativa: ${currency(brief.total)}`,
-    "",
-    `🔗 Simulação completa: ${getSimulationUrl(brief)}`,
-    "",
-    "Podemos conversar sobre disponibilidade e como você prefere combinar? 🙏",
-  );
-
-  return lines.join("\n");
-}
-
-export function buildBriefGreeting(brief: EncounterBrief): string {
-  return `Olá, ${brief.artisticName}! Vi seu anúncio e montei uma simulação de encontro. Dá uma olhada no que tenho em mente e me diz se funciona pra você. ✨`;
+  return buildBriefMessageTextWithOrigin(brief, currentOrigin());
 }
 
 function readSessionJson<T>(key: string): T | null {

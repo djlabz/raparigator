@@ -1,6 +1,7 @@
-import type { PremiumBillingCycle, PremiumPlanOption } from "@sigillus/contracts";
+import type { PremiumPlanOption } from "@sigillus/contracts";
 
 export type { PremiumPlanOption };
+export { PREMIUM_PLAN_OPTIONS, getBillingSavingsPercent, getPlanOption } from "@sigillus/domain";
 
 export interface PremiumImmediateGain {
   id: string;
@@ -10,31 +11,11 @@ export interface PremiumImmediateGain {
   exclusive?: boolean;
 }
 
-export const PREMIUM_PLAN_OPTIONS: PremiumPlanOption[] = [
-  {
-    cycle: "monthly",
-    label: "Mensal",
-    price: 10,
-    monthlyEquivalent: 10,
-  },
-  {
-    cycle: "semiannual",
-    label: "Semestral",
-    price: 30,
-    monthlyEquivalent: 5,
-    badge: "50% off",
-  },
-];
-
 export const PREMIUM_EXCLUSIVE_FEATURES = [
   "Visualização única",
   "Apelido por cliente/conversa",
   "Acesso prioritário a novos recursos e benefícios",
 ] as const;
-
-export function getPlanOption(cycle: PremiumBillingCycle): PremiumPlanOption {
-  return PREMIUM_PLAN_OPTIONS.find((option) => option.cycle === cycle) ?? PREMIUM_PLAN_OPTIONS[0];
-}
 
 export function getSharedGains(): PremiumImmediateGain[] {
   return [
@@ -78,13 +59,4 @@ export function getImmediateGains(): PremiumImmediateGain[] {
       exclusive: true,
     },
   ];
-}
-
-export function getBillingSavingsPercent(): number {
-  const monthly = getPlanOption("monthly").monthlyEquivalent;
-  const semiannual = getPlanOption("semiannual").monthlyEquivalent;
-  if (monthly <= 0) {
-    return 0;
-  }
-  return Math.round(((monthly - semiannual) / monthly) * 100);
 }

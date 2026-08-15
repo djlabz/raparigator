@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
   },
   output: "standalone",
   outputFileTracingRoot: path.join(__dirname, "../.."),
-  transpilePackages: ["motion", "@sigillus/contracts"],
+  transpilePackages: ["motion", "@sigillus/contracts", "@sigillus/domain"],
   allowedDevOrigins: ["*.trycloudflare.com"],
 };
 

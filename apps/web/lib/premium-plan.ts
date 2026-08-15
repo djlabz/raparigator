@@ -1,16 +1,20 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import type { PlanTier } from "@/lib/types";
+import type { PlanTier } from "@sigillus/contracts";
+import { getPlanLimits } from "@sigillus/domain";
+
+export {
+  PREMIUM_PHOTO_LIMIT,
+  PREMIUM_VIDEO_LIMIT,
+  PREMIUM_VISIBILITY_MULTIPLIER,
+  STANDARD_PHOTO_LIMIT,
+  STANDARD_VIDEO_LIMIT,
+} from "@sigillus/domain";
 
 const PLAN_STORAGE_KEY = "sigillus-premium-plan";
 const VIEW_ONCE_COUNT_KEY = "sigillus-view-once-count";
 
-export const STANDARD_PHOTO_LIMIT = 10;
-export const STANDARD_VIDEO_LIMIT = 3;
-export const PREMIUM_PHOTO_LIMIT = 100;
-export const PREMIUM_VIDEO_LIMIT = 50;
-export const PREMIUM_VISIBILITY_MULTIPLIER = 1.6;
 export const PREMIUM_UPLOAD_ERROR_MESSAGE = "Houve um erro ao fazer o upload";
 
 const listeners = new Set<() => void>();
@@ -67,15 +71,16 @@ export function usePremiumPlan() {
   const viewOnceUsed = useSyncExternalStore<number>(subscribe, readViewOnceCount, () => 0);
 
   const isPremium = plan === "premium";
+  const limits = getPlanLimits(plan);
 
   return {
     plan,
     isPremium,
     activatePremium,
     viewOnceUsed,
-    canSendViewOnce: isPremium,
+    canSendViewOnce: limits.canSendViewOnce,
     registerViewOnceSend,
-    photoLimit: isPremium ? PREMIUM_PHOTO_LIMIT : STANDARD_PHOTO_LIMIT,
-    videoLimit: isPremium ? PREMIUM_VIDEO_LIMIT : STANDARD_VIDEO_LIMIT,
+    photoLimit: limits.photoLimit,
+    videoLimit: limits.videoLimit,
   };
 }

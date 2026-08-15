@@ -10,29 +10,17 @@ import type {
   WeeklySignup,
 } from "./types";
 
-export const states = ["SP", "RJ", "MG", "PR", "SC", "RS"];
-export const cities = [
-  "Sao Paulo",
-  "Campinas",
-  "Santos",
-  "Rio de Janeiro",
-  "Belo Horizonte",
-  "Curitiba",
-];
-export const categories = ["Feminina", "Masculino", "Trans", "Casais"];
+import {
+  CATALOG_CATEGORIES,
+  CATALOG_CITIES,
+  CATALOG_LOCATIONS,
+  CATALOG_STATES,
+} from "@sigillus/domain";
 
-export const locationsData = [
-  { city: "São Paulo", state: "SP" },
-  { city: "Rio de Janeiro", state: "RJ" },
-  { city: "Belo Horizonte", state: "MG" },
-  { city: "Aracaju", state: "SE" },
-  { city: "Curitiba", state: "PR" },
-  { city: "Salvador", state: "BA" },
-  { city: "Florianópolis", state: "SC" },
-  { city: "Porto Alegre", state: "RS" },
-  { city: "Brasília", state: "DF" },
-  // Adicione outras cidades conforme necessário
-];
+export const states = CATALOG_STATES;
+export const cities = CATALOG_CITIES;
+export const categories = CATALOG_CATEGORIES;
+export const locationsData = CATALOG_LOCATIONS;
 
 export const ads: ProfessionalAd[] = [
   {

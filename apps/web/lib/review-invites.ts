@@ -2,13 +2,13 @@
 
 import { useMemo, useSyncExternalStore } from "react";
 import { pushNotification, removeNotification } from "@/lib/account-notifications";
-import type { InviteStatus, Message, ReviewInvite, SubmittedReview } from "@sigillus/contracts";
+import type { InviteStatus, ReviewInvite, SubmittedReview } from "@sigillus/contracts";
+import { REVIEW_INVITE_TTL_MS, getInviteStatus } from "@sigillus/domain";
 
 export type { InviteStatus, ReviewInvite, SubmittedReview };
+export { getInviteDaysLeft, getInviteStatus, hasTwoWayConversation } from "@sigillus/domain";
 
 const STORAGE_KEY = "sigillus-review-invites";
-
-const INVITE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 
 interface ReviewInvitesState {
   invites: ReviewInvite[];
@@ -103,23 +103,6 @@ function writeState(next: ReviewInvitesState) {
   emitChange();
 }
 
-export function getInviteStatus(invite: ReviewInvite | undefined): InviteStatus {
-  if (!invite) {
-    return "none";
-  }
-
-  if (invite.usedAt) {
-    return "used";
-  }
-
-  return Date.parse(invite.expiresAt) <= Date.now() ? "expired" : "open";
-}
-
-export function getInviteDaysLeft(invite: ReviewInvite): number {
-  const remaining = Date.parse(invite.expiresAt) - Date.now();
-  return Math.max(0, Math.ceil(remaining / (24 * 60 * 60 * 1000)));
-}
-
 function findInvite(state: ReviewInvitesState, conversationId: string) {
   return state.invites.find((invite) => invite.conversationId === conversationId);
 }
@@ -138,7 +121,7 @@ export function inviteToReview(conversationId: string, adSlug: string): boolean 
     conversationId,
     adSlug,
     invitedAt: new Date(now).toISOString(),
-    expiresAt: new Date(now + INVITE_TTL_MS).toISOString(),
+    expiresAt: new Date(now + REVIEW_INVITE_TTL_MS).toISOString(),
     usedAt: null,
   };
 
@@ -200,29 +183,6 @@ export function submitReview(input: {
   });
 
   return true;
-}
-
-/**
- * Primeira camada do gate: só existe convite possível quando a conversa é real,
- * com mensagens dos dois lados dentro da plataforma.
- */
-export function hasTwoWayConversation(messages: Message[]): boolean {
-  let fromClient = false;
-  let fromProfessional = false;
-
-  for (const message of messages) {
-    if (message.senderRole === "cliente") {
-      fromClient = true;
-    } else if (message.senderRole === "profissional") {
-      fromProfessional = true;
-    }
-
-    if (fromClient && fromProfessional) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 function inviteNotificationId(conversationId: string) {
