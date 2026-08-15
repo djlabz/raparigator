@@ -4,7 +4,7 @@ import path from "node:path";
 import { Client } from "pg";
 import { createDatabase, type Database } from "../../src/db/client";
 
-const TEST_DB_NAME = "sigillus_test";
+const TEST_DB_NAME = process.env.TEST_DB_NAME ?? "sigillus_test";
 
 function adminUrl(databaseUrl: string) {
   const url = new URL(databaseUrl);
