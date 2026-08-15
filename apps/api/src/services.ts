@@ -13,6 +13,7 @@ import { createFeedService } from "./modules/feed/service";
 import { createMediaService } from "./modules/media/service";
 import { createNotificationsService } from "./modules/notifications/service";
 import { createProfileRepository } from "./modules/profiles/repository";
+import { createReviewsService } from "./modules/reviews/service";
 
 export type ServiceDeps = {
   config: AppConfig;
@@ -39,5 +40,6 @@ export function createServices(deps: ServiceDeps) {
     announcements: createAnnouncementsService({ db, profiles, logger }),
     media: createMediaService({ db, profiles, storage, jobs, logger }),
     chat: createChatService({ db, profiles, storage, chatEvents, logger }),
+    reviews: createReviewsService({ db, profiles, notifications, jobs, logger }),
   };
 }

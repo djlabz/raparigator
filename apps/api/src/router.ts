@@ -6,6 +6,7 @@ import { chatRouter } from "./modules/chat/router";
 import { feedRouter } from "./modules/feed/router";
 import { mediaRouter } from "./modules/media/router";
 import { notificationsRouter } from "./modules/notifications/router";
+import { reviewsRouter } from "./modules/reviews/router";
 
 export const router = {
   auth: authRouter,
@@ -15,6 +16,7 @@ export const router = {
   announcements: announcementsRouter,
   media: mediaRouter,
   chat: chatRouter,
+  reviews: reviewsRouter,
   notifications: notificationsRouter,
 };
 
