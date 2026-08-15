@@ -16,6 +16,7 @@
   "dependencies": {
     "@orpc/client": "1.15.0",
     "@orpc/contract": "1.15.0",
+    "@sentry/nextjs": "10.70.0",
     "@sigillus/contracts": "0.1.0",
     "@sigillus/domain": "0.1.0",
     "lucide-react": "1.28.0",
