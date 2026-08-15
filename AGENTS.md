@@ -30,9 +30,9 @@ compose.yaml         Postgres 17 + MinIO para desenvolvimento
 - Lint: `npm run lint` (oxlint) — SEMPRE rode antes de finalizar tarefa
 - Formatação: `npm run format` (oxfmt) · verificar sem escrever: `npm run format:check`
 - Typecheck de todos os workspaces: `npm run typecheck`
-- Testes unitários (domain + api): `npm run test`
+- Testes unitários (domain + api): `npm run test` — os da API são de integração e precisam de `DATABASE_URL` (o `apps/api/.env` serve; eles criam e migram o banco `sigillus_test` sozinhos; `TEST_DB_NAME` muda o nome)
 - Build: `npm run build` (todos) · `npm run build:web` · `npm run build:api`
-- E2E: `npm run test:e2e` (Playwright em `apps/web/tests`, só Chromium)
+- E2E: `npm run test:e2e` (Playwright em `apps/web/tests`, só Chromium; `PORT=3100 npm run test:e2e` se a 3000 estiver ocupada)
 - Verificação local típica: `npm run check` (lint + format:check + typecheck) + `npm run test` + checagem visual quando mexer em motion/UI
 - **E2E só na hora de abrir PR.** A suíte leva ~1 min e trava o fluxo se rodar a cada ajuste. Durante a implementação use `npm run check` + verificação visual. Rode `npm run test:e2e` quando o usuário pedir para commitar/abrir PR — e antes de abrir o PR. Exceção: pode rodar um arquivo específico (`npx playwright test tests/x.spec.ts` dentro de `apps/web`) quando estiver mexendo naquele fluxo.
 - Logins de teste estão em `apps/web/tests/helpers/credentials.ts` (admin: `admin@sigillus.dev` / `Admin@123` em `apps/web/lib/mock-users.ts`)
@@ -40,7 +40,7 @@ compose.yaml         Postgres 17 + MinIO para desenvolvimento
 
 ## Origem de dados no web
 
-`apps/web` lê `NEXT_PUBLIC_DATA_SOURCE=mock|api` (default `mock`). Em `mock` tudo vem de `apps/web/lib/mock-data.ts` e `localStorage`, como sempre foi. Em `api` os módulos já migrados chamam a API pelo client oRPC tipado (`apps/web/lib/api/`); os demais continuam em mock. A ordem de migração está em `docs/adr/README.md`. `apps/web/middleware.ts` protege `(private)` e `(admin)` nos dois modos.
+`apps/web` lê `NEXT_PUBLIC_DATA_SOURCE=mock|api` (default `mock`). Em `mock` tudo vem de `apps/web/lib/mock-data.ts` e `localStorage`, como sempre foi. Em `api` os módulos já migrados chamam a API pelo client oRPC tipado (`apps/web/lib/api/`); os demais continuam em mock. A ordem de migração está em `docs/adr/README.md`. `apps/web/proxy.ts` (convenção do Next 16 que substitui `middleware.ts`) protege `(private)` e `(admin)` nos dois modos.
 
 ## Estrutura do web
 

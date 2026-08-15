@@ -50,19 +50,19 @@ NEXT_PUBLIC_DATA_SOURCE=api npm run dev
 
 ## Scripts (raiz)
 
-| Script                                      | O que faz                                                        |
-| ------------------------------------------- | ---------------------------------------------------------------- |
-| `npm run dev` / `dev:legacy`                | Next em dev (Turbopack / webpack)                                |
-| `npm run dev:api`                           | API em dev com reload (`tsx watch`)                              |
-| `npm run build` / `build:web` / `build:api` | Build de produção                                                |
-| `npm run check`                             | lint + format:check + typecheck de todos os workspaces           |
-| `npm run test`                              | Testes unitários (Vitest) do `domain` e da `api`                 |
-| `npm run test:e2e`                          | Suíte Playwright do web (Chromium)                               |
-| `npm run db:up` / `db:down`                 | Sobe/derruba Postgres + MinIO                                    |
-| `npm run db:generate -w apps/api`           | Gera migration SQL a partir do schema Drizzle                    |
-| `npm run db:migrate -w apps/api`            | Aplica migrations                                                |
-| `npm run db:seed -w apps/api`               | Seeds de catálogos e dados de desenvolvimento                    |
-| `npm run share`                             | Expõe o web publicamente via Cloudflare tunnel (use com cuidado) |
+| Script                                      | O que faz                                                         |
+| ------------------------------------------- | ----------------------------------------------------------------- |
+| `npm run dev` / `dev:legacy`                | Next em dev (Turbopack / webpack)                                 |
+| `npm run dev:api`                           | API em dev com reload (`tsx watch`)                               |
+| `npm run build` / `build:web` / `build:api` | Build de produção                                                 |
+| `npm run check`                             | lint + format:check + typecheck de todos os workspaces            |
+| `npm run test`                              | Vitest do `domain` e da `api` (a `api` precisa de `DATABASE_URL`) |
+| `npm run test:e2e`                          | Suíte Playwright do web (Chromium)                                |
+| `npm run db:up` / `db:down`                 | Sobe/derruba Postgres + MinIO                                     |
+| `npm run db:generate -w apps/api`           | Gera migration SQL a partir do schema Drizzle                     |
+| `npm run db:migrate -w apps/api`            | Aplica migrations                                                 |
+| `npm run db:seed -w apps/api`               | Seeds de catálogos e dados de desenvolvimento                     |
+| `npm run share`                             | Expõe o web publicamente via Cloudflare tunnel (use com cuidado)  |
 
 ## Origem de dados no web
 
