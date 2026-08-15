@@ -1,4 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
+import ageVerifiedState from "./tests/storage/age-verified.json" with { type: "json" };
+
+const port = Number(process.env.PORT ?? 3000);
+const baseURL = `http://localhost:${port}`;
+const storageState = {
+  ...ageVerifiedState,
+  origins: ageVerifiedState.origins.map((entry) => ({ ...entry, origin: baseURL })),
+};
 
 export default defineConfig({
   testDir: "./tests",
@@ -12,8 +20,8 @@ export default defineConfig({
     timeout: 10_000,
   },
   use: {
-    baseURL: "http://localhost:3000",
-    storageState: "tests/storage/age-verified.json",
+    baseURL,
+    storageState,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
@@ -26,8 +34,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3000",
+    command: `npm run dev -- --port ${port}`,
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

@@ -12,7 +12,7 @@ import {
   type PointerEvent,
 } from "react";
 import { motion, useMotionTemplate, useSpring } from "motion/react";
-import type { ProfessionalAd } from "@/lib/types";
+import type { FeedAdSummary } from "@sigillus/contracts";
 import { isLocalImageSrc } from "@/lib/ad-profile-image";
 import { cn, currency } from "@/lib/utils";
 import { FEED_CARD_SIZE_CLASS } from "./constants";
@@ -82,7 +82,7 @@ function getNavCommitMs() {
   return window.matchMedia(REDUCED_MOTION_QUERY).matches ? NAV_COMMIT_REDUCED_MS : NAV_COMMIT_MS;
 }
 
-function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priority?: boolean }) {
+function PremiumFeedCard({ ad, priority = false }: { ad: FeedAdSummary; priority?: boolean }) {
   const router = useRouter();
   const cardRef = useRef<HTMLDivElement>(null);
   const desktopHover = useDesktopHoverEnabled();
@@ -502,7 +502,7 @@ function PremiumFeedCard({ ad, priority = false }: { ad: ProfessionalAd; priorit
   );
 }
 
-export function FeedAdCard({ ad, priority = false }: { ad: ProfessionalAd; priority?: boolean }) {
+export function FeedAdCard({ ad, priority = false }: { ad: FeedAdSummary; priority?: boolean }) {
   const [imageIndex, setImageIndex] = useState(0);
   const isPremium = ad.adTier === "premium";
 

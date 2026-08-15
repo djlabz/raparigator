@@ -3,6 +3,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 import type { AdminUser } from "@/lib/types";
 import { adminUsers } from "@/lib/mock-users";
+import { ADMIN_SESSION_COOKIE, writeSessionCookie } from "@/lib/session-cookies";
 
 const STORAGE_KEY = "sigillus-admin-session";
 
@@ -30,6 +31,7 @@ function setStoredEmail(email: string | null) {
       window.localStorage.removeItem(STORAGE_KEY);
     }
   }
+  writeSessionCookie(ADMIN_SESSION_COOKIE, email);
   emitChange();
 }
 

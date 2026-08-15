@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ads, cities } from "@/lib/mock-data";
+import { cities } from "@/lib/mock-data";
+import { useFeedAds } from "@/lib/feed-data";
 import {
   chromeBelowDesktopNavStickyMaxH,
   chromeBelowDesktopNavStickyMinH,
@@ -23,7 +24,6 @@ import {
   FEED_DEFAULT_LOCATION_LABEL,
   clearFeedFilters,
   createFeedFiltersCriteria,
-  filterAds,
   isFeedPremiumSelected,
   partitionFeedAds,
   serializeFeedFiltersCriteria,
@@ -96,7 +96,7 @@ export function FeedScreen() {
     setCriteria((current) => toggleFeedAdType(current, type as FeedAdTypeLabel));
   };
 
-  const filteredAds = useMemo(() => filterAds(ads, criteria), [criteria]);
+  const { ads: filteredAds, isLoading: isLoadingFeed } = useFeedAds(criteria);
   const { premium: premiumAds, standard: standardAds } = useMemo(
     () => partitionFeedAds(filteredAds),
     [filteredAds],
@@ -393,7 +393,7 @@ export function FeedScreen() {
               onOpenFilters={() => setShowFilters(true)}
             />
 
-            {loadingMore ? (
+            {loadingMore || isLoadingFeed ? (
               <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {Array.from({ length: 6 }).map((_, index) => (
                   <Skeleton

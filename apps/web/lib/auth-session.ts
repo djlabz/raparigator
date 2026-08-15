@@ -3,6 +3,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { getMockUserByRole } from "@/lib/mock-users";
 import type { AuthRole } from "@/lib/types";
+import { USER_ROLE_COOKIE, writeSessionCookie } from "@/lib/session-cookies";
 
 const STORAGE_KEY = "sigillus-user-role";
 
@@ -34,6 +35,7 @@ function setStoredRole(role: AuthRole) {
   if (typeof window !== "undefined") {
     window.localStorage.setItem(STORAGE_KEY, role);
   }
+  writeSessionCookie(USER_ROLE_COOKIE, role === "visitor" ? null : role);
 
   emitChange();
 }
