@@ -3,6 +3,7 @@ import { announcementsRouter } from "./modules/announcements/router";
 import { authRouter } from "./modules/auth/router";
 import { catalogsRouter } from "./modules/catalogs/router";
 import { feedRouter } from "./modules/feed/router";
+import { mediaRouter } from "./modules/media/router";
 import { notificationsRouter } from "./modules/notifications/router";
 
 export const router = {
@@ -11,6 +12,7 @@ export const router = {
   feed: feedRouter,
   ads: adsRouter,
   announcements: announcementsRouter,
+  media: mediaRouter,
   notifications: notificationsRouter,
 };
 

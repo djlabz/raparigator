@@ -9,6 +9,7 @@ import { createAdsService } from "./modules/ads/service";
 import { createAnnouncementsService } from "./modules/announcements/service";
 import { createCatalogsService } from "./modules/catalogs/service";
 import { createFeedService } from "./modules/feed/service";
+import { createMediaService } from "./modules/media/service";
 import { createNotificationsService } from "./modules/notifications/service";
 import { createProfileRepository } from "./modules/profiles/repository";
 
@@ -35,5 +36,6 @@ export function createServices(deps: ServiceDeps) {
     feed: createFeedService(profiles),
     ads: createAdsService(db, profiles),
     announcements: createAnnouncementsService({ db, profiles, logger }),
+    media: createMediaService({ db, profiles, storage, jobs, logger }),
   };
 }
