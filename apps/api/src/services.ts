@@ -12,6 +12,7 @@ import { createChatService } from "./modules/chat/service";
 import { createFeedService } from "./modules/feed/service";
 import { createMediaService } from "./modules/media/service";
 import { createNotificationsService } from "./modules/notifications/service";
+import { createPremiumService } from "./modules/premium/service";
 import { createProfileRepository } from "./modules/profiles/repository";
 import { createReviewsService } from "./modules/reviews/service";
 import { createVerificationService } from "./modules/verification/service";
@@ -42,6 +43,7 @@ export function createServices(deps: ServiceDeps) {
     media: createMediaService({ db, profiles, storage, jobs, logger }),
     chat: createChatService({ db, profiles, storage, chatEvents, logger }),
     reviews: createReviewsService({ db, profiles, notifications, jobs, logger }),
+    premium: createPremiumService({ db, billing, config, jobs, logger }),
     verification: createVerificationService({ db, config, logger }),
   };
 }

@@ -6,6 +6,7 @@ export type JobPayloads = {
   "media.moderate": { assetId: string };
   "review-invite.expire": { inviteId: string };
   "billing.webhook": { deliveryId: string };
+  "premium.expire": Record<string, never>;
 };
 
 export type JobName = keyof JobPayloads;
@@ -13,6 +14,7 @@ export type JobName = keyof JobPayloads;
 export type JobHandler<TName extends JobName> = (payload: JobPayloads[TName]) => Promise<void>;
 
 export interface JobQueue {
+  schedule(name: JobName, cron: string): Promise<void>;
   enqueue<TName extends JobName>(
     name: TName,
     payload: JobPayloads[TName],
@@ -40,6 +42,10 @@ export function createPgBossQueue(databaseUrl: string, logger: Logger): JobQueue
         await boss.stop({ graceful: true });
         started = false;
       }
+    },
+    async schedule(name, cron) {
+      await boss.createQueue(name).catch(() => undefined);
+      await boss.schedule(name, cron, {}, { retryLimit: 1 });
     },
     async enqueue(name, payload, options) {
       await boss.createQueue(name).catch(() => undefined);
@@ -69,6 +75,7 @@ export function createInlineQueue(logger?: Logger): JobQueue & {
   const enqueued: Array<{ name: JobName; payload: unknown }> = [];
   return {
     enqueued,
+    async schedule() {},
     async start() {},
     async stop() {},
     async enqueue(name, payload) {
