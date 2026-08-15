@@ -10,8 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx --env-file-if-exists=.env src/db/migrate.ts",
-    "db:seed": "tsx --env-file-if-exists=.env src/db/seed/index.ts",
+    "db:migrate": "tsx --env-file-if-exists=.env src/cli/migrate.ts",
+    "db:seed": "tsx --env-file-if-exists=.env src/cli/seed.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

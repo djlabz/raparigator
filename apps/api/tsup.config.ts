@@ -3,8 +3,8 @@ import { defineConfig } from "tsup";
 export default defineConfig({
   entry: {
     server: "src/server.ts",
-    migrate: "src/db/migrate.ts",
-    seed: "src/db/seed/index.ts",
+    migrate: "src/cli/migrate.ts",
+    seed: "src/cli/seed.ts",
   },
   format: ["esm"],
   target: "node22",

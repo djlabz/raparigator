@@ -1,8 +1,6 @@
 import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { getConfig } from "../config";
-import { getLogger } from "../lib/logger";
 import { createDatabase } from "./client";
 
 export async function runMigrations(databaseUrl?: string) {
@@ -17,16 +15,4 @@ export async function runMigrations(databaseUrl?: string) {
   } finally {
     await pool.end();
   }
-}
-
-if (process.argv[1] && process.argv[1] === fileURLToPath(import.meta.url)) {
-  runMigrations()
-    .then(() => {
-      getLogger().info("migrations aplicadas");
-      process.exit(0);
-    })
-    .catch((error) => {
-      getLogger().error({ err: error }, "falha ao aplicar migrations");
-      process.exit(1);
-    });
 }

@@ -3,6 +3,7 @@ import { getConfig } from "./config";
 import { createApp } from "./app";
 import { createDatabase } from "./db/client";
 import { runMigrations } from "./db/migrate";
+import { runSeeds } from "./db/seed";
 import { createAdminAuth, createUserAuth } from "./lib/auth";
 import { getLogger } from "./lib/logger";
 import { MemoryRateLimiter, NoopRateLimiter } from "./lib/rate-limit";
@@ -25,6 +26,10 @@ async function main() {
   if (config.MIGRATE_ON_BOOT) {
     await runMigrations();
     logger.info("migrations aplicadas no boot");
+  }
+  if (config.SEED_ON_BOOT) {
+    await runSeeds();
+    logger.info("seeds aplicadas no boot");
   }
 
   const { db, pool } = createDatabase(config);
