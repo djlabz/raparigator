@@ -8,6 +8,7 @@ import type { ObjectStorage } from "./lib/storage";
 import { createAdsService } from "./modules/ads/service";
 import { createAnnouncementsService } from "./modules/announcements/service";
 import { createCatalogsService } from "./modules/catalogs/service";
+import { createChatService } from "./modules/chat/service";
 import { createFeedService } from "./modules/feed/service";
 import { createMediaService } from "./modules/media/service";
 import { createNotificationsService } from "./modules/notifications/service";
@@ -37,5 +38,6 @@ export function createServices(deps: ServiceDeps) {
     ads: createAdsService(db, profiles),
     announcements: createAnnouncementsService({ db, profiles, logger }),
     media: createMediaService({ db, profiles, storage, jobs, logger }),
+    chat: createChatService({ db, profiles, storage, chatEvents, logger }),
   };
 }
