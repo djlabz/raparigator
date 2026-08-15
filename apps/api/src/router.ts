@@ -1,4 +1,5 @@
 import { adsRouter } from "./modules/ads/router";
+import { announcementsRouter } from "./modules/announcements/router";
 import { authRouter } from "./modules/auth/router";
 import { catalogsRouter } from "./modules/catalogs/router";
 import { feedRouter } from "./modules/feed/router";
@@ -9,6 +10,7 @@ export const router = {
   catalogs: catalogsRouter,
   feed: feedRouter,
   ads: adsRouter,
+  announcements: announcementsRouter,
   notifications: notificationsRouter,
 };
 

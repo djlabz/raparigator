@@ -6,6 +6,7 @@ import type { JobQueue } from "./lib/jobs";
 import type { Logger } from "./lib/logger";
 import type { ObjectStorage } from "./lib/storage";
 import { createAdsService } from "./modules/ads/service";
+import { createAnnouncementsService } from "./modules/announcements/service";
 import { createCatalogsService } from "./modules/catalogs/service";
 import { createFeedService } from "./modules/feed/service";
 import { createNotificationsService } from "./modules/notifications/service";
@@ -33,5 +34,6 @@ export function createServices(deps: ServiceDeps) {
     catalogs: createCatalogsService(db),
     feed: createFeedService(profiles),
     ads: createAdsService(db, profiles),
+    announcements: createAnnouncementsService({ db, profiles, logger }),
   };
 }
