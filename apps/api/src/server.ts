@@ -3,6 +3,7 @@ import { getConfig } from "./config";
 import { createApp } from "./app";
 import { createDatabase } from "./db/client";
 import { runMigrations } from "./db/migrate";
+import { createAdminAuth, createUserAuth } from "./lib/auth";
 import { getLogger } from "./lib/logger";
 import { MemoryRateLimiter, NoopRateLimiter } from "./lib/rate-limit";
 import { initSentry } from "./lib/sentry";
@@ -26,6 +27,8 @@ async function main() {
     config,
     db,
     logger,
+    auth: createUserAuth(db, config),
+    adminAuth: createAdminAuth(db, config),
     rateLimiter: config.RATE_LIMIT_ENABLED ? new MemoryRateLimiter() : new NoopRateLimiter(),
     services: createServices({ config, db, logger }),
     ready: () => ready,

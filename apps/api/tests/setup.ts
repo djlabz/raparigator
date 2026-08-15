@@ -1,5 +1,5 @@
 process.env.NODE_ENV = "test";
-process.env.LOG_LEVEL ??= "silent";
+process.env.LOG_LEVEL ??= "fatal";
 process.env.DATABASE_URL ??= "postgres://sigillus:sigillus@localhost:5432/sigillus_test";
 process.env.AUTH_SECRET ??= "test-secret-0123456789abcdef0123456789abcdef";
 process.env.S3_ENDPOINT ??= "http://localhost:9000";

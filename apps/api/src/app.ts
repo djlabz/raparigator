@@ -60,6 +60,9 @@ export function createApp(deps: AppDeps) {
     deps.ready() ? c.json({ status: "ready" }) : c.json({ status: "starting" }, 503),
   );
 
+  app.on(["GET", "POST"], "/api/auth/*", (c) => deps.auth.handler(c.req.raw));
+  app.on(["GET", "POST"], "/api/admin-auth/*", (c) => deps.adminAuth.handler(c.req.raw));
+
   const reportError = (error: unknown) => {
     const status = (error as { status?: number }).status;
     if (typeof status === "number" && status < 500) {
