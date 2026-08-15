@@ -14,6 +14,7 @@ import { createMediaService } from "./modules/media/service";
 import { createNotificationsService } from "./modules/notifications/service";
 import { createProfileRepository } from "./modules/profiles/repository";
 import { createReviewsService } from "./modules/reviews/service";
+import { createVerificationService } from "./modules/verification/service";
 
 export type ServiceDeps = {
   config: AppConfig;
@@ -28,7 +29,7 @@ export type ServiceDeps = {
 export type Services = ReturnType<typeof createServices>;
 
 export function createServices(deps: ServiceDeps) {
-  const { db, logger, storage, jobs, chatEvents } = deps;
+  const { db, logger, storage, jobs, chatEvents, billing, config } = deps;
   const profiles = createProfileRepository(db, storage);
   const notifications = createNotificationsService({ db });
   return {
@@ -41,5 +42,6 @@ export function createServices(deps: ServiceDeps) {
     media: createMediaService({ db, profiles, storage, jobs, logger }),
     chat: createChatService({ db, profiles, storage, chatEvents, logger }),
     reviews: createReviewsService({ db, profiles, notifications, jobs, logger }),
+    verification: createVerificationService({ db, config, logger }),
   };
 }

@@ -7,6 +7,7 @@ import { feedRouter } from "./modules/feed/router";
 import { mediaRouter } from "./modules/media/router";
 import { notificationsRouter } from "./modules/notifications/router";
 import { reviewsRouter } from "./modules/reviews/router";
+import { verificationRouter } from "./modules/verification/router";
 
 export const router = {
   auth: authRouter,
@@ -18,6 +19,7 @@ export const router = {
   chat: chatRouter,
   reviews: reviewsRouter,
   notifications: notificationsRouter,
+  verification: verificationRouter,
 };
 
 export type AppRouter = typeof router;
