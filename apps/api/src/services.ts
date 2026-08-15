@@ -5,6 +5,7 @@ import type { ChatEventBus } from "./lib/chat-events";
 import type { JobQueue } from "./lib/jobs";
 import type { Logger } from "./lib/logger";
 import type { ObjectStorage } from "./lib/storage";
+import { createAdminService } from "./modules/admin/service";
 import { createAdsService } from "./modules/ads/service";
 import { createAnnouncementsService } from "./modules/announcements/service";
 import { createCatalogsService } from "./modules/catalogs/service";
@@ -45,5 +46,13 @@ export function createServices(deps: ServiceDeps) {
     reviews: createReviewsService({ db, profiles, notifications, jobs, logger }),
     premium: createPremiumService({ db, billing, config, jobs, logger }),
     verification: createVerificationService({ db, config, logger }),
+    admin: createAdminService({
+      db,
+      profiles,
+      logger,
+      notify: async (userId, item) => {
+        await notifications.push(userId, item);
+      },
+    }),
   };
 }

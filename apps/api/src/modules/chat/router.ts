@@ -30,10 +30,14 @@ export const chatRouter = {
     .handler(({ context, input }) => context.deps.services.chat.sendMedia(context.user, input)),
   openViewOnce: os.chat.openViewOnce
     .use(withUser)
-    .handler(({ context, input }) => context.deps.services.chat.openViewOnce(context.user, input.messageId)),
+    .handler(({ context, input }) =>
+      context.deps.services.chat.openViewOnce(context.user, input.messageId),
+    ),
   markRead: os.chat.markRead
     .use(withUser)
-    .handler(({ context, input }) => context.deps.services.chat.markRead(context.user, input.conversationId)),
+    .handler(({ context, input }) =>
+      context.deps.services.chat.markRead(context.user, input.conversationId),
+    ),
   setBlocked: os.chat.setBlocked
     .use(withUser)
     .handler(({ context, input }) => context.deps.services.chat.setBlocked(context.user, input)),

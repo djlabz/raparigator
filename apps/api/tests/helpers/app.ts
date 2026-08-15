@@ -51,6 +51,8 @@ export function createTestHarness(): TestHarness {
       auth: createUserAuth(database.db, config),
       adminAuth: createAdminAuth(database.db, config),
       rateLimiter: new MemoryRateLimiter(),
+      billing: createFakeBillingProvider(config.BILLING_WEBHOOK_SECRET),
+      jobs,
       services: createServices({
         config,
         db: database.db,

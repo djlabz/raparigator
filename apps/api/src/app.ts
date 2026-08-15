@@ -12,6 +12,7 @@ import type { AppDeps } from "./deps";
 import { captureException } from "./lib/sentry";
 import { createAppContext, resolveClientIp } from "./orpc/context";
 import { router } from "./router";
+import { createBillingWebhookRoute } from "./routes/billing-webhook";
 
 export function createApp(deps: AppDeps) {
   const { config, db, logger } = deps;
@@ -62,6 +63,15 @@ export function createApp(deps: AppDeps) {
 
   app.on(["GET", "POST"], "/api/auth/*", (c) => deps.auth.handler(c.req.raw));
   app.on(["GET", "POST"], "/api/admin-auth/*", (c) => deps.adminAuth.handler(c.req.raw));
+  app.route(
+    "/",
+    createBillingWebhookRoute({
+      db,
+      billing: deps.billing,
+      jobs: deps.jobs,
+      logger,
+    }),
+  );
 
   const reportError = (error: unknown) => {
     const status = (error as { status?: number }).status;

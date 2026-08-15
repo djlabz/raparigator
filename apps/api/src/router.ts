@@ -1,3 +1,5 @@
+import { os } from "./orpc/base";
+import { adminRouter } from "./modules/admin/router";
 import { adsRouter } from "./modules/ads/router";
 import { announcementsRouter } from "./modules/announcements/router";
 import { authRouter } from "./modules/auth/router";
@@ -10,7 +12,7 @@ import { premiumRouter } from "./modules/premium/router";
 import { reviewsRouter } from "./modules/reviews/router";
 import { verificationRouter } from "./modules/verification/router";
 
-export const router = {
+export const router = os.router({
   auth: authRouter,
   catalogs: catalogsRouter,
   feed: feedRouter,
@@ -22,6 +24,7 @@ export const router = {
   notifications: notificationsRouter,
   premium: premiumRouter,
   verification: verificationRouter,
-};
+  admin: adminRouter,
+});
 
 export type AppRouter = typeof router;

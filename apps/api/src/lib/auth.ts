@@ -77,7 +77,7 @@ export function createUserAuth(db: Database, config: AppConfig) {
     session: {
       expiresIn: SESSION_MAX_AGE_SECONDS,
       updateAge: SESSION_UPDATE_AGE_SECONDS,
-      cookieCache: { enabled: true, maxAge: 5 * 60 },
+      cookieCache: { enabled: false },
     },
     rateLimit: {
       enabled: config.RATE_LIMIT_ENABLED,
@@ -120,7 +120,7 @@ export function createAdminAuth(db: Database, config: AppConfig) {
     session: {
       expiresIn: 60 * 60 * 12,
       updateAge: 60 * 60,
-      cookieCache: { enabled: true, maxAge: 60 },
+      cookieCache: { enabled: false },
     },
     rateLimit: {
       enabled: config.RATE_LIMIT_ENABLED,

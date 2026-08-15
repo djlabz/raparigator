@@ -11,6 +11,9 @@ import { createFakeBillingProvider } from "./lib/billing/fake-provider";
 import { createPgNotifyChatEventBus } from "./lib/chat-events";
 import { createInlineQueue, createPgBossQueue } from "./lib/jobs";
 import { createS3Storage } from "./lib/storage";
+import { registerMediaJobs } from "./modules/media/jobs";
+import { registerBillingJobs } from "./modules/premium/jobs";
+import { registerReviewJobs } from "./modules/reviews/service";
 import { createServices } from "./services";
 import type { AppDeps } from "./deps";
 
@@ -43,9 +46,19 @@ async function main() {
     auth: createUserAuth(db, config),
     adminAuth: createAdminAuth(db, config),
     rateLimiter: config.RATE_LIMIT_ENABLED ? new MemoryRateLimiter() : new NoopRateLimiter(),
+    billing,
+    jobs,
     services: createServices({ config, db, logger, storage, jobs, chatEvents, billing }),
     ready: () => ready,
   };
+
+  await registerMediaJobs({ db, storage, jobs, logger });
+  await registerReviewJobs({ jobs, logger });
+  await registerBillingJobs({ db, premium: deps.services.premium, billing, jobs, logger });
+  await jobs.work("premium.expire", async () => {
+    await deps.services.premium.expireDueSubscriptions();
+  });
+  await jobs.schedule("premium.expire", "0 * * * *");
 
   const app = createApp(deps);
   const server = serve({ fetch: app.fetch, port: config.PORT, hostname: config.HOST }, (info) => {

@@ -16,7 +16,9 @@ export const reviewsRouter = {
   invite: os.reviews.invite
     .use(withUser)
     .use(requireRole("profissional"))
-    .handler(({ context, input }) => context.deps.services.reviews.invite(context.user, input.conversationId)),
+    .handler(({ context, input }) =>
+      context.deps.services.reviews.invite(context.user, input.conversationId),
+    ),
   withdrawInvite: os.reviews.withdrawInvite
     .use(withUser)
     .use(requireRole("profissional"))
