@@ -3,6 +3,7 @@ import { getConfig } from "../../config";
 import { getLogger } from "../../lib/logger";
 import { createDatabase } from "../client";
 import { seedCatalogs } from "./catalogs";
+import { seedDevData } from "./dev-data";
 import { seedDevUsers } from "./users";
 
 export async function runSeeds(options: { devData?: boolean } = {}) {
@@ -12,6 +13,7 @@ export async function runSeeds(options: { devData?: boolean } = {}) {
     await seedCatalogs(db);
     if (options.devData ?? !config.isProduction) {
       await seedDevUsers(db);
+      await seedDevData(db);
     }
   } finally {
     await pool.end();

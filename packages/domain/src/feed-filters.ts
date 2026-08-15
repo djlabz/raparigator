@@ -135,58 +135,62 @@ export function isFeedPremiumSelected(criteria: FeedFiltersCriteria): boolean {
   return criteria.adTiers.includes("premium");
 }
 
+export const FEED_ETHNICITY_SYNONYMS: Record<string, string[]> = {
+  caucasiana: ["branca", "cauc"],
+  negra: ["negra", "preta"],
+  asiatica: ["asiat"],
+  latina: ["latin", "parda"],
+};
+
+export const FEED_HAIR_SYNONYMS: Record<string, string[]> = {
+  loira: ["loiro", "loira"],
+  morena: ["castanho", "moreno", "preto"],
+  ruiva: ["ruiv"],
+};
+
+export const FEED_SERVICE_SYNONYMS: Array<{ when: string; terms: string[] }> = [
+  { when: "jantares", terms: ["jantar", "evento"] },
+  { when: "viagem", terms: ["viagem", "tour"] },
+];
+
+export const FEED_LOCAL_SERVICE_TERMS = ["hotel", "local"];
+
+export function feedEthnicityTerms(selected: string): string[] {
+  const normalized = normalizeText(selected);
+  return FEED_ETHNICITY_SYNONYMS[normalized] ?? [normalized];
+}
+
+export function feedHairTerms(selected: string): string[] {
+  const normalized = normalizeText(selected);
+  return FEED_HAIR_SYNONYMS[normalized] ?? [normalized];
+}
+
+export function feedServiceTerms(selected: string): string[] {
+  const normalized = normalizeText(selected);
+  const synonym = FEED_SERVICE_SYNONYMS.find((entry) => normalized.includes(entry.when));
+  return synonym ? synonym.terms : [normalized];
+}
+
+function includesAnyTerm(value: string, terms: string[]): boolean {
+  const normalized = normalizeText(value);
+  return terms.some((term) => normalized.includes(term));
+}
+
 export function matchesFeedEthnicity(adEthnicity: string, selected: string): boolean {
-  const normalizedEthnicity = normalizeText(selected);
-  const normalizedAd = normalizeText(adEthnicity);
-  if (normalizedEthnicity === "caucasiana") {
-    return normalizedAd.includes("branca") || normalizedAd.includes("cauc");
-  }
-  if (normalizedEthnicity === "negra") {
-    return normalizedAd.includes("negra") || normalizedAd.includes("preta");
-  }
-  if (normalizedEthnicity === "asiatica") {
-    return normalizedAd.includes("asiat");
-  }
-  if (normalizedEthnicity === "latina") {
-    return normalizedAd.includes("latin") || normalizedAd.includes("parda");
-  }
-  return normalizedAd.includes(normalizedEthnicity);
+  return includesAnyTerm(adEthnicity, feedEthnicityTerms(selected));
 }
 
 export function matchesFeedHair(adHairColor: string, selected: string): boolean {
-  const normalizedHair = normalizeText(selected);
-  const adHair = normalizeText(adHairColor);
-  if (normalizedHair === "loira") {
-    return adHair.includes("loiro") || adHair.includes("loira");
-  }
-  if (normalizedHair === "morena") {
-    return adHair.includes("castanho") || adHair.includes("moreno") || adHair.includes("preto");
-  }
-  if (normalizedHair === "ruiva") {
-    return adHair.includes("ruiv");
-  }
-  return adHair.includes(normalizedHair);
+  return includesAnyTerm(adHairColor, feedHairTerms(selected));
 }
 
 export function matchesFeedService(adServices: string[], selected: string): boolean {
-  const normalizedSelection = normalizeText(selected);
-  return adServices.some((adService) => {
-    const normalizedService = normalizeText(adService);
-    if (normalizedSelection.includes("jantares")) {
-      return normalizedService.includes("jantar") || normalizedService.includes("evento");
-    }
-    if (normalizedSelection.includes("viagem")) {
-      return normalizedService.includes("viagem") || normalizedService.includes("tour");
-    }
-    return normalizedService.includes(normalizedSelection);
-  });
+  const terms = feedServiceTerms(selected);
+  return adServices.some((adService) => includesAnyTerm(adService, terms));
 }
 
 export function hasFeedLocalService(adServices: string[]): boolean {
-  return adServices.some((service) => {
-    const normalizedService = normalizeText(service);
-    return normalizedService.includes("hotel") || normalizedService.includes("local");
-  });
+  return adServices.some((service) => includesAnyTerm(service, FEED_LOCAL_SERVICE_TERMS));
 }
 
 export function matchesFeedCriteria(ad: FeedFilterableAd, criteria: FeedFiltersCriteria): boolean {

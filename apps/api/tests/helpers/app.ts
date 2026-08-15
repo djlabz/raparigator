@@ -6,6 +6,10 @@ import { seedCatalogs } from "../../src/db/seed/catalogs";
 import { createAdminAuth, createUserAuth } from "../../src/lib/auth";
 import { createLogger } from "../../src/lib/logger";
 import { MemoryRateLimiter } from "../../src/lib/rate-limit";
+import { createFakeBillingProvider } from "../../src/lib/billing/fake-provider";
+import { createMemoryChatEventBus } from "../../src/lib/chat-events";
+import { createInlineQueue } from "../../src/lib/jobs";
+import { createMemoryStorage } from "../../src/lib/storage";
 import { createServices } from "../../src/services";
 import type { AppDeps } from "../../src/deps";
 import { ensureTestDatabase, truncateAll } from "./db";
@@ -14,6 +18,8 @@ export type TestHarness = {
   deps: AppDeps;
   db: Database;
   config: AppConfig;
+  storage: ReturnType<typeof createMemoryStorage>;
+  jobs: ReturnType<typeof createInlineQueue>;
   fetch: (input: string, init?: RequestInit) => Promise<Response>;
   rpc: <T>(
     path: string,
@@ -35,7 +41,9 @@ export function createTestHarness(): TestHarness {
     const config = loadConfig({ ...process.env, DATABASE_URL: databaseUrl, NODE_ENV: "test" });
     const database = createDatabase(config);
     pool = database.pool;
-    const logger = createLogger({ level: "silent", pretty: false });
+    const logger = createLogger({ level: "fatal", pretty: false });
+    const storage = createMemoryStorage();
+    const jobs = createInlineQueue(logger);
     const deps: AppDeps = {
       config,
       db: database.db,
@@ -43,14 +51,24 @@ export function createTestHarness(): TestHarness {
       auth: createUserAuth(database.db, config),
       adminAuth: createAdminAuth(database.db, config),
       rateLimiter: new MemoryRateLimiter(),
-      services: createServices({ config, db: database.db, logger }),
+      services: createServices({
+        config,
+        db: database.db,
+        logger,
+        storage,
+        jobs,
+        chatEvents: createMemoryChatEventBus(),
+        billing: createFakeBillingProvider(config.BILLING_WEBHOOK_SECRET),
+      }),
       ready: () => true,
     };
     const app = createApp(deps);
     harness.deps = deps;
     harness.db = database.db;
     harness.config = config;
-    harness.fetch = (input, init) =>
+    harness.storage = storage;
+    harness.jobs = jobs;
+    harness.fetch = async (input, init) =>
       app.request(new Request(new URL(input, config.API_ORIGIN), init));
     harness.rpc = async (path, input, headers) => {
       const response = await harness.fetch(`/rpc/${path}`, {
@@ -60,9 +78,10 @@ export function createTestHarness(): TestHarness {
       });
       const text = await response.text();
       const parsed = text ? (JSON.parse(text) as { json?: unknown }) : {};
+      const body = parsed && typeof parsed === "object" && "json" in parsed ? parsed.json : parsed;
       return {
         status: response.status,
-        body: (parsed.json ?? parsed) as never,
+        body: body as never,
         headers: response.headers,
       };
     };

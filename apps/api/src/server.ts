@@ -7,6 +7,10 @@ import { createAdminAuth, createUserAuth } from "./lib/auth";
 import { getLogger } from "./lib/logger";
 import { MemoryRateLimiter, NoopRateLimiter } from "./lib/rate-limit";
 import { initSentry } from "./lib/sentry";
+import { createFakeBillingProvider } from "./lib/billing/fake-provider";
+import { createPgNotifyChatEventBus } from "./lib/chat-events";
+import { createInlineQueue, createPgBossQueue } from "./lib/jobs";
+import { createS3Storage } from "./lib/storage";
 import { createServices } from "./services";
 import type { AppDeps } from "./deps";
 
@@ -23,6 +27,15 @@ async function main() {
   const { db, pool } = createDatabase(config);
   let ready = false;
 
+  const storage = createS3Storage(config);
+  const jobs = config.JOBS_ENABLED
+    ? createPgBossQueue(config.DATABASE_URL, logger)
+    : createInlineQueue(logger);
+  const chatEvents = createPgNotifyChatEventBus(config.DATABASE_URL, logger);
+  const billing = createFakeBillingProvider(config.BILLING_WEBHOOK_SECRET);
+  await jobs.start();
+  await chatEvents.start();
+
   const deps: AppDeps = {
     config,
     db,
@@ -30,7 +43,7 @@ async function main() {
     auth: createUserAuth(db, config),
     adminAuth: createAdminAuth(db, config),
     rateLimiter: config.RATE_LIMIT_ENABLED ? new MemoryRateLimiter() : new NoopRateLimiter(),
-    services: createServices({ config, db, logger }),
+    services: createServices({ config, db, logger, storage, jobs, chatEvents, billing }),
     ready: () => ready,
   };
 
@@ -44,6 +57,8 @@ async function main() {
     logger.info({ signal }, "encerrando");
     ready = false;
     server.close();
+    await chatEvents.stop();
+    await jobs.stop();
     await pool.end();
     process.exit(0);
   };
