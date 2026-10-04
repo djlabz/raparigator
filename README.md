@@ -28,6 +28,8 @@ cd raparigator
 npm install
 ```
 
+O `npm install` cria `.env`, `apps/api/.env` e `apps/web/.env.local` a partir dos `.example` quando ainda não existem; as portas locais se ajustam em `SIGILLUS_PG_PORT` / `SIGILLUS_MINIO_PORT` no `.env` da raiz.
+
 Só o web (dados mockados, sem banco):
 
 ```bash

@@ -3,20 +3,13 @@
     "playwright": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "@playwright/mcp@latest",
-        "--browser",
-        "chromium"
-      ],
+      "args": ["@playwright/mcp@latest", "--browser", "chromium"],
       "env": {}
     },
     "chrome-devtools": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "-y",
-        "chrome-devtools-mcp@latest"
-      ],
+      "args": ["-y", "chrome-devtools-mcp@latest"],
       "env": {}
     }
   }
