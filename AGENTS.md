@@ -2,6 +2,8 @@
 
 Plataforma de anúncios de acompanhantes (marca **Sigillus**): feed, chat, painel da profissional, assinatura premium e backoffice admin. Desde 14/08/2026 a plataforma é **vitrine de anúncios**: nenhum dinheiro de cliente transita por ela, o único fluxo monetário é profissional → plataforma (assinatura premium) e ela não organiza, intermedeia nem acompanha encontro. Detalhes e decisões em `docs/adr/`.
 
+**O que falta fazer, em ordem, com as decisões já tomadas, está em `docs/roteiro.md`. Leia antes de começar qualquer task.**
+
 ## Layout
 
 ```
@@ -63,7 +65,7 @@ compose.yaml         Postgres 17 + MinIO para desenvolvimento
 - Importe sempre com o alias `@/` dentro de `apps/web` (aponta para `apps/web/`); entre pacotes use `@sigillus/contracts` e `@sigillus/domain`
 - Componentes React em PascalCase; hooks começam com `use`
 - Commits: conventional (`feat:`, `fix:`, `chore:`, `style:`, `docs:`, `refactor:`, `ci:`), mensagem em português
-- Branches descritivas (`feature/...`, `fix/...`); PRs contra `development`; nunca commite direto na `main`
+- Branches descritivas (`feat/T-xx-nome-curto`, `fix/...`); PRs contra `main`; nunca commite direto na `main`
 - Textos de UI em português (PT-BR)
 - Não escreva comentários no código
 - Versões de dependência sempre pinadas (sem `^`, `~`, `*` ou `latest`); Renovate cuida das atualizações

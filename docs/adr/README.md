@@ -17,6 +17,8 @@ Desde 14/08/2026 a plataforma é **vitrine de anúncios**. Nenhum dinheiro de cl
 
 ## Ordem sugerida de desligamento dos mocks no `apps/web`
 
+> O acompanhamento passo a passo (tasks T-10 a T-19, estado e decisões) está em `docs/roteiro.md`.
+
 Cada passo é um PR pequeno; a suíte E2E precisa continuar verde ao fim de cada um. A flag `NEXT_PUBLIC_DATA_SOURCE=mock|api` seleciona a origem por módulo, então a migração é serviço a serviço, não big-bang.
 
 1. **Feed** (feito neste PR como prova de conceito): `feed.list` com filtros no servidor.

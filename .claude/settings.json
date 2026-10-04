@@ -7,15 +7,21 @@
       "Bash(npm run build)",
       "Bash(npx tsc:*)",
       "Read(**)",
-      "Edit(**)"
+      "Edit(**)",
+      "Bash(npm run check)",
+      "Bash(npm run test)",
+      "Bash(npm run test:e2e)",
+      "Bash(npm run format)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run db:*)",
+      "Bash(npx playwright test:*)"
     ],
     "deny": [
       "Bash(npm run share)",
       "Read(.env*)",
       "Edit(.env*)",
       "Edit(.next/**)",
-      "Edit(node_modules/**)",
-      "Edit(package-lock.json)"
+      "Edit(node_modules/**)"
     ]
   }
 }
