@@ -4,6 +4,9 @@ const booleanFromEnv = z
   .enum(["true", "false", "1", "0"])
   .transform((value) => value === "true" || value === "1");
 
+const emptyStringToUndefined = z.literal("").transform(() => undefined);
+const optionalUrl = z.union([z.string().url(), emptyStringToUndefined]).optional();
+
 const csv = z
   .string()
   .default("")
@@ -28,14 +31,14 @@ const EnvSchema = z
     CORS_ORIGINS: csv,
     AUTH_SECRET: z.string().min(32),
     AUTH_TRUST_HOST: booleanFromEnv.default(false),
-    COOKIE_DOMAIN: z.string().optional(),
+    COOKIE_DOMAIN: z.union([emptyStringToUndefined, z.string()]).optional(),
     S3_ENDPOINT: z.string().url(),
     S3_REGION: z.string().default("auto"),
     S3_BUCKET: z.string().min(1),
     S3_ACCESS_KEY_ID: z.string().min(1),
     S3_SECRET_ACCESS_KEY: z.string().min(1),
     S3_FORCE_PATH_STYLE: booleanFromEnv.default(true),
-    S3_PUBLIC_BASE_URL: z.string().url().optional(),
+    S3_PUBLIC_BASE_URL: optionalUrl,
     MEDIA_UPLOAD_TTL_SECONDS: z.coerce.number().int().min(60).max(3600).default(900),
     MEDIA_VIEW_URL_TTL_SECONDS: z.coerce.number().int().min(30).max(3600).default(300),
     BILLING_PROVIDER: z.enum(["fake"]).default("fake"),
@@ -43,7 +46,7 @@ const EnvSchema = z
     BILLING_WEBHOOK_SECRET: z.string().min(16),
     JOBS_ENABLED: booleanFromEnv.default(true),
     RATE_LIMIT_ENABLED: booleanFromEnv.default(true),
-    SENTRY_DSN: z.string().url().optional(),
+    SENTRY_DSN: optionalUrl,
     SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
     OPENAPI_DOCS_ENABLED: booleanFromEnv.optional(),
     VERIFICATION_DEV_CODES: booleanFromEnv.default(false),

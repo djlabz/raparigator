@@ -42,4 +42,16 @@ describe("config", () => {
     expect(config.billingEnabled).toBe(false);
     expect(config.docsEnabled).toBe(false);
   });
+
+  it("aceita strings vazias para campos opcionais e converte para undefined", () => {
+    const config = loadConfig({
+      ...baseEnv,
+      SENTRY_DSN: "",
+      S3_PUBLIC_BASE_URL: "",
+      COOKIE_DOMAIN: "",
+    });
+    expect(config.SENTRY_DSN).toBeUndefined();
+    expect(config.S3_PUBLIC_BASE_URL).toBeUndefined();
+    expect(config.COOKIE_DOMAIN).toBeUndefined();
+  });
 });
