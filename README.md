@@ -73,6 +73,6 @@ NEXT_PUBLIC_DATA_SOURCE=api npm run dev
 ## Contribuindo
 
 1. Commits semânticos em português (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `ci:`).
-2. Branches descritivas; PRs contra `development`, nunca direto na `main`.
+2. Branches descritivas (`feat/T-xx-nome-curto`); PRs contra `main`, nunca commit direto nela. A ordem do que falta fazer está em `docs/roteiro.md`.
 3. `npm run check` e `npm run test` verdes antes de abrir PR; `npm run test:e2e` antes de publicar o PR.
 4. Convenções completas e proibições em `AGENTS.md`.
