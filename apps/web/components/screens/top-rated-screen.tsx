@@ -1,9 +1,13 @@
-﻿import { AppShell } from "@/components/layout/app-shell";
+"use client";
+
+import { AppShell } from "@/components/layout/app-shell";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ads } from "@/lib/mock-data";
+import type { FeedAdSummary } from "@sigillus/contracts";
+import { usePopularAds } from "@/lib/ad-data";
 
 export function TopRatedScreen() {
+  const { items: ads, isLoading } = usePopularAds("top_rated");
   const grouped = groupByCategory(
     [...ads].sort((a, b) => b.rating - a.rating),
     (ad) => ({
@@ -18,7 +22,7 @@ export function TopRatedScreen() {
     <AppShell>
       <div className="space-y-4">
         <h1 className="text-2xl font-semibold text-zinc-900">Mais avaliadas</h1>
-        {grouped.length === 0 ? (
+        {!isLoading && grouped.length === 0 ? (
           <EmptyState
             title="Ainda sem elogios por aqui"
             description="Quando as avaliações chegarem, elas aparecem aqui — bem cheinhas de carinho."
@@ -45,7 +49,7 @@ export function TopRatedScreen() {
   );
 }
 
-function groupByCategory<T>(source: typeof ads, mapper: (item: (typeof ads)[number]) => T) {
+function groupByCategory<T>(source: FeedAdSummary[], mapper: (item: FeedAdSummary) => T) {
   const categories = Array.from(new Set(source.map((item) => item.category)));
   return categories.map((category) => ({
     category,

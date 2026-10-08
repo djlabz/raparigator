@@ -3,8 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
-// Importamos o novo locationsData em vez de cities e states separados
-import { categories, locationsData } from "@/lib/mock-data";
+import { useCatalogs } from "@/lib/catalogs-data";
 import { BrandWordmark } from "@/components/ui/brand-wordmark";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -20,6 +19,7 @@ import styles from "./onboarding-screen.module.css";
 
 export function OnboardingScreen() {
   const { role, user, isLoggedIn, logout } = useAuthSession();
+  const { categories, locations: locationsData } = useCatalogs();
   const [showLocationToast, setShowLocationToast] = useState(false);
   const [isPopularVisible, setIsPopularVisible] = useState(false);
 

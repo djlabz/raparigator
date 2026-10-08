@@ -1,8 +1,11 @@
-﻿import { AppShell } from "@/components/layout/app-shell";
+"use client";
+
+import { AppShell } from "@/components/layout/app-shell";
 import { Card } from "@/components/ui/card";
-import { ads } from "@/lib/mock-data";
+import { usePopularAds } from "@/lib/ad-data";
 
 export function MostViewedScreen() {
+  const { items: ads } = usePopularAds("most_viewed");
   const categories = Array.from(new Set(ads.map((item) => item.category)));
 
   return (

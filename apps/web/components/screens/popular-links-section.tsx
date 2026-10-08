@@ -1,5 +1,5 @@
 ﻿import Link from "next/link";
-import { popularSections } from "@/lib/mock-data";
+import { popularSections } from "@/lib/popular-sections";
 import { Card } from "@/components/ui/card";
 
 export function PopularLinksSection() {

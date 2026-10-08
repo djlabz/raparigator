@@ -1,7 +1,9 @@
-﻿import Image from "next/image";
+"use client";
+
+import Image from "next/image";
 import { AppShell } from "@/components/layout/app-shell";
 import { Card } from "@/components/ui/card";
-import { mediaHighlights } from "@/lib/mock-data";
+import { useMediaHighlights } from "@/lib/ad-data";
 
 interface TrendingMediaScreenProps {
   kind: "foto" | "video";
@@ -9,6 +11,7 @@ interface TrendingMediaScreenProps {
 }
 
 export function TrendingMediaScreen({ kind, title }: TrendingMediaScreenProps) {
+  const { items: mediaHighlights } = useMediaHighlights();
   const filtered = mediaHighlights.filter((item) => item.kind === kind);
   const categories = Array.from(new Set(filtered.map((item) => item.category)));
 

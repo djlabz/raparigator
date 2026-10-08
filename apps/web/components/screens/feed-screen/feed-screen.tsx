@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cities } from "@/lib/mock-data";
+import { useCatalogs } from "@/lib/catalogs-data";
 import { useFeedAds } from "@/lib/feed-data";
 import {
   chromeBelowDesktopNavStickyMaxH,
@@ -74,6 +74,7 @@ export function FeedScreen() {
   const appliedHintTimerRef = useRef<number | null>(null);
   const filtersFingerprintRef = useRef("");
 
+  const { cities } = useCatalogs();
   const normalizedLocationQuery = locationInput.toLowerCase().trim();
   const locationMatches =
     normalizedLocationQuery.length < 2
