@@ -20,7 +20,7 @@ import {
   validatePasswordPair,
 } from "@/lib/identity";
 import { getVerificationState } from "@/lib/verification";
-import type { AuthRole, MockUser } from "../../lib/types";
+import type { AuthRole, User } from "../../lib/types";
 
 interface ProfileFormState {
   fullName: string;
@@ -39,7 +39,7 @@ const SAVE_CONFIRMATION_AUTO_DISMISS_MS = 3200;
 
 type ProfileFieldErrors = Partial<Record<keyof ProfileFormState, string>>;
 
-function initialFormState(user: MockUser | null): ProfileFormState {
+function initialFormState(user: User | null): ProfileFormState {
   return {
     fullName: user?.fullName ?? "",
     alias: user?.alias ?? "",
@@ -52,7 +52,7 @@ function initialFormState(user: MockUser | null): ProfileFormState {
   };
 }
 
-function readStoredForm(key: string, user: MockUser | null): ProfileFormState {
+function readStoredForm(key: string, user: User | null): ProfileFormState {
   if (typeof window === "undefined") {
     return initialFormState(user);
   }
@@ -98,7 +98,7 @@ export function AccountScreen() {
   );
 }
 
-function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; user: MockUser }) {
+function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; user: User }) {
   const { unreadCount, bannerClosed, setBannerClosed, markAllAsRead } =
     useAccountNotifications(role);
   const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});

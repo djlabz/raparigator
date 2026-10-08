@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import type { AuthRole, MockUser } from "@/lib/types";
+import type { AuthRole, User } from "@/lib/types";
 import { getProfileHref, getRoleLabel } from "@/lib/navigation";
 import { chromeCircle } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
 
 interface AccountMenuProps {
   role: AuthRole;
-  user: MockUser | null;
+  user: User | null;
   onLogout: () => void;
 }
 
