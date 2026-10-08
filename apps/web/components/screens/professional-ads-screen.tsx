@@ -6,11 +6,18 @@ import { useRef } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useMyAnnouncement } from "@/lib/announcement-draft";
+import { isApiDataSource } from "@/lib/data-source";
 import { ads } from "@/lib/mock-data";
 import type { ProfessionalAd } from "@/lib/types";
 import { currency } from "@/lib/utils";
 
 export function ProfessionalAdsScreen() {
+  const useApi = isApiDataSource();
+  const myAnnouncement = useMyAnnouncement();
+
+  const listAds = useApi ? (myAnnouncement.ad ? [myAnnouncement.ad] : []) : ads.slice(0, 2);
+
   return (
     <AppShell>
       <div className="space-y-6">
@@ -23,11 +30,24 @@ export function ProfessionalAdsScreen() {
           </h1>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          {ads.slice(0, 2).map((ad) => (
-            <ProfessionalAdListCard key={ad.id} ad={ad} />
-          ))}
-        </div>
+        {useApi && myAnnouncement.isLoading ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="h-48 rounded-2xl border border-zinc-200 bg-zinc-50 animate-pulse" />
+          </div>
+        ) : listAds.length === 0 ? (
+          <Card className="space-y-4 p-8 text-center">
+            <p className="text-zinc-600">Você ainda não tem um anúncio configurado.</p>
+            <Link href="/painel?tab=Anúncio">
+              <Button>Configurar meu anúncio</Button>
+            </Link>
+          </Card>
+        ) : (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {listAds.map((ad) => (
+              <ProfessionalAdListCard key={ad.id} ad={ad} />
+            ))}
+          </div>
+        )}
       </div>
     </AppShell>
   );

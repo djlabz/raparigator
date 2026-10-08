@@ -62,6 +62,7 @@ import {
   subscribeChatStore,
   updateChatParticipantAlias,
 } from "@/lib/chat-store";
+import { updateAvailability } from "@/lib/announcement-draft";
 import { getConversationAd } from "@/lib/conversation-ad";
 import {
   buildBriefGreeting,
@@ -143,6 +144,7 @@ function saveProfessionalAvailability(status: AvailabilityStatus) {
   if (typeof window !== "undefined") {
     window.localStorage.setItem(PROFESSIONAL_AVAILABILITY_STORAGE_KEY, status);
   }
+  updateAvailability(status).catch(() => {});
 }
 
 function getProfessionalAvailabilityOption(status: AvailabilityStatus) {

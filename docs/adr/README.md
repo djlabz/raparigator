@@ -11,6 +11,7 @@ Formato curto: Contexto / Opções consideradas / Decisão / Consequências. Um 
 | [005](005-filas-e-tempo-real.md)                    | pg-boss no Postgres; chat por LISTEN/NOTIFY + SSE                         |
 | [006](006-deploy.md)                                | Deploy agnóstico: Dockerfile, env, healthz, migrations idempotentes       |
 | [008](008-migracao-web-dual-mode-e-autenticacao.md) | Migração web dual-mode e integração com better-auth                       |
+| [009](009-migracao-rascunho-de-anuncio.md)          | Rascunho de anúncio, seções, publicação e controle de status via API      |
 
 ## Restrição de produto que atravessa todos os ADRs
 
