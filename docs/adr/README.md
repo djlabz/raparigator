@@ -2,14 +2,15 @@
 
 Formato curto: Contexto / Opções consideradas / Decisão / Consequências. Um arquivo por decisão, numerado, imutável depois de aceito (mudou de ideia? novo ADR que substitui o antigo).
 
-| ADR                                            | Decisão                                                                   |
-| ---------------------------------------------- | ------------------------------------------------------------------------- |
-| [001](001-linguagem-do-backend.md)             | Backend em TypeScript, no monorepo, com contrato e domínio compartilhados |
-| [002](002-runtime-e-gerenciador-de-pacotes.md) | Node LTS + npm workspaces                                                 |
-| [003](003-framework-http.md)                   | Hono + oRPC contract-first + Zod 4                                        |
-| [004](004-orm-e-migrations.md)                 | Drizzle SQL-first; migrations em CI e no boot                             |
-| [005](005-filas-e-tempo-real.md)               | pg-boss no Postgres; chat por LISTEN/NOTIFY + SSE                         |
-| [006](006-deploy.md)                           | Deploy agnóstico: Dockerfile, env, healthz, migrations idempotentes       |
+| ADR                                                 | Decisão                                                                   |
+| --------------------------------------------------- | ------------------------------------------------------------------------- |
+| [001](001-linguagem-do-backend.md)                  | Backend em TypeScript, no monorepo, com contrato e domínio compartilhados |
+| [002](002-runtime-e-gerenciador-de-pacotes.md)      | Node LTS + npm workspaces                                                 |
+| [003](003-framework-http.md)                        | Hono + oRPC contract-first + Zod 4                                        |
+| [004](004-orm-e-migrations.md)                      | Drizzle SQL-first; migrations em CI e no boot                             |
+| [005](005-filas-e-tempo-real.md)                    | pg-boss no Postgres; chat por LISTEN/NOTIFY + SSE                         |
+| [006](006-deploy.md)                                | Deploy agnóstico: Dockerfile, env, healthz, migrations idempotentes       |
+| [008](008-migracao-web-dual-mode-e-autenticacao.md) | Migração web dual-mode e integração com better-auth                       |
 
 ## Restrição de produto que atravessa todos os ADRs
 
