@@ -66,6 +66,8 @@ compose.yaml         Postgres 17 + MinIO para desenvolvimento
 - Componentes React em PascalCase; hooks começam com `use`
 - Commits: conventional (`feat:`, `fix:`, `chore:`, `style:`, `docs:`, `refactor:`, `ci:`), mensagem em português
 - Branches descritivas (`feat/T-xx-nome-curto`, `fix/...`); PRs contra `main`; nunca commite direto na `main`
+- A main exige histórico linear: PRs entram com `gh pr merge <n> --rebase --delete-branch` (ou --squash quando o PR tiver commits de ajuste). Merge commit é bloqueado pelo ruleset.
+- Em sequências de comandos com efeito destrutivo (merge, delete de branch, reset, rm), rode um comando por vez e confirme o resultado antes do próximo.
 - Textos de UI em português (PT-BR)
 - Não escreva comentários no código
 - Versões de dependência sempre pinadas (sem `^`, `~`, `*` ou `latest`); Renovate cuida das atualizações

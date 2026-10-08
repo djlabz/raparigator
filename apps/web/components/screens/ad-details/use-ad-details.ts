@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useProfessionalAd } from "@/lib/ad-data";
 import { useAuthSession } from "@/lib/auth-session";
 import {
   buildEncounterBrief,
@@ -6,7 +7,6 @@ import {
   readSimulationDraft,
   saveSimulationDraft,
 } from "@/lib/encounter-brief";
-import { ads } from "@/lib/mock-data";
 import type { EncounterBrief, ProfessionalAd, SimulationSelection } from "@/lib/types";
 
 export interface BentoItem {
@@ -17,6 +17,7 @@ export interface BentoItem {
 
 export interface UseAdDetailsReturn {
   ad: ProfessionalAd | undefined;
+  isLoading: boolean;
   role: ReturnType<typeof useAuthSession>["role"];
   riskTarget: "WhatsApp" | "Telegram" | null;
   setRiskTarget: (target: "WhatsApp" | "Telegram" | null) => void;
@@ -83,7 +84,7 @@ export function useAdDetails(slug: string, options: UseAdDetailsOptions = {}): U
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [galleryMode, setGalleryMode] = useState<"alternative" | "grid">("alternative");
 
-  const ad = useMemo(() => ads.find((item) => item.slug === slug), [slug]);
+  const { ad, isLoading } = useProfessionalAd(slug);
 
   const bentoItems = useMemo(() => {
     if (!ad || !ad.images) return [];
@@ -176,6 +177,7 @@ export function useAdDetails(slug: string, options: UseAdDetailsOptions = {}): U
 
   return {
     ad,
+    isLoading,
     role,
     riskTarget,
     setRiskTarget,

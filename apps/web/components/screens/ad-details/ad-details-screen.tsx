@@ -7,6 +7,7 @@ import { PremiumAdDetailsScreen } from "./premium-ad-details-screen";
 import { StandardAdDetailsScreen } from "./standard-ad-details-screen";
 import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useRegisterAdView } from "@/lib/ad-data";
 import { consumeReturnScroll } from "@/lib/auth-return";
 
 interface AdDetailsScreenProps {
@@ -14,7 +15,8 @@ interface AdDetailsScreenProps {
 }
 
 export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
-  const { ad, isPremium } = useAdDetails(slug);
+  const { ad, isLoading, isPremium } = useAdDetails(slug);
+  useRegisterAdView(slug, Boolean(ad));
   const pathname = usePathname();
 
   // Resolvidos no primeiro render e guardados: no StrictMode o efeito monta duas vezes e
@@ -100,6 +102,10 @@ export function AdDetailsScreen({ slug }: AdDetailsScreenProps) {
       window.removeEventListener("keydown", cancel);
     };
   }, [anchorId, returnScroll]);
+
+  if (isLoading) {
+    return <AppShell>{null}</AppShell>;
+  }
 
   if (!ad) {
     return (
