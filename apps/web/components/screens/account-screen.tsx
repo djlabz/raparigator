@@ -20,6 +20,7 @@ import {
   validatePasswordPair,
 } from "@/lib/identity";
 import { getVerificationState } from "@/lib/verification";
+import { updateContact } from "@/lib/announcement-draft";
 import type { AuthRole, User } from "../../lib/types";
 
 interface ProfileFormState {
@@ -229,6 +230,11 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
     setFieldErrors({});
     setFormError(null);
     setSaveMessage("Dados da conta salvos com sucesso.");
+
+    const digits = form.phone.replace(/\D/g, "");
+    if (role === "profissional" && digits.length >= 10 && digits.length <= 15) {
+      updateContact({ whatsappNumber: digits, telegramUsername: null }).catch(() => {});
+    }
   };
 
   const openOperationalSettings = () => {

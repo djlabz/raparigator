@@ -40,8 +40,10 @@ import type {
   AnnouncementPublishWarningItem,
   AnnouncementSectionKey,
   AnnouncementServiceOption,
+  AnnouncementDraftState,
   AvailabilityDay,
 } from "@/lib/announcement-draft-types";
+import { isApiDataSource } from "@/lib/data-source";
 import { ImageCropperModal, type Area } from "@/components/ui/image-cropper-modal";
 import { ImageBlurModal, type ImageBlurResult } from "@/components/ui/image-blur-modal";
 import { aspectsMatch } from "@/components/ui/image-selection-utils";
@@ -428,11 +430,13 @@ export function AnnouncementTab({
   ad,
   status,
   onToggleStatus,
+  initialDraft,
 }: {
   ad: AdPreview;
   adSlug: string;
   status: AdStatus;
   onToggleStatus: () => void;
+  initialDraft?: AnnouncementDraftState | null;
 }) {
   const {
     form,
@@ -449,7 +453,7 @@ export function AnnouncementTab({
     cancelSection,
     publish,
     isSectionReadyForOptimization,
-  } = useAnnouncementDraft(ad);
+  } = useAnnouncementDraft(ad, initialDraft);
   const router = useRouter();
   const { isPremium, photoLimit, videoLimit } = usePremiumPlan();
   const motionValues = useOptionalDashboardHeaderTitleMotion();
@@ -1057,7 +1061,9 @@ export function AnnouncementTab({
   } as const;
 
   const handleViewPublicAd = () => {
-    syncDraftToMockAd(ad.slug, form);
+    if (!isApiDataSource()) {
+      syncDraftToMockAd(ad.slug, form);
+    }
     router.push(`/anuncio/${ad.slug}`);
   };
 

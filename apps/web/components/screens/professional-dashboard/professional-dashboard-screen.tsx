@@ -9,6 +9,7 @@ import { useAuthSession } from "@/lib/auth-session";
 import { useAccountNotifications } from "@/lib/account-notifications";
 import type { AuthRole } from "@/lib/types";
 import { ads } from "@/lib/mock-data";
+import { useMyAnnouncement, updateListingStatus } from "@/lib/announcement-draft";
 import { chromeBelowDesktopNavStickyTop } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
 import { InfoBanner } from "@/components/ui/info-banner";
@@ -102,8 +103,15 @@ export function ProfessionalDashboardScreen() {
   const headingRef = useRef<HTMLDivElement>(null);
   useDashboardTitleScroll({ headingRef });
 
+  const myAnnouncement = useMyAnnouncement();
   const [activeTab, setActiveTab] = useState<string>("Anúncio");
-  const [adStatus, setAdStatus] = useState<AdStatus>("Ativo");
+  const [adStatus, setAdStatus] = useState<AdStatus>(() => myAnnouncement.listingStatus);
+
+  useEffect(() => {
+    if (myAnnouncement.listingStatus) {
+      setAdStatus(myAnnouncement.listingStatus);
+    }
+  }, [myAnnouncement.listingStatus]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -122,7 +130,13 @@ export function ProfessionalDashboardScreen() {
     }
   }, []);
 
-  const currentAd = ads[0];
+  const handleToggleStatus = async () => {
+    const nextStatus = adStatus === "Ativo" ? "Pausado" : "Ativo";
+    setAdStatus(nextStatus);
+    await updateListingStatus(nextStatus);
+  };
+
+  const currentAd = myAnnouncement.ad ?? ads[0];
   const adSlug = currentAd.slug;
 
   return (
@@ -214,7 +228,8 @@ export function ProfessionalDashboardScreen() {
               ad={currentAd}
               adSlug={adSlug}
               status={adStatus}
-              onToggleStatus={() => setAdStatus((prev) => (prev === "Ativo" ? "Pausado" : "Ativo"))}
+              initialDraft={myAnnouncement.draft}
+              onToggleStatus={handleToggleStatus}
             />
           )}
           {activeTab === "Avaliações" && <ReviewsTab adSlug={adSlug} />}
