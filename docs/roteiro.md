@@ -71,7 +71,7 @@ Logins de dev (seeds): `cliente@sigillus.dev` / `Cliente@123`, `profissional@sig
 
 - [x] **T-10 Catálogos e anúncio público** (passo 2). Procedimentos: `catalogs.get`, `ads.getBySlug`, `ads.listPopular`, `ads.mediaHighlights`, `ads.registerView`. Web: `app/(public)/anuncio/[slug]/page.tsx`, `components/screens/ad-details/use-ad-details.ts`, `most-viewed-screen.tsx`, `top-rated-screen.tsx`, `trending-media-screen.tsx`, `popular-links-section.tsx`, `lib/conversation-ad.ts`. Sem sessão, leitura pura. Pronto quando: as 4 telas públicas renderizam do banco no modo `api` com os dados das seeds; E2E `ad-details`, `home`, `gallery-profile-photo` verdes em mock. (PR #42, 08/10)
 
-- [ ] **T-11 Auth e sessão** (passo 3). A maior task da fase; tudo depois depende dela. Pode virar 2 PRs (usuário; admin).
+- [x] **T-11 Auth e sessão** (passo 3). A maior task da fase; tudo depois depende dela. (PR #43, 08/10)
   - Adicionar `better-auth` (versão pinada, a mesma da API) em `apps/web`. Criar `apps/web/lib/api/auth-client.ts` com `createAuthClient({ baseURL: getApiUrl(), basePath: "/api/auth" })` e `inferAdditionalFields` para `role`, `cpf`, `phone`, `city`, `alias`; e `admin-auth-client.ts` para `/api/admin-auth`.
   - `lib/auth-session.ts`: no modo `api`, `useAuthSession` passa a vir de `authClient.useSession()` + `auth.me` (para `plan`); `setRole` deixa de existir no modo `api`; `logout` chama `signOut`. Manter o mock intacto no modo `mock`.
   - Telas: `login-screen.tsx` (`signIn.email`), `client-signup-screen.tsx` e `professional-signup-screen.tsx` (`signUp.email` com `role` e campos extras), `admin-login-screen.tsx` (`adminAuthClient.signIn.email`), `account-screen.tsx` (dados reais). Erros do better-auth em PT-BR na tela.
