@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { ShieldAlert, Eye, EyeOff } from "lucide-react";
 import { useAdminSession } from "@/lib/admin-session";
 import { getMockAdminByEmail } from "@/lib/mock-users";
+import { adminAuthClient } from "@/lib/api/admin-auth-client";
+import { isApiDataSource } from "@/lib/data-source";
+import { translateAuthError } from "@/lib/auth-errors";
 
 export function AdminLoginScreen() {
   const router = useRouter();
@@ -20,7 +23,26 @@ export function AdminLoginScreen() {
     setError(null);
     setLoading(true);
 
-    await new Promise((r) => setTimeout(r, 600)); // simula latência
+    if (isApiDataSource()) {
+      try {
+        const res = await adminAuthClient.signIn.email({
+          email: email.trim(),
+          password,
+        });
+
+        if (res.error) {
+          setError(translateAuthError(res.error.message || res.error.statusText));
+          setLoading(false);
+          return;
+        }
+
+        router.push("/admin");
+      } catch (err: unknown) {
+        setError(translateAuthError(err));
+        setLoading(false);
+      }
+      return;
+    }
 
     const admin = getMockAdminByEmail(email.trim());
     if (!admin || admin.password !== password) {
@@ -29,7 +51,7 @@ export function AdminLoginScreen() {
       return;
     }
 
-    login(admin);
+    login?.(admin);
     router.push("/admin");
   };
 

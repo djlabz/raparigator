@@ -12,6 +12,9 @@ import { Input } from "../ui/input";
 import { readRedirectTarget } from "../../lib/auth-return";
 import { useAuthSession } from "../../lib/auth-session";
 import { mockUsers } from "../../lib/mock-users";
+import { authClient } from "@/lib/api/auth-client";
+import { isApiDataSource } from "@/lib/data-source";
+import { translateAuthError } from "@/lib/auth-errors";
 
 const loginHeroImage = {
   src: "/images/personas/persona2/persona2-elegant-look.webp",
@@ -24,9 +27,33 @@ export function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setError(null);
+
+    if (isApiDataSource()) {
+      setSubmitting(true);
+      try {
+        const res = await authClient.signIn.email({
+          email: email.trim(),
+          password,
+        });
+
+        if (res.error) {
+          setError(translateAuthError(res.error.message || res.error.statusText));
+          setSubmitting(false);
+          return;
+        }
+
+        router.push(readRedirectTarget());
+      } catch (err: unknown) {
+        setError(translateAuthError(err));
+        setSubmitting(false);
+      }
+      return;
+    }
 
     const user = mockUsers.find(
       (item) => item.email === email.trim() && item.password === password,
@@ -37,7 +64,7 @@ export function LoginScreen() {
       return;
     }
 
-    setRole(user.role);
+    setRole?.(user.role);
     router.push(readRedirectTarget());
   };
 
@@ -190,7 +217,12 @@ export function LoginScreen() {
               ) : null}
 
               <div className="sticky bottom-0 z-20 pt-1 pb-1 md:static md:p-0">
-                <Button fullWidth size="lg" className="shadow-md shadow-wine-700/20">
+                <Button
+                  fullWidth
+                  size="lg"
+                  disabled={submitting}
+                  className="shadow-md shadow-wine-700/20"
+                >
                   Entrar na plataforma
                 </Button>
               </div>

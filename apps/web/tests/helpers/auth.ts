@@ -32,3 +32,83 @@ export async function loginViaUi(page: Page, user: { email: string; password: st
   await page.getByRole("button", { name: "Entrar na plataforma" }).click();
   await page.waitForURL("**/feed**");
 }
+
+export async function loginViaApi(
+  page: Page,
+  user: { email: string; password: string },
+  apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000",
+) {
+  const response = await page.request.post(`${apiUrl}/api/auth/sign-in/email`, {
+    data: {
+      email: user.email,
+      password: user.password,
+    },
+  });
+
+  if (!response.ok()) {
+    throw new Error(`Falha no login via API (${response.status()}): ${await response.text()}`);
+  }
+
+  const setCookies = response
+    .headersArray()
+    .filter((h) => h.name.toLowerCase() === "set-cookie")
+    .map((h) => h.value);
+
+  const base = baseUrl();
+  for (const cookieStr of setCookies) {
+    const [pair] = cookieStr.split(";");
+    const eqIdx = pair.indexOf("=");
+    if (eqIdx !== -1) {
+      const name = pair.slice(0, eqIdx).trim();
+      const value = pair.slice(eqIdx + 1).trim();
+      await page.context().addCookies([
+        {
+          name,
+          value,
+          url: base,
+        },
+      ]);
+    }
+  }
+}
+
+export async function loginAdminViaApi(
+  page: Page,
+  admin = credentials.admin,
+  apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000",
+) {
+  const response = await page.request.post(`${apiUrl}/api/admin-auth/sign-in/email`, {
+    data: {
+      email: admin.email,
+      password: admin.password,
+    },
+  });
+
+  if (!response.ok()) {
+    throw new Error(
+      `Falha no login de admin via API (${response.status()}): ${await response.text()}`,
+    );
+  }
+
+  const setCookies = response
+    .headersArray()
+    .filter((h) => h.name.toLowerCase() === "set-cookie")
+    .map((h) => h.value);
+
+  const base = baseUrl();
+  for (const cookieStr of setCookies) {
+    const [pair] = cookieStr.split(";");
+    const eqIdx = pair.indexOf("=");
+    if (eqIdx !== -1) {
+      const name = pair.slice(0, eqIdx).trim();
+      const value = pair.slice(eqIdx + 1).trim();
+      await page.context().addCookies([
+        {
+          name,
+          value,
+          url: base,
+        },
+      ]);
+    }
+  }
+}

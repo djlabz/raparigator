@@ -24,6 +24,7 @@ export type {
   ReportType,
   Review,
   SimulationSelection,
+  User,
   VerificationStatus,
   WeeklySignup,
 } from "@sigillus/contracts";
@@ -34,5 +35,5 @@ export type MockUser = User & {
 };
 
 export type AdminUser = ContractAdminUser & {
-  password: string;
+  password?: string;
 };

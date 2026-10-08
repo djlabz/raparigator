@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { BackButton } from "@/components/ui/back-button";
-import type { AuthRole, MockUser } from "@/lib/types";
+import type { AuthRole, User } from "@/lib/types";
 import {
   chromeControlsRow,
   chromeGlassFixed,
@@ -23,7 +23,7 @@ import { NotificationBellButton } from "./notification-bell-button";
 
 interface TopHeaderProps {
   role: AuthRole;
-  user: MockUser | null;
+  user: User | null;
   isLoggedIn: boolean;
   onLogout: () => void;
   onBack?: () => void;
