@@ -30,21 +30,13 @@ npm install
 
 O `npm install` cria `.env`, `apps/api/.env` e `apps/web/.env.local` a partir dos `.example` quando ainda não existem; as portas locais se ajustam em `SIGILLUS_PG_PORT` / `SIGILLUS_MINIO_PORT` no `.env` da raiz.
 
-Só o web (dados mockados, sem banco):
-
-```bash
-npm run dev
-```
-
-Web + API:
-
 ```bash
 npm run db:up
 cp apps/api/.env.example apps/api/.env
 npm run db:migrate -w apps/api
 npm run db:seed -w apps/api
 npm run dev:api
-NEXT_PUBLIC_DATA_SOURCE=api npm run dev
+npm run dev
 ```
 
 - Web: http://localhost:3000 · API: http://localhost:4000 (`/healthz`, `/api/docs` com a spec OpenAPI)
@@ -66,9 +58,9 @@ NEXT_PUBLIC_DATA_SOURCE=api npm run dev
 | `npm run db:seed -w apps/api`               | Seeds de catálogos e dados de desenvolvimento                     |
 | `npm run share`                             | Expõe o web publicamente via Cloudflare tunnel (use com cuidado)  |
 
-## Origem de dados no web
+## Comunicação web e API
 
-`NEXT_PUBLIC_DATA_SOURCE=mock|api` (default `mock`). Os módulos migram um a um do mock para a API; a ordem está em `docs/adr/README.md`. Em modo `api`, `NEXT_PUBLIC_API_URL` aponta para a API (default `http://localhost:4000`).
+O web conecta-se diretamente à API pelo client oRPC tipado (`apps/web/lib/api/`). A variável `NEXT_PUBLIC_API_URL` aponta para a API (default `http://localhost:4000`). Mocks locais foram completamente removidos (ADR-016).
 
 ## Contribuindo
 

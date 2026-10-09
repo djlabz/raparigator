@@ -3,13 +3,11 @@ import { credentials } from "./helpers/credentials";
 import { loginViaUi } from "./helpers/auth";
 
 test.describe("Autenticação", () => {
-  test("login de cliente redireciona para o feed e grava role", async ({ page }) => {
+  test("login de cliente redireciona para o feed autenticado", async ({ page }) => {
     await loginViaUi(page, credentials.cliente);
 
     await expect(page).toHaveURL(/\/feed/);
-    await expect
-      .poll(async () => page.evaluate(() => window.localStorage.getItem("sigillus-user-role")))
-      .toBe("cliente");
+    await expect(page.getByRole("button", { name: /Abrir opções da conta/ })).toBeVisible();
   });
 
   test("credenciais inválidas exibem erro", async ({ page }) => {
@@ -26,12 +24,10 @@ test.describe("Autenticação", () => {
     await expect(page).toHaveURL(/\/auth\/login/);
   });
 
-  test("login de profissional grava role profissional", async ({ page }) => {
+  test("login de profissional grava sessão e exibe painel", async ({ page }) => {
     await loginViaUi(page, credentials.profissional);
 
     await expect(page).toHaveURL(/\/feed/);
-    await expect
-      .poll(async () => page.evaluate(() => window.localStorage.getItem("sigillus-user-role")))
-      .toBe("profissional");
+    await expect(page.getByRole("link", { name: "Painel" })).toBeVisible();
   });
 });

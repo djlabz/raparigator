@@ -1,6 +1,11 @@
 name: Playwright Tests
 on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
   workflow_dispatch:
+
 jobs:
   test:
     timeout-minutes: 60
@@ -13,6 +18,13 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Sobe Postgres e MinIO
+        run: npm run db:up
+      - name: Prepara ambiente da API
+        run: |
+          cp apps/api/.env.example apps/api/.env
+          npm run db:migrate -w apps/api
+          npm run db:seed -w apps/api
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
         working-directory: apps/web
