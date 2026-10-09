@@ -1,6 +1,6 @@
 "use client";
 
-import type { AccountNotificationItem } from "@/lib/account-notifications";
+import { type AccountNotificationItem, formatRelativeTime } from "@/lib/account-notifications";
 import { cn } from "@/lib/utils";
 
 interface NotificationsCenterProps {
@@ -40,7 +40,9 @@ function NotificationRow({
           <p className={cn("font-semibold", notification.read ? "text-zinc-700" : "text-zinc-900")}>
             {notification.title}
           </p>
-          <span className="shrink-0 text-xs text-zinc-500">{notification.time}</span>
+          <span className="shrink-0 text-xs text-zinc-500">
+            {formatRelativeTime(notification.time)}
+          </span>
         </div>
         <p className="mt-1 text-sm text-zinc-600">{notification.message}</p>
       </div>
