@@ -1,4 +1,11 @@
-import type { EncounterBrief, Message } from "@/lib/types";
+import { getApiClient } from "@/lib/api/client";
+import { isApiDataSource } from "@/lib/data-source";
+import type {
+  ChatMutationResult,
+  Conversation,
+  EncounterBrief,
+  Message,
+} from "@sigillus/contracts";
 
 export async function delay(ms = 260): Promise<void> {
   await new Promise<void>((resolve) => {
@@ -6,12 +13,43 @@ export async function delay(ms = 260): Promise<void> {
   });
 }
 
+export async function fetchConversations(): Promise<Conversation[]> {
+  if (!isApiDataSource()) {
+    return [];
+  }
+  return getApiClient().chat.listConversations();
+}
+
+export async function fetchMessages(
+  conversationId: string,
+  options: { before?: string; limit?: number } = {},
+): Promise<{ items: Message[]; hasMore: boolean }> {
+  if (!isApiDataSource()) {
+    return { items: [], hasMore: false };
+  }
+  return getApiClient().chat.listMessages({ conversationId, ...options });
+}
+
+export async function fetchEnsureConversationForAd(adSlug: string): Promise<string> {
+  const result = await getApiClient().chat.ensureConversationForAd({ adSlug });
+  return result.conversationId;
+}
+
 export async function fetchTextMessage(
   conversationId: string,
   content: string,
   senderDisplayName: string,
+  clientMessageId?: string,
 ): Promise<Message> {
-  // BACKEND: POST /api/chat/conversations/:conversationId/messages
+  if (isApiDataSource()) {
+    const result = await getApiClient().chat.sendText({
+      conversationId,
+      content,
+      clientMessageId,
+    });
+    return result.message;
+  }
+
   await delay(420);
   return {
     id: `srv-${Date.now()}`,
@@ -35,8 +73,18 @@ export async function fetchBriefMessage(
   brief: EncounterBrief,
   greeting: string,
   senderDisplayName: string,
+  clientMessageId?: string,
 ): Promise<Message> {
-  // BACKEND: POST /api/chat/conversations/:conversationId/messages/brief
+  if (isApiDataSource()) {
+    const result = await getApiClient().chat.sendBrief({
+      conversationId,
+      brief,
+      greeting,
+      clientMessageId,
+    });
+    return result.message;
+  }
+
   await delay(460);
   return {
     id: `brief-${Date.now()}`,
@@ -59,8 +107,22 @@ export async function fetchBriefMessage(
 export async function fetchViewOnceMediaMessage(
   conversationId: string,
   senderDisplayName: string,
+  assetId?: string,
+  clientMessageId?: string,
 ): Promise<Message> {
-  // BACKEND: POST /api/chat/conversations/:conversationId/messages/media
+  if (isApiDataSource()) {
+    if (!assetId) {
+      throw new Error("Mídia não informada");
+    }
+    const result = await getApiClient().chat.sendMedia({
+      conversationId,
+      assetId,
+      isViewOnce: true,
+      clientMessageId,
+    });
+    return result.message;
+  }
+
   await delay(520);
   return {
     id: `media-${Date.now()}`,
@@ -86,30 +148,62 @@ export async function fetchViewOnceMediaMessage(
 }
 
 export async function fetchSetConversationBlocked(
-  _conversationId: string,
-  _isBlocked: boolean,
-): Promise<void> {
-  // BACKEND: PATCH /api/chat/conversations/:conversationId/block
+  conversationId: string,
+  isBlocked: boolean,
+): Promise<ChatMutationResult> {
+  if (isApiDataSource()) {
+    return getApiClient().chat.setBlocked({ conversationId, isBlocked });
+  }
   await delay(200);
+  return { ok: true };
 }
 
-export async function fetchDeleteConversationFromInbox(_conversationId: string): Promise<void> {
-  // BACKEND: DELETE /api/chat/conversations/:conversationId/inbox
+export async function fetchDeleteConversationFromInbox(
+  conversationId: string,
+): Promise<ChatMutationResult> {
+  if (isApiDataSource()) {
+    return getApiClient().chat.deleteFromInbox({ conversationId });
+  }
   await delay(200);
+  return { ok: true };
 }
 
 export async function fetchReportConversation(
-  _conversationId: string,
-  _reason: string,
-): Promise<void> {
-  // BACKEND: POST /api/chat/conversations/:conversationId/report
+  conversationId: string,
+  reason: string,
+): Promise<ChatMutationResult> {
+  if (isApiDataSource()) {
+    return getApiClient().chat.report({ conversationId, reason, type: "other" });
+  }
   await delay(300);
+  return { ok: true };
 }
 
 export async function fetchUpdateParticipantAlias(
-  _conversationId: string,
-  _alias: string | null,
-): Promise<void> {
-  // BACKEND: PATCH /api/chat/conversations/:conversationId/alias
+  conversationId: string,
+  alias: string | null,
+): Promise<ChatMutationResult> {
+  if (isApiDataSource()) {
+    return getApiClient().chat.updateAlias({ conversationId, alias });
+  }
   await delay(200);
+  return { ok: true };
+}
+
+export async function fetchMarkConversationRead(conversationId: string): Promise<void> {
+  if (isApiDataSource()) {
+    await getApiClient().chat.markRead({ conversationId });
+    return;
+  }
+  await delay(100);
+}
+
+export async function fetchOpenViewOnce(
+  messageId: string,
+): Promise<{ openedAt: string; url: string | null }> {
+  if (isApiDataSource()) {
+    return getApiClient().chat.openViewOnce({ messageId });
+  }
+  await delay(200);
+  return { openedAt: new Date().toISOString(), url: null };
 }

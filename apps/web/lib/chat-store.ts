@@ -1,22 +1,38 @@
 import {
   fetchBriefMessage,
+  fetchConversations,
   fetchDeleteConversationFromInbox,
+  fetchEnsureConversationForAd,
+  fetchMarkConversationRead,
+  fetchMessages,
   fetchReportConversation,
   fetchSetConversationBlocked,
   fetchTextMessage,
   fetchUpdateParticipantAlias,
   fetchViewOnceMediaMessage,
 } from "@/lib/chat-service";
-import { getConversationAd } from "@/lib/conversation-ad";
+import { getApiClient } from "@/lib/api/client";
+import { isApiDataSource } from "@/lib/data-source";
 import { ads, conversations as mockConversations, messages as mockMessages } from "@/lib/mock-data";
-import type { ChatMutationResult, ChatSendResult, ChatSnapshot } from "@/lib/chat-store-types";
+import type {
+  ChatEvent,
+  ChatMutationResult,
+  ChatSendResult,
+  ChatSnapshot,
+} from "@/lib/chat-store-types";
 import type { Conversation, EncounterBrief, Message } from "@/lib/types";
 
 const EMPTY_SNAPSHOT: ChatSnapshot = { conversations: [], messages: [] };
 
 let snapshot: ChatSnapshot = EMPTY_SNAPSHOT;
 let seeded = false;
+let apiInitialized = false;
 const listeners = new Set<() => void>();
+
+let sseController: AbortController | null = null;
+let sseActive = false;
+let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+let reconnectAttempts = 0;
 
 function cloneConversation(conversation: Conversation): Conversation {
   return { ...conversation };
@@ -59,13 +75,144 @@ export function getChatStoreSnapshot(): ChatSnapshot {
   return snapshot;
 }
 
+async function refreshConversations(): Promise<void> {
+  if (!isApiDataSource() || typeof window === "undefined") {
+    return;
+  }
+  try {
+    const remoteConversations = await fetchConversations();
+    const current = snapshot;
+    replaceSnapshot({
+      ...current,
+      conversations: remoteConversations.filter((c) => !c.deletedFromInboxAt),
+    });
+  } catch {
+    return;
+  }
+}
+
+export async function loadConversationMessages(conversationId: string): Promise<void> {
+  if (!isApiDataSource() || typeof window === "undefined" || !conversationId) {
+    return;
+  }
+  try {
+    const { items } = await fetchMessages(conversationId, { limit: 50 });
+    const current = snapshot;
+    const pendingOptimistic = current.messages.filter(
+      (m) => m.conversationId === conversationId && m.status === "sending",
+    );
+    const otherMessages = current.messages.filter((m) => m.conversationId !== conversationId);
+    const map = new Map<string, Message>();
+    for (const item of items) {
+      map.set(item.id, item);
+    }
+    for (const opt of pendingOptimistic) {
+      if (!map.has(opt.id)) {
+        map.set(opt.id, opt);
+      }
+    }
+    replaceSnapshot({
+      ...current,
+      messages: [...otherMessages, ...Array.from(map.values())],
+    });
+  } catch {
+    return;
+  }
+}
+
+function handleChatEvent(event: ChatEvent) {
+  if (event.type === "message.created") {
+    void refreshConversations();
+    void loadConversationMessages(event.conversationId);
+  } else if (event.type === "message.delivered") {
+    const current = snapshot;
+    replaceSnapshot({
+      ...current,
+      messages: current.messages.map((m) =>
+        m.id === event.messageId
+          ? { ...m, status: "delivered", deliveredAt: event.deliveredAt }
+          : m,
+      ),
+    });
+  } else if (event.type === "message.opened") {
+    const current = snapshot;
+    replaceSnapshot({
+      ...current,
+      messages: current.messages.map((m) =>
+        m.id === event.messageId && m.media
+          ? { ...m, media: { ...m.media, openedAt: event.openedAt } }
+          : m,
+      ),
+    });
+  } else if (event.type === "conversation.updated") {
+    void refreshConversations();
+  }
+}
+
+export function startChatEventStream() {
+  if (typeof window === "undefined" || !isApiDataSource() || sseActive) {
+    return;
+  }
+  sseActive = true;
+  sseController = new AbortController();
+  const signal = sseController.signal;
+
+  (async () => {
+    try {
+      const stream = await getApiClient().chat.subscribe({}, { signal });
+      reconnectAttempts = 0;
+      for await (const event of stream) {
+        if (signal.aborted) break;
+        handleChatEvent(event);
+      }
+    } catch {
+      return;
+    } finally {
+      sseActive = false;
+      if (!signal.aborted) {
+        const backoffMs = Math.min(1000 * Math.pow(2, reconnectAttempts), 15000);
+        reconnectAttempts += 1;
+        if (reconnectTimeout) clearTimeout(reconnectTimeout);
+        reconnectTimeout = setTimeout(startChatEventStream, backoffMs);
+      }
+    }
+  })();
+}
+
+export function stopChatEventStream() {
+  if (sseController) {
+    sseController.abort();
+    sseController = null;
+  }
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+    reconnectTimeout = null;
+  }
+  sseActive = false;
+  reconnectAttempts = 0;
+}
+
 export function ensureChatStore(): ChatSnapshot {
   if (typeof window === "undefined") {
     return EMPTY_SNAPSHOT;
   }
-  if (!seeded) {
-    seeded = true;
-    snapshot = buildSeedSnapshot();
+  if (!isApiDataSource()) {
+    if (!seeded) {
+      seeded = true;
+      snapshot = buildSeedSnapshot();
+    }
+    return snapshot;
+  }
+
+  if (!apiInitialized) {
+    apiInitialized = true;
+    void refreshConversations().then(() => {
+      const current = snapshot;
+      if (current.conversations.length > 0) {
+        void loadConversationMessages(current.conversations[0].id);
+      }
+    });
+    startChatEventStream();
   }
   return snapshot;
 }
@@ -74,8 +221,12 @@ export function reseedChatStore(): ChatSnapshot {
   if (typeof window === "undefined") {
     return EMPTY_SNAPSHOT;
   }
-  seeded = true;
-  replaceSnapshot(buildSeedSnapshot());
+  if (!isApiDataSource()) {
+    seeded = true;
+    replaceSnapshot(buildSeedSnapshot());
+    return snapshot;
+  }
+  void refreshConversations();
   return snapshot;
 }
 
@@ -106,6 +257,9 @@ export function markConversationAsRead(conversationId: string) {
       conversation.id === conversationId ? { ...conversation, unread: 0 } : conversation,
     ),
   });
+  if (isApiDataSource()) {
+    void fetchMarkConversationRead(conversationId);
+  }
 }
 
 function syncPreview(
@@ -120,45 +274,49 @@ function syncPreview(
   );
 }
 
-/**
- * Devolve o id da conversa vinculada a um anúncio, criando-a quando o cliente ainda
- * não falou com aquela profissional.
- */
-export function ensureConversationForAd(adSlug: string): string | null {
+export async function ensureConversationForAd(adSlug: string): Promise<string | null> {
   if (typeof window === "undefined") {
     return null;
   }
 
   const current = ensureChatStore();
-  const existing = current.conversations.find(
-    (conversation) => getConversationAd(conversation)?.slug === adSlug,
-  );
+  const existing = current.conversations.find((conversation) => conversation.adSlug === adSlug);
   if (existing) {
     return existing.id;
   }
 
-  const ad = ads.find((item) => item.slug === adSlug);
-  if (!ad) {
-    return null;
+  if (!isApiDataSource()) {
+    const ad = ads.find((item) => item.slug === adSlug);
+    if (!ad) {
+      return null;
+    }
+
+    const conversation: Conversation = {
+      id: `local-conv-${adSlug}`,
+      participantId: ad.id,
+      contactName: ad.artisticName,
+      contactStatus: ad.status === "indisponivel" ? "offline" : "online",
+      lastMessage: "Conversa iniciada pelo anúncio",
+      lastMessageAt: "agora",
+      unread: 0,
+      adSlug,
+    };
+
+    replaceSnapshot({
+      ...current,
+      conversations: [conversation, ...current.conversations],
+    });
+
+    return conversation.id;
   }
 
-  const conversation: Conversation = {
-    id: `local-conv-${adSlug}`,
-    participantId: ad.id,
-    contactName: ad.artisticName,
-    contactStatus: ad.status === "indisponivel" ? "offline" : "online",
-    lastMessage: "Conversa iniciada pelo anúncio",
-    lastMessageAt: "agora",
-    unread: 0,
-    adSlug,
-  };
-
-  replaceSnapshot({
-    ...current,
-    conversations: [conversation, ...current.conversations],
-  });
-
-  return conversation.id;
+  try {
+    const conversationId = await fetchEnsureConversationForAd(adSlug);
+    await refreshConversations();
+    return conversationId;
+  } catch {
+    return null;
+  }
 }
 
 export async function sendChatBrief(
@@ -176,7 +334,8 @@ export async function sendChatBrief(
     return { ok: false, reason: "blocked" };
   }
 
-  const optimisticId = `local-brief-${Date.now()}`;
+  const clientMessageId = `cmsg_brief_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  const optimisticId = clientMessageId;
   const optimisticMessage: Message = {
     id: optimisticId,
     conversationId,
@@ -200,7 +359,13 @@ export async function sendChatBrief(
   });
 
   try {
-    const confirmed = await fetchBriefMessage(conversationId, brief, greeting, senderDisplayName);
+    const confirmed = await fetchBriefMessage(
+      conversationId,
+      brief,
+      greeting,
+      senderDisplayName,
+      clientMessageId,
+    );
     const latest = ensureChatStore();
     replaceSnapshot({
       ...latest,
@@ -240,7 +405,8 @@ export async function sendChatText(
     return { ok: false, reason: "blocked" };
   }
 
-  const optimisticId = `local-${Date.now()}`;
+  const clientMessageId = `cmsg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  const optimisticId = clientMessageId;
   const optimisticMessage: Message = {
     id: optimisticId,
     conversationId,
@@ -263,7 +429,12 @@ export async function sendChatText(
   });
 
   try {
-    const confirmed = await fetchTextMessage(conversationId, trimmed, senderDisplayName);
+    const confirmed = await fetchTextMessage(
+      conversationId,
+      trimmed,
+      senderDisplayName,
+      clientMessageId,
+    );
     const latest = ensureChatStore();
     replaceSnapshot({
       ...latest,
@@ -287,6 +458,7 @@ export async function sendChatText(
 export async function sendChatViewOnceMedia(
   conversationId: string,
   senderDisplayName: string,
+  assetId?: string,
 ): Promise<ChatSendResult> {
   const current = ensureChatStore();
   const conversation = current.conversations.find((item) => item.id === conversationId);
@@ -297,7 +469,8 @@ export async function sendChatViewOnceMedia(
     return { ok: false, reason: "blocked" };
   }
 
-  const optimisticId = `local-media-${Date.now()}`;
+  const clientMessageId = `cmsg_media_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  const optimisticId = clientMessageId;
   const optimisticMessage: Message = {
     id: optimisticId,
     conversationId,
@@ -308,7 +481,7 @@ export async function sendChatViewOnceMedia(
     messageType: "media",
     status: "sending",
     media: {
-      id: `local-asset-${Date.now()}`,
+      id: assetId ?? `local-asset-${Date.now()}`,
       kind: "image",
       name: "Mídia temporária",
       isViewOnce: true,
@@ -326,7 +499,12 @@ export async function sendChatViewOnceMedia(
   });
 
   try {
-    const confirmed = await fetchViewOnceMediaMessage(conversationId, senderDisplayName);
+    const confirmed = await fetchViewOnceMediaMessage(
+      conversationId,
+      senderDisplayName,
+      assetId,
+      clientMessageId,
+    );
     const latest = ensureChatStore();
     replaceSnapshot({
       ...latest,
@@ -366,8 +544,11 @@ export async function setChatConversationBlocked(
   });
 
   try {
-    await fetchSetConversationBlocked(conversationId, isBlocked);
-    return { ok: true };
+    const result = await fetchSetConversationBlocked(conversationId, isBlocked);
+    if (!result.ok) {
+      throw new Error("failed");
+    }
+    return result;
   } catch {
     const latest = ensureChatStore();
     replaceSnapshot({
@@ -395,8 +576,11 @@ export async function deleteChatConversationFromInbox(
   });
 
   try {
-    await fetchDeleteConversationFromInbox(conversationId);
-    return { ok: true };
+    const result = await fetchDeleteConversationFromInbox(conversationId);
+    if (!result.ok) {
+      throw new Error("failed");
+    }
+    return result;
   } catch {
     const latest = ensureChatStore();
     replaceSnapshot({
@@ -419,8 +603,7 @@ export async function reportChatConversation(
   }
 
   try {
-    await fetchReportConversation(conversationId, reason);
-    return { ok: true };
+    return await fetchReportConversation(conversationId, reason);
   } catch {
     return { ok: false, reason: "adapter_error" };
   }
@@ -447,8 +630,11 @@ export async function updateChatParticipantAlias(
   });
 
   try {
-    await fetchUpdateParticipantAlias(conversationId, nextAlias ?? null);
-    return { ok: true };
+    const result = await fetchUpdateParticipantAlias(conversationId, nextAlias ?? null);
+    if (!result.ok) {
+      throw new Error("failed");
+    }
+    return result;
   } catch {
     const latest = ensureChatStore();
     replaceSnapshot({

@@ -35,6 +35,29 @@ function cachedAdState(slug: string): AdState | null {
   return adCache.has(slug) ? { slug, ad: adCache.get(slug) ?? null, error: null } : null;
 }
 
+export function getCachedAd(slug: string): ProfessionalAd | null {
+  if (!isApiDataSource()) {
+    return mockAds.find((item) => item.slug === slug) ?? null;
+  }
+  return adCache.get(slug) ?? null;
+}
+
+export async function fetchAdBySlug(slug: string): Promise<ProfessionalAd | null> {
+  if (!isApiDataSource()) {
+    return mockAds.find((item) => item.slug === slug) ?? null;
+  }
+  if (adCache.has(slug)) {
+    return adCache.get(slug) ?? null;
+  }
+  try {
+    const ad = await getApiClient().ads.getBySlug({ slug });
+    adCache.set(slug, ad);
+    return ad;
+  } catch {
+    return null;
+  }
+}
+
 export function useProfessionalAd(slug: string): ProfessionalAdResult {
   const useApi = isApiDataSource();
   const [apiState, setApiState] = useState<AdState | null>(() => cachedAdState(slug));

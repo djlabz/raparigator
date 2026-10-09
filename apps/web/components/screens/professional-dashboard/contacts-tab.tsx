@@ -51,7 +51,8 @@ export function ContactsTab({ adSlug, professionalName }: ContactsTabProps) {
     return chat.conversations
       .filter(
         (conversation) =>
-          !conversation.deletedFromInboxAt && getConversationAd(conversation)?.slug === adSlug,
+          !conversation.deletedFromInboxAt &&
+          (conversation.adSlug === adSlug || getConversationAd(conversation)?.slug === adSlug),
       )
       .map((conversation) => {
         const messages = chat.messages.filter(

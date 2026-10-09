@@ -1,4 +1,5 @@
 export type {
+  ChatEvent,
   ChatMutationReason,
   ChatMutationResult,
   ChatSendResult,
