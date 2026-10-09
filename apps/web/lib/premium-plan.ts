@@ -67,6 +67,8 @@ export async function fetchPremiumState(): Promise<PremiumState | null> {
     emitChange();
     return state;
   } catch {
+    cachedApiState = null;
+    emitChange();
     return null;
   }
 }
@@ -75,15 +77,15 @@ const STANDARD_LIMITS = getPlanLimits("standard");
 const PREMIUM_LIMITS = getPlanLimits("premium");
 
 export function getCachedPlanTier(): PlanTier {
-  if (isApiDataSource() && cachedApiState) {
-    return cachedApiState.plan;
+  if (isApiDataSource()) {
+    return cachedApiState ? cachedApiState.plan : "standard";
   }
   return readStoredPlan();
 }
 
 export function getCachedPremiumLimits(): PlanLimits {
-  if (isApiDataSource() && cachedApiState) {
-    return cachedApiState.limits;
+  if (isApiDataSource()) {
+    return cachedApiState ? cachedApiState.limits : STANDARD_LIMITS;
   }
   const plan = readStoredPlan();
   return plan === "premium" ? PREMIUM_LIMITS : STANDARD_LIMITS;
@@ -94,6 +96,36 @@ export function activatePremium() {
     window.localStorage.setItem(PLAN_STORAGE_KEY, "premium");
   }
 
+  if (isApiDataSource()) {
+    cachedApiState = {
+      plan: "premium",
+      limits: PREMIUM_LIMITS,
+      subscription: cachedApiState?.subscription ?? null,
+    };
+  }
+
+  emitChange();
+}
+
+export function deactivatePremium() {
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(PLAN_STORAGE_KEY, "standard");
+  }
+
+  if (isApiDataSource()) {
+    cachedApiState = {
+      plan: "standard",
+      limits: STANDARD_LIMITS,
+      subscription: null,
+    };
+  }
+
+  emitChange();
+}
+
+export function resetCachedPremiumState() {
+  cachedApiState = null;
+  apiFetchPromise = null;
   emitChange();
 }
 
@@ -127,7 +159,9 @@ export function usePremiumPlan() {
   return {
     plan,
     isPremium,
+    subscription: cachedApiState?.subscription ?? null,
     activatePremium,
+    deactivatePremium,
     viewOnceUsed,
     canSendViewOnce: limits.canSendViewOnce,
     registerViewOnceSend,

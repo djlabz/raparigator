@@ -315,7 +315,7 @@ type ToastState = { title: string; message: string; type?: "success" | "error" |
 
 export function ChatScreen() {
   const { isLoggedIn, user, role } = useAuthSession();
-  const { isPremium, canSendViewOnce } = usePremiumPlan();
+  const { canSendViewOnce, canUseAlias } = usePremiumPlan();
   const { getInvite } = useReviewInvites();
   ensureChatStore();
   const snapshot = useSyncExternalStore(
@@ -684,7 +684,7 @@ export function ChatScreen() {
   const openRenameModal = () => {
     if (!activeConversation) return;
 
-    if (!isPremium) {
+    if (!canUseAlias) {
       setProfilePanelOpen(false);
       openPremiumUpsell("alias");
       return;

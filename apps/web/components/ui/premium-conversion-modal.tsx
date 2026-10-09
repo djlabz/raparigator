@@ -11,7 +11,7 @@ import {
   getPlanOption,
   getSharedGains,
   PREMIUM_EXCLUSIVE_FEATURES,
-  PREMIUM_PLAN_OPTIONS,
+  usePremiumPlans,
 } from "@/lib/premium-catalog";
 import type { PremiumBillingCycle } from "@/lib/types";
 import { cn, currency } from "@/lib/utils";
@@ -94,7 +94,9 @@ export function PremiumConversionModal({
   const [canScrollDown, setCanScrollDown] = useState(true);
   const [reachedEnd, setReachedEnd] = useState(false);
   const sharedGains = getSharedGains();
-  const selectedPlan = getPlanOption(billingCycle);
+  const planOptions = usePremiumPlans();
+  const selectedPlan =
+    planOptions.find((option) => option.cycle === billingCycle) ?? getPlanOption(billingCycle);
   const savingsPercent = getBillingSavingsPercent();
 
   if (open !== wasOpen) {
@@ -309,7 +311,7 @@ export function PremiumConversionModal({
                 Economize {savingsPercent}% no plano semestral
               </p>
               <div className="grid grid-cols-2 gap-2">
-                {PREMIUM_PLAN_OPTIONS.map((option) => {
+                {planOptions.map((option) => {
                   const selected = billingCycle === option.cycle;
                   return (
                     <button
