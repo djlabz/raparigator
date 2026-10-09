@@ -14,6 +14,7 @@ Formato curto: Contexto / Opções consideradas / Decisão / Consequências. Um 
 | [009](009-migracao-rascunho-de-anuncio.md)          | Rascunho de anúncio, seções, publicação e controle de status via API      |
 | [010](010-migracao-midia-e-storage.md)              | Upload pré-assinado, processamento de mídia e gestão de galeria via API   |
 | [011](011-migracao-chat-e-streaming.md)             | Chat, camada otimista e streaming em tempo real (SSE) via API             |
+| [012](012-migracao-avaliacoes-e-convites.md)        | Avaliações por convite, gating e recálculo de rating via API              |
 
 ## Restrição de produto que atravessa todos os ADRs
 

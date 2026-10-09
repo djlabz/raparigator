@@ -3,11 +3,11 @@
 import { Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useProfessionalAd } from "@/lib/ad-data";
 import { useAdReviews } from "@/lib/ad-reviews";
-import { ads } from "@/lib/mock-data";
 
 export function ReviewsTab({ adSlug }: { adSlug: string }) {
-  const ad = ads.find((item) => item.slug === adSlug);
+  const { ad } = useProfessionalAd(adSlug);
   const { reviews, rating, reviewsCount } = useAdReviews(ad);
 
   return (
