@@ -32,6 +32,7 @@ export function ReviewCta({ ad }: ReviewCtaProps) {
   const [score, setScore] = useState(0);
   const [comment, setComment] = useState("");
   const [sent, setSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const conversation =
     chat.conversations.find(
@@ -112,35 +113,49 @@ export function ReviewCta({ ad }: ReviewCtaProps) {
 
       <Modal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          if (!isSubmitting) {
+            setModalOpen(false);
+          }
+        }}
         title={`Avaliar ${ad.artisticName}`}
         description={`Sua avaliação aparece publicamente como "${alias}".`}
         actions={
           <>
-            <Button variant="secondary" fullWidth onClick={() => setModalOpen(false)}>
+            <Button
+              variant="secondary"
+              fullWidth
+              disabled={isSubmitting}
+              onClick={() => setModalOpen(false)}
+            >
               Cancelar
             </Button>
             <Button
               fullWidth
-              disabled={score === 0}
-              onClick={() => {
-                const ok = submitReview({
-                  conversationId: conversation.id,
-                  adSlug: ad.slug,
-                  author: alias,
-                  score,
-                  comment,
-                });
+              disabled={score === 0 || isSubmitting}
+              onClick={async () => {
+                setIsSubmitting(true);
+                try {
+                  const ok = await submitReview({
+                    conversationId: conversation.id,
+                    adSlug: ad.slug,
+                    author: alias,
+                    score,
+                    comment,
+                  });
 
-                setModalOpen(false);
+                  setModalOpen(false);
 
-                if (ok) {
-                  setSent(true);
-                  window.setTimeout(() => setSent(false), 4000);
+                  if (ok) {
+                    setSent(true);
+                    window.setTimeout(() => setSent(false), 4000);
+                  }
+                } finally {
+                  setIsSubmitting(false);
                 }
               }}
             >
-              Enviar avaliação
+              {isSubmitting ? "Enviando..." : "Enviar avaliação"}
             </Button>
           </>
         }
