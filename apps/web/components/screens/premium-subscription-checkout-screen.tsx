@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { PixIcon } from "@/components/ui/pix-icon";
 import { ShinyButton } from "@/components/ui/shiny-button";
 import { Toast } from "@/components/ui/toast";
-import { getImmediateGains, getPlanOption, PREMIUM_PLAN_OPTIONS } from "@/lib/premium-catalog";
+import { getImmediateGains, getPlanOption, usePremiumPlans } from "@/lib/premium-catalog";
 import { usePremiumPlan } from "@/lib/premium-plan";
 import type { PremiumBillingCycle } from "@/lib/types";
 import { currency, cn } from "@/lib/utils";
@@ -42,6 +42,7 @@ export function PremiumSubscriptionCheckoutScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isPremium, activatePremium } = usePremiumPlan();
+  const planOptions = usePremiumPlans();
 
   const billingParam = searchParams.get("billing");
   const initialBilling: PremiumBillingCycle = isBillingCycle(billingParam)
@@ -56,7 +57,11 @@ export function PremiumSubscriptionCheckoutScreen() {
   const [isPaying, setIsPaying] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const selectedPlan = useMemo(() => getPlanOption(billingCycle), [billingCycle]);
+  const selectedPlan = useMemo(
+    () =>
+      planOptions.find((option) => option.cycle === billingCycle) ?? getPlanOption(billingCycle),
+    [planOptions, billingCycle],
+  );
   const gains = getImmediateGains();
 
   const handleConfirm = () => {
@@ -127,7 +132,7 @@ export function PremiumSubscriptionCheckoutScreen() {
                   Ciclo
                 </p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  {PREMIUM_PLAN_OPTIONS.map((option) => {
+                  {planOptions.map((option) => {
                     const selected = billingCycle === option.cycle;
                     return (
                       <button
