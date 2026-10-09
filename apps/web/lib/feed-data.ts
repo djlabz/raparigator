@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { FeedAdSummary, FeedFiltersCriteria } from "@sigillus/contracts";
 import { PAGE_SIZE_MAX } from "@sigillus/contracts";
-import { filterAds, serializeFeedFiltersCriteria } from "@sigillus/domain";
+import { serializeFeedFiltersCriteria } from "@sigillus/domain";
 import { getApiClient } from "@/lib/api/client";
-import { isApiDataSource } from "@/lib/data-source";
-import { ads as mockAds } from "@/lib/mock-data";
 
 export type FeedAdsResult = {
   ads: FeedAdSummary[];
@@ -17,7 +15,6 @@ export type FeedAdsResult = {
 const EMPTY: FeedAdSummary[] = [];
 
 export function useFeedAds(criteria: FeedFiltersCriteria): FeedAdsResult {
-  const useApi = isApiDataSource();
   const fingerprint = serializeFeedFiltersCriteria(criteria);
   const [apiState, setApiState] = useState<{
     key: string;
@@ -29,15 +26,7 @@ export function useFeedAds(criteria: FeedFiltersCriteria): FeedAdsResult {
     error: null,
   });
 
-  const mockResult = useMemo(
-    () => (useApi ? EMPTY : filterAds(mockAds, criteria)),
-    [criteria, useApi],
-  );
-
   useEffect(() => {
-    if (!useApi) {
-      return;
-    }
     let cancelled = false;
     getApiClient()
       .feed.list({ criteria, sort: "relevance", pagination: { page: 1, pageSize: PAGE_SIZE_MAX } })
@@ -58,11 +47,7 @@ export function useFeedAds(criteria: FeedFiltersCriteria): FeedAdsResult {
     return () => {
       cancelled = true;
     };
-  }, [criteria, fingerprint, useApi]);
-
-  if (!useApi) {
-    return { ads: mockResult, isLoading: false, error: null };
-  }
+  }, [criteria, fingerprint]);
 
   return {
     ads: apiState.ads,

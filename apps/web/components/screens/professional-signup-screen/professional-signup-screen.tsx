@@ -13,9 +13,7 @@ import { InfoBanner } from "@/components/ui/info-banner";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import { Stepper, StepItem } from "@/components/ui/stepper";
-import { useAuthSession } from "@/lib/auth-session";
 import { authClient } from "@/lib/api/auth-client";
-import { isApiDataSource } from "@/lib/data-source";
 import { translateAuthError } from "@/lib/auth-errors";
 
 const professionalImages = [
@@ -32,7 +30,6 @@ const professionalHeroImages = [
 
 export function ProfessionalSignupScreen() {
   const router = useRouter();
-  const { setRole } = useAuthSession();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -78,54 +75,41 @@ export function ProfessionalSignupScreen() {
   };
 
   const handleCreateAccount = async () => {
-    if (isApiDataSource()) {
-      try {
-        const res = await authClient.signUp.email({
-          email: email.trim(),
-          password,
-          name: civilName.trim(),
-          role: "profissional",
-          cpf: cpf.trim() || undefined,
-          phone: phone.trim() || undefined,
-          alias: artisticNameEnabled && artisticName.trim() ? artisticName.trim() : undefined,
-        });
+    try {
+      const res = await authClient.signUp.email({
+        email: email.trim(),
+        password,
+        name: civilName.trim(),
+        role: "profissional",
+        cpf: cpf.trim() || undefined,
+        phone: phone.trim() || undefined,
+        alias: artisticNameEnabled && artisticName.trim() ? artisticName.trim() : undefined,
+      });
 
-        if (res.error) {
-          showToast({
-            title: "Erro ao criar conta",
-            message: translateAuthError(res.error.message || res.error.statusText),
-            type: "error",
-          });
-          return;
-        }
-
-        showToast({
-          title: "Conta criada com sucesso!",
-          message: "Redirecionando para o seu dashboard...",
-          type: "success",
-        });
-        setTimeout(() => {
-          router.push("/profissional/dashboard");
-        }, 1000);
-      } catch (err: unknown) {
+      if (res.error) {
         showToast({
           title: "Erro ao criar conta",
-          message: translateAuthError(err),
+          message: translateAuthError(res.error.message || res.error.statusText),
           type: "error",
         });
+        return;
       }
-      return;
-    }
 
-    setRole?.("profissional");
-    showToast({
-      title: "Conta criada com sucesso!",
-      message: "Redirecionando para o seu dashboard...",
-      type: "success",
-    });
-    setTimeout(() => {
-      router.push("/profissional/dashboard");
-    }, 1000);
+      showToast({
+        title: "Conta criada com sucesso!",
+        message: "Redirecionando para o seu dashboard...",
+        type: "success",
+      });
+      setTimeout(() => {
+        router.push("/profissional/dashboard");
+      }, 1000);
+    } catch (err: unknown) {
+      showToast({
+        title: "Erro ao criar conta",
+        message: translateAuthError(err),
+        type: "error",
+      });
+    }
   };
 
   const handleArtisticNameToggle = (enabled: boolean) => {

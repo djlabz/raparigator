@@ -2,59 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { fetchAdBySlug, getCachedAd } from "@/lib/ad-data";
-import { isApiDataSource } from "@/lib/data-source";
-import { ads } from "@/lib/mock-data";
 import type { Conversation, ProfessionalAd } from "@/lib/types";
 
-function normalizeText(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-}
-
 export function getConversationAd(conversation: Conversation | null): ProfessionalAd | null {
-  if (!conversation) {
+  if (!conversation || !conversation.adSlug) {
     return null;
   }
 
-  if (conversation.adSlug) {
-    if (!isApiDataSource()) {
-      return ads.find((ad) => ad.slug === conversation.adSlug) ?? null;
-    }
-    const cached = getCachedAd(conversation.adSlug);
-    if (cached) {
-      return cached;
-    }
-    void fetchAdBySlug(conversation.adSlug);
-    return null;
+  const cached = getCachedAd(conversation.adSlug);
+  if (cached) {
+    return cached;
   }
-
-  if (!isApiDataSource()) {
-    return (
-      ads.find((ad) =>
-        normalizeText(ad.artisticName).includes(normalizeText(conversation.contactName)),
-      ) ?? null
-    );
-  }
-
+  void fetchAdBySlug(conversation.adSlug);
   return null;
 }
 
 export async function fetchConversationAd(
   conversation: Conversation | null,
 ): Promise<ProfessionalAd | null> {
-  if (!conversation) {
+  if (!conversation || !conversation.adSlug) {
     return null;
   }
-  if (conversation.adSlug) {
-    return fetchAdBySlug(conversation.adSlug);
-  }
-  if (!isApiDataSource()) {
-    return getConversationAd(conversation);
-  }
-  return null;
+  return fetchAdBySlug(conversation.adSlug);
 }
 
 export function useConversationAd(conversation: Conversation | null): ProfessionalAd | null {

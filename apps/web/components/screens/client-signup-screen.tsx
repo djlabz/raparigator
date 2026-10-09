@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import { Stepper, StepItem } from "@/components/ui/stepper";
 import { readRedirectTarget } from "@/lib/auth-return";
-import { useAuthSession } from "@/lib/auth-session";
 import {
   formatCpf,
   validateCpf,
@@ -23,7 +22,6 @@ import {
   validateRequiredName,
 } from "@/lib/identity";
 import { authClient } from "@/lib/api/auth-client";
-import { isApiDataSource } from "@/lib/data-source";
 import { translateAuthError } from "@/lib/auth-errors";
 
 const clientImages = [
@@ -40,7 +38,6 @@ const clientHeroImages = [
 
 export function ClientSignupScreen() {
   const router = useRouter();
-  const { setRole } = useAuthSession();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [cpfValue, setCpfValue] = useState("");
   const [fullName, setFullName] = useState("");
@@ -191,55 +188,41 @@ export function ClientSignupScreen() {
   };
 
   const handleCreateAccount = async () => {
-    if (isApiDataSource()) {
-      try {
-        const res = await authClient.signUp.email({
-          email: email.trim(),
-          password,
-          name: fullName.trim(),
-          role: "cliente",
-          cpf: cpfValue.trim() || undefined,
-          alias: nicknameEnabled && nickname.trim() ? nickname.trim() : undefined,
-        });
+    try {
+      const res = await authClient.signUp.email({
+        email: email.trim(),
+        password,
+        name: fullName.trim(),
+        role: "cliente",
+        cpf: cpfValue.trim() || undefined,
+        alias: nicknameEnabled && nickname.trim() ? nickname.trim() : undefined,
+      });
 
-        if (res.error) {
-          showToast({
-            title: "Erro ao criar conta",
-            message: translateAuthError(res.error.message || res.error.statusText),
-            type: "error",
-          });
-          return;
-        }
-
-        showToast({
-          title: "Conta criada com sucesso!",
-          message: "Bem-vindo ao Sigillus.",
-          type: "success",
-        });
-        const destination = readRedirectTarget();
-        setTimeout(() => {
-          router.push(destination);
-        }, 1000);
-      } catch (err: unknown) {
+      if (res.error) {
         showToast({
           title: "Erro ao criar conta",
-          message: translateAuthError(err),
+          message: translateAuthError(res.error.message || res.error.statusText),
           type: "error",
         });
+        return;
       }
-      return;
-    }
 
-    setRole?.("cliente");
-    showToast({
-      title: "Conta criada com sucesso!",
-      message: "Bem-vindo ao Sigillus.",
-      type: "success",
-    });
-    const destination = readRedirectTarget();
-    setTimeout(() => {
-      router.push(destination);
-    }, 1000);
+      showToast({
+        title: "Conta criada com sucesso!",
+        message: "Bem-vindo ao Sigillus.",
+        type: "success",
+      });
+      const destination = readRedirectTarget();
+      setTimeout(() => {
+        router.push(destination);
+      }, 1000);
+    } catch (err: unknown) {
+      showToast({
+        title: "Erro ao criar conta",
+        message: translateAuthError(err),
+        type: "error",
+      });
+    }
   };
 
   return (

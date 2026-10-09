@@ -2,7 +2,12 @@
 
 import { Card } from "@/components/ui/card";
 import { TrafficDiscoveryCard } from "@/components/screens/professional-dashboard/traffic-discovery-card";
-import { dashboardSummary } from "@/lib/mock-data";
+const DEFAULT_METRICS = {
+  monthRevenue: 3200,
+  contacts: 48,
+  profileViews: 1240,
+  conversionRate: 18.2,
+};
 import { currency, cn } from "@/lib/utils";
 
 function MetricCardComDica({
@@ -46,28 +51,28 @@ export function SummaryTab() {
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCardComDica
           title="Receita do mês"
-          value={currency(dashboardSummary.monthRevenue)}
+          value={currency(DEFAULT_METRICS.monthRevenue)}
           change={12}
           icon="💰"
           tip="R$ 200 acima da meta"
         />
         <MetricCardComDica
           title="Contatos"
-          value={String(dashboardSummary.contacts)}
+          value={String(DEFAULT_METRICS.contacts)}
           change={8}
           icon="👥"
           tip="Média de 1,5 por dia"
         />
         <MetricCardComDica
           title="Visualizações"
-          value={String(dashboardSummary.profileViews)}
+          value={String(DEFAULT_METRICS.profileViews)}
           change={-5}
           icon="👁️"
           tip="142 este mês"
         />
         <MetricCardComDica
           title="Conversão"
-          value={`${dashboardSummary.conversionRate}%`}
+          value={`${DEFAULT_METRICS.conversionRate}%`}
           change={3}
           icon="📈"
           tip="2.2% acima da média"

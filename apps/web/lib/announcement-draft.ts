@@ -9,7 +9,6 @@ import type {
   AnnouncementPricingItem,
   AnnouncementProfileScore,
   AnnouncementPublishResult,
-  AnnouncementSaveResult,
   AnnouncementSaveSectionResult,
   AnnouncementSaveStatus,
   AnnouncementSectionDirtyState,
@@ -33,8 +32,6 @@ import {
   validateSectionForSave,
 } from "@sigillus/domain";
 import { getApiClient } from "@/lib/api/client";
-import { isApiDataSource } from "@/lib/data-source";
-import { ads } from "@/lib/mock-data";
 
 export {
   OPTIMIZE_SECTION_ORDER,
@@ -51,9 +48,7 @@ export {
   serializeAnnouncementDraft,
 } from "@sigillus/domain";
 
-const SAVE_LATENCY_MS = 600;
 const SAVED_STATUS_RESET_MS = 2000;
-const NO_CHANGES_STATUS_RESET_MS = 1200;
 
 export type MyAnnouncementResult = {
   ad: ProfessionalAd | undefined;
@@ -77,17 +72,11 @@ type MyAnnouncementState = {
 let myAnnouncementCache: MyAnnouncementState | null = null;
 
 export function useMyAnnouncement(): MyAnnouncementResult {
-  const useApi = isApiDataSource();
-  const [state, setState] = useState<MyAnnouncementState | null>(() =>
-    useApi ? myAnnouncementCache : null,
-  );
-  const [isLoading, setIsLoading] = useState<boolean>(() => useApi && !myAnnouncementCache);
+  const [state, setState] = useState<MyAnnouncementState | null>(() => myAnnouncementCache);
+  const [isLoading, setIsLoading] = useState<boolean>(() => !myAnnouncementCache);
   const [error, setError] = useState<string | null>(null);
 
   const fetchMine = useCallback(async () => {
-    if (!useApi) {
-      return;
-    }
     setIsLoading(true);
     setError(null);
     try {
@@ -106,30 +95,14 @@ export function useMyAnnouncement(): MyAnnouncementResult {
     } finally {
       setIsLoading(false);
     }
-  }, [useApi]);
+  }, []);
 
   useEffect(() => {
-    if (!useApi || myAnnouncementCache) {
+    if (myAnnouncementCache) {
       return;
     }
     fetchMine();
-  }, [fetchMine, useApi]);
-
-  if (!useApi) {
-    const defaultMockAd = ads[0];
-    return {
-      ad: defaultMockAd,
-      draft: null,
-      listingStatus: (defaultMockAd?.status === "indisponivel"
-        ? "Pausado"
-        : "Ativo") as AnnouncementListingStatus,
-      score: null,
-      tips: [],
-      isLoading: false,
-      error: null,
-      refetch: async () => {},
-    };
-  }
+  }, [fetchMine]);
 
   return {
     ad: state?.ad ?? undefined,
@@ -144,9 +117,6 @@ export function useMyAnnouncement(): MyAnnouncementResult {
 }
 
 export async function updateListingStatus(status: AnnouncementListingStatus): Promise<void> {
-  if (!isApiDataSource()) {
-    return;
-  }
   await getApiClient().announcements.setListingStatus({ status });
   if (myAnnouncementCache) {
     myAnnouncementCache.listingStatus = status;
@@ -157,9 +127,6 @@ export async function updateListingStatus(status: AnnouncementListingStatus): Pr
 }
 
 export async function updateAvailability(status: AvailabilityStatus): Promise<void> {
-  if (!isApiDataSource()) {
-    return;
-  }
   await getApiClient().announcements.setAvailability({ status });
 }
 
@@ -167,73 +134,11 @@ export async function updateContact(contact: {
   whatsappNumber: string | null;
   telegramUsername: string | null;
 }): Promise<void> {
-  if (!isApiDataSource()) {
-    return;
-  }
   await getApiClient().announcements.setContact(contact);
 }
 
-export function syncDraftToMockAd(slug: string, form: AnnouncementDraftState) {
-  const target = ads.find((item) => item.slug === slug);
-
-  if (!target) {
-    return false;
-  }
-
-  target.images = [...form.images];
-
-  if (
-    form.profileIndex !== null &&
-    form.profileIndex >= 0 &&
-    form.profileIndex < form.images.length
-  ) {
-    const preview = form.profilePreviews[form.profileIndex];
-    target.profileImage = preview || form.images[form.profileIndex];
-    target.profileImageIndex = form.profileIndex;
-  } else {
-    target.profileImage = undefined;
-    target.profileImageIndex = undefined;
-  }
-
-  target.shortDescription = form.shortDescription;
-  target.description = form.description;
-
-  if (form.locationCity.trim()) {
-    target.city = form.locationCity.trim();
-  }
-
-  if (form.locationState.trim()) {
-    target.state = form.locationState.trim();
-  }
-
-  const activeAddress = form.locationAddresses.find((address) => address.active);
-  if (activeAddress?.addressLine.trim()) {
-    target.neighborhood = activeAddress.addressLine.trim();
-  }
-
-  const selectedServices = form.services
-    .filter((service) => service.selected)
-    .map((service) => service.label);
-  if (selectedServices.length > 0) {
-    target.services = selectedServices;
-  }
-
+export function syncDraftToMockAd(_slug: string, _form: AnnouncementDraftState) {
   return true;
-}
-
-async function persistDraftMock(
-  slug: string,
-  form: AnnouncementDraftState,
-): Promise<"saved" | "error"> {
-  await new Promise<void>((resolve) => {
-    window.setTimeout(resolve, SAVE_LATENCY_MS);
-  });
-
-  if (!syncDraftToMockAd(slug, form)) {
-    return "error";
-  }
-
-  return "saved";
 }
 
 export type AnnouncementPublishOptions = {
@@ -290,19 +195,6 @@ export function useAnnouncementDraft(
     }
   }, [initialDraft, hasUnsavedChanges]);
 
-  useEffect(() => {
-    if (isApiDataSource()) {
-      return;
-    }
-    const target = ads.find((item) => item.slug === ad.slug);
-
-    if (!target) {
-      return;
-    }
-
-    target.images = [...form.images];
-  }, [ad.slug, form.images]);
-
   const score = calculateProfileScore(form);
   const tips = generateSmartTips(form);
 
@@ -343,65 +235,6 @@ export function useAnnouncementDraft(
     [],
   );
 
-  const persistDraft = useCallback(async (): Promise<AnnouncementSaveResult> => {
-    const hasChanges = serializeAnnouncementDraft(formRef.current) !== lastSavedSnapshotRef.current;
-
-    if (!hasChanges) {
-      setSaveStatus("saved");
-      setSavedEpoch((current) => current + 1);
-      if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
-      idleStatusTimeoutRef.current = setTimeout(
-        () => setSaveStatus("idle"),
-        NO_CHANGES_STATUS_RESET_MS,
-      );
-      return "no_changes";
-    }
-
-    if (isSavingRef.current) {
-      return "busy";
-    }
-
-    isSavingRef.current = true;
-    setSaveStatus("saving");
-
-    try {
-      if (isApiDataSource()) {
-        const client = getApiClient();
-        const res = await client.announcements.saveDraft({ draft: formRef.current });
-        lastSavedSnapshotRef.current = serializeAnnouncementDraft(formRef.current);
-        setSavedEpoch((current) => current + 1);
-        setSaveStatus("saved");
-        setLastSavedAt(new Date(res.savedAt));
-        if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
-        idleStatusTimeoutRef.current = setTimeout(
-          () => setSaveStatus("idle"),
-          SAVED_STATUS_RESET_MS,
-        );
-        return "saved";
-      }
-
-      const result = await persistDraftMock(ad.slug, formRef.current);
-
-      if (result === "error") {
-        setSaveStatus("error");
-        return "error";
-      }
-
-      lastSavedSnapshotRef.current = serializeAnnouncementDraft(formRef.current);
-      setSavedEpoch((current) => current + 1);
-      setSaveStatus("saved");
-      setLastSavedAt(new Date());
-      if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
-      idleStatusTimeoutRef.current = setTimeout(() => setSaveStatus("idle"), SAVED_STATUS_RESET_MS);
-      return "saved";
-    } catch {
-      setSaveStatus("error");
-      return "error";
-    } finally {
-      isSavingRef.current = false;
-    }
-  }, [ad.slug]);
-
   const saveSection = useCallback(
     async (section: AnnouncementSectionKey): Promise<AnnouncementSaveSectionResult> => {
       if (!sectionDirtyState[section]) {
@@ -417,52 +250,40 @@ export function useAnnouncementDraft(
         return validationFailure;
       }
 
-      if (isApiDataSource()) {
-        isSavingRef.current = true;
-        setSaveStatus("saving");
-        try {
-          const client = getApiClient();
-          const result = await client.announcements.saveSection({
-            section,
-            draft: formRef.current,
-          });
+      isSavingRef.current = true;
+      setSaveStatus("saving");
+      try {
+        const client = getApiClient();
+        const result = await client.announcements.saveSection({
+          section,
+          draft: formRef.current,
+        });
 
-          if (!result.ok) {
-            setSaveStatus("error");
-            return result;
-          }
-
-          lastSavedSnapshotRef.current = serializeAnnouncementDraft(formRef.current);
-          setSavedEpoch((current) => current + 1);
-          setSaveStatus("saved");
-          setLastSavedAt(new Date());
-          if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
-          idleStatusTimeoutRef.current = setTimeout(
-            () => setSaveStatus("idle"),
-            SAVED_STATUS_RESET_MS,
-          );
-
-          setSavedSectionSnapshots(buildSectionSnapshots(formRef.current));
-          return result;
-        } catch {
+        if (!result.ok) {
           setSaveStatus("error");
-          return { ok: false, reason: "error" };
-        } finally {
-          isSavingRef.current = false;
+          return result;
         }
+
+        lastSavedSnapshotRef.current = serializeAnnouncementDraft(formRef.current);
+        setSavedEpoch((current) => current + 1);
+        setSaveStatus("saved");
+        setLastSavedAt(new Date());
+        if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
+        idleStatusTimeoutRef.current = setTimeout(
+          () => setSaveStatus("idle"),
+          SAVED_STATUS_RESET_MS,
+        );
+
+        setSavedSectionSnapshots(buildSectionSnapshots(formRef.current));
+        return result;
+      } catch {
+        setSaveStatus("error");
+        return { ok: false, reason: "error" };
+      } finally {
+        isSavingRef.current = false;
       }
-
-      const saveResult = await persistDraft();
-
-      if (saveResult === "error" || saveResult === "busy") {
-        return { ok: false, reason: saveResult };
-      }
-
-      setSavedSectionSnapshots(buildSectionSnapshots(formRef.current));
-
-      return { ok: true, saveResult };
     },
-    [persistDraft, saveStatus, sectionDirtyState],
+    [saveStatus, sectionDirtyState],
   );
 
   const cancelSection = useCallback(
@@ -571,60 +392,44 @@ export function useAnnouncementDraft(
         };
       }
 
-      if (isApiDataSource()) {
-        isSavingRef.current = true;
-        setSaveStatus("saving");
-        try {
-          const client = getApiClient();
-          const result = await client.announcements.publish({
-            draft: formRef.current,
-          });
+      isSavingRef.current = true;
+      setSaveStatus("saving");
+      try {
+        const client = getApiClient();
+        const result = await client.announcements.publish({
+          draft: formRef.current,
+        });
 
-          if (!result.ok) {
-            setSaveStatus("idle");
-            return result;
-          }
-
-          lastSavedSnapshotRef.current = serializeAnnouncementDraft(formRef.current);
-          setSavedEpoch((current) => current + 1);
-          setSaveStatus("saved");
-          setLastSavedAt(new Date());
-          if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
-          idleStatusTimeoutRef.current = setTimeout(
-            () => setSaveStatus("idle"),
-            SAVED_STATUS_RESET_MS,
-          );
-
-          setSavedSectionSnapshots(buildSectionSnapshots(formRef.current));
-
-          if (status !== "Ativo") {
-            onActivate();
-          }
-
-          return { ok: true };
-        } catch {
-          setSaveStatus("error");
-          return { ok: false, reason: "error", message: ANNOUNCEMENT_PUBLISH_ERROR_MESSAGE };
-        } finally {
-          isSavingRef.current = false;
+        if (!result.ok) {
+          setSaveStatus("idle");
+          return result;
         }
-      }
 
-      const saveResult = await persistDraft();
+        lastSavedSnapshotRef.current = serializeAnnouncementDraft(formRef.current);
+        setSavedEpoch((current) => current + 1);
+        setSaveStatus("saved");
+        setLastSavedAt(new Date());
+        if (idleStatusTimeoutRef.current) clearTimeout(idleStatusTimeoutRef.current);
+        idleStatusTimeoutRef.current = setTimeout(
+          () => setSaveStatus("idle"),
+          SAVED_STATUS_RESET_MS,
+        );
 
-      if (saveResult === "error") {
+        setSavedSectionSnapshots(buildSectionSnapshots(formRef.current));
+
+        if (status !== "Ativo") {
+          onActivate();
+        }
+
+        return { ok: true };
+      } catch {
+        setSaveStatus("error");
         return { ok: false, reason: "error", message: ANNOUNCEMENT_PUBLISH_ERROR_MESSAGE };
+      } finally {
+        isSavingRef.current = false;
       }
-
-      setSavedSectionSnapshots(buildSectionSnapshots(formRef.current));
-
-      if (status !== "Ativo") {
-        onActivate();
-      }
-
-      return { ok: true };
     },
-    [persistDraft, saveStatus, sectionDirtyState],
+    [saveStatus, sectionDirtyState],
   );
 
   return {

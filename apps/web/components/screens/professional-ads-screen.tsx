@@ -7,16 +7,13 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useMyAnnouncement } from "@/lib/announcement-draft";
-import { isApiDataSource } from "@/lib/data-source";
-import { ads } from "@/lib/mock-data";
 import type { ProfessionalAd } from "@/lib/types";
 import { currency } from "@/lib/utils";
 
 export function ProfessionalAdsScreen() {
-  const useApi = isApiDataSource();
   const myAnnouncement = useMyAnnouncement();
 
-  const listAds = useApi ? (myAnnouncement.ad ? [myAnnouncement.ad] : []) : ads.slice(0, 2);
+  const listAds = myAnnouncement.ad ? [myAnnouncement.ad] : [];
 
   return (
     <AppShell>
@@ -30,7 +27,7 @@ export function ProfessionalAdsScreen() {
           </h1>
         </div>
 
-        {useApi && myAnnouncement.isLoading ? (
+        {myAnnouncement.isLoading ? (
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="h-48 rounded-2xl border border-zinc-200 bg-zinc-50 animate-pulse" />
           </div>

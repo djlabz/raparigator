@@ -7,8 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuthSession } from "@/lib/auth-session";
 import { useAccountNotifications } from "@/lib/account-notifications";
-import type { AuthRole } from "@/lib/types";
-import { ads } from "@/lib/mock-data";
+import type { AuthRole, ProfessionalAd } from "@/lib/types";
 import { useMyAnnouncement, updateListingStatus } from "@/lib/announcement-draft";
 import { chromeBelowDesktopNavStickyTop } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
@@ -136,7 +135,42 @@ export function ProfessionalDashboardScreen() {
     await updateListingStatus(nextStatus);
   };
 
-  const currentAd = myAnnouncement.ad ?? ads[0];
+  const fallbackAd: ProfessionalAd = {
+    id: "meu-perfil",
+    slug: "meu-perfil",
+    displayName: "Meu Perfil",
+    artisticName: "Meu Perfil",
+    city: "São Paulo",
+    state: "SP",
+    neighborhood: "Centro",
+    category: "Acompanhante",
+    shortDescription: "",
+    description: "",
+    serviceDescription: "",
+    startingPrice: 300,
+    age: 23,
+    heightCm: 168,
+    weightKg: 58,
+    ethnicity: "Branca",
+    eyeColor: "Castanhos",
+    hairType: "Liso",
+    hairColor: "Castanho",
+    services: [],
+    serviceOptions: [],
+    fetishOptions: [],
+    fetishCustom: "",
+    pricingTable: [],
+    paymentMethods: ["dinheiro"],
+    status: "livre",
+    adTier: "normal",
+    verificationStatus: "published",
+    submittedAt: new Date().toISOString(),
+    images: [],
+    rating: 5,
+    reviewsCount: 0,
+    profileViews: 0,
+  };
+  const currentAd = myAnnouncement.ad ?? fallbackAd;
   const adSlug = currentAd.slug;
 
   return (
