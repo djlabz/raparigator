@@ -52,6 +52,7 @@ import {
   ensureChatStore,
   getChatStoreSnapshot,
   getServerChatStoreSnapshot,
+  loadConversationMessages,
   markConversationAsRead,
   reseedChatStore,
   reportChatConversation,
@@ -63,7 +64,7 @@ import {
   updateChatParticipantAlias,
 } from "@/lib/chat-store";
 import { updateAvailability } from "@/lib/announcement-draft";
-import { getConversationAd } from "@/lib/conversation-ad";
+import { getConversationAd, useConversationAd } from "@/lib/conversation-ad";
 import {
   buildBriefGreeting,
   clearBriefHandoff,
@@ -94,6 +95,17 @@ const getStatusColor = (status: Conversation["contactStatus"]) =>
   status === "online" ? "bg-emerald-500" : "bg-zinc-400";
 const getStatusLabel = (status: Conversation["contactStatus"]) =>
   status === "online" ? "Online" : "Offline";
+
+function formatChatTime(rawTime: string): string {
+  if (!rawTime || rawTime === "agora" || !rawTime.includes("T")) {
+    return rawTime;
+  }
+  const date = new Date(rawTime);
+  if (isNaN(date.getTime())) {
+    return rawTime;
+  }
+  return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
 
 const PROFESSIONAL_AVAILABILITY_STORAGE_KEY = "sigillus-professional-chat-availability";
 
@@ -404,7 +416,13 @@ export function ChatScreen() {
   const participantAlias = activeConversation?.currentUserAlias ?? "";
   const currentDisplayName = participantAlias || globalAlias || "Cliente reservado";
 
-  const activeAd = useMemo(() => getConversationAd(activeConversation), [activeConversation]);
+  const activeAd = useConversationAd(activeConversation);
+
+  useEffect(() => {
+    if (activeConversation?.id) {
+      void loadConversationMessages(activeConversation.id);
+    }
+  }, [activeConversation?.id]);
 
   const currentMessages = useMemo(
     () =>
@@ -1048,7 +1066,7 @@ export function ChatScreen() {
                             {conversation.contactName}
                           </p>
                           <span className="text-[10px] font-medium text-zinc-400">
-                            {conversation.lastMessageAt}
+                            {formatChatTime(conversation.lastMessageAt)}
                           </span>
                         </div>
                         <p className="truncate text-xs text-zinc-500">{conversation.lastMessage}</p>
@@ -1686,7 +1704,7 @@ function ConversationThread({
                     </div>
                   )}
                   <span className="mt-1 flex items-center gap-1 px-1 text-[10px] font-medium uppercase text-zinc-400">
-                    {message.sentAt}
+                    {formatChatTime(message.sentAt)}
                     {StatusIcon ? (
                       <>
                         <StatusIcon size={12} className={status.className} />

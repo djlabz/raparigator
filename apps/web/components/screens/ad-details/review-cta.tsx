@@ -35,7 +35,9 @@ export function ReviewCta({ ad }: ReviewCtaProps) {
 
   const conversation =
     chat.conversations.find(
-      (item) => !item.deletedFromInboxAt && getConversationAd(item)?.slug === ad.slug,
+      (item) =>
+        !item.deletedFromInboxAt &&
+        (item.adSlug === ad.slug || getConversationAd(item)?.slug === ad.slug),
     ) ?? null;
 
   const invite = conversation ? getInvite(conversation.id) : undefined;

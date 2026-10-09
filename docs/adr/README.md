@@ -13,6 +13,7 @@ Formato curto: Contexto / Opções consideradas / Decisão / Consequências. Um 
 | [008](008-migracao-web-dual-mode-e-autenticacao.md) | Migração web dual-mode e integração com better-auth                       |
 | [009](009-migracao-rascunho-de-anuncio.md)          | Rascunho de anúncio, seções, publicação e controle de status via API      |
 | [010](010-migracao-midia-e-storage.md)              | Upload pré-assinado, processamento de mídia e gestão de galeria via API   |
+| [011](011-migracao-chat-e-streaming.md)             | Chat, camada otimista e streaming em tempo real (SSE) via API             |
 
 ## Restrição de produto que atravessa todos os ADRs
 

@@ -22,8 +22,8 @@ export function useContactCta(brief: EncounterBrief | null): ContactCta {
     saveReturnScroll(pathname);
   };
 
-  const openChatWithBrief = () => {
-    const conversationId = brief ? ensureConversationForAd(brief.adSlug) : null;
+  const openChatWithBrief = async () => {
+    const conversationId = brief ? await ensureConversationForAd(brief.adSlug) : null;
     if (brief && conversationId) {
       requestBriefHandoff(brief, conversationId);
     }
