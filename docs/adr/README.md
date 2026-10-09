@@ -17,6 +17,7 @@ Formato curto: Contexto / Opções consideradas / Decisão / Consequências. Um 
 | [012](012-migracao-avaliacoes-e-convites.md)        | Avaliações por convite, gating e recálculo de rating via API              |
 | [013](013-migracao-notificacoes.md)                 | Central de notificações e eventos de conta via API                        |
 | [014](014-migracao-premium.md)                      | Gestão de plano premium e limites via API                                 |
+| [015](015-migracao-backoffice.md)                   | Migração do backoffice administrativo para API                            |
 
 ## Restrição de produto que atravessa todos os ADRs
 

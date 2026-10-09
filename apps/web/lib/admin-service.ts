@@ -15,8 +15,9 @@ import {
   mockReports,
   weeklySignupsData,
 } from "@/lib/mock-data";
+import { getApiClient } from "@/lib/api/client";
+import { isApiDataSource } from "@/lib/data-source";
 
-// ── In-memory stores (mock only) ─────────────────────────────────────────────
 const profileStore: ProfessionalAd[] = ads.map((ad) => ({
   ...ad,
   verificationStatus: ad.verificationStatus ?? ("published" as VerificationStatus),
@@ -24,10 +25,12 @@ const profileStore: ProfessionalAd[] = ads.map((ad) => ({
 
 const clientStore: MockClient[] = mockClients.map((c) => ({ ...c }));
 const reportStore: Report[] = mockReports.map((r) => ({ ...r }));
-// ─────────────────────────────────────────────────────────────────────────────
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-  // BACKEND: GET /api/admin/dashboard
+  if (isApiDataSource()) {
+    return getApiClient().admin.dashboard();
+  }
+
   const published = profileStore.filter(
     (p) => p.verificationStatus === "published" && !p.isSuspended,
   );
@@ -48,13 +51,20 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 }
 
 export async function getClients(status?: "active" | "suspended"): Promise<MockClient[]> {
-  // BACKEND: GET /api/admin/clients?status={status}
+  if (isApiDataSource()) {
+    return getApiClient().admin.clients({ status });
+  }
+
   if (!status) return [...clientStore];
   return clientStore.filter((c) => c.status === status);
 }
 
 export async function suspendClient(id: string, adminId: string, reason: string): Promise<void> {
-  // BACKEND: POST /api/admin/clients/:id/suspend { adminId, reason }
+  if (isApiDataSource()) {
+    await getApiClient().admin.suspendClient({ id, reason });
+    return;
+  }
+
   const idx = clientStore.findIndex((c) => c.id === id);
   if (idx !== -1) {
     clientStore[idx] = { ...clientStore[idx], status: "suspended", suspensionReason: reason };
@@ -62,7 +72,11 @@ export async function suspendClient(id: string, adminId: string, reason: string)
 }
 
 export async function reinstateClient(id: string, _adminId: string): Promise<void> {
-  // BACKEND: POST /api/admin/clients/:id/reinstate { adminId }
+  if (isApiDataSource()) {
+    await getApiClient().admin.reinstateClient({ id });
+    return;
+  }
+
   const idx = clientStore.findIndex((c) => c.id === id);
   if (idx !== -1) {
     clientStore[idx] = { ...clientStore[idx], status: "active", suspensionReason: undefined };
@@ -70,7 +84,10 @@ export async function reinstateClient(id: string, _adminId: string): Promise<voi
 }
 
 export async function getActiveProfessionals(): Promise<ProfessionalAd[]> {
-  // BACKEND: GET /api/admin/professionals?status=published
+  if (isApiDataSource()) {
+    return getApiClient().admin.professionals({ status: "published" });
+  }
+
   return profileStore.filter((p) => p.verificationStatus === "published");
 }
 
@@ -79,7 +96,11 @@ export async function suspendProfessional(
   adminId: string,
   reason: string,
 ): Promise<void> {
-  // BACKEND: POST /api/admin/professionals/:id/suspend { adminId, reason }
+  if (isApiDataSource()) {
+    await getApiClient().admin.suspendProfessional({ id, reason });
+    return;
+  }
+
   const idx = profileStore.findIndex((p) => p.id === id);
   if (idx !== -1) {
     profileStore[idx] = { ...profileStore[idx], isSuspended: true, rejectionReason: reason };
@@ -87,7 +108,11 @@ export async function suspendProfessional(
 }
 
 export async function reinstateProfessional(id: string, _adminId: string): Promise<void> {
-  // BACKEND: POST /api/admin/professionals/:id/reinstate { adminId }
+  if (isApiDataSource()) {
+    await getApiClient().admin.reinstateProfessional({ id });
+    return;
+  }
+
   const idx = profileStore.findIndex((p) => p.id === id);
   if (idx !== -1) {
     profileStore[idx] = { ...profileStore[idx], isSuspended: false, rejectionReason: undefined };
@@ -95,13 +120,19 @@ export async function reinstateProfessional(id: string, _adminId: string): Promi
 }
 
 export async function getAllProfiles(status?: VerificationStatus): Promise<ProfessionalAd[]> {
-  // BACKEND: GET /api/admin/profiles?status={status}
+  if (isApiDataSource()) {
+    return getApiClient().admin.professionals({ status });
+  }
+
   if (!status) return [...profileStore];
   return profileStore.filter((p) => p.verificationStatus === status);
 }
 
 export async function getProfileById(id: string): Promise<ProfessionalAd | null> {
-  // BACKEND: GET /api/admin/profiles/:id
+  if (isApiDataSource()) {
+    return getApiClient().admin.profile({ id });
+  }
+
   return profileStore.find((p) => p.id === id) ?? null;
 }
 
@@ -110,7 +141,10 @@ export async function approveProfile(
   adminId: string,
   note?: string,
 ): Promise<AdminReviewAction> {
-  // BACKEND: POST /api/admin/profiles/:id/approve
+  if (isApiDataSource()) {
+    return getApiClient().admin.approveProfile({ id, note });
+  }
+
   const idx = profileStore.findIndex((p) => p.id === id);
   if (idx !== -1) {
     profileStore[idx] = {
@@ -133,7 +167,10 @@ export async function rejectProfile(
   adminId: string,
   reason: string,
 ): Promise<AdminReviewAction> {
-  // BACKEND: POST /api/admin/profiles/:id/reject
+  if (isApiDataSource()) {
+    return getApiClient().admin.rejectProfile({ id, reason });
+  }
+
   const idx = profileStore.findIndex((p) => p.id === id);
   if (idx !== -1) {
     profileStore[idx] = {
@@ -151,16 +188,21 @@ export async function rejectProfile(
   };
 }
 
-// ── Denúncias ────────────────────────────────────────────────────────────────
-
 export async function getReports(status?: ReportStatus): Promise<Report[]> {
-  // BACKEND: GET /api/admin/reports?status={status}
+  if (isApiDataSource()) {
+    return getApiClient().admin.reports({ status });
+  }
+
   if (!status) return [...reportStore];
   return reportStore.filter((r) => r.status === status);
 }
 
 export async function startReview(id: string): Promise<void> {
-  // BACKEND: POST /api/admin/reports/:id/start-review
+  if (isApiDataSource()) {
+    await getApiClient().admin.startReportReview({ id });
+    return;
+  }
+
   const idx = reportStore.findIndex((r) => r.id === id);
   if (idx !== -1) {
     reportStore[idx] = {
@@ -176,7 +218,11 @@ export async function resolveReport(
   resolution: "resolved" | "dismissed",
   note: string,
 ): Promise<void> {
-  // BACKEND: POST /api/admin/reports/:id/resolve { resolution, note }
+  if (isApiDataSource()) {
+    await getApiClient().admin.resolveReport({ id, resolution, note });
+    return;
+  }
+
   const idx = reportStore.findIndex((r) => r.id === id);
   if (idx !== -1) {
     reportStore[idx] = {
@@ -188,10 +234,15 @@ export async function resolveReport(
   }
 }
 
-// ── Busca Global ─────────────────────────────────────────────────────────────
-
 export async function globalSearch(query: string): Promise<GlobalSearchResult[]> {
-  // BACKEND: GET /api/admin/search?q={query}
+  if (isApiDataSource()) {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      return [];
+    }
+    return getApiClient().admin.search({ q: trimmed });
+  }
+
   if (!query.trim()) return [];
   const q = query.toLowerCase();
 
