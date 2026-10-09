@@ -1,10 +1,14 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { getApiClient } from "@/lib/api/client";
+import { isApiDataSource } from "@/lib/data-source";
 import type { AccountNotificationItem, AuthRole } from "@sigillus/contracts";
+import { formatRelativeTime } from "@sigillus/domain";
+import { getRoleLabel } from "./navigation";
 
 export type { AccountNotificationItem };
-import { getRoleLabel } from "./navigation";
+export { formatRelativeTime };
 
 const DEFAULT_NOTIFICATION_HREF = "/conta#profile-workflow";
 
@@ -22,6 +26,9 @@ interface AccountNotificationState {
 const listeners = new Set<() => void>();
 const roleStateCache = new Map<Exclude<AuthRole, "visitor">, AccountNotificationState>();
 const roleServerSnapshotCache = new Map<Exclude<AuthRole, "visitor">, AccountNotificationState>();
+
+let apiItems: AccountNotificationItem[] = [];
+let apiInFlight = false;
 
 const notificationsKey = (role: Exclude<AuthRole, "visitor">) =>
   `sigillus-account-notifications-${role}`;
@@ -120,6 +127,18 @@ function readState(role: Exclude<AuthRole, "visitor">): AccountNotificationState
 }
 
 function getSnapshot(role: Exclude<AuthRole, "visitor">): AccountNotificationState {
+  if (isApiDataSource()) {
+    return {
+      items: apiItems,
+      bannerClosed:
+        typeof window !== "undefined" && window.localStorage.getItem(bannerKey(role)) === "true",
+      navbarAckedUnreadIds: readAckedIds(role),
+      swingPaused:
+        typeof window !== "undefined" &&
+        window.localStorage.getItem(swingPausedKey(role)) === "true",
+    };
+  }
+
   const cachedState = roleStateCache.get(role);
   if (cachedState) {
     return cachedState;
@@ -151,6 +170,15 @@ function writeState(role: Exclude<AuthRole, "visitor">, state: AccountNotificati
     return;
   }
 
+  if (isApiDataSource()) {
+    apiItems = state.items;
+    window.localStorage.setItem(bannerKey(role), String(state.bannerClosed));
+    window.localStorage.setItem(navbarAckKey(role), JSON.stringify(state.navbarAckedUnreadIds));
+    window.localStorage.setItem(swingPausedKey(role), String(state.swingPaused));
+    emitChange();
+    return;
+  }
+
   const nextState: AccountNotificationState = {
     items: state.items,
     bannerClosed: state.bannerClosed,
@@ -170,7 +198,6 @@ function unreadIds(items: AccountNotificationItem[]) {
   return items.filter((item) => !item.read).map((item) => item.id);
 }
 
-/** Insere ou substitui uma notificação no topo da lista, deduplicando por id. */
 export function pushNotification(
   role: Exclude<AuthRole, "visitor">,
   item: Omit<AccountNotificationItem, "read">,
@@ -197,14 +224,38 @@ export function removeNotification(role: Exclude<AuthRole, "visitor">, id: strin
     items: current.items.filter((item) => item.id !== id),
     navbarAckedUnreadIds: current.navbarAckedUnreadIds.filter((ackedId) => ackedId !== id),
   });
+
+  if (isApiDataSource()) {
+    getApiClient()
+      .notifications.remove({ id })
+      .catch(() => {});
+  }
 }
 
 export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
+  const useApi = isApiDataSource();
   const state = useSyncExternalStore(
     subscribe,
     () => getSnapshot(role),
     () => getServerSnapshot(role),
   );
+
+  useEffect(() => {
+    if (!useApi || apiInFlight) {
+      return;
+    }
+    apiInFlight = true;
+    getApiClient()
+      .notifications.list()
+      .then((items) => {
+        apiItems = items;
+        emitChange();
+      })
+      .catch(() => {})
+      .finally(() => {
+        apiInFlight = false;
+      });
+  }, [useApi, role]);
 
   const unreadCount = useMemo(() => state.items.filter((item) => !item.read).length, [state.items]);
 
@@ -216,17 +267,21 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
   const unreadItems = useMemo(() => state.items.filter((item) => !item.read), [state.items]);
   const readItems = useMemo(() => state.items.filter((item) => item.read), [state.items]);
 
-  return {
-    notifications: state.items,
-    unreadItems,
-    readItems,
-    unreadCount,
-    navbarBadgeCount,
-    swingPaused: state.swingPaused,
-    bannerClosed: state.bannerClosed,
-    setBannerClosed: (nextValue: boolean) =>
-      writeState(role, { ...getSnapshot(role), bannerClosed: nextValue }),
-    markAllAsRead: () => {
+  const refresh = useMemo(() => {
+    return async () => {
+      if (!useApi) {
+        return;
+      }
+      try {
+        const items = await getApiClient().notifications.list();
+        apiItems = items;
+        emitChange();
+      } catch {}
+    };
+  }, [useApi]);
+
+  const markAllAsRead = useMemo(() => {
+    return () => {
       const current = getSnapshot(role);
       writeState(role, {
         ...current,
@@ -234,8 +289,16 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
         navbarAckedUnreadIds: [],
         swingPaused: false,
       });
-    },
-    markAsRead: (id: string) => {
+      if (useApi) {
+        getApiClient()
+          .notifications.markAllRead()
+          .catch(() => {});
+      }
+    };
+  }, [role, useApi]);
+
+  const markAsRead = useMemo(() => {
+    return (id: string) => {
       const current = getSnapshot(role);
       const nextItems = current.items.map((item) =>
         item.id === id ? { ...item, read: true } : item,
@@ -246,7 +309,27 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
         navbarAckedUnreadIds: current.navbarAckedUnreadIds.filter((ackedId) => ackedId !== id),
         swingPaused: unreadIds(nextItems).length === 0 ? false : current.swingPaused,
       });
-    },
+      if (useApi) {
+        getApiClient()
+          .notifications.markRead({ id })
+          .catch(() => {});
+      }
+    };
+  }, [role, useApi]);
+
+  return {
+    notifications: state.items,
+    unreadItems,
+    readItems,
+    unreadCount,
+    navbarBadgeCount,
+    swingPaused: state.swingPaused,
+    bannerClosed: state.bannerClosed,
+    setBannerClosed: (nextValue: boolean) =>
+      writeState(role, { ...getSnapshot(role), bannerClosed: nextValue }),
+    markAllAsRead,
+    markAsRead,
+    refresh,
     clearNavbarBadge: () => {
       const current = getSnapshot(role);
       writeState(role, {

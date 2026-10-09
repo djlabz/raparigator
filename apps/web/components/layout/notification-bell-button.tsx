@@ -30,6 +30,7 @@ export function NotificationBellButton({ role, className }: NotificationBellButt
     swingPaused,
     markAsRead,
     markAllAsRead,
+    refresh,
     pauseNotificationSwing,
     resumeNotificationSwing,
   } = useAccountNotifications(role);
@@ -52,6 +53,7 @@ export function NotificationBellButton({ role, className }: NotificationBellButt
   const handleOpen = () => {
     pauseNotificationSwing();
     setOpen(true);
+    void refresh();
   };
 
   return (
