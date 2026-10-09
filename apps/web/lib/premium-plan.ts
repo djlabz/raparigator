@@ -1,8 +1,10 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import type { PlanTier } from "@sigillus/contracts";
+import { useEffect, useSyncExternalStore } from "react";
+import type { PlanLimits, PlanTier, PremiumState } from "@sigillus/contracts";
 import { getPlanLimits } from "@sigillus/domain";
+import { getApiClient } from "@/lib/api/client";
+import { isApiDataSource } from "@/lib/data-source";
 
 export {
   PREMIUM_PHOTO_LIMIT,
@@ -18,6 +20,9 @@ const VIEW_ONCE_COUNT_KEY = "sigillus-view-once-count";
 export const PREMIUM_UPLOAD_ERROR_MESSAGE = "Houve um erro ao fazer o upload";
 
 const listeners = new Set<() => void>();
+
+let cachedApiState: PremiumState | null = null;
+let apiFetchPromise: Promise<PremiumState | null> | null = null;
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
@@ -50,6 +55,40 @@ function readViewOnceCount(): number {
   return Number.isFinite(stored) && stored > 0 ? Math.floor(stored) : 0;
 }
 
+export async function fetchPremiumState(): Promise<PremiumState | null> {
+  if (!isApiDataSource()) {
+    return null;
+  }
+
+  try {
+    const client = getApiClient();
+    const state = await client.premium.getState();
+    cachedApiState = state;
+    emitChange();
+    return state;
+  } catch {
+    return null;
+  }
+}
+
+const STANDARD_LIMITS = getPlanLimits("standard");
+const PREMIUM_LIMITS = getPlanLimits("premium");
+
+export function getCachedPlanTier(): PlanTier {
+  if (isApiDataSource() && cachedApiState) {
+    return cachedApiState.plan;
+  }
+  return readStoredPlan();
+}
+
+export function getCachedPremiumLimits(): PlanLimits {
+  if (isApiDataSource() && cachedApiState) {
+    return cachedApiState.limits;
+  }
+  const plan = readStoredPlan();
+  return plan === "premium" ? PREMIUM_LIMITS : STANDARD_LIMITS;
+}
+
 export function activatePremium() {
   if (typeof window !== "undefined") {
     window.localStorage.setItem(PLAN_STORAGE_KEY, "premium");
@@ -67,11 +106,23 @@ export function registerViewOnceSend() {
 }
 
 export function usePremiumPlan() {
-  const plan = useSyncExternalStore<PlanTier>(subscribe, readStoredPlan, () => "standard");
+  const plan = useSyncExternalStore<PlanTier>(subscribe, getCachedPlanTier, () => "standard");
+  const limits = useSyncExternalStore<PlanLimits>(
+    subscribe,
+    getCachedPremiumLimits,
+    () => STANDARD_LIMITS,
+  );
   const viewOnceUsed = useSyncExternalStore<number>(subscribe, readViewOnceCount, () => 0);
 
+  useEffect(() => {
+    if (isApiDataSource() && !cachedApiState && !apiFetchPromise) {
+      apiFetchPromise = fetchPremiumState().finally(() => {
+        apiFetchPromise = null;
+      });
+    }
+  }, []);
+
   const isPremium = plan === "premium";
-  const limits = getPlanLimits(plan);
 
   return {
     plan,
@@ -82,5 +133,9 @@ export function usePremiumPlan() {
     registerViewOnceSend,
     photoLimit: limits.photoLimit,
     videoLimit: limits.videoLimit,
+    visibilityMultiplier: limits.visibilityMultiplier,
+    canUseAlias: limits.canUseAlias,
+    limits,
+    refetch: fetchPremiumState,
   };
 }

@@ -8,4 +8,10 @@ export type {
   AnnouncementMediaOperationKind,
   AnnouncementMediaRebuildResult,
   AnnouncementMediaSourceOffset,
+  CreateUploadInput,
+  CreateUploadOutput,
+  MediaAsset,
+  MediaAssetStatus,
+  MediaKind,
+  MediaPurpose,
 } from "@sigillus/contracts";

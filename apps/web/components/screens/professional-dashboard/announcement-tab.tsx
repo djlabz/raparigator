@@ -2,7 +2,15 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { motion, useMotionValue } from "motion/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,7 +63,15 @@ import { PremiumConversionModal } from "@/components/ui/premium-conversion-modal
 import { PremiumEntryBanner } from "@/components/ui/premium-entry-banner";
 import { PremiumEntryButton } from "@/components/ui/premium-entry-button";
 import { PREMIUM_UPLOAD_ERROR_MESSAGE, usePremiumPlan } from "@/lib/premium-plan";
-import { useAnnouncementMedia } from "@/lib/announcement-media";
+import {
+  isPlanLimitError,
+  listMyMedia,
+  removeMedia,
+  reorderMedia,
+  setProfileImageMedia,
+  uploadMediaFile,
+  useAnnouncementMedia,
+} from "@/lib/announcement-media";
 import { getCroppedImg } from "@/lib/cropImage";
 
 const SELECT_PLACEHOLDER = "Selecionar";
@@ -426,6 +442,11 @@ function useSmUp() {
   return useSyncExternalStore(subscribeSmUp, getSmUpSnapshot, () => true);
 }
 
+function isVideoSrc(src: string): boolean {
+  if (!src) return false;
+  return src.startsWith("data:video") || /\.(mp4|webm|mov|mkv)(\?.*)?$/i.test(src);
+}
+
 export function AnnouncementTab({
   ad,
   status,
@@ -438,6 +459,8 @@ export function AnnouncementTab({
   onToggleStatus: () => void;
   initialDraft?: AnnouncementDraftState | null;
 }) {
+  const useApi = isApiDataSource();
+  const assetMapRef = useRef<Map<string, string>>(new Map());
   const {
     form,
     saveStatus,
@@ -467,15 +490,162 @@ export function AnnouncementTab({
   const [conversionFrom, setConversionFrom] = useState<string | undefined>(undefined);
   const [uploadToast, setUploadToast] = useState<{ title: string; message: string } | null>(null);
 
+  useEffect(() => {
+    if (!useApi) return;
+    let active = true;
+    listMyMedia("gallery")
+      .then((assets) => {
+        if (!active) return;
+        for (const item of assets) {
+          if (item.url) assetMapRef.current.set(item.url, item.id);
+          if (item.thumbnailUrl) assetMapRef.current.set(item.thumbnailUrl, item.id);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [useApi]);
+
+  const findAssetIdForUrl = useCallback((url: string): string | null => {
+    if (!url) return null;
+    const direct = assetMapRef.current.get(url);
+    if (direct) return direct;
+    for (const [key, id] of assetMapRef.current.entries()) {
+      if (url.includes(id) || key.includes(url) || url.includes(key)) {
+        return id;
+      }
+    }
+    return null;
+  }, []);
+
   const openConversion = (from: string, highlight?: "portfolio") => {
     setConversionFrom(from);
     setConversionHighlight(highlight);
     setConversionOpen(true);
   };
 
-  const showUploadError = () => {
-    setUploadToast({ title: "Upload", message: PREMIUM_UPLOAD_ERROR_MESSAGE });
+  const showUploadError = (message?: string) => {
+    setUploadToast({ title: "Upload", message: message || PREMIUM_UPLOAD_ERROR_MESSAGE });
     window.setTimeout(() => setUploadToast(null), 3200);
+  };
+
+  const handleAddPhoto = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.multiple = true;
+    input.accept =
+      ".webp,.jpg,.jpeg,.avif,.mp4,.mov,.webm,image/webp,image/jpeg,image/avif,video/mp4,video/quicktime,video/webm";
+    input.onchange = async (e) => {
+      const files = Array.from((e.target as HTMLInputElement).files || []);
+      if (!files.length) return;
+
+      if (!useApi) {
+        let currentVideos = form.images.filter((img) => isVideoSrc(img)).length;
+        let currentPhotos = form.images.length - currentVideos;
+        let blockedByLimit = false;
+
+        files.forEach((file) => {
+          const isVid = file.type.startsWith("video/");
+          if (isVid && currentVideos >= videoLimit) {
+            blockedByLimit = true;
+            return;
+          }
+          if (!isVid && currentPhotos >= photoLimit) {
+            blockedByLimit = true;
+            return;
+          }
+
+          if (isVid) currentVideos++;
+          else currentPhotos++;
+
+          const reader = new FileReader();
+          reader.onload = (readerEvent) => {
+            const result = readerEvent.target?.result as string;
+            updateForm((current) => ({
+              ...current,
+              images: [...current.images, result],
+              coverPreviews: [...current.coverPreviews, ""],
+              profilePreviews: [...current.profilePreviews, ""],
+            }));
+          };
+          reader.readAsDataURL(file);
+        });
+
+        if (blockedByLimit) {
+          if (isPremium) {
+            showUploadError();
+          } else {
+            openConversion("portfolio", "portfolio");
+          }
+        }
+        return;
+      }
+
+      let currentVideos = form.images.filter((img) => isVideoSrc(img)).length;
+      let currentPhotos = form.images.length - currentVideos;
+
+      for (const file of files) {
+        const isVid = file.type.startsWith("video/");
+        if (isVid && currentVideos >= videoLimit) {
+          if (isPremium) {
+            showUploadError("Você atingiu o limite de vídeos do seu plano.");
+          } else {
+            openConversion("portfolio", "portfolio");
+          }
+          continue;
+        }
+        if (!isVid && currentPhotos >= photoLimit) {
+          if (isPremium) {
+            showUploadError("Você atingiu o limite de fotos do seu plano.");
+          } else {
+            openConversion("portfolio", "portfolio");
+          }
+          continue;
+        }
+
+        try {
+          const asset = await uploadMediaFile(file, "gallery");
+          if (isVid) currentVideos++;
+          else currentPhotos++;
+
+          const displayUrl = asset.thumbnailUrl || asset.url || "";
+          if (asset.url) assetMapRef.current.set(asset.url, asset.id);
+          if (asset.thumbnailUrl) assetMapRef.current.set(asset.thumbnailUrl, asset.id);
+
+          updateForm((current) => {
+            const isFirstImage = current.images.length === 0;
+            const nextImages = [...current.images, displayUrl];
+            const nextCoverPreviews = [...current.coverPreviews, ""];
+            const nextProfilePreviews = [...current.profilePreviews, ""];
+            const nextProfileIndex = isFirstImage ? 0 : current.profileIndex;
+
+            if (isFirstImage && !isVid) {
+              void setProfileImageMedia(asset.id);
+            }
+
+            return {
+              ...current,
+              images: nextImages,
+              coverPreviews: nextCoverPreviews,
+              profilePreviews: nextProfilePreviews,
+              profileIndex: nextProfileIndex,
+            };
+          });
+        } catch (err) {
+          if (isPlanLimitError(err)) {
+            if (isPremium) {
+              showUploadError((err as Error).message || "Limite do plano atingido.");
+            } else {
+              openConversion("portfolio", "portfolio");
+            }
+          } else {
+            showUploadError((err as Error).message || PREMIUM_UPLOAD_ERROR_MESSAGE);
+          }
+        }
+      }
+    };
+    input.click();
   };
 
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
@@ -644,10 +814,20 @@ export function AnnouncementTab({
 
       if (mode === "cover") {
         const safeIndex = resolveCoverIndex(index, current.images.length);
+        const nextImages = moveItemToFront(current.images, safeIndex);
+
+        if (useApi) {
+          const assetIds = nextImages
+            .map((img) => findAssetIdForUrl(img))
+            .filter((id): id is string => Boolean(id));
+          if (assetIds.length === nextImages.length) {
+            void reorderMedia(assetIds);
+          }
+        }
 
         const next = {
           ...current,
-          images: moveItemToFront(current.images, safeIndex),
+          images: nextImages,
           coverPreviews: moveItemToFront(nextPreviews, safeIndex),
           profilePreviews: moveItemToFront(nextProfilePreviews, safeIndex),
           coverIndex: current.images.length > 0 ? 0 : current.coverIndex,
@@ -667,6 +847,14 @@ export function AnnouncementTab({
   };
 
   const updateProfilePreview = (index: number, previewSrc: string) => {
+    if (useApi) {
+      const targetUrl = form.images[index];
+      const assetId = targetUrl ? findAssetIdForUrl(targetUrl) : null;
+      if (assetId) {
+        void setProfileImageMedia(assetId);
+      }
+    }
+
     updateForm((current) => {
       if (current.images.length === 0) {
         return current;
@@ -689,6 +877,17 @@ export function AnnouncementTab({
   };
 
   const setCoverIndex = (index: number) => {
+    if (useApi && form.images.length > 0) {
+      const safeIndex = resolveCoverIndex(index, form.images.length);
+      const nextImages = moveItemToFront(form.images, safeIndex);
+      const assetIds = nextImages
+        .map((img) => findAssetIdForUrl(img))
+        .filter((id): id is string => Boolean(id));
+      if (assetIds.length === nextImages.length) {
+        void reorderMedia(assetIds);
+      }
+    }
+
     updateForm((current) => {
       if (current.images.length === 0) {
         return current;
@@ -716,6 +915,12 @@ export function AnnouncementTab({
   };
 
   const setProfileIndex = (index: number) => {
+    if (useApi) {
+      const targetUrl = form.images[index];
+      const assetId = targetUrl ? findAssetIdForUrl(targetUrl) : null;
+      void setProfileImageMedia(assetId);
+    }
+
     updateForm((current) => {
       if (current.images.length === 0) {
         return current;
@@ -731,6 +936,14 @@ export function AnnouncementTab({
   };
 
   const deleteMediaAtIndex = (index: number) => {
+    const targetUrl = form.images[index];
+    if (useApi && targetUrl) {
+      const assetId = findAssetIdForUrl(targetUrl);
+      if (assetId) {
+        void removeMedia(assetId);
+      }
+    }
+
     updateForm((current) => {
       const nextImages = current.images.filter((_, imageIndex) => imageIndex !== index);
       const nextPreviews = removeIndexedCoverPreview(current.coverPreviews, index);
@@ -1277,57 +1490,7 @@ export function AnnouncementTab({
               setActivePhotoIndex(idx - 1);
             }
           }}
-          onAddPhoto={() => {
-            const input = document.createElement("input");
-            input.type = "file";
-            input.multiple = true;
-            input.accept =
-              ".webp,.jpg,.jpeg,.avif,.mp4,.mov,.webm,image/webp,image/jpeg,image/avif,video/mp4,video/quicktime,video/webm";
-            input.onchange = (e) => {
-              const files = Array.from((e.target as HTMLInputElement).files || []);
-              if (!files.length) return;
-
-              let currentVideos = form.images.filter((img) => img.startsWith("data:video")).length;
-              let currentPhotos = form.images.length - currentVideos;
-              let blockedByLimit = false;
-
-              files.forEach((file) => {
-                const isVid = file.type.startsWith("video/");
-                if (isVid && currentVideos >= videoLimit) {
-                  blockedByLimit = true;
-                  return;
-                }
-                if (!isVid && currentPhotos >= photoLimit) {
-                  blockedByLimit = true;
-                  return;
-                }
-
-                if (isVid) currentVideos++;
-                else currentPhotos++;
-
-                const reader = new FileReader();
-                reader.onload = (readerEvent) => {
-                  const result = readerEvent.target?.result as string;
-                  updateForm((current) => ({
-                    ...current,
-                    images: [...current.images, result],
-                    coverPreviews: [...current.coverPreviews, ""],
-                    profilePreviews: [...current.profilePreviews, ""],
-                  }));
-                };
-                reader.readAsDataURL(file);
-              });
-
-              if (blockedByLimit) {
-                if (isPremium) {
-                  showUploadError();
-                } else {
-                  openConversion("portfolio", "portfolio");
-                }
-              }
-            };
-            input.click();
-          }}
+          onAddPhoto={handleAddPhoto}
         />
       )}
 
@@ -1551,59 +1714,7 @@ export function AnnouncementTab({
               onUpgradeClick={() => openConversion("portfolio", "portfolio")}
               onPhotoClick={(idx) => setActivePhotoIndex(idx)}
               onDeletePhoto={(idx) => deleteMediaAtIndex(idx)}
-              onAddPhoto={() => {
-                const input = document.createElement("input");
-                input.type = "file";
-                input.multiple = true;
-                input.accept =
-                  ".webp,.jpg,.jpeg,.avif,.mp4,.mov,.webm,image/webp,image/jpeg,image/avif,video/mp4,video/quicktime,video/webm";
-                input.onchange = (e) => {
-                  const files = Array.from((e.target as HTMLInputElement).files || []);
-                  if (!files.length) return;
-
-                  let currentVideos = form.images.filter((img) =>
-                    img.startsWith("data:video"),
-                  ).length;
-                  let currentPhotos = form.images.length - currentVideos;
-                  let blockedByLimit = false;
-
-                  files.forEach((file) => {
-                    const isVid = file.type.startsWith("video/");
-                    if (isVid && currentVideos >= videoLimit) {
-                      blockedByLimit = true;
-                      return;
-                    }
-                    if (!isVid && currentPhotos >= photoLimit) {
-                      blockedByLimit = true;
-                      return;
-                    }
-
-                    if (isVid) currentVideos++;
-                    else currentPhotos++;
-
-                    const reader = new FileReader();
-                    reader.onload = (readerEvent) => {
-                      const result = readerEvent.target?.result as string;
-                      updateForm((current) => ({
-                        ...current,
-                        images: [...current.images, result],
-                        coverPreviews: [...current.coverPreviews, ""],
-                        profilePreviews: [...current.profilePreviews, ""],
-                      }));
-                    };
-                    reader.readAsDataURL(file);
-                  });
-
-                  if (blockedByLimit) {
-                    if (isPremium) {
-                      showUploadError();
-                    } else {
-                      openConversion("portfolio", "portfolio");
-                    }
-                  }
-                };
-                input.click();
-              }}
+              onAddPhoto={handleAddPhoto}
             />
           </SectionCard>
 
@@ -2287,7 +2398,7 @@ function BentoPhotoGallery({
     return Math.min(Math.max(ratio, 0.42), 2.4);
   };
 
-  const videosCount = images.filter((img) => img.startsWith("data:video")).length;
+  const videosCount = images.filter((img) => isVideoSrc(img)).length;
   const photosCount = images.length - videosCount;
   const canAddMore = photosCount < photoLimit || videosCount < videoLimit;
   const mediaCapacity = photoLimit + videoLimit;
@@ -2320,7 +2431,7 @@ function BentoPhotoGallery({
         mediaSources.map(
           (src, idx) =>
             new Promise<void>((resolve) => {
-              if (!src || src.startsWith("data:video")) {
+              if (!src || isVideoSrc(src)) {
                 nextRatios[idx] = 1;
                 resolve();
                 return;
