@@ -10,6 +10,7 @@ Formato curto: Contexto / Opções consideradas / Decisão / Consequências. Um 
 | [004](004-orm-e-migrations.md)                      | Drizzle SQL-first; migrations em CI e no boot                             |
 | [005](005-filas-e-tempo-real.md)                    | pg-boss no Postgres; chat por LISTEN/NOTIFY + SSE                         |
 | [006](006-deploy.md)                                | Deploy agnóstico: Dockerfile, env, healthz, migrations idempotentes       |
+| [007](007-infra-escolhida.md)                       | Infraestrutura de deploy: VPS única com Docker Compose e subdomínios      |
 | [008](008-migracao-web-dual-mode-e-autenticacao.md) | Migração web dual-mode e integração com better-auth                       |
 | [009](009-migracao-rascunho-de-anuncio.md)          | Rascunho de anúncio, seções, publicação e controle de status via API      |
 | [010](010-migracao-midia-e-storage.md)              | Upload pré-assinado, processamento de mídia e gestão de galeria via API   |

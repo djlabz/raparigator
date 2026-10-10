@@ -199,6 +199,7 @@ export async function seedDevData(db: Database) {
 
     await db.delete(reviews).where(eq(reviews.isSeed, false));
     await db.delete(reviewInvites).where(inArray(reviewInvites.conversationId, ["c1", "c2"]));
+    await db.delete(messages).where(inArray(messages.conversationId, ["c1", "c2"]));
 
     await db
       .insert(conversations)

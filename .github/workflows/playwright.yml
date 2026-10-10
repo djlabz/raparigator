@@ -10,6 +10,8 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_API_URL: http://localhost:4000
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -19,7 +21,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Sobe Postgres e MinIO
-        run: npm run db:up
+        run: |
+          docker pull postgres:17-alpine
+          docker pull cgr.dev/chainguard/minio:latest
+          npm run db:up
       - name: Prepara ambiente da API
         run: |
           cp apps/api/.env.example apps/api/.env
