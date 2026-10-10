@@ -99,7 +99,7 @@ Logins de dev (seeds): `cliente@sigillus.dev` / `Cliente@123`, `profissional@sig
 
 Pode intercalar com o fim da fase 1; T-20 e T-21 não dependem de nada.
 
-- [ ] **T-20 CLI `create-admin`.** `apps/api/src/cli/create-admin.ts` + script `admin:create -w apps/api`, lendo e-mail, nome e senha de argumentos ou env, reaproveitando `upsertAdminWithPassword` de `src/db/seed/users.ts`. Hoje não existe forma de criar o primeiro admin em produção (sign-up de admin é desligado e as seeds de admin não rodam com `NODE_ENV=production`). Testar que roda contra o banco de teste.
+- [x] **T-20 CLI `create-admin`.** `apps/api/src/cli/create-admin.ts` + script `admin:create -w apps/api`, lendo e-mail, nome e senha de argumentos ou env, reaproveitando `upsertAdminWithPassword` de `src/db/seed/users.ts`. Hoje não existe forma de criar o primeiro admin em produção (sign-up de admin é desligado e as seeds de admin não rodam com `NODE_ENV=production`). Testar que roda contra o banco de teste. (PR #53, 10/10)
 
 - [ ] **T-21 Verificação opcional por flag** (D-03). API: env `VERIFICATION_REQUIRED` (default `false`), exposto em `verification.getState` como `required: boolean` (adicionar ao schema em `contracts`). Nenhum endpoint passa a exigir verificação; a flag só informa a UI. Web: `account-screen.tsx` e `professional-dashboard-screen.tsx` mostram a seção de verificação como "opcional" quando `required=false` e escondem o botão de enviar código enquanto não houver provedor (sem provedor, `sendCode` só loga; não prometer ao usuário um código que não chega). Pronto quando: cadastro e publicação funcionam sem verificar nada, e a UI não oferece envio de código.
 
@@ -114,6 +114,8 @@ Pode intercalar com o fim da fase 1; T-20 e T-21 não dependem de nada.
 - [ ] **T-26 Deploy.** Depende de P-03. Checklist de env de produção da API (todas as chaves de `apps/api/.env.example` com valor real; `AUTH_SECRET` de 32+ bytes aleatórios; `BILLING_PROVIDER=fake` + `BILLING_FAKE_ACKNOWLEDGED=true` enquanto gratuito; `VERIFICATION_DEV_CODES=false`; `OPENAPI_DOCS_ENABLED=false`; `CORS_ORIGINS` e `WEB_ORIGIN` com o domínio real; `COOKIE_DOMAIN` com o domínio pai se web e API estiverem em subdomínios diferentes; `S3_*` do storage escolhido; `SENTRY_DSN`). Postgres com `CREATE EXTENSION pg_trgm` permitido. Em produção, migrations rodam no boot (`MIGRATE_ON_BOOT`) ou com `DATABASE_URL` explícito; nunca via `npm run db:migrate`, que completa chaves ausentes com o `.env.example`. Backup diário do Postgres e do bucket. Rodar `admin:create` (T-20). Registrar o que foi escolhido em `docs/adr/007-infra-escolhida.md`.
 
 - [ ] **T-27 Smoke test pós-deploy.** Roteiro manual em `docs/smoke.md`: cadastro de cliente e de profissional, publicar anúncio, admin aprova, anúncio aparece no feed, cliente abre conversa, envia briefing, profissional responde, convite de avaliação, avaliação, denúncia, suspensão, logout, `/healthz` e `/readyz` 200. Executar e anotar a data.
+
+- [ ] **T-28 Bateria de testes de estresse, resiliência e consolidação.** Ao concluir a Fase 2: executar todas as suítes de testes possíveis, testes de estresse e concorrência na API e no web (múltiplas requisições simultâneas, streaming de chat SSE concorrente, rajadas de requisições e navegações paralelas), varredura profunda de bugs/falhas e edge cases. Incorporar novos testes automatizados criados durante a Fase 2 e consolidar a suíte inteira antes da Fase 3.
 
 ## 6. Fase 3 — monetização (parada por decisão, não por falta de código)
 

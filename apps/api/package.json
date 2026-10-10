@@ -12,7 +12,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file-if-exists=.env.example --env-file-if-exists=.env src/cli/migrate.ts",
     "db:seed": "tsx --env-file-if-exists=.env.example --env-file-if-exists=.env src/cli/seed.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "admin:create": "tsx --env-file-if-exists=.env.example --env-file-if-exists=.env src/cli/create-admin.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1111.0",
