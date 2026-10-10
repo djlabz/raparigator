@@ -30,4 +30,27 @@ test.describe("Autenticação", () => {
     await expect(page).toHaveURL(/\/feed/);
     await expect(page.getByRole("link", { name: "Painel" })).toBeVisible();
   });
+
+  test("link de esqueceu a senha leva para a tela de recuperação e envia solicitação", async ({
+    page,
+  }) => {
+    await page.goto("/auth/login");
+    await page.getByRole("link", { name: "Esqueceu a senha?" }).click();
+
+    await expect(page).toHaveURL(/\/auth\/esqueci-senha/);
+    await expect(page.getByRole("heading", { name: "Esqueceu sua senha?" })).toBeVisible();
+
+    await page.getByLabel("E-mail").fill("cliente@sigillus.dev");
+    await page.getByRole("button", { name: "Enviar link de recuperação" }).click();
+
+    await expect(page.getByRole("heading", { name: "E-mail enviado!" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Voltar para o login" })).toBeVisible();
+  });
+
+  test("redefinir senha sem token avisa que o link é inválido", async ({ page }) => {
+    await page.goto("/auth/redefinir-senha");
+
+    await expect(page.getByRole("heading", { name: "Link inválido ou expirado" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Solicitar novo link" })).toBeVisible();
+  });
 });

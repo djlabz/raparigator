@@ -11,6 +11,7 @@ import type { Database } from "../../db/client";
 import { users, verificationChannels } from "../../db/schema";
 import { newId } from "../../lib/ids";
 import type { Logger } from "../../lib/logger";
+import type { Mailer } from "../../lib/mail";
 
 export const VERIFICATION_CODE_TTL_MS = 10 * 60 * 1000;
 export const VERIFICATION_MAX_ATTEMPTS = 5;
@@ -24,6 +25,7 @@ export type VerificationServiceDeps = {
   config: AppConfig;
   logger: Logger;
   notifier?: VerificationNotifier;
+  mailer?: Mailer;
 };
 
 export type VerificationService = ReturnType<typeof createVerificationService>;
@@ -91,9 +93,40 @@ export function createLoggingVerificationNotifier(logger: Logger): VerificationN
   };
 }
 
+export function createEmailVerificationNotifier(
+  mailer: Mailer,
+  logger: Logger,
+): VerificationNotifier {
+  return {
+    async sendCode(channel, target, code) {
+      if (channel === "email") {
+        await mailer.send({
+          to: target,
+          subject: "Seu código de confirmação — Sigillus",
+          text: `Seu código de confirmação no Sigillus é: ${code}\n\nEste código expira em 10 minutos.`,
+          html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #18181b;">
+  <h2 style="color: #722f37;">Sigillus</h2>
+  <p>Seu código de confirmação de e-mail é:</p>
+  <div style="font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #722f37; padding: 16px 0;">
+    ${code}
+  </div>
+  <p style="font-size: 13px; color: #71717a;">Este código é válido por 10 minutos. Se você não solicitou, ignore esta mensagem.</p>
+</div>`,
+        });
+        return;
+      }
+      logger.info({ channel }, "código de verificação enviado");
+    },
+  };
+}
+
 export function createVerificationService(deps: VerificationServiceDeps) {
   const { db, config, logger } = deps;
-  const notifier = deps.notifier ?? createLoggingVerificationNotifier(logger);
+  const notifier =
+    deps.notifier ??
+    (deps.mailer
+      ? createEmailVerificationNotifier(deps.mailer, logger)
+      : createLoggingVerificationNotifier(logger));
 
   async function findRow(userId: string, channel: VerificationChannel): Promise<ChannelRow | null> {
     const [row] = await db

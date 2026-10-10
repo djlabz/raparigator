@@ -188,4 +188,20 @@ describe("verificação de e-mail e telefone", () => {
     const stateRequired = await serviceRequired.getState(user);
     expect(stateRequired.required).toBe(true);
   });
+
+  it("envia e-mail com código de confirmação quando configurado com mailer", async () => {
+    const { user } = await setup();
+    harness.mailer.clear();
+    const serviceWithMailer = createVerificationService({
+      db: harness.db,
+      config: harness.config,
+      logger: harness.deps.logger,
+      mailer: harness.mailer,
+    });
+
+    await serviceWithMailer.sendCode(user, "email");
+    expect(harness.mailer.sent).toHaveLength(1);
+    expect(harness.mailer.sent[0]?.to).toBe(user.email);
+    expect(harness.mailer.sent[0]?.subject).toContain("código de confirmação");
+  });
 });

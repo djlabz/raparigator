@@ -183,7 +183,7 @@ export function LoginScreen() {
                 />
                 <div className="flex justify-end pt-1">
                   <Link
-                    href="/auth/recuperar-senha"
+                    href="/auth/esqueci-senha"
                     className="text-xs font-semibold text-wine-700 transition-all hover:text-wine-800 hover:underline"
                   >
                     Esqueceu a senha?

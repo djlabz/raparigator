@@ -53,6 +53,9 @@ const EnvSchema = z
     VERIFICATION_REQUIRED: booleanFromEnv.default(false),
     PREMIUM_CHECKOUT_ENABLED: booleanFromEnv.default(false),
     SEED_ON_BOOT: booleanFromEnv.default(false),
+    MAIL_PROVIDER: z.enum(["log", "resend"]).default("log"),
+    RESEND_API_KEY: z.union([emptyStringToUndefined, z.string()]).optional(),
+    MAIL_FROM: z.string().default("Sigillus <nao-responda@sigillus.dev>"),
   })
   .superRefine((env, ctx) => {
     if (
@@ -72,6 +75,13 @@ const EnvSchema = z
         code: "custom",
         path: ["VERIFICATION_DEV_CODES"],
         message: "VERIFICATION_DEV_CODES não pode estar ligado em produção.",
+      });
+    }
+    if (env.NODE_ENV === "production" && env.MAIL_PROVIDER === "resend" && !env.RESEND_API_KEY) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["RESEND_API_KEY"],
+        message: "RESEND_API_KEY é obrigatória quando MAIL_PROVIDER=resend em produção.",
       });
     }
   });

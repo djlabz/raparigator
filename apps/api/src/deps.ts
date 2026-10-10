@@ -4,6 +4,7 @@ import type { AdminAuth, UserAuth } from "./lib/auth";
 import type { BillingProvider } from "./lib/billing/provider";
 import type { JobQueue } from "./lib/jobs";
 import type { Logger } from "./lib/logger";
+import type { Mailer } from "./lib/mail";
 import type { RateLimiter } from "./lib/rate-limit";
 import type { Services } from "./services";
 
@@ -16,6 +17,7 @@ export type AppDeps = {
   rateLimiter: RateLimiter;
   billing: BillingProvider;
   jobs: JobQueue;
+  mailer: Mailer;
   services: Services;
   ready: () => boolean;
 };
