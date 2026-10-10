@@ -41,7 +41,7 @@ test.describe("Estresse e resiliência na UI", () => {
 
     const countBefore = await page.getByText("Simulação de encontro").count();
     const sendBtn = page.getByRole("button", { name: "Enviar interesse" }).first();
-    await Promise.allSettled([sendBtn.click(), sendBtn.click()]);
+    await sendBtn.click({ clickCount: 2 });
 
     await expect(preview).toBeHidden();
     const countAfter = await page.getByText("Simulação de encontro").count();
