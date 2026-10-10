@@ -3,6 +3,8 @@ import { credentials } from "./helpers/credentials";
 import { seedAdminSession } from "./helpers/auth";
 
 test.describe("Admin", () => {
+  test.describe.configure({ mode: "serial" });
+
   test("login válido abre o dashboard", async ({ page }) => {
     await page.goto("/admin/login");
 

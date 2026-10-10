@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   getChatStoreSnapshot,
   getServerChatStoreSnapshot,
+  loadConversationMessages,
   subscribeChatStore,
 } from "@/lib/chat-store";
 import { getConversationAd } from "@/lib/conversation-ad";
@@ -46,6 +47,11 @@ export function ContactsTab({ adSlug, professionalName }: ContactsTabProps) {
     getServerChatStoreSnapshot,
   );
   const { getInvite } = useReviewInvites();
+  useEffect(() => {
+    chat.conversations.forEach((conversation) => {
+      void loadConversationMessages(conversation.id);
+    });
+  }, [chat.conversations]);
 
   const rows = useMemo<ContactRow[]>(() => {
     return chat.conversations
