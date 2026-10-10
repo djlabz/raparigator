@@ -115,7 +115,7 @@ Pode intercalar com o fim da fase 1; T-20 e T-21 não dependem de nada.
 
 - [x] **T-27 Smoke test pós-deploy.** Roteiro manual estruturado em `docs/smoke.md` cobrindo todas as etapas: liveness/readiness (`/healthz` e `/readyz`), cadastro de cliente e de profissional, publicação de anúncio, aprovação pelo admin, feed público, simulação e envio de card de briefing no chat, resposta em tempo real, convite e submissão de avaliação, denúncia e suspensão moderativa, e logout. Execução local validada contra a suíte ponta a ponta. (PR #60, 10/10)
 
-- [ ] **T-28 Bateria de testes de estresse, resiliência e consolidação.** Ao concluir a Fase 2: executar todas as suítes de testes possíveis, testes de estresse e concorrência na API e no web (múltiplas requisições simultâneas, streaming de chat SSE concorrente, rajadas de requisições e navegações paralelas), varredura profunda de bugs/falhas e edge cases. Incorporar novos testes automatizados criados durante a Fase 2 e consolidar a suíte inteira antes da Fase 3.
+- [x] **T-28 Bateria de testes de estresse, resiliência e consolidação.** Ao concluir a Fase 2: suíte de concorrência e estresse na API (20 mensagens paralelas, 10 subscribers SSE simultâneos, race condition de avaliação e 50 requisições simultâneas) e no web (rajadas de filtros, double-submit e navegações rápidas). Relatório consolidado em `docs/relatorios/2026-10-10-bateria-de-estresse-resiliencia-e-consolidacao.md` com 158 testes unitários/integração e 78 testes E2E aprovados. Fase 2 concluída com sucesso. (PR #61, 10/10)
 
 ## 6. Fase 3 — monetização (parada por decisão, não por falta de código)
 
