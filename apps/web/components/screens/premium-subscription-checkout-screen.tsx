@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, Crown, CreditCard } from "lucide-react";
@@ -41,8 +41,14 @@ const fieldClassName =
 export function PremiumSubscriptionCheckoutScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isPremium, activatePremium } = usePremiumPlan();
+  const { isPremium, activatePremium, checkoutEnabled } = usePremiumPlan();
   const planOptions = usePremiumPlans();
+
+  useEffect(() => {
+    if (!checkoutEnabled) {
+      router.replace("/profissional/dashboard");
+    }
+  }, [checkoutEnabled, router]);
 
   const billingParam = searchParams.get("billing");
   const initialBilling: PremiumBillingCycle = isBillingCycle(billingParam)
@@ -79,6 +85,10 @@ export function PremiumSubscriptionCheckoutScreen() {
       }, 1400);
     }, 800);
   };
+
+  if (!checkoutEnabled) {
+    return null;
+  }
 
   if (isPremium && !showSuccess) {
     return (

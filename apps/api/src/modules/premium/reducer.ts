@@ -33,14 +33,17 @@ function applyOne(
   switch (event.type) {
     case "checkout_created":
       return { ...state, status: "pending_payment" };
-    case "payment_confirmed":
+    case "payment_confirmed": {
+      const until = event.payload?.until ? new Date(event.payload.until as string) : null;
       return {
         status: "active",
         currentPeriodStart: event.occurredAt,
-        currentPeriodEnd: addBillingCycle(event.occurredAt, cycle),
+        currentPeriodEnd: until ?? addBillingCycle(event.occurredAt, cycle),
         cancelAtPeriodEnd: false,
       };
+    }
     case "renewed": {
+      const until = event.payload?.until ? new Date(event.payload.until as string) : null;
       const base =
         state.currentPeriodEnd && state.currentPeriodEnd.getTime() > event.occurredAt.getTime()
           ? state.currentPeriodEnd
@@ -49,7 +52,7 @@ function applyOne(
         ...state,
         status: "active",
         currentPeriodStart: base,
-        currentPeriodEnd: addBillingCycle(base, cycle),
+        currentPeriodEnd: until ?? addBillingCycle(base, cycle),
       };
     }
     case "payment_failed":

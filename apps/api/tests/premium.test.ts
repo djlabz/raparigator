@@ -19,12 +19,16 @@ type Setup = {
   profileId: string;
 };
 
-async function setup(): Promise<Setup> {
+async function setup(options?: { checkoutEnabled?: boolean }): Promise<Setup> {
   const billing = createFakeBillingProvider(harness.config.BILLING_WEBHOOK_SECRET);
+  const config = {
+    ...harness.config,
+    PREMIUM_CHECKOUT_ENABLED: options?.checkoutEnabled ?? true,
+  };
   const premium = createPremiumService({
     db: harness.db,
     billing,
-    config: harness.config,
+    config,
     jobs: harness.jobs,
     logger: harness.deps.logger,
   });
@@ -284,5 +288,38 @@ describe("premium / billing", () => {
     expect(response.status).toBe(202);
     const [delivery] = await harness.db.select().from(webhookDeliveries);
     expect(delivery?.error).toBe("assinatura_nao_encontrada");
+  });
+
+  it("startSubscription responde CONFLICT quando checkoutEnabled=false", async () => {
+    const { premium, userId, email } = await setup({ checkoutEnabled: false });
+    const state = await premium.getState(userId);
+    expect(state.checkoutEnabled).toBe(false);
+    await expect(
+      premium.startSubscription({ id: userId, email }, { cycle: "monthly" }),
+    ).rejects.toMatchObject({
+      code: "CONFLICT",
+    });
+  });
+
+  it("getState retorna checkoutEnabled=true quando habilitado", async () => {
+    const { premium, userId } = await setup({ checkoutEnabled: true });
+    const state = await premium.getState(userId);
+    expect(state.checkoutEnabled).toBe(true);
+  });
+
+  it("grantManual concede período premium e atualiza adTier", async () => {
+    const { premium, userId, profileId } = await setup();
+    expect(await adTierOf(profileId)).toBe("normal");
+
+    const result = await premium.grantManual(userId, 3);
+    expect(result.status).toBe("active");
+    expect(result.provider).toBe("manual");
+    expect(await adTierOf(profileId)).toBe("premium");
+
+    const state = await premium.getState(userId);
+    expect(state.plan).toBe("premium");
+    expect(state.subscription?.status).toBe("active");
+    expect(state.subscription?.provider).toBe("manual");
+    expect(new Date(state.subscription!.currentPeriodEnd!)).toBeInstanceOf(Date);
   });
 });

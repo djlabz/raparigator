@@ -69,11 +69,10 @@ export function getBillingSavingsPercent(): number {
   return Math.round(((monthly - semiannual) / monthly) * 100);
 }
 
-export function addBillingCycle(start: Date, cycle: PremiumBillingCycle): Date {
-  const months = PREMIUM_CYCLE_MONTHS[cycle];
-  const targetMonthStart = Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + months, 1);
+export function addMonths(start: Date, count: number): Date {
+  const targetMonthStart = Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + count, 1);
   const daysInTargetMonth = new Date(
-    Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + months + 1, 0),
+    Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + count + 1, 0),
   ).getUTCDate();
   const day = Math.min(start.getUTCDate(), daysInTargetMonth);
   const next = new Date(targetMonthStart);
@@ -85,4 +84,8 @@ export function addBillingCycle(start: Date, cycle: PremiumBillingCycle): Date {
     start.getUTCMilliseconds(),
   );
   return next;
+}
+
+export function addBillingCycle(start: Date, cycle: PremiumBillingCycle): Date {
+  return addMonths(start, PREMIUM_CYCLE_MONTHS[cycle]);
 }

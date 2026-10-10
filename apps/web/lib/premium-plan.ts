@@ -91,6 +91,13 @@ export function getCachedPremiumLimits(): PlanLimits {
   return plan === "premium" ? PREMIUM_LIMITS : STANDARD_LIMITS;
 }
 
+export function getCachedCheckoutEnabled(): boolean {
+  if (isApiDataSource()) {
+    return cachedApiState ? cachedApiState.checkoutEnabled : false;
+  }
+  return false;
+}
+
 export function activatePremium() {
   if (typeof window !== "undefined") {
     window.localStorage.setItem(PLAN_STORAGE_KEY, "premium");
@@ -101,6 +108,7 @@ export function activatePremium() {
       plan: "premium",
       limits: PREMIUM_LIMITS,
       subscription: cachedApiState?.subscription ?? null,
+      checkoutEnabled: cachedApiState?.checkoutEnabled ?? false,
     };
   }
 
@@ -117,6 +125,7 @@ export function deactivatePremium() {
       plan: "standard",
       limits: STANDARD_LIMITS,
       subscription: null,
+      checkoutEnabled: cachedApiState?.checkoutEnabled ?? false,
     };
   }
 
@@ -144,6 +153,11 @@ export function usePremiumPlan() {
     getCachedPremiumLimits,
     () => STANDARD_LIMITS,
   );
+  const checkoutEnabled = useSyncExternalStore<boolean>(
+    subscribe,
+    getCachedCheckoutEnabled,
+    () => false,
+  );
   const viewOnceUsed = useSyncExternalStore<number>(subscribe, readViewOnceCount, () => 0);
 
   useEffect(() => {
@@ -159,6 +173,7 @@ export function usePremiumPlan() {
   return {
     plan,
     isPremium,
+    checkoutEnabled,
     subscription: cachedApiState?.subscription ?? null,
     activatePremium,
     deactivatePremium,

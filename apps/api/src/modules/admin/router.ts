@@ -64,4 +64,7 @@ export const adminRouter = {
   search: admin.admin.search.handler(({ context, input }) =>
     context.deps.services.admin.search(input),
   ),
+  grantPremium: admin.admin.grantPremium.handler(({ context, input }) =>
+    context.deps.services.admin.grantPremium(context.admin, input),
+  ),
 };

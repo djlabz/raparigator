@@ -34,6 +34,7 @@ export function createServices(deps: ServiceDeps) {
   const { db, logger, storage, jobs, chatEvents, billing, config } = deps;
   const profiles = createProfileRepository(db, storage);
   const notifications = createNotificationsService({ db });
+  const premium = createPremiumService({ db, billing, config, jobs, logger });
   return {
     profiles,
     notifications,
@@ -44,12 +45,13 @@ export function createServices(deps: ServiceDeps) {
     media: createMediaService({ db, profiles, storage, jobs, logger }),
     chat: createChatService({ db, profiles, storage, chatEvents, logger }),
     reviews: createReviewsService({ db, profiles, notifications, jobs, logger }),
-    premium: createPremiumService({ db, billing, config, jobs, logger }),
+    premium,
     verification: createVerificationService({ db, config, logger }),
     admin: createAdminService({
       db,
       profiles,
       logger,
+      premium,
       notify: async (userId, item) => {
         await notifications.push(userId, item);
       },

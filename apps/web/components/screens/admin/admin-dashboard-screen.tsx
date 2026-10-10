@@ -20,6 +20,7 @@ import {
   Activity,
   BarChart3,
   Calendar,
+  Crown,
 } from "lucide-react";
 import { AdminLayoutShell } from "./admin-layout-shell";
 import { getDashboardStats } from "@/lib/admin-service";
@@ -50,6 +51,8 @@ function ActivityIcon({ action }: { action: AdminActivityLog["action"] }) {
       return <ShieldX className="h-4 w-4 text-orange-400" />;
     case "account_reinstated":
       return <ShieldCheck className="h-4 w-4 text-emerald-400" />;
+    case "premium_granted":
+      return <Crown className="h-4 w-4 text-amber-400" />;
   }
 }
 
@@ -67,6 +70,8 @@ function activityLabel(log: AdminActivityLog): string {
       return `${log.targetName} — conta suspensa`;
     case "account_reinstated":
       return `${log.targetName} — conta reativada`;
+    case "premium_granted":
+      return `${log.targetName} — premium concedido`;
   }
 }
 

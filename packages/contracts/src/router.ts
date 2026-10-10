@@ -4,6 +4,7 @@ import {
   AdminActivityLogSchema,
   DashboardStatsSchema,
   GlobalSearchResultSchema,
+  GrantPremiumInputSchema,
   ReportSchema,
   ReportStatusSchema,
   ReportTypeSchema,
@@ -418,6 +419,10 @@ export const adminContract = {
     .route({ method: "GET", path: "/admin/search" })
     .input(z.object({ q: z.string().trim().min(1).max(100) }))
     .output(z.array(GlobalSearchResultSchema)),
+  grantPremium: base
+    .route({ method: "POST", path: "/admin/profiles/{id}/grant-premium" })
+    .input(GrantPremiumInputSchema)
+    .output(OkSchema),
 };
 
 export const contract = {

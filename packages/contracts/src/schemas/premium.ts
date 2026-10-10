@@ -44,6 +44,7 @@ export const PremiumStateSchema = z.object({
   plan: PlanTierSchema,
   limits: PlanLimitsSchema,
   subscription: SubscriptionSchema.nullable(),
+  checkoutEnabled: z.boolean(),
 });
 export type PremiumState = z.infer<typeof PremiumStateSchema>;
 

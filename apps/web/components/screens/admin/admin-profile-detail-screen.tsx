@@ -15,10 +15,11 @@ import {
   DollarSign,
   X,
   AlertTriangle,
+  Crown,
 } from "lucide-react";
 import { AdminLayoutShell } from "./admin-layout-shell";
 import { useAdminSession } from "@/lib/admin-session";
-import { getProfileById, approveProfile, rejectProfile } from "@/lib/admin-service";
+import { getProfileById, approveProfile, rejectProfile, grantPremium } from "@/lib/admin-service";
 import type { ProfessionalAd, VerificationStatus } from "@/lib/types";
 
 interface AdminProfileDetailScreenProps {
@@ -67,9 +68,11 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
   const [profile, setProfile] = useState<ProfessionalAd | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
-  const [actionLoading, setActionLoading] = useState<"approve" | "reject" | null>(null);
+  const [actionLoading, setActionLoading] = useState<"approve" | "reject" | "grant" | null>(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [showGrantModal, setShowGrantModal] = useState(false);
+  const [grantMonths, setGrantMonths] = useState(1);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const loadProfile = useCallback(async () => {
@@ -108,6 +111,21 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
     setShowRejectModal(false);
     setRejectReason("");
     showToast("Perfil recusado.", "error");
+  };
+
+  const handleGrantPremium = async () => {
+    if (!admin || !profile) return;
+    setActionLoading("grant");
+    try {
+      await grantPremium(profile.id, grantMonths);
+      await loadProfile();
+      setShowGrantModal(false);
+      showToast("Plano Premium concedido com sucesso!", "success");
+    } catch {
+      showToast("Erro ao conceder premium.", "error");
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   if (loading) {
@@ -175,8 +193,21 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <StatusBadge status={profile.verificationStatus} />
+          {profile.adTier === "premium" ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-600/50 bg-amber-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300">
+              <Crown className="h-3 w-3" /> Premium
+            </span>
+          ) : null}
+          <button
+            onClick={() => setShowGrantModal(true)}
+            disabled={actionLoading !== null}
+            className="flex items-center gap-1.5 rounded-xl border border-amber-600/60 bg-amber-600/20 px-3.5 py-2 text-xs font-semibold text-amber-300 transition-all hover:bg-amber-600/30 disabled:opacity-60"
+          >
+            <Crown className="h-3.5 w-3.5" />
+            {profile.adTier === "premium" ? "Estender Premium" : "Conceder Premium"}
+          </button>
           {isPending && (
             <div className="flex gap-2">
               <button
@@ -401,6 +432,72 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
                   <XCircle className="h-4 w-4" />
                 )}
                 Confirmar recusa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showGrantModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-amber-400" />
+                <h2 className="font-semibold text-zinc-100">
+                  {profile.adTier === "premium"
+                    ? "Estender Plano Premium"
+                    : "Conceder Plano Premium"}
+                </h2>
+              </div>
+              <button
+                onClick={() => setShowGrantModal(false)}
+                className="rounded-lg p-1 text-zinc-600 hover:text-zinc-300"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <p className="mb-4 text-sm text-zinc-400">
+              Escolha por quanto tempo deseja conceder o acesso Premium para{" "}
+              <strong className="text-zinc-200">{profile.artisticName}</strong>:
+            </p>
+
+            <div className="mb-5 grid grid-cols-4 gap-2">
+              {[1, 3, 6, 12].map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setGrantMonths(m)}
+                  className={`rounded-xl border py-2.5 text-center text-xs font-semibold transition-all ${
+                    grantMonths === m
+                      ? "border-amber-500 bg-amber-500/20 text-amber-300"
+                      : "border-zinc-800 bg-zinc-800/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+                  }`}
+                >
+                  {m} {m === 1 ? "mês" : "meses"}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowGrantModal(false)}
+                className="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-400 transition-all hover:text-zinc-200"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleGrantPremium}
+                disabled={actionLoading === "grant"}
+                className="flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-amber-500 disabled:opacity-50"
+              >
+                {actionLoading === "grant" ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  <Crown className="h-4 w-4" />
+                )}
+                Confirmar
               </button>
             </div>
           </div>

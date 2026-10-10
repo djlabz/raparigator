@@ -8,7 +8,7 @@ import type {
   Subscription,
   SubscriptionEventType,
 } from "@sigillus/contracts";
-import { PREMIUM_PLAN_OPTIONS, getPlanLimits, getPlanOption } from "@sigillus/domain";
+import { PREMIUM_PLAN_OPTIONS, addMonths, getPlanLimits, getPlanOption } from "@sigillus/domain";
 import type { AppConfig } from "../../config";
 import type { Database } from "../../db/client";
 import { professionalProfiles, subscriptionEvents, subscriptions } from "../../db/schema";
@@ -138,7 +138,12 @@ export function createPremiumService(deps: PremiumServiceDeps) {
 
   function stateFrom(subscription: Subscription | null): PremiumState {
     const plan = subscription?.status === "active" ? "premium" : "standard";
-    return { plan, limits: getPlanLimits(plan), subscription };
+    return {
+      plan,
+      limits: getPlanLimits(plan),
+      subscription,
+      checkoutEnabled: config.PREMIUM_CHECKOUT_ENABLED,
+    };
   }
 
   return {
@@ -158,6 +163,11 @@ export function createPremiumService(deps: PremiumServiceDeps) {
       user: PremiumUser,
       input: { cycle: PremiumBillingCycle },
     ): Promise<StartSubscriptionOutput> {
+      if (!config.PREMIUM_CHECKOUT_ENABLED) {
+        throw new ORPCError("CONFLICT", {
+          message: "O checkout de assinatura premium está temporariamente desabilitado.",
+        });
+      }
       if (!config.billingEnabled) {
         throw new ORPCError("CONFLICT", { message: "Assinatura indisponível no momento." });
       }
@@ -248,6 +258,43 @@ export function createPremiumService(deps: PremiumServiceDeps) {
         )
         .limit(1);
       return row ?? null;
+    },
+
+    async grantManual(userId: string, months: number): Promise<Subscription> {
+      const now = new Date();
+      const latest = await findLatestForUser(userId);
+      const isCurrentlyActive =
+        latest &&
+        latest.status === "active" &&
+        latest.currentPeriodEnd &&
+        latest.currentPeriodEnd.getTime() > now.getTime();
+      const baseDate = isCurrentlyActive ? (latest.currentPeriodEnd as Date) : now;
+      const until = addMonths(baseDate, months);
+
+      if (latest && (latest.status === "active" || latest.status === "pending_payment")) {
+        return applyEvent(latest.id, {
+          type: isCurrentlyActive ? "renewed" : "payment_confirmed",
+          idempotencyKey: `manual:${latest.id}:${now.getTime()}`,
+          payload: { source: "manual", months, until: until.toISOString() },
+          occurredAt: now,
+        });
+      }
+
+      const subscriptionId = newId();
+      await db.insert(subscriptions).values({
+        id: subscriptionId,
+        userId,
+        provider: "manual",
+        cycle: months >= 6 ? "semiannual" : "monthly",
+        status: "pending_payment",
+      });
+
+      return applyEvent(subscriptionId, {
+        type: "payment_confirmed",
+        idempotencyKey: `manual:${subscriptionId}:${now.getTime()}`,
+        payload: { source: "manual", months, until: until.toISOString() },
+        occurredAt: now,
+      });
     },
 
     async expireDueSubscriptions(now: Date = new Date()): Promise<number> {

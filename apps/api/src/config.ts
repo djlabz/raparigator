@@ -51,6 +51,7 @@ const EnvSchema = z
     OPENAPI_DOCS_ENABLED: booleanFromEnv.optional(),
     VERIFICATION_DEV_CODES: booleanFromEnv.default(false),
     VERIFICATION_REQUIRED: booleanFromEnv.default(false),
+    PREMIUM_CHECKOUT_ENABLED: booleanFromEnv.default(false),
     SEED_ON_BOOT: booleanFromEnv.default(false),
   })
   .superRefine((env, ctx) => {

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   PREMIUM_VISIBILITY_MULTIPLIER,
   addBillingCycle,
+  addMonths,
   canUploadMedia,
   getBillingSavingsPercent,
   getPlanLimits,
@@ -43,6 +44,9 @@ describe("limites por plano", () => {
     expect(addBillingCycle(start, "monthly").toISOString()).toBe("2026-02-28T00:00:00.000Z");
     expect(addBillingCycle(new Date("2026-08-15T12:00:00.000Z"), "semiannual").toISOString()).toBe(
       "2027-02-15T12:00:00.000Z",
+    );
+    expect(addMonths(new Date("2026-03-31T10:00:00.000Z"), 3).toISOString()).toBe(
+      "2026-06-30T10:00:00.000Z",
     );
   });
 });

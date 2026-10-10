@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { IdSchema } from "./common";
 
 export const AdminActivityActionSchema = z.enum([
   "profile_approved",
@@ -7,6 +8,7 @@ export const AdminActivityActionSchema = z.enum([
   "client_registered",
   "account_suspended",
   "account_reinstated",
+  "premium_granted",
 ]);
 export type AdminActivityAction = z.infer<typeof AdminActivityActionSchema>;
 
@@ -77,3 +79,9 @@ export const GlobalSearchResultSchema = z.object({
   status: z.string().optional(),
 });
 export type GlobalSearchResult = z.infer<typeof GlobalSearchResultSchema>;
+
+export const GrantPremiumInputSchema = z.object({
+  id: IdSchema,
+  months: z.number().int().min(1).max(12).default(1),
+});
+export type GrantPremiumInput = z.infer<typeof GrantPremiumInputSchema>;
