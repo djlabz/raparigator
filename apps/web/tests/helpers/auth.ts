@@ -4,7 +4,7 @@ import { credentials } from "./credentials";
 type UserRole = "cliente" | "profissional";
 
 function baseUrl() {
-  return test.info().project.use.baseURL ?? "http://localhost:3000";
+  return test.info().project.use.baseURL ?? "http://localhost:3100";
 }
 
 const cookieCache = new Map<string, Array<{ name: string; value: string; url: string }>>();

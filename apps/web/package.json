@@ -3,15 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "dev:legacy": "next dev",
+    "dev": "next dev --turbopack -p 3100",
+    "dev:legacy": "next dev -p 3100",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3100",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:ui": "playwright test --project=chromium --ui",
     "test:e2e:report": "playwright show-report",
-    "share": "npx cloudflared tunnel --url http://localhost:3000"
+    "share": "npx cloudflared tunnel --url http://localhost:3100"
   },
   "dependencies": {
     "@orpc/client": "1.15.0",
