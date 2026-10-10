@@ -18,6 +18,7 @@ Formato curto: Contexto / Opções consideradas / Decisão / Consequências. Um 
 | [013](013-migracao-notificacoes.md)                 | Central de notificações e eventos de conta via API                        |
 | [014](014-migracao-premium.md)                      | Gestão de plano premium e limites via API                                 |
 | [015](015-migracao-backoffice.md)                   | Migração do backoffice administrativo para API                            |
+| [016](016-virada-api-e-remocao-dos-mocks.md)        | Virada definitiva para a API e remoção completa dos mocks no web          |
 
 ## Restrição de produto que atravessa todos os ADRs
 

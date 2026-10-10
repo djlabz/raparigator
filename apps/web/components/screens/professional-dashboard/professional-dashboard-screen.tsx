@@ -259,6 +259,7 @@ export function ProfessionalDashboardScreen() {
           {activeTab === "Resumo" && <SummaryTab />}
           {activeTab === "Anúncio" && (
             <AnnouncementTab
+              key={currentAd.id}
               ad={currentAd}
               adSlug={adSlug}
               status={adStatus}

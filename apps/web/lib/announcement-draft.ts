@@ -183,7 +183,12 @@ export function useAnnouncementDraft(
     setHasUnsavedChanges(serializeAnnouncementDraft(form) !== lastSavedSnapshotRef.current);
   }, [form, savedEpoch]);
 
+  const initialAdSignatureRef = useRef(
+    `${ad.slug}:${ad.profileImage ?? ""}:${ad.images.join(",")}`,
+  );
+
   useEffect(() => {
+    const signature = `${ad.slug}:${ad.profileImage ?? ""}:${ad.images.join(",")}`;
     if (initialDraft && !hasUnsavedChanges) {
       const serialized = serializeAnnouncementDraft(initialDraft);
       if (serialized !== initializedDraftRef.current) {
@@ -192,8 +197,15 @@ export function useAnnouncementDraft(
         setSavedSectionSnapshots(buildSectionSnapshots(initialDraft));
         lastSavedSnapshotRef.current = serialized;
       }
+    } else if (!initialDraft && !hasUnsavedChanges && signature !== initialAdSignatureRef.current) {
+      initialAdSignatureRef.current = signature;
+      const nextState = buildInitialState(ad);
+      const serialized = serializeAnnouncementDraft(nextState);
+      setForm(nextState);
+      setSavedSectionSnapshots(buildSectionSnapshots(nextState));
+      lastSavedSnapshotRef.current = serialized;
     }
-  }, [initialDraft, hasUnsavedChanges]);
+  }, [ad, initialDraft, hasUnsavedChanges]);
 
   const score = calculateProfileScore(form);
   const tips = generateSmartTips(form);

@@ -141,10 +141,15 @@ test.describe("Feed", () => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto("/feed");
 
+    await expect(page.locator("[data-feed-desktop-title-stack]")).toBeVisible();
+    await expect(page.locator("[data-feed-premium-section]")).toBeVisible();
+    await expect.poll(() => headerTitleOpacity(page, "premium")).toBeGreaterThan(0.9);
+    await expect.poll(() => headerTitleOpacity(page, "standard")).toBeLessThan(0.05);
+
     const bursts = [120, 240, 80, 360, 160, 400, -180, 90, -40, 300];
     for (const delta of bursts) {
       await page.evaluate((amount) => window.scrollBy(0, amount), delta);
-      await page.waitForTimeout(40);
+      await page.waitForTimeout(100);
       await assertTitleMatchesPremiumVisibility(page);
     }
 
@@ -154,6 +159,7 @@ test.describe("Feed", () => {
     await page.goto("/chat");
     await page.goto("/feed");
     await expect(page.locator("[data-feed-desktop-title-stack]")).toBeVisible();
+    await expect(page.locator("[data-feed-premium-section]")).toBeVisible();
     await expect.poll(() => headerTitleOpacity(page, "premium")).toBeGreaterThan(0.9);
     await expect.poll(() => headerTitleOpacity(page, "standard")).toBeLessThan(0.05);
     await scrollUntilPremiumClearsHeader(page);

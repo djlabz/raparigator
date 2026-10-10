@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import type {
   AdminActivityLog,
   ClientAccount,
@@ -197,6 +197,9 @@ export async function seedDevData(db: Database) {
     const clientId = DEV_USERS[0]!.id;
     const proId = DEV_USERS[1]!.id;
 
+    await db.delete(reviews).where(eq(reviews.isSeed, false));
+    await db.delete(reviewInvites).where(inArray(reviewInvites.conversationId, ["c1", "c2"]));
+
     await db
       .insert(conversations)
       .values({
@@ -289,17 +292,89 @@ export async function seedDevData(db: Database) {
       ])
       .onConflictDoNothing();
 
-    await db
-      .insert(reviewInvites)
-      .values({
-        id: "invite-seed-c1",
-        conversationId: "c1",
-        profileId: lunaProfileId,
-        clientUserId: clientId,
-        invitedAt: new Date(),
-        expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-      })
-      .onConflictDoNothing();
+    const valentinaProfileId = profileIdBySlug.get("valentina-noir-campinas");
+    const valentinaUserId = "pro-valentina-noir-campinas";
+    if (valentinaProfileId) {
+      await db
+        .insert(conversations)
+        .values({
+          id: "c2",
+          profileId: valentinaProfileId,
+          clientUserId: clientId,
+          professionalUserId: valentinaUserId,
+          lastMessagePreview: "Perfeito, combinamos assim.",
+          lastMessageAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: conversations.id,
+          set: {
+            profileId: valentinaProfileId,
+            clientUserId: clientId,
+            professionalUserId: valentinaUserId,
+            lastMessagePreview: "Perfeito, combinamos assim.",
+            lastMessageAt: new Date(),
+          },
+        });
+
+      await db
+        .insert(conversationParticipants)
+        .values([
+          {
+            id: "cp-client-c2",
+            conversationId: "c2",
+            userId: clientId,
+            role: "cliente",
+            alias: "Cliente reservado",
+            unreadCount: 0,
+          },
+          {
+            id: "cp-pro-c2",
+            conversationId: "c2",
+            userId: valentinaUserId,
+            role: "profissional",
+            unreadCount: 0,
+          },
+        ])
+        .onConflictDoNothing();
+
+      await db
+        .insert(messages)
+        .values([
+          {
+            id: "m6",
+            conversationId: "c2",
+            senderUserId: clientId,
+            senderRole: "cliente",
+            messageType: "text",
+            content: "Ola Valentina, tudo bem?",
+            sentAt: new Date(Date.now() - 3600_000),
+            deliveredAt: new Date(Date.now() - 3600_000),
+          },
+          {
+            id: "m7",
+            conversationId: "c2",
+            senderUserId: valentinaUserId,
+            senderRole: "profissional",
+            messageType: "text",
+            content: "Perfeito, combinamos assim.",
+            sentAt: new Date(Date.now() - 1800_000),
+            deliveredAt: new Date(Date.now() - 1800_000),
+          },
+        ])
+        .onConflictDoNothing();
+
+      await db
+        .insert(reviewInvites)
+        .values({
+          id: "invite-seed-c2",
+          conversationId: "c2",
+          profileId: valentinaProfileId,
+          clientUserId: clientId,
+          invitedAt: new Date(),
+          expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        })
+        .onConflictDoNothing();
+    }
   }
 
   await db.execute(sql`select 1`);

@@ -1,5 +1,5 @@
 export default async function globalSetup() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001";
   const maxAttempts = 30;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {

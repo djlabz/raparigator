@@ -107,7 +107,12 @@ test.describe("Briefing de encontro", () => {
     // do chat ser montada do zero nem de parâmetro na URL.
     await page.getByRole("link", { name: "Feed" }).first().click();
     await page.waitForURL("**/feed**");
-    await page.locator(`a[href*="/anuncio/${ads.premiumSlug}"]`).first().click();
+    const adCard = page
+      .locator("[data-feed-premium-section]")
+      .locator(`a[href*="/anuncio/${ads.premiumSlug}"]`)
+      .first();
+    await expect(adCard).toBeVisible();
+    await adCard.click();
     await page.waitForURL(`**/anuncio/${ads.premiumSlug}`);
 
     await buildSimulation(page);
@@ -155,7 +160,7 @@ test.describe("Briefing de encontro", () => {
     await page.getByRole("button", { name: "Descartar simulação" }).first().click();
 
     await expect(page.getByText("Seu interesse, pronto para enviar")).toBeHidden();
-    await expect(page.getByText("Simulação de encontro")).toBeHidden();
+    await expect(page.getByRole("button", { name: "Descartar simulação" })).toHaveCount(0);
   });
 
   test("link de simulação remonta as seleções e ignora serviço inválido", async ({ page }) => {

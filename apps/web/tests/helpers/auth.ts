@@ -7,11 +7,20 @@ function baseUrl() {
   return test.info().project.use.baseURL ?? "http://localhost:3000";
 }
 
+const cookieCache = new Map<string, Array<{ name: string; value: string; url: string }>>();
+
 export async function loginViaApi(
   page: Page,
   user: { email: string; password: string },
-  apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000",
+  apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001",
 ) {
+  const base = baseUrl();
+  const cached = cookieCache.get(user.email);
+  if (cached) {
+    await page.context().addCookies(cached.map((c) => ({ ...c, url: base })));
+    return;
+  }
+
   const response = await page.request.post(`${apiUrl}/api/auth/sign-in/email`, {
     data: {
       email: user.email,
@@ -28,29 +37,33 @@ export async function loginViaApi(
     .filter((h) => h.name.toLowerCase() === "set-cookie")
     .map((h) => h.value);
 
-  const base = baseUrl();
+  const cookiesToStore: Array<{ name: string; value: string; url: string }> = [];
   for (const cookieStr of setCookies) {
     const [pair] = cookieStr.split(";");
     const eqIdx = pair.indexOf("=");
     if (eqIdx !== -1) {
       const name = pair.slice(0, eqIdx).trim();
       const value = pair.slice(eqIdx + 1).trim();
-      await page.context().addCookies([
-        {
-          name,
-          value,
-          url: base,
-        },
-      ]);
+      cookiesToStore.push({ name, value, url: base });
     }
   }
+
+  cookieCache.set(user.email, cookiesToStore);
+  await page.context().addCookies(cookiesToStore);
 }
 
 export async function loginAdminViaApi(
   page: Page,
   admin = credentials.admin,
-  apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000",
+  apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001",
 ) {
+  const base = baseUrl();
+  const cached = cookieCache.get(admin.email);
+  if (cached) {
+    await page.context().addCookies(cached.map((c) => ({ ...c, url: base })));
+    return;
+  }
+
   const response = await page.request.post(`${apiUrl}/api/admin-auth/sign-in/email`, {
     data: {
       email: admin.email,
@@ -69,22 +82,19 @@ export async function loginAdminViaApi(
     .filter((h) => h.name.toLowerCase() === "set-cookie")
     .map((h) => h.value);
 
-  const base = baseUrl();
+  const cookiesToStore: Array<{ name: string; value: string; url: string }> = [];
   for (const cookieStr of setCookies) {
     const [pair] = cookieStr.split(";");
     const eqIdx = pair.indexOf("=");
     if (eqIdx !== -1) {
       const name = pair.slice(0, eqIdx).trim();
       const value = pair.slice(eqIdx + 1).trim();
-      await page.context().addCookies([
-        {
-          name,
-          value,
-          url: base,
-        },
-      ]);
+      cookiesToStore.push({ name, value, url: base });
     }
   }
+
+  cookieCache.set(admin.email, cookiesToStore);
+  await page.context().addCookies(cookiesToStore);
 }
 
 export async function seedUserRole(page: Page, role: UserRole) {

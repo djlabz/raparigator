@@ -5,7 +5,6 @@ import { getApiClient } from "@/lib/api/client";
 import { isApiDataSource } from "@/lib/data-source";
 import type { AccountNotificationItem, AuthRole } from "@sigillus/contracts";
 import { formatRelativeTime } from "@sigillus/domain";
-import { getRoleLabel } from "./navigation";
 
 export type { AccountNotificationItem };
 export { formatRelativeTime };
@@ -30,8 +29,6 @@ const roleServerSnapshotCache = new Map<Exclude<AuthRole, "visitor">, AccountNot
 let apiItems: AccountNotificationItem[] = [];
 let apiInFlight = false;
 
-const notificationsKey = (role: Exclude<AuthRole, "visitor">) =>
-  `sigillus-account-notifications-${role}`;
 const bannerKey = (role: Exclude<AuthRole, "visitor">) =>
   `sigillus-account-banner-dismissed-${role}`;
 const navbarAckKey = (role: Exclude<AuthRole, "visitor">) => `sigillus-account-navbar-ack-${role}`;
@@ -56,38 +53,14 @@ function subscribe(listener: () => void) {
 function emitChange() {
   listeners.forEach((listener) => listener());
 }
-
-function defaultNotifications(role: Exclude<AuthRole, "visitor">): AccountNotificationItem[] {
-  const roleLabel = getRoleLabel(role).toLowerCase();
-
-  return [
-    {
-      id: "complete-profile",
-      title: "Complete seu cadastro",
-      message: `Finalize o perfil ${roleLabel} para liberar as funcionalidades da plataforma.`,
-      time: "Agora",
-      read: false,
-    },
-    {
-      id: "security-check",
-      title: "Validação de segurança",
-      message: "Revise seus dados para manter sua conta pronta para uso seguro e rastreável.",
-      time: "Hoje, 09:40",
-      read: true,
-    },
-  ];
-}
-
 function readAckedIds(role: Exclude<AuthRole, "visitor">): string[] {
   if (typeof window === "undefined") {
     return [];
   }
-
   const raw = window.localStorage.getItem(navbarAckKey(role));
   if (!raw) {
     return [];
   }
-
   try {
     const parsed = JSON.parse(raw) as string[];
     return Array.isArray(parsed) ? parsed.filter((id) => typeof id === "string") : [];
@@ -96,55 +69,20 @@ function readAckedIds(role: Exclude<AuthRole, "visitor">): string[] {
   }
 }
 
-function readState(role: Exclude<AuthRole, "visitor">): AccountNotificationState {
-  if (typeof window === "undefined") {
-    return getServerSnapshot(role);
-  }
-
-  const rawItems = window.localStorage.getItem(notificationsKey(role));
-  const rawBanner = window.localStorage.getItem(bannerKey(role));
-  const rawSwing = window.localStorage.getItem(swingPausedKey(role));
-
-  let items = defaultNotifications(role);
-
-  if (rawItems) {
-    try {
-      const parsed = JSON.parse(rawItems) as AccountNotificationItem[];
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        items = parsed;
-      }
-    } catch {
-      items = defaultNotifications(role);
-    }
-  }
-
-  return {
-    items,
-    bannerClosed: rawBanner === "true",
-    navbarAckedUnreadIds: readAckedIds(role),
-    swingPaused: rawSwing === "true",
-  };
-}
-
 function getSnapshot(role: Exclude<AuthRole, "visitor">): AccountNotificationState {
-  if (isApiDataSource()) {
-    return {
-      items: apiItems,
-      bannerClosed:
-        typeof window !== "undefined" && window.localStorage.getItem(bannerKey(role)) === "true",
-      navbarAckedUnreadIds: readAckedIds(role),
-      swingPaused:
-        typeof window !== "undefined" &&
-        window.localStorage.getItem(swingPausedKey(role)) === "true",
-    };
-  }
-
   const cachedState = roleStateCache.get(role);
   if (cachedState) {
     return cachedState;
   }
 
-  const initialState = readState(role);
+  const initialState: AccountNotificationState = {
+    items: apiItems,
+    bannerClosed:
+      typeof window !== "undefined" && window.localStorage.getItem(bannerKey(role)) === "true",
+    navbarAckedUnreadIds: readAckedIds(role),
+    swingPaused:
+      typeof window !== "undefined" && window.localStorage.getItem(swingPausedKey(role)) === "true",
+  };
   roleStateCache.set(role, initialState);
   return initialState;
 }
@@ -156,7 +94,7 @@ function getServerSnapshot(role: Exclude<AuthRole, "visitor">): AccountNotificat
   }
 
   const serverState: AccountNotificationState = {
-    items: defaultNotifications(role),
+    items: [],
     bannerClosed: false,
     navbarAckedUnreadIds: [],
     swingPaused: false,
@@ -170,27 +108,11 @@ function writeState(role: Exclude<AuthRole, "visitor">, state: AccountNotificati
     return;
   }
 
-  if (isApiDataSource()) {
-    apiItems = state.items;
-    window.localStorage.setItem(bannerKey(role), String(state.bannerClosed));
-    window.localStorage.setItem(navbarAckKey(role), JSON.stringify(state.navbarAckedUnreadIds));
-    window.localStorage.setItem(swingPausedKey(role), String(state.swingPaused));
-    emitChange();
-    return;
-  }
-
-  const nextState: AccountNotificationState = {
-    items: state.items,
-    bannerClosed: state.bannerClosed,
-    navbarAckedUnreadIds: state.navbarAckedUnreadIds,
-    swingPaused: state.swingPaused,
-  };
-
-  roleStateCache.set(role, nextState);
-  window.localStorage.setItem(notificationsKey(role), JSON.stringify(nextState.items));
-  window.localStorage.setItem(bannerKey(role), String(nextState.bannerClosed));
-  window.localStorage.setItem(navbarAckKey(role), JSON.stringify(nextState.navbarAckedUnreadIds));
-  window.localStorage.setItem(swingPausedKey(role), String(nextState.swingPaused));
+  apiItems = state.items;
+  roleStateCache.set(role, state);
+  window.localStorage.setItem(bannerKey(role), String(state.bannerClosed));
+  window.localStorage.setItem(navbarAckKey(role), JSON.stringify(state.navbarAckedUnreadIds));
+  window.localStorage.setItem(swingPausedKey(role), String(state.swingPaused));
   emitChange();
 }
 
@@ -249,6 +171,8 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
       .notifications.list()
       .then((items) => {
         apiItems = items;
+        const current = getSnapshot(role);
+        roleStateCache.set(role, { ...current, items });
         emitChange();
       })
       .catch(() => {})
@@ -275,10 +199,12 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
       try {
         const items = await getApiClient().notifications.list();
         apiItems = items;
+        const current = getSnapshot(role);
+        roleStateCache.set(role, { ...current, items });
         emitChange();
       } catch {}
     };
-  }, [useApi]);
+  }, [useApi, role]);
 
   const markAllAsRead = useMemo(() => {
     return () => {

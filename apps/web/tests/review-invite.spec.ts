@@ -2,12 +2,14 @@ import { test, expect } from "@playwright/test";
 import { seedUserRole } from "./helpers/auth";
 
 const AD_SLUG = "luna-velvet-sao-paulo";
-const AD_WITHOUT_INVITE_SLUG = "valentina-noir-campinas";
+const AD_WITH_INVITE_SLUG = "valentina-noir-campinas";
 
 test.describe("Avaliação por convite", () => {
+  test.describe.configure({ mode: "serial" });
+
   test("cliente sem convite não consegue avaliar", async ({ page }) => {
     await seedUserRole(page, "cliente");
-    await page.goto(`/anuncio/${AD_WITHOUT_INVITE_SLUG}`);
+    await page.goto(`/anuncio/${AD_SLUG}`);
 
     await expect(page.getByText(/aguarde o convite da profissional/i)).toBeVisible();
     await expect(page.getByRole("button", { name: "Avaliar este perfil" })).toHaveCount(0);
@@ -22,7 +24,7 @@ test.describe("Avaliação por convite", () => {
 
   test("com convite aberto, cliente avalia uma única vez", async ({ page }) => {
     await seedUserRole(page, "cliente");
-    await page.goto(`/anuncio/${AD_SLUG}`);
+    await page.goto(`/anuncio/${AD_WITH_INVITE_SLUG}`);
 
     await page.getByRole("button", { name: "Avaliar este perfil" }).click();
 
