@@ -27,4 +27,18 @@ test.describe("Home / onboarding", () => {
     await expect(page).toHaveURL(/location=SP/);
     await expect(page.getByText("Modelos Premium").first()).toBeVisible();
   });
+
+  test("rodapé exibe links institucionais e navega para termos e privacidade", async ({ page }) => {
+    await page.goto("/");
+
+    const termosLink = page.getByRole("link", { name: "Termos de Uso" }).first();
+    await expect(termosLink).toBeVisible();
+    await termosLink.click();
+    await expect(page).toHaveURL(/\/termos/);
+    await expect(page.getByRole("heading", { name: /Termos de Uso/i })).toBeVisible();
+
+    await page.goto("/privacidade");
+    await expect(page.getByRole("heading", { name: /Política de Privacidade/i })).toBeVisible();
+    await expect(page.getByText(/Lei Geral de Proteção de Dados/i).first()).toBeVisible();
+  });
 });

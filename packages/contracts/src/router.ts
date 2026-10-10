@@ -79,6 +79,10 @@ const base = oc.errors({
 
 export const authContract = {
   me: base.route({ method: "GET", path: "/auth/me" }).output(SessionSchema),
+  deleteAccount: base
+    .route({ method: "POST", path: "/auth/delete-account" })
+    .input(z.object({ confirmation: z.literal(true).optional() }).default({}))
+    .output(OkSchema),
 };
 
 export const catalogsContract = {

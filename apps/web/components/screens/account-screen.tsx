@@ -21,6 +21,8 @@ import {
 } from "@/lib/identity";
 import { useVerification } from "@/lib/verification";
 import { updateContact } from "@/lib/announcement-draft";
+import { getApiClient } from "@/lib/api/client";
+import { authClient } from "@/lib/api/auth-client";
 import type { AuthRole, User } from "../../lib/types";
 
 interface ProfileFormState {
@@ -113,6 +115,9 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordModalError, setPasswordModalError] = useState<string | null>(null);
   const [passwordModalSuccess, setPasswordModalSuccess] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const profileCompleted = isProfileFormComplete(role, form);
 
   const clearFieldError = <FieldName extends keyof ProfileFormState>(fieldName: FieldName) => {
@@ -162,6 +167,24 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
       setPasswordModalSuccess(false);
       setSaveMessage("Senha alterada com sucesso.");
     }, 1500);
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    setDeleteError(null);
+    try {
+      const client = getApiClient();
+      await client.auth.deleteAccount({});
+      await authClient.signOut();
+      window.location.href = "/";
+    } catch (err: unknown) {
+      setIsDeletingAccount(false);
+      setDeleteError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível excluir sua conta. Tente novamente mais tarde.",
+      );
+    }
   };
 
   useEffect(() => {
@@ -597,6 +620,44 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
           </div>
         </Card>
       ) : null}
+
+      <Card className="space-y-4 border-red-200 bg-white shadow-sm shadow-zinc-200/70">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-red-700">
+            Privacidade e LGPD
+          </p>
+          <h2 className="mt-1 text-xl font-semibold text-zinc-900">Exclusão de conta</h2>
+          <p className="mt-1 text-sm text-zinc-600">
+            Em conformidade com a Lei Geral de Proteção de Dados (LGPD), você pode solicitar a
+            eliminação dos seus dados e o encerramento da sua conta a qualquer momento.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-red-200 bg-red-50/50 p-4 text-xs text-red-950 sm:text-sm">
+          <p className="font-semibold text-red-900">Ao confirmar a exclusão:</p>
+          <ul className="mt-2 list-disc list-inside space-y-1 text-red-800">
+            <li>Todas as suas mídias e fotos enviadas serão apagadas do servidor.</li>
+            <li>Suas mensagens no chat serão anonimizadas.</li>
+            <li>Seus dados de acesso e credenciais serão permanentemente removidos.</li>
+            <li>Esta ação é definitiva e irreversível.</li>
+          </ul>
+        </div>
+
+        <div className="pt-1">
+          <Button
+            type="button"
+            variant="danger"
+            className="bg-red-700 hover:bg-red-800 focus-visible:ring-red-500"
+            onClick={() => {
+              setDeleteError(null);
+              setShowDeleteModal(true);
+            }}
+            data-testid="delete-account-button"
+          >
+            Excluir minha conta
+          </Button>
+        </div>
+      </Card>
       <Modal
         open={showPasswordModal}
         title="Alterar Senha"
@@ -674,6 +735,52 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
               </div>
             </div>
           )}
+        </div>
+      </Modal>
+
+      <Modal
+        open={showDeleteModal}
+        title="Confirmar exclusão de conta"
+        description="Esta ação é permanente e não poderá ser desfeita."
+        onClose={() => !isDeletingAccount && setShowDeleteModal(false)}
+        mobileCentered={true}
+        actions={null}
+      >
+        <div className="space-y-5 max-w-md">
+          <p className="text-sm text-zinc-700 leading-relaxed">
+            Tem certeza de que deseja excluir sua conta no Sigillus? Todos os seus dados pessoais,
+            fotos enviadas e histórico de credenciais serão excluídos de acordo com a LGPD.
+          </p>
+
+          {deleteError ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {deleteError}
+            </div>
+          ) : null}
+
+          <div className="flex gap-3 justify-end pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={isDeletingAccount}
+              onClick={() => {
+                setShowDeleteModal(false);
+                setDeleteError(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              disabled={isDeletingAccount}
+              className="bg-red-700 hover:bg-red-800 focus-visible:ring-red-500"
+              onClick={handleDeleteAccount}
+              data-testid="confirm-delete-account-button"
+            >
+              {isDeletingAccount ? "Excluindo..." : "Sim, excluir definitivamente"}
+            </Button>
+          </div>
         </div>
       </Modal>
     </div>

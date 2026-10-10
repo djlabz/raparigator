@@ -51,6 +51,8 @@ export function ProfessionalSignupScreen() {
     password?: string;
     confirmPassword?: string;
   }>({});
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsError, setTermsError] = useState<string | null>(null);
   const [toast, setToast] = useState<{
     title: string;
     message: string;
@@ -75,6 +77,18 @@ export function ProfessionalSignupScreen() {
   };
 
   const handleCreateAccount = async () => {
+    if (!termsAccepted) {
+      setTermsError(
+        "Você precisa concordar com os Termos de Uso e a Política de Privacidade para continuar.",
+      );
+      showToast({
+        title: "Aceite obrigatório",
+        message: "Por favor, aceite os Termos de Uso e a Política de Privacidade.",
+        type: "error",
+      });
+      return;
+    }
+
     try {
       const res = await authClient.signUp.email({
         email: email.trim(),
@@ -652,6 +666,45 @@ export function ProfessionalSignupScreen() {
                       <li>Nome civil preenchido</li>
                       <li>Telefone, e-mail e senha confirmados</li>
                     </ul>
+                  </div>
+
+                  <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-2xs">
+                    <label className="flex items-start gap-3 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={termsAccepted}
+                        onChange={(e) => {
+                          setTermsAccepted(e.target.checked);
+                          if (e.target.checked) setTermsError(null);
+                        }}
+                        className="mt-1 h-4 w-4 rounded border-zinc-300 text-wine-700 focus:ring-wine-600"
+                        data-testid="professional-terms-checkbox"
+                      />
+                      <span className="text-xs text-zinc-700 leading-relaxed sm:text-sm">
+                        Declaro que sou maior de 18 anos civis e li e concordo integralmente com os{" "}
+                        <Link
+                          href="/termos"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-wine-800 underline hover:text-wine-900"
+                        >
+                          Termos de Uso
+                        </Link>{" "}
+                        e com a{" "}
+                        <Link
+                          href="/privacidade"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-wine-800 underline hover:text-wine-900"
+                        >
+                          Política de Privacidade
+                        </Link>
+                        .
+                      </span>
+                    </label>
+                    {termsError ? (
+                      <p className="mt-2 text-xs font-medium text-red-600">{termsError}</p>
+                    ) : null}
                   </div>
 
                   <InfoBanner

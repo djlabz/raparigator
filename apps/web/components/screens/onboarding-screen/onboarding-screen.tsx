@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -12,6 +12,7 @@ import { Toast } from "@/components/ui/toast";
 import { useAuthSession } from "@/lib/auth-session";
 import { AccountMenu } from "@/components/layout/account-menu";
 import { PopularLinksSection } from "../popular-links-section";
+import { SiteFooter } from "@/components/layout/site-footer";
 import { ChromeScrim } from "@/components/layout/chrome-scrim";
 import { chromeControlsRow, chromePill, chromeSafeTop } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
@@ -307,6 +308,7 @@ export function OnboardingScreen() {
         <div className="box-border max-w-384 mx-auto px-6 md:px-12 py-10 md:py-12">
           <PopularLinksSection />
         </div>
+        <SiteFooter />
       </div>
     </div>
   );

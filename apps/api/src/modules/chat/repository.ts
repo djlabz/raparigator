@@ -82,15 +82,21 @@ export function createChatRepository(db: Database) {
       .select({
         conversation: conversations,
         profile: profileColumns,
-        clientUser: { id: clientUsers.id, name: clientUsers.name },
-        professionalUser: { id: professionalUsers.id, name: professionalUsers.name },
+        clientUser: {
+          id: sql<string>`coalesce(${clientUsers.id}, ${conversations.clientUserId})`,
+          name: sql<string>`coalesce(${clientUsers.name}, 'Conta encerrada')`,
+        },
+        professionalUser: {
+          id: sql<string>`coalesce(${professionalUsers.id}, ${conversations.professionalUserId})`,
+          name: sql<string>`coalesce(${professionalUsers.name}, 'Conta encerrada')`,
+        },
         clientParticipant: clientParticipants,
         professionalParticipant: professionalParticipants,
       })
       .from(conversations)
       .innerJoin(professionalProfiles, eq(professionalProfiles.id, conversations.profileId))
-      .innerJoin(clientUsers, eq(clientUsers.id, conversations.clientUserId))
-      .innerJoin(professionalUsers, eq(professionalUsers.id, conversations.professionalUserId))
+      .leftJoin(clientUsers, eq(clientUsers.id, conversations.clientUserId))
+      .leftJoin(professionalUsers, eq(professionalUsers.id, conversations.professionalUserId))
       .innerJoin(
         clientParticipants,
         and(

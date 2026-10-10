@@ -17,4 +17,30 @@ test.describe("Identity signup", () => {
 
     await expect(page.getByText("A senha deve ter ao menos 8 caracteres.")).toBeVisible();
   });
+
+  test("cliente no passo 3 exige aceite dos termos para criar conta", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto("/auth/cadastro/cliente");
+
+    await page.getByLabel("Seu CPF").fill("529.982.247-25");
+    await page.getByLabel("Nome completo civil").fill("Cliente Teste");
+    await page.getByRole("button", { name: "Continuar" }).click();
+
+    await page.getByLabel("E-mail principal").fill("cliente.teste@sigillus.dev");
+    await page.getByLabel("Confirmar e-mail").fill("cliente.teste@sigillus.dev");
+    await page.getByLabel("Crie sua senha").fill("SenhaForte@123");
+    await page.getByLabel("Confirmar senha").fill("SenhaForte@123");
+    await page.getByRole("button", { name: "Continuar" }).click();
+
+    await expect(page.getByRole("heading", { name: "Revisão Final" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Termos de Uso" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Política de Privacidade" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Criar conta" }).click();
+    await expect(
+      page.getByText(
+        "Você precisa concordar com os Termos de Uso e a Política de Privacidade para continuar.",
+      ),
+    ).toBeVisible();
+  });
 });

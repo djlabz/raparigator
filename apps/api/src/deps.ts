@@ -6,6 +6,7 @@ import type { JobQueue } from "./lib/jobs";
 import type { Logger } from "./lib/logger";
 import type { Mailer } from "./lib/mail";
 import type { RateLimiter } from "./lib/rate-limit";
+import type { ObjectStorage } from "./lib/storage";
 import type { Services } from "./services";
 
 export type AppDeps = {
@@ -18,6 +19,7 @@ export type AppDeps = {
   billing: BillingProvider;
   jobs: JobQueue;
   mailer: Mailer;
+  storage: ObjectStorage;
   services: Services;
   ready: () => boolean;
 };
