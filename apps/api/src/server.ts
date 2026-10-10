@@ -11,6 +11,7 @@ import { initSentry } from "./lib/sentry";
 import { createFakeBillingProvider } from "./lib/billing/fake-provider";
 import { createPgNotifyChatEventBus } from "./lib/chat-events";
 import { createInlineQueue, createPgBossQueue } from "./lib/jobs";
+import { createMailer } from "./lib/mail";
 import { createS3Storage } from "./lib/storage";
 import { registerMediaJobs } from "./modules/media/jobs";
 import { registerBillingJobs } from "./modules/premium/jobs";
@@ -41,6 +42,7 @@ async function main() {
     : createInlineQueue(logger);
   const chatEvents = createPgNotifyChatEventBus(config.DATABASE_URL, logger);
   const billing = createFakeBillingProvider(config.BILLING_WEBHOOK_SECRET);
+  const mailer = createMailer(config, logger);
   await jobs.start();
   await chatEvents.start();
 
@@ -48,12 +50,13 @@ async function main() {
     config,
     db,
     logger,
-    auth: createUserAuth(db, config),
+    auth: createUserAuth(db, config, mailer),
     adminAuth: createAdminAuth(db, config),
     rateLimiter: config.RATE_LIMIT_ENABLED ? new MemoryRateLimiter() : new NoopRateLimiter(),
     billing,
     jobs,
-    services: createServices({ config, db, logger, storage, jobs, chatEvents, billing }),
+    mailer,
+    services: createServices({ config, db, logger, storage, jobs, chatEvents, billing, mailer }),
     ready: () => ready,
   };
 

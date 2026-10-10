@@ -61,4 +61,45 @@ describe("autenticação e sessão", () => {
     });
     expect(response.ok).toBe(false);
   });
+
+  it("recuperação de senha envia e-mail com token e permite redefinir com sucesso", async () => {
+    await signUp(harness, { email: "reset@teste.dev", password: "SenhaAntiga@123" });
+
+    const forgetResponse = await harness.fetch("/api/auth/request-password-reset", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: harness.config.WEB_ORIGIN },
+      body: JSON.stringify({ email: "reset@teste.dev" }),
+    });
+    expect(forgetResponse.ok).toBe(true);
+    expect(harness.mailer.sent).toHaveLength(1);
+
+    const emailSent = harness.mailer.sent[0]!;
+    expect(emailSent.to).toBe("reset@teste.dev");
+    expect(emailSent.subject).toContain("Redefinição de senha");
+
+    const match = emailSent.text.match(/token=([a-zA-Z0-9_-]+)/);
+    expect(match).not.toBeNull();
+    const token = match![1];
+
+    const resetResponse = await harness.fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: harness.config.WEB_ORIGIN },
+      body: JSON.stringify({ token, newPassword: "SenhaNova@456" }),
+    });
+    expect(resetResponse.ok).toBe(true);
+
+    const oldLoginResponse = await harness.fetch("/api/auth/sign-in/email", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: harness.config.WEB_ORIGIN },
+      body: JSON.stringify({ email: "reset@teste.dev", password: "SenhaAntiga@123" }),
+    });
+    expect(oldLoginResponse.ok).toBe(false);
+
+    const newLoginResponse = await harness.fetch("/api/auth/sign-in/email", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: harness.config.WEB_ORIGIN },
+      body: JSON.stringify({ email: "reset@teste.dev", password: "SenhaNova@456" }),
+    });
+    expect(newLoginResponse.ok).toBe(true);
+  });
 });

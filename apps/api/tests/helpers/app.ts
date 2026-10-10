@@ -9,6 +9,7 @@ import { MemoryRateLimiter } from "../../src/lib/rate-limit";
 import { createFakeBillingProvider } from "../../src/lib/billing/fake-provider";
 import { createMemoryChatEventBus } from "../../src/lib/chat-events";
 import { createInlineQueue } from "../../src/lib/jobs";
+import { createMemoryMailer, type MemoryMailer } from "../../src/lib/mail";
 import { createMemoryStorage } from "../../src/lib/storage";
 import { createServices } from "../../src/services";
 import type { AppDeps } from "../../src/deps";
@@ -20,6 +21,7 @@ export type TestHarness = {
   config: AppConfig;
   storage: ReturnType<typeof createMemoryStorage>;
   jobs: ReturnType<typeof createInlineQueue>;
+  mailer: MemoryMailer;
   fetch: (input: string, init?: RequestInit) => Promise<Response>;
   rpc: <T>(
     path: string,
@@ -44,15 +46,17 @@ export function createTestHarness(): TestHarness {
     const logger = createLogger({ level: "fatal", pretty: false });
     const storage = createMemoryStorage();
     const jobs = createInlineQueue(logger);
+    const mailer = createMemoryMailer();
     const deps: AppDeps = {
       config,
       db: database.db,
       logger,
-      auth: createUserAuth(database.db, config),
+      auth: createUserAuth(database.db, config, mailer),
       adminAuth: createAdminAuth(database.db, config),
       rateLimiter: new MemoryRateLimiter(),
       billing: createFakeBillingProvider(config.BILLING_WEBHOOK_SECRET),
       jobs,
+      mailer,
       services: createServices({
         config,
         db: database.db,
@@ -61,6 +65,7 @@ export function createTestHarness(): TestHarness {
         jobs,
         chatEvents: createMemoryChatEventBus(),
         billing: createFakeBillingProvider(config.BILLING_WEBHOOK_SECRET),
+        mailer,
       }),
       ready: () => true,
     };
@@ -70,6 +75,7 @@ export function createTestHarness(): TestHarness {
     harness.config = config;
     harness.storage = storage;
     harness.jobs = jobs;
+    harness.mailer = mailer;
     harness.fetch = async (input, init) =>
       app.request(new Request(new URL(input, config.API_ORIGIN), init));
     harness.rpc = async (path, input, headers) => {
@@ -92,6 +98,7 @@ export function createTestHarness(): TestHarness {
   beforeEach(async () => {
     await truncateAll(harness.db);
     await seedCatalogs(harness.db);
+    harness.mailer.clear();
   });
 
   afterAll(async () => {

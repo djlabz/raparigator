@@ -4,6 +4,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import type { AppConfig } from "../config";
 import type { Database } from "../db/client";
 import * as schema from "../db/schema";
+import type { Mailer } from "./mail";
 import { newId } from "./ids";
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
@@ -18,7 +19,7 @@ function cookieOptions(config: AppConfig) {
   };
 }
 
-export function createUserAuth(db: Database, config: AppConfig) {
+export function createUserAuth(db: Database, config: AppConfig, mailer?: Mailer) {
   return betterAuth({
     appName: "Sigillus",
     baseURL: config.API_ORIGIN,
@@ -38,6 +39,27 @@ export function createUserAuth(db: Database, config: AppConfig) {
       enabled: true,
       minPasswordLength: 8,
       requireEmailVerification: false,
+      sendResetPassword: async ({ user, token }) => {
+        if (!mailer) {
+          return;
+        }
+        const resetUrl = `${config.WEB_ORIGIN}/auth/redefinir-senha?token=${token}`;
+        await mailer.send({
+          to: user.email,
+          subject: "Redefinição de senha — Sigillus",
+          text: `Olá ${user.name || ""},\n\nRecebemos uma solicitação para redefinir a senha da sua conta no Sigillus.\n\nAcesse o link abaixo para criar uma nova senha:\n${resetUrl}\n\nO link é válido por 1 hora. Se você não solicitou a alteração, ignore esta mensagem.`,
+          html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #18181b;">
+  <h2 style="color: #722f37;">Sigillus</h2>
+  <p>Olá <strong>${user.name || ""}</strong>,</p>
+  <p>Recebemos uma solicitação para redefinir a senha da sua conta.</p>
+  <p style="margin: 24px 0;">
+    <a href="${resetUrl}" style="background-color: #722f37; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Redefinir minha senha</a>
+  </p>
+  <p style="font-size: 13px; color: #71717a;">Ou copie o link: <br/><a href="${resetUrl}">${resetUrl}</a></p>
+  <p style="font-size: 12px; color: #a1a1aa; margin-top: 32px;">Se você não solicitou este e-mail, pode ignorá-lo com segurança.</p>
+</div>`,
+        });
+      },
     },
     user: {
       additionalFields: {

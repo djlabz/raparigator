@@ -4,6 +4,7 @@ import type { BillingProvider } from "./lib/billing/provider";
 import type { ChatEventBus } from "./lib/chat-events";
 import type { JobQueue } from "./lib/jobs";
 import type { Logger } from "./lib/logger";
+import type { Mailer } from "./lib/mail";
 import type { ObjectStorage } from "./lib/storage";
 import { createAdminService } from "./modules/admin/service";
 import { createAdsService } from "./modules/ads/service";
@@ -26,12 +27,13 @@ export type ServiceDeps = {
   jobs: JobQueue;
   chatEvents: ChatEventBus;
   billing: BillingProvider;
+  mailer?: Mailer;
 };
 
 export type Services = ReturnType<typeof createServices>;
 
 export function createServices(deps: ServiceDeps) {
-  const { db, logger, storage, jobs, chatEvents, billing, config } = deps;
+  const { db, logger, storage, jobs, chatEvents, billing, config, mailer } = deps;
   const profiles = createProfileRepository(db, storage);
   const notifications = createNotificationsService({ db });
   const premium = createPremiumService({ db, billing, config, jobs, logger });
@@ -46,7 +48,7 @@ export function createServices(deps: ServiceDeps) {
     chat: createChatService({ db, profiles, storage, chatEvents, logger }),
     reviews: createReviewsService({ db, profiles, notifications, jobs, logger }),
     premium,
-    verification: createVerificationService({ db, config, logger }),
+    verification: createVerificationService({ db, config, logger, mailer }),
     admin: createAdminService({
       db,
       profiles,
