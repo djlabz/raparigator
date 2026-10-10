@@ -130,6 +130,7 @@ export function createVerificationService(deps: VerificationServiceDeps) {
       return {
         email: toPublicChannelState(byChannel.get("email") ?? null, targetFor(user, "email"), now),
         phone: toPublicChannelState(byChannel.get("phone") ?? null, targetFor(user, "phone"), now),
+        required: config.VERIFICATION_REQUIRED,
       };
     },
 

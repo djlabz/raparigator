@@ -19,7 +19,7 @@ import {
   isProfileFormComplete,
   validatePasswordPair,
 } from "@/lib/identity";
-import { getVerificationState } from "@/lib/verification";
+import { useVerification } from "@/lib/verification";
 import { updateContact } from "@/lib/announcement-draft";
 import type { AuthRole, User } from "../../lib/types";
 
@@ -245,10 +245,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
     window.location.href = "/profissional/dashboard?tab=Verificação";
   };
 
-  const verificationState = getVerificationState(user.id, {
-    email: user.email,
-    phone: user.phone ?? "",
-  });
+  const verificationState = useVerification(user);
   const verifiedItems = [verificationState.email.verified, verificationState.phone.verified].filter(
     Boolean,
   ).length;
@@ -526,10 +523,18 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
                   Segurança e confiança
                 </p>
-                <h3 className="mt-1 text-xl font-semibold text-zinc-900">Verifique sua conta</h3>
+                <div className="mt-1 flex items-center gap-2">
+                  <h3 className="text-xl font-semibold text-zinc-900">Verifique sua conta</h3>
+                  {!verificationState.required ? (
+                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                      Opcional
+                    </span>
+                  ) : null}
+                </div>
                 <p className="mt-1 text-sm text-zinc-600">
-                  Aumente a confiança do seu perfil em poucos minutos. Seus dados de validação não
-                  são compartilhados publicamente.
+                  {!verificationState.required
+                    ? "A verificação de contato é opcional para publicar anúncios. Seus dados de validação não são compartilhados publicamente."
+                    : "Aumente a confiança do seu perfil em poucos minutos. Seus dados de validação não são compartilhados publicamente."}
                 </p>
               </div>
               <Button type="button" variant="secondary" onClick={openVerificationSettings}>
@@ -559,7 +564,11 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
                 <p
                   className={`mt-1 text-sm font-semibold ${verificationState.email.verified ? "text-emerald-700" : "text-zinc-700"}`}
                 >
-                  {verificationState.email.verified ? "Validado" : "Pendente"}
+                  {verificationState.email.verified
+                    ? "Validado"
+                    : !verificationState.required
+                      ? "Pendente (Opcional)"
+                      : "Pendente"}
                 </p>
               </div>
               <div
@@ -571,7 +580,11 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
                 <p
                   className={`mt-1 text-sm font-semibold ${verificationState.phone.verified ? "text-emerald-700" : "text-zinc-700"}`}
                 >
-                  {verificationState.phone.verified ? "Validado" : "Verificar"}
+                  {verificationState.phone.verified
+                    ? "Validado"
+                    : !verificationState.required
+                      ? "Pendente (Opcional)"
+                      : "Verificar"}
                 </p>
               </div>
               <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 opacity-75">

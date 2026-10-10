@@ -22,7 +22,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "check": "npm run lint && npm run format:check && npm run typecheck",
     "test": "npm run test --workspaces --if-present",
-    "test:e2e": "npm run test:e2e -w apps/web",
+    "test:e2e": "npm run db:seed -w apps/api && npm run test:e2e -w apps/web",
     "test:e2e:ui": "npm run test:e2e:ui -w apps/web",
     "test:e2e:report": "npm run test:e2e:report -w apps/web",
     "db:up": "docker compose up -d",

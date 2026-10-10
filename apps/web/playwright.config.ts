@@ -37,7 +37,8 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "npm run dev:api -w apps/api",
+      command: "npm run dev:api",
+      cwd: "../..",
       url: `${apiUrl}/healthz`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
