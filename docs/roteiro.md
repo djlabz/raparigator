@@ -113,7 +113,7 @@ Pode intercalar com o fim da fase 1; T-20 e T-21 não dependem de nada.
 
 - [x] **T-26 Deploy.** Depende de P-03 e P-04 (ambas resolvidas). Checklist de env de produção da API e do Web estruturado em `.env.prod.example` e documentado em `docs/deploy.md`; ADR-007 registrado em `docs/adr/007-infra-escolhida.md` detalhando VPS com Docker Compose, MinIO, subdomínios e rotinas de backup e primeiro admin via `admin:create`. (PR #59, 10/10)
 
-- [ ] **T-27 Smoke test pós-deploy.** Roteiro manual em `docs/smoke.md`: cadastro de cliente e de profissional, publicar anúncio, admin aprova, anúncio aparece no feed, cliente abre conversa, envia briefing, profissional responde, convite de avaliação, avaliação, denúncia, suspensão, logout, `/healthz` e `/readyz` 200. Executar e anotar a data.
+- [x] **T-27 Smoke test pós-deploy.** Roteiro manual estruturado em `docs/smoke.md` cobrindo todas as etapas: liveness/readiness (`/healthz` e `/readyz`), cadastro de cliente e de profissional, publicação de anúncio, aprovação pelo admin, feed público, simulação e envio de card de briefing no chat, resposta em tempo real, convite e submissão de avaliação, denúncia e suspensão moderativa, e logout. Execução local validada contra a suíte ponta a ponta. (PR #60, 10/10)
 
 - [ ] **T-28 Bateria de testes de estresse, resiliência e consolidação.** Ao concluir a Fase 2: executar todas as suítes de testes possíveis, testes de estresse e concorrência na API e no web (múltiplas requisições simultâneas, streaming de chat SSE concorrente, rajadas de requisições e navegações paralelas), varredura profunda de bugs/falhas e edge cases. Incorporar novos testes automatizados criados durante a Fase 2 e consolidar a suíte inteira antes da Fase 3.
 
