@@ -57,6 +57,7 @@ export function createTestHarness(): TestHarness {
       billing: createFakeBillingProvider(config.BILLING_WEBHOOK_SECRET),
       jobs,
       mailer,
+      storage,
       services: createServices({
         config,
         db: database.db,

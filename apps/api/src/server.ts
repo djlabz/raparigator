@@ -56,6 +56,7 @@ async function main() {
     billing,
     jobs,
     mailer,
+    storage,
     services: createServices({ config, db, logger, storage, jobs, chatEvents, billing, mailer }),
     ready: () => ready,
   };

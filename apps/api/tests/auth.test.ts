@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
 import { DEV_ADMINS, upsertAdminWithPassword } from "../src/db/seed/users";
+import * as schema from "../src/db/schema";
 import { createTestHarness } from "./helpers/app";
 import { signInAdmin, signUp } from "./helpers/auth";
 
@@ -101,5 +103,104 @@ describe("autenticação e sessão", () => {
       body: JSON.stringify({ email: "reset@teste.dev", password: "SenhaNova@456" }),
     });
     expect(newLoginResponse.ok).toBe(true);
+  });
+
+  it("auth.deleteAccount exige autenticação", async () => {
+    const res = await harness.rpc("auth/deleteAccount");
+    expect(res.status).toBe(401);
+  });
+
+  it("auth.deleteAccount apaga mídias do storage, anonimiza mensagens enviadas e remove usuário", async () => {
+    const client = await signUp(harness, {
+      email: "del-client@teste.dev",
+      password: "Senha@12345",
+    });
+    const pro = await signUp(harness, { email: "del-pro@teste.dev", role: "profissional" });
+
+    const mediaKey = `users/${client.userId}/foto.jpg`;
+    await harness.storage.putObject(mediaKey, new Uint8Array([1, 2, 3]), "image/jpeg");
+    expect(harness.storage.objects.has(mediaKey)).toBe(true);
+
+    const assetId = "asset-test-1";
+    await harness.db.insert(schema.mediaAssets).values({
+      id: assetId,
+      ownerUserId: client.userId,
+      kind: "image",
+      purpose: "profile",
+      status: "ready",
+      contentType: "image/jpeg",
+      sizeBytes: 3,
+      storageKey: mediaKey,
+    });
+
+    const profileId = "prof-test-1";
+    await harness.db.insert(schema.professionalProfiles).values({
+      id: profileId,
+      userId: pro.userId,
+      slug: "pro-del-teste",
+      displayName: "Pro Teste",
+      artisticName: "Pro Teste",
+      city: "São Paulo",
+      state: "SP",
+    });
+
+    const convId = "conv-test-1";
+    await harness.db.insert(schema.conversations).values({
+      id: convId,
+      profileId,
+      clientUserId: client.userId,
+      professionalUserId: pro.userId,
+      lastMessagePreview: "Olá, tenho uma pergunta pessoal",
+    });
+
+    await harness.db.insert(schema.conversationParticipants).values([
+      { id: "part-1", conversationId: convId, userId: client.userId, role: "cliente" },
+      { id: "part-2", conversationId: convId, userId: pro.userId, role: "profissional" },
+    ]);
+
+    const msgId = "msg-test-1";
+    await harness.db.insert(schema.messages).values({
+      id: msgId,
+      conversationId: convId,
+      senderUserId: client.userId,
+      senderRole: "cliente",
+      messageType: "text",
+      content: "Olá, tenho uma pergunta pessoal",
+    });
+
+    const deleteRes = await harness.rpc<{ ok: boolean }>(
+      "auth/deleteAccount",
+      {},
+      { cookie: client.cookie },
+    );
+    expect(deleteRes.status).toBe(200);
+    expect(deleteRes.body).toEqual({ ok: true });
+
+    expect(harness.storage.objects.has(mediaKey)).toBe(false);
+
+    const [msgAfter] = await harness.db
+      .select()
+      .from(schema.messages)
+      .where(eq(schema.messages.id, msgId));
+    expect(msgAfter).toBeDefined();
+    expect(msgAfter!.senderUserId).toBe(client.userId);
+    expect(msgAfter!.content).toBe("[Mensagem apagada devido à exclusão da conta]");
+
+    const [convAfter] = await harness.db
+      .select()
+      .from(schema.conversations)
+      .where(eq(schema.conversations.id, convId));
+    expect(convAfter).toBeDefined();
+    expect(convAfter!.lastMessagePreview).toBe("[Mensagem apagada]");
+
+    const meRes = await harness.rpc<{ user: null }>("auth/me", {}, { cookie: client.cookie });
+    expect(meRes.body).toEqual({ user: null });
+
+    const loginRes = await harness.fetch("/api/auth/sign-in/email", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: harness.config.WEB_ORIGIN },
+      body: JSON.stringify({ email: "del-client@teste.dev", password: "Senha@12345" }),
+    });
+    expect(loginRes.ok).toBe(false);
   });
 });

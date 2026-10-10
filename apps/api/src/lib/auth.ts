@@ -62,6 +62,9 @@ export function createUserAuth(db: Database, config: AppConfig, mailer?: Mailer)
       },
     },
     user: {
+      deleteUser: {
+        enabled: true,
+      },
       additionalFields: {
         role: {
           type: ["cliente", "profissional"],

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SiteFooter } from "@/components/layout/site-footer";
 import { useCatalogs } from "@/lib/catalogs-data";
 import { useFeedAds } from "@/lib/feed-data";
 import {
@@ -467,6 +468,7 @@ export function FeedScreen() {
             )}
           </div>
         </section>
+        <SiteFooter className="mt-12 rounded-2xl" />
       </div>
 
       <Modal

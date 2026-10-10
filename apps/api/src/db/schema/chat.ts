@@ -9,7 +9,6 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import type { EncounterBrief } from "@sigillus/contracts";
-import { users } from "./auth";
 import { mediaAssets } from "./media";
 import { professionalProfiles } from "./profiles";
 
@@ -20,12 +19,8 @@ export const conversations = pgTable(
     profileId: text()
       .notNull()
       .references(() => professionalProfiles.id, { onDelete: "cascade" }),
-    clientUserId: text()
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    professionalUserId: text()
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    clientUserId: text().notNull(),
+    professionalUserId: text().notNull(),
     lastMessagePreview: text().notNull().default(""),
     lastMessageAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -45,9 +40,7 @@ export const conversationParticipants = pgTable(
     conversationId: text()
       .notNull()
       .references(() => conversations.id, { onDelete: "cascade" }),
-    userId: text()
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    userId: text().notNull(),
     role: text({ enum: ["cliente", "profissional"] }).notNull(),
     unreadCount: integer().notNull().default(0),
     alias: text(),
@@ -69,9 +62,7 @@ export const messages = pgTable(
     conversationId: text()
       .notNull()
       .references(() => conversations.id, { onDelete: "cascade" }),
-    senderUserId: text()
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    senderUserId: text().notNull(),
     senderRole: text({ enum: ["cliente", "profissional", "suporte"] }).notNull(),
     messageType: text({ enum: ["text", "media", "brief"] }).notNull(),
     content: text(),
