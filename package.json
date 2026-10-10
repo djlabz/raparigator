@@ -27,6 +27,7 @@
     "test:e2e:report": "npm run test:e2e:report -w apps/web",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
+    "admin:create": "npm run admin:create -w apps/api --",
     "share": "npm run share -w apps/web"
   },
   "devDependencies": {

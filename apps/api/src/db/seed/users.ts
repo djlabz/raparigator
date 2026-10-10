@@ -94,12 +94,19 @@ export async function upsertUserWithPassword(db: Database, user: SeedUser) {
   return userId;
 }
 
-export async function upsertAdminWithPassword(db: Database, admin: (typeof DEV_ADMINS)[number]) {
+export type UpsertAdminInput = {
+  id?: string;
+  fullName: string;
+  email: string;
+  password: string;
+};
+
+export async function upsertAdminWithPassword(db: Database, admin: UpsertAdminInput) {
   const [existing] = await db
     .select({ id: adminUsers.id })
     .from(adminUsers)
     .where(eq(adminUsers.email, admin.email));
-  const adminId = existing?.id ?? admin.id;
+  const adminId = existing?.id ?? admin.id ?? newId();
   const password = await hashPassword(admin.password);
   await db
     .insert(adminUsers)
