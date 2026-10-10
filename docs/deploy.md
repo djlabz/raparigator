@@ -132,7 +132,7 @@ Após a subida inicial da stack, execute o comando CLI dentro do container da AP
 
 ```bash
 docker compose -f compose.prod.yaml exec api \
-  node dist/cli/create-admin.js \
+  node dist/create-admin.js \
   --email="admin@seudominio.com" \
   --name="Administrador Sigillus" \
   --password="<SenhaForteComPeloMenos8Caracteres>"

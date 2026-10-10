@@ -5,6 +5,7 @@ export default defineConfig({
     server: "src/server.ts",
     migrate: "src/cli/migrate.ts",
     seed: "src/cli/seed.ts",
+    "create-admin": "src/cli/create-admin.ts",
   },
   format: ["esm"],
   target: "node22",

@@ -28,6 +28,7 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "admin:create": "npm run admin:create -w apps/api --",
+    "check:prod-env": "bash scripts/check-prod-env.sh",
     "share": "npm run share -w apps/web"
   },
   "devDependencies": {
