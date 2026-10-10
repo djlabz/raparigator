@@ -50,6 +50,7 @@ const EnvSchema = z
     SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
     OPENAPI_DOCS_ENABLED: booleanFromEnv.optional(),
     VERIFICATION_DEV_CODES: booleanFromEnv.default(false),
+    VERIFICATION_REQUIRED: booleanFromEnv.default(false),
     SEED_ON_BOOT: booleanFromEnv.default(false),
   })
   .superRefine((env, ctx) => {

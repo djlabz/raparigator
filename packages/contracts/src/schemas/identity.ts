@@ -67,5 +67,6 @@ export type VerificationPublicChannelState = z.infer<typeof VerificationPublicCh
 export const VerificationPublicStateSchema = z.object({
   email: VerificationPublicChannelStateSchema,
   phone: VerificationPublicChannelStateSchema,
+  required: z.boolean(),
 });
 export type VerificationPublicState = z.infer<typeof VerificationPublicStateSchema>;

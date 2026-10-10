@@ -18,11 +18,11 @@ import { SummaryTab } from "./summary-tab";
 import type { AdStatus } from "./types";
 import { useDashboardTitleScroll } from "./use-dashboard-title-scroll";
 import {
+  HAS_VERIFICATION_PROVIDER,
   confirmVerificationCode,
-  getVerificationState,
   sendVerificationCode,
+  useVerification,
   type VerificationChannel,
-  type VerificationState,
 } from "@/lib/verification";
 
 function DashboardTabSkeleton() {
@@ -280,15 +280,11 @@ export function ProfessionalDashboardScreen() {
 
 function VerificationTab() {
   const { role, user } = useAuthSession();
-  const userId = user?.id ?? "anonymous";
+  const verificationState = useVerification(user);
   const verificationTargets = {
     email: user?.email ?? "",
     phone: user?.phone ?? "",
   };
-  const verificationSyncKey = `${userId}|${verificationTargets.email}|${verificationTargets.phone}`;
-  const [verificationState, setVerificationState] = useState<VerificationState>(() =>
-    getVerificationState(userId, verificationTargets),
-  );
   const [codeInputs, setCodeInputs] = useState<Record<VerificationChannel, string>>({
     email: "",
     phone: "",
@@ -299,15 +295,6 @@ function VerificationTab() {
     email: null,
     phone: null,
   });
-  const [previousVerificationSyncKey, setPreviousVerificationSyncKey] =
-    useState(verificationSyncKey);
-
-  if (verificationSyncKey !== previousVerificationSyncKey) {
-    setPreviousVerificationSyncKey(verificationSyncKey);
-    setVerificationState(getVerificationState(userId, verificationTargets));
-    setCodeInputs({ email: "", phone: "" });
-    setRevealedCodes({ email: null, phone: null });
-  }
 
   useEffect(() => {
     if (!infoMessage) {
@@ -344,32 +331,34 @@ function VerificationTab() {
     setInfoMessage(message);
   };
 
-  const handleSendCode = (channel: VerificationChannel) => {
-    const result = sendVerificationCode(userId, verificationTargets, channel, verificationState);
-    setVerificationState(result.state);
-    setRevealedCodes((current) => ({ ...current, [channel]: result.code }));
-    pushInfo(
-      channel === "email"
-        ? `Código de teste enviado para ${verificationTargets.email}.`
-        : `Código de teste enviado para ${verificationTargets.phone}.`,
-      "info",
-    );
+  const handleSendCode = async (channel: VerificationChannel) => {
+    if (!HAS_VERIFICATION_PROVIDER) return;
+    try {
+      const result = await sendVerificationCode(channel);
+      setRevealedCodes((current) => ({ ...current, [channel]: result.devCode }));
+      pushInfo(
+        channel === "email"
+          ? `Código de teste enviado para ${verificationTargets.email}.`
+          : `Código de teste enviado para ${verificationTargets.phone}.`,
+        "info",
+      );
+    } catch {
+      pushInfo("Erro ao enviar código de verificação.", "error");
+    }
   };
 
-  const handleConfirmCode = (channel: VerificationChannel) => {
-    const result = confirmVerificationCode(
-      userId,
-      verificationTargets,
-      channel,
-      codeInputs[channel],
-      verificationState,
-    );
-    setVerificationState(result.state);
-    pushInfo(result.message, result.success ? "success" : "error");
+  const handleConfirmCode = async (channel: VerificationChannel) => {
+    if (!HAS_VERIFICATION_PROVIDER) return;
+    try {
+      const result = await confirmVerificationCode(channel, codeInputs[channel]);
+      pushInfo(result.message, result.success ? "success" : "error");
 
-    if (result.success) {
-      setCodeInputs((current) => ({ ...current, [channel]: "" }));
-      setRevealedCodes((current) => ({ ...current, [channel]: null }));
+      if (result.success) {
+        setCodeInputs((current) => ({ ...current, [channel]: "" }));
+        setRevealedCodes((current) => ({ ...current, [channel]: null }));
+      }
+    } catch {
+      pushInfo("Erro ao confirmar código.", "error");
     }
   };
 
@@ -380,9 +369,18 @@ function VerificationTab() {
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
             Verificação da conta
           </p>
-          <h2 className="mt-1 text-2xl font-semibold text-zinc-900">Confiança do perfil</h2>
+          <div className="mt-1 flex items-center gap-2">
+            <h2 className="text-2xl font-semibold text-zinc-900">Confiança do perfil</h2>
+            {!verificationState.required ? (
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                Opcional
+              </span>
+            ) : null}
+          </div>
           <p className="mt-1 text-sm text-zinc-600">
-            Conclua as etapas de e-mail e telefone para elevar a segurança da conta.
+            {!verificationState.required
+              ? "A verificação de contato é opcional para publicar anúncios. O envio de códigos estará disponível em breve."
+              : "Conclua as etapas de e-mail e telefone para elevar a segurança da conta."}
           </p>
         </div>
         <span className="self-start rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
@@ -425,7 +423,7 @@ function VerificationTab() {
           actionLabel={
             verificationState.email.verified
               ? "Validado"
-              : verificationState.email.pendingCode
+              : verificationState.email.codeSentAt
                 ? "Reenviar código"
                 : "Enviar código"
           }
@@ -435,6 +433,7 @@ function VerificationTab() {
           onCodeChange={(value) => setCodeInputs((current) => ({ ...current, email: value }))}
           onAction={() => handleSendCode("email")}
           onConfirm={() => handleConfirmCode("email")}
+          hasProvider={HAS_VERIFICATION_PROVIDER}
         />
         <VerificationItem
           title="Telefone"
@@ -443,7 +442,7 @@ function VerificationTab() {
           actionLabel={
             verificationState.phone.verified
               ? "Validado"
-              : verificationState.phone.pendingCode
+              : verificationState.phone.codeSentAt
                 ? "Reenviar código"
                 : "Enviar SMS"
           }
@@ -453,6 +452,7 @@ function VerificationTab() {
           onCodeChange={(value) => setCodeInputs((current) => ({ ...current, phone: value }))}
           onAction={() => handleSendCode("phone")}
           onConfirm={() => handleConfirmCode("phone")}
+          hasProvider={HAS_VERIFICATION_PROVIDER}
         />
         <VerificationItem
           title="Documento"
@@ -460,6 +460,7 @@ function VerificationTab() {
           done={false}
           actionLabel="Em breve"
           disabled
+          hasProvider={false}
         />
       </div>
     </Card>
@@ -478,6 +479,7 @@ function VerificationItem({
   onAction,
   onConfirm,
   disabled = false,
+  hasProvider = false,
 }: {
   title: string;
   description: string;
@@ -490,6 +492,7 @@ function VerificationItem({
   onAction?: () => void;
   onConfirm?: () => void;
   disabled?: boolean;
+  hasProvider?: boolean;
 }) {
   return (
     <div
@@ -501,7 +504,7 @@ function VerificationItem({
     >
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">{title}</p>
       <p className="mt-2 min-h-12 text-sm text-zinc-600">{description}</p>
-      {revealedCode && codeLabel ? (
+      {hasProvider && revealedCode && codeLabel ? (
         <div className="mt-3 rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-2 text-xs text-zinc-700">
           <span className="font-semibold text-zinc-500">{codeLabel}:</span>{" "}
           <span className="font-mono font-semibold tracking-[0.18em] text-zinc-900">
@@ -509,7 +512,7 @@ function VerificationItem({
           </span>
         </div>
       ) : null}
-      {codeValue !== undefined && onCodeChange && onConfirm ? (
+      {hasProvider && codeValue !== undefined && onCodeChange && onConfirm ? (
         <div className="mt-3 flex flex-1 flex-col">
           <div className="space-y-2">
             <Input
@@ -548,18 +551,24 @@ function VerificationItem({
           <span
             className={cn("text-sm font-semibold", done ? "text-emerald-700" : "text-zinc-700")}
           >
-            {done ? "Concluído" : disabled ? "Futuro" : "Pendente"}
+            {done ? "Validado" : disabled ? "Em breve" : "Opcional"}
           </span>
-          <Button
-            type="button"
-            size="sm"
-            variant={done ? "secondary" : "primary"}
-            onClick={onAction}
-            disabled={disabled || done}
-            className="min-w-27"
-          >
-            {actionLabel}
-          </Button>
+          {hasProvider ? (
+            <Button
+              type="button"
+              size="sm"
+              variant={done ? "secondary" : "primary"}
+              onClick={onAction}
+              disabled={disabled || done}
+              className="min-w-27"
+            >
+              {actionLabel}
+            </Button>
+          ) : (
+            <span className="rounded-full border border-zinc-200 bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+              {done ? "Concluído" : "Em implantação"}
+            </span>
+          )}
         </div>
       )}
     </div>

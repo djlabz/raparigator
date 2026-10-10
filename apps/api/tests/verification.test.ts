@@ -50,6 +50,7 @@ describe("verificação de e-mail e telefone", () => {
     });
     expect(state.phone.target).toBe("11999998888");
     expect(state.phone.verified).toBe(false);
+    expect(state.required).toBe(false);
   });
 
   it("fluxo feliz: envia, confirma, marca verificado e emailVerified", async () => {
@@ -167,5 +168,24 @@ describe("verificação de e-mail e telefone", () => {
     await expect(service.sendCode({ ...user, phone: null }, "phone")).rejects.toMatchObject({
       code: "CONFLICT",
     });
+  });
+
+  it("expõe required conforme a flag VERIFICATION_REQUIRED", async () => {
+    const { user } = await setup();
+    const serviceDefault = createVerificationService({
+      db: harness.db,
+      config: { ...harness.config, VERIFICATION_REQUIRED: false },
+      logger: harness.deps.logger,
+    });
+    const stateDefault = await serviceDefault.getState(user);
+    expect(stateDefault.required).toBe(false);
+
+    const serviceRequired = createVerificationService({
+      db: harness.db,
+      config: { ...harness.config, VERIFICATION_REQUIRED: true },
+      logger: harness.deps.logger,
+    });
+    const stateRequired = await serviceRequired.getState(user);
+    expect(stateRequired.required).toBe(true);
   });
 });
