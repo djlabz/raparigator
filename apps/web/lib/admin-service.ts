@@ -98,3 +98,7 @@ export async function globalSearch(query: string): Promise<GlobalSearchResult[]>
   }
   return getApiClient().admin.search({ q: trimmed });
 }
+
+export async function grantPremium(id: string, months = 1): Promise<void> {
+  await getApiClient().admin.grantPremium({ id, months });
+}

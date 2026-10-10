@@ -315,7 +315,7 @@ type ToastState = { title: string; message: string; type?: "success" | "error" |
 
 export function ChatScreen() {
   const { isLoggedIn, user, role } = useAuthSession();
-  const { canSendViewOnce, canUseAlias } = usePremiumPlan();
+  const { canSendViewOnce, canUseAlias, checkoutEnabled } = usePremiumPlan();
   const { getInvite } = useReviewInvites();
   ensureChatStore();
   const snapshot = useSyncExternalStore(
@@ -640,6 +640,9 @@ export function ChatScreen() {
   };
 
   const openPremiumUpsell = (highlight: PremiumHighlight) => {
+    if (!checkoutEnabled) {
+      return;
+    }
     setPremiumUpsellHighlight(highlight);
     setPremiumUpsellOpen(true);
   };

@@ -1,6 +1,7 @@
 "use client";
 
 import { Crown } from "lucide-react";
+import { usePremiumPlan } from "@/lib/premium-plan";
 import { cn } from "@/lib/utils";
 
 interface PremiumEntryBannerProps {
@@ -10,6 +11,12 @@ interface PremiumEntryBannerProps {
 }
 
 export function PremiumEntryBanner({ variant, onClick, className }: PremiumEntryBannerProps) {
+  const { checkoutEnabled } = usePremiumPlan();
+
+  if (!checkoutEnabled) {
+    return null;
+  }
+
   const isSidebar = variant === "sidebar";
 
   return (

@@ -478,7 +478,7 @@ export function AnnouncementTab({
     isSectionReadyForOptimization,
   } = useAnnouncementDraft(ad, initialDraft);
   const router = useRouter();
-  const { isPremium, photoLimit, videoLimit } = usePremiumPlan();
+  const { isPremium, photoLimit, videoLimit, checkoutEnabled } = usePremiumPlan();
   const motionValues = useOptionalDashboardHeaderTitleMotion();
   const fallbackInPageOpacity = useMotionValue(1);
   const inPageTitleOpacity = motionValues?.inPageTitleOpacity ?? fallbackInPageOpacity;
@@ -520,6 +520,9 @@ export function AnnouncementTab({
   }, []);
 
   const openConversion = (from: string, highlight?: "portfolio") => {
+    if (!checkoutEnabled) {
+      return;
+    }
     setConversionFrom(from);
     setConversionHighlight(highlight);
     setConversionOpen(true);

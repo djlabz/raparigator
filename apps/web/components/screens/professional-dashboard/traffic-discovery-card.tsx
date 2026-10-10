@@ -29,7 +29,7 @@ const trafficDiscovery = {
 };
 
 export function TrafficDiscoveryCard() {
-  const { isPremium } = usePremiumPlan();
+  const { isPremium, checkoutEnabled } = usePremiumPlan();
   const [upsellOpen, setUpsellOpen] = useState(false);
 
   const maxImpression = Math.max(...trafficDiscovery.weeklyImpressions.map((day) => day.value));
@@ -131,9 +131,11 @@ export function TrafficDiscoveryCard() {
               esperando por você.
             </p>
           </div>
-          <ShinyButton size="sm" onClick={() => setUpsellOpen(true)}>
-            Revelar Tráfego VIP
-          </ShinyButton>
+          {checkoutEnabled ? (
+            <ShinyButton size="sm" onClick={() => setUpsellOpen(true)}>
+              Revelar Tráfego VIP
+            </ShinyButton>
+          ) : null}
         </div>
       ) : null}
 

@@ -26,6 +26,7 @@ import { newId } from "../../lib/ids";
 import type { Logger } from "../../lib/logger";
 import { toProfessionalAd, type ProfileRow } from "../profiles/mapper";
 import type { ProfileRepository } from "../profiles/repository";
+import type { PremiumService } from "../premium/service";
 
 export type AdminActor = { id: string; name: string; email: string };
 
@@ -38,6 +39,7 @@ export type AdminServiceDeps = {
   profiles: ProfileRepository;
   logger: Logger;
   notify?: AdminNotify;
+  premium?: PremiumService;
 };
 
 export type AdminService = ReturnType<typeof createAdminService>;
@@ -122,7 +124,7 @@ function profileLabel(row: ProfileRow): string {
 }
 
 export function createAdminService(deps: AdminServiceDeps) {
-  const { db, profiles, logger, notify } = deps;
+  const { db, profiles, logger, notify, premium } = deps;
 
   async function logActivity(entry: {
     action: ActivityRow["action"];
@@ -524,6 +526,35 @@ export function createAdminService(deps: AdminServiceDeps) {
         status: row.verificationStatus,
       }));
       return [...clientResults, ...professionalResults];
+    },
+
+    async grantPremium(admin: AdminActor, input: { id: string; months?: number }) {
+      if (!premium) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Serviço de premium não configurado.",
+        });
+      }
+      const months = input.months ?? 1;
+      const row = await requireProfile(input.id);
+      await premium.grantManual(row.userId, months);
+      await logActivity({
+        action: "premium_granted",
+        targetName: profileLabel(row),
+        targetId: row.id,
+        adminEmail: admin.email,
+        reason: `Concessão manual de Premium (${months} mês(es))`,
+      });
+      await notifyProfileOwner(row.userId, {
+        key: `premium-granted:${row.id}:${Date.now()}`,
+        title: "Plano Premium ativado",
+        message: `Seu perfil recebeu acesso ao plano Premium por ${months} mês(es).`,
+        href: "/profissional/dashboard",
+      });
+      logger.info(
+        { adminId: admin.id, profileId: row.id, months },
+        "premium concedido manualmente",
+      );
+      return { ok: true as const };
     },
   };
 }

@@ -1,7 +1,14 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { RPCHandler } from "@orpc/server/fetch";
-import { adminActivityLogs, conversations, reports, sessions, users } from "../src/db/schema";
+import {
+  adminActivityLogs,
+  conversations,
+  professionalProfiles,
+  reports,
+  sessions,
+  users,
+} from "../src/db/schema";
 import { DEV_ADMINS, upsertAdminWithPassword } from "../src/db/seed/users";
 import { adminRouter } from "../src/modules/admin/router";
 import { createAdminService, type AdminNotification } from "../src/modules/admin/service";
@@ -20,6 +27,7 @@ function setup() {
     db: harness.db,
     profiles: harness.deps.services.profiles,
     logger: harness.deps.logger,
+    premium: harness.deps.services.premium,
     notify: async (userId, notification) => {
       notified.push({ userId, notification });
     },
@@ -352,5 +360,42 @@ describe("admin / backoffice", () => {
     expect(pros[0]?.href).toBe(`/admin/perfis/${pros[0]?.id}`);
     const byEmail = await rpc<Array<{ type: string }>>("admin/search", { q: "mariana@" }, cookie);
     expect(byEmail.body.some((item) => item.type === "client")).toBe(true);
+  });
+
+  it("concede premium para perfil profissional e registra log e notificação", async () => {
+    const { rpc, notified } = setup();
+    const cookie = await adminCookie();
+    const { profile, userId } = await createProfessional(
+      "pro-grant@teste.dev",
+      "Camila Santos",
+      "published",
+    );
+
+    const response = await rpc<{ ok: true }>(
+      "admin/grantPremium",
+      { id: profile.id, months: 6 },
+      cookie,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ ok: true });
+
+    const [updatedProfile] = await harness.db
+      .select({ adTier: professionalProfiles.adTier })
+      .from(professionalProfiles)
+      .where(eq(professionalProfiles.id, profile.id));
+    expect(updatedProfile?.adTier).toBe("premium");
+
+    const [log] = await harness.db
+      .select()
+      .from(adminActivityLogs)
+      .where(eq(adminActivityLogs.action, "premium_granted"));
+    expect(log?.targetId).toBe(profile.id);
+
+    expect(
+      notified.some(
+        (item) => item.userId === userId && item.notification.title.includes("Premium"),
+      ),
+    ).toBe(true);
   });
 });

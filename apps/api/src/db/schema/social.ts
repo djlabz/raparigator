@@ -94,6 +94,7 @@ export const adminActivityLogs = pgTable(
         "client_registered",
         "account_suspended",
         "account_reinstated",
+        "premium_granted",
       ],
     }).notNull(),
     targetName: text().notNull(),
