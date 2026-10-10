@@ -16,7 +16,8 @@ services:
       retries: 10
 
   minio:
-    image: quay.io/minio/minio:latest
+    image: cgr.dev/chainguard/minio:latest
+    user: "0:0"
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: sigillus
@@ -27,13 +28,13 @@ services:
     volumes:
       - minio-data:/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD", "/bin/mc", "ready", "local"]
       interval: 5s
       timeout: 5s
       retries: 10
 
   minio-init:
-    image: quay.io/minio/minio:latest
+    image: cgr.dev/chainguard/minio:latest
     depends_on:
       minio:
         condition: service_healthy

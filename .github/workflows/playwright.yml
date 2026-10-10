@@ -21,7 +21,7 @@ jobs:
       - name: Sobe Postgres e MinIO
         run: |
           docker pull postgres:17-alpine
-          docker pull quay.io/minio/minio:latest
+          docker pull cgr.dev/chainguard/minio:latest
           npm run db:up
       - name: Prepara ambiente da API
         run: |

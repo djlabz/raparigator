@@ -30,7 +30,7 @@ Adota-se o modelo de **VPS única com Docker Compose** e **subdomínios separado
 - **API (`sigillus-api:latest`)**: Container Node.js 22 Alpine rodando a API Hono/oRPC na porta interna 4000.
 - **Web (`sigillus-web:latest`)**: Container Node.js 22 Alpine rodando Next.js 16 em modo standalone na porta interna 3000.
 - **Postgres 17 (`postgres:17-alpine`)**: Banco relacional persistido no volume nomeado `postgres-data`. A extensão `pg_trgm` é habilitada para as buscas textuais do feed.
-- **MinIO (`quay.io/minio/minio:latest`)**: Servidor S3 self-hosted persistido no volume nomeado `minio-data`, com serviço `minio-init` que cria o bucket `sigillus-media` e define a política pública de download no prefixo `/public`.
+- **MinIO (`cgr.dev/chainguard/minio:latest`)**: Servidor S3 self-hosted persistido no volume nomeado `minio-data`, com serviço `minio-init` que cria o bucket `sigillus-media` e define a política pública de download no prefixo `/public`.
 
 ### 2. Rede, TLS e Proxy Reverso
 
