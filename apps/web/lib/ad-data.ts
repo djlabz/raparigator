@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import type { FeedAdSummary, MediaHighlight, ProfessionalAd } from "@sigillus/contracts";
 import { getApiClient } from "@/lib/api/client";
-import { isApiDataSource } from "@/lib/data-source";
-import { ads as mockAds, mediaHighlights as mockMediaHighlights } from "@/lib/mock-data";
 
 export type PopularAdsKind = "most_viewed" | "top_rated";
 
@@ -36,16 +34,10 @@ function cachedAdState(slug: string): AdState | null {
 }
 
 export function getCachedAd(slug: string): ProfessionalAd | null {
-  if (!isApiDataSource()) {
-    return mockAds.find((item) => item.slug === slug) ?? null;
-  }
   return adCache.get(slug) ?? null;
 }
 
 export async function fetchAdBySlug(slug: string): Promise<ProfessionalAd | null> {
-  if (!isApiDataSource()) {
-    return mockAds.find((item) => item.slug === slug) ?? null;
-  }
   if (adCache.has(slug)) {
     return adCache.get(slug) ?? null;
   }
@@ -59,11 +51,10 @@ export async function fetchAdBySlug(slug: string): Promise<ProfessionalAd | null
 }
 
 export function useProfessionalAd(slug: string): ProfessionalAdResult {
-  const useApi = isApiDataSource();
   const [apiState, setApiState] = useState<AdState | null>(() => cachedAdState(slug));
 
   useEffect(() => {
-    if (!useApi || adCache.has(slug)) {
+    if (adCache.has(slug)) {
       return;
     }
     let cancelled = false;
@@ -87,11 +78,7 @@ export function useProfessionalAd(slug: string): ProfessionalAdResult {
     return () => {
       cancelled = true;
     };
-  }, [slug, useApi]);
-
-  if (!useApi) {
-    return { ad: mockAds.find((item) => item.slug === slug), isLoading: false, error: null };
-  }
+  }, [slug]);
 
   const state = apiState?.slug === slug ? apiState : cachedAdState(slug);
   if (!state) {
@@ -101,10 +88,8 @@ export function useProfessionalAd(slug: string): ProfessionalAdResult {
 }
 
 export function useRegisterAdView(slug: string, enabled: boolean) {
-  const useApi = isApiDataSource();
-
   useEffect(() => {
-    if (!useApi || !enabled || viewedSlugs.has(slug)) {
+    if (!enabled || viewedSlugs.has(slug)) {
       return;
     }
     viewedSlugs.add(slug);
@@ -113,16 +98,14 @@ export function useRegisterAdView(slug: string, enabled: boolean) {
       .catch(() => {
         viewedSlugs.delete(slug);
       });
-  }, [enabled, slug, useApi]);
+  }, [enabled, slug]);
 }
 
 function useApiList<T>(
   key: string,
   load: () => Promise<T[]>,
-  mockItems: T[],
   fallbackError: string,
 ): AsyncListResult<T> {
-  const useApi = isApiDataSource();
   const [apiState, setApiState] = useState<{ key: string; items: T[]; error: string | null }>({
     key: "",
     items: [],
@@ -130,9 +113,6 @@ function useApiList<T>(
   });
 
   useEffect(() => {
-    if (!useApi) {
-      return;
-    }
     let cancelled = false;
     load()
       .then((items) => {
@@ -148,11 +128,7 @@ function useApiList<T>(
     return () => {
       cancelled = true;
     };
-  }, [fallbackError, key, load, useApi]);
-
-  if (!useApi) {
-    return { items: mockItems, isLoading: false, error: null };
-  }
+  }, [fallbackError, key, load]);
 
   return {
     items: apiState.key === key ? apiState.items : [],
@@ -171,7 +147,6 @@ export function usePopularAds(kind: PopularAdsKind): AsyncListResult<FeedAdSumma
   return useApiList<FeedAdSummary>(
     kind,
     kind === "most_viewed" ? loadMostViewed : loadTopRated,
-    mockAds,
     "Não foi possível carregar o ranking.",
   );
 }
@@ -180,7 +155,6 @@ export function useMediaHighlights(): AsyncListResult<MediaHighlight> {
   return useApiList<MediaHighlight>(
     "media-highlights",
     loadMediaHighlights,
-    mockMediaHighlights,
     "Não foi possível carregar os destaques.",
   );
 }

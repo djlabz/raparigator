@@ -12,8 +12,6 @@ import {
   fetchViewOnceMediaMessage,
 } from "@/lib/chat-service";
 import { getApiClient } from "@/lib/api/client";
-import { isApiDataSource } from "@/lib/data-source";
-import { ads, conversations as mockConversations, messages as mockMessages } from "@/lib/mock-data";
 import type {
   ChatEvent,
   ChatMutationResult,
@@ -25,7 +23,6 @@ import type { Conversation, EncounterBrief, Message } from "@/lib/types";
 const EMPTY_SNAPSHOT: ChatSnapshot = { conversations: [], messages: [] };
 
 let snapshot: ChatSnapshot = EMPTY_SNAPSHOT;
-let seeded = false;
 let apiInitialized = false;
 const listeners = new Set<() => void>();
 
@@ -33,27 +30,6 @@ let sseController: AbortController | null = null;
 let sseActive = false;
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 let reconnectAttempts = 0;
-
-function cloneConversation(conversation: Conversation): Conversation {
-  return { ...conversation };
-}
-
-function cloneMessage(message: Message): Message {
-  return {
-    ...message,
-    media: message.media ? { ...message.media } : undefined,
-    brief: message.brief ? { ...message.brief, extras: [...message.brief.extras] } : undefined,
-  };
-}
-
-function buildSeedSnapshot(): ChatSnapshot {
-  return {
-    conversations: mockConversations
-      .map(cloneConversation)
-      .filter((conversation) => !conversation.deletedFromInboxAt),
-    messages: mockMessages.map(cloneMessage).filter((message) => !message.deletedAt),
-  };
-}
 
 function emit() {
   queueMicrotask(() => {
@@ -76,7 +52,7 @@ export function getChatStoreSnapshot(): ChatSnapshot {
 }
 
 async function refreshConversations(): Promise<void> {
-  if (!isApiDataSource() || typeof window === "undefined") {
+  if (typeof window === "undefined") {
     return;
   }
   try {
@@ -92,7 +68,7 @@ async function refreshConversations(): Promise<void> {
 }
 
 export async function loadConversationMessages(conversationId: string): Promise<void> {
-  if (!isApiDataSource() || typeof window === "undefined" || !conversationId) {
+  if (typeof window === "undefined" || !conversationId) {
     return;
   }
   try {
@@ -150,7 +126,7 @@ function handleChatEvent(event: ChatEvent) {
 }
 
 export function startChatEventStream() {
-  if (typeof window === "undefined" || !isApiDataSource() || sseActive) {
+  if (typeof window === "undefined" || sseActive) {
     return;
   }
   sseActive = true;
@@ -196,13 +172,6 @@ export function ensureChatStore(): ChatSnapshot {
   if (typeof window === "undefined") {
     return EMPTY_SNAPSHOT;
   }
-  if (!isApiDataSource()) {
-    if (!seeded) {
-      seeded = true;
-      snapshot = buildSeedSnapshot();
-    }
-    return snapshot;
-  }
 
   if (!apiInitialized) {
     apiInitialized = true;
@@ -220,11 +189,6 @@ export function ensureChatStore(): ChatSnapshot {
 export function reseedChatStore(): ChatSnapshot {
   if (typeof window === "undefined") {
     return EMPTY_SNAPSHOT;
-  }
-  if (!isApiDataSource()) {
-    seeded = true;
-    replaceSnapshot(buildSeedSnapshot());
-    return snapshot;
   }
   void refreshConversations();
   return snapshot;
@@ -257,9 +221,7 @@ export function markConversationAsRead(conversationId: string) {
       conversation.id === conversationId ? { ...conversation, unread: 0 } : conversation,
     ),
   });
-  if (isApiDataSource()) {
-    void fetchMarkConversationRead(conversationId);
-  }
+  void fetchMarkConversationRead(conversationId);
 }
 
 function syncPreview(
@@ -283,31 +245,6 @@ export async function ensureConversationForAd(adSlug: string): Promise<string | 
   const existing = current.conversations.find((conversation) => conversation.adSlug === adSlug);
   if (existing) {
     return existing.id;
-  }
-
-  if (!isApiDataSource()) {
-    const ad = ads.find((item) => item.slug === adSlug);
-    if (!ad) {
-      return null;
-    }
-
-    const conversation: Conversation = {
-      id: `local-conv-${adSlug}`,
-      participantId: ad.id,
-      contactName: ad.artisticName,
-      contactStatus: ad.status === "indisponivel" ? "offline" : "online",
-      lastMessage: "Conversa iniciada pelo anúncio",
-      lastMessageAt: "agora",
-      unread: 0,
-      adSlug,
-    };
-
-    replaceSnapshot({
-      ...current,
-      conversations: [conversation, ...current.conversations],
-    });
-
-    return conversation.id;
   }
 
   try {

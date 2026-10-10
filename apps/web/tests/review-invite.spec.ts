@@ -2,33 +2,11 @@ import { test, expect } from "@playwright/test";
 import { seedUserRole } from "./helpers/auth";
 
 const AD_SLUG = "luna-velvet-sao-paulo";
-const CONVERSATION_ID = "c1";
-
-async function seedOpenInvite(page: import("@playwright/test").Page) {
-  await page.addInitScript(
-    ({ adSlug, conversationId }) => {
-      const now = Date.now();
-      window.localStorage.setItem(
-        "sigillus-review-invites",
-        JSON.stringify({
-          invites: [
-            {
-              conversationId,
-              adSlug,
-              invitedAt: new Date(now).toISOString(),
-              expiresAt: new Date(now + 14 * 24 * 60 * 60 * 1000).toISOString(),
-              usedAt: null,
-            },
-          ],
-          reviews: [],
-        }),
-      );
-    },
-    { adSlug: AD_SLUG, conversationId: CONVERSATION_ID },
-  );
-}
+const AD_WITH_INVITE_SLUG = "valentina-noir-campinas";
 
 test.describe("Avaliação por convite", () => {
+  test.describe.configure({ mode: "serial" });
+
   test("cliente sem convite não consegue avaliar", async ({ page }) => {
     await seedUserRole(page, "cliente");
     await page.goto(`/anuncio/${AD_SLUG}`);
@@ -46,12 +24,10 @@ test.describe("Avaliação por convite", () => {
 
   test("com convite aberto, cliente avalia uma única vez", async ({ page }) => {
     await seedUserRole(page, "cliente");
-    await seedOpenInvite(page);
-    await page.goto(`/anuncio/${AD_SLUG}`);
+    await page.goto(`/anuncio/${AD_WITH_INVITE_SLUG}`);
 
     await page.getByRole("button", { name: "Avaliar este perfil" }).click();
 
-    // O input é sr-only e a estrela cobre o ponto de clique; o usuário clica no label.
     await page.locator("label", { has: page.getByRole("radio", { name: "5 estrelas" }) }).click();
     await expect(page.getByRole("radio", { name: "5 estrelas" })).toBeChecked();
 

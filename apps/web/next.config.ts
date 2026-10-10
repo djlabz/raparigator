@@ -6,15 +6,32 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  // Allow access to remote image placeholder.
   images: {
     qualities: [90, 75],
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "picsum.photos",
-        port: "",
-        pathname: "/**", // This allows any path under the hostname
+        protocol: "http",
+        hostname: "localhost",
+        port: "9000",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "9010",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "127.0.0.1",
+        port: "9000",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "127.0.0.1",
+        port: "9010",
+        pathname: "/**",
       },
       {
         protocol: "https",

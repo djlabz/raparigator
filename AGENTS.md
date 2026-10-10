@@ -37,12 +37,12 @@ compose.yaml         Postgres 17 + MinIO para desenvolvimento
 - E2E: `npm run test:e2e` (Playwright em `apps/web/tests`, só Chromium; `PORT=3100 npm run test:e2e` se a 3000 estiver ocupada)
 - Verificação local típica: `npm run check` (lint + format:check + typecheck) + `npm run test` + checagem visual quando mexer em motion/UI
 - **E2E só na hora de abrir PR.** A suíte leva ~1 min e trava o fluxo se rodar a cada ajuste. Durante a implementação use `npm run check` + verificação visual. Rode `npm run test:e2e` quando o usuário pedir para commitar/abrir PR — e antes de abrir o PR. Exceção: pode rodar um arquivo específico (`npx playwright test tests/x.spec.ts` dentro de `apps/web`) quando estiver mexendo naquele fluxo.
-- Logins de teste estão em `apps/web/tests/helpers/credentials.ts` (admin: `admin@sigillus.dev` / `Admin@123` em `apps/web/lib/mock-users.ts`)
+- Logins de teste estão em `apps/web/tests/helpers/credentials.ts` (admin: `admin@sigillus.dev` / `Admin@123`)
 - PWA / tela cheia: em aba normal a barra de endereço não some. Para experiência tipo app instale via "Adicionar à Tela de Início" (`display: standalone` em `apps/web/app/manifest.ts`) e valide nesse modo.
 
-## Origem de dados no web
+## Comunicação web e API
 
-`apps/web` lê `NEXT_PUBLIC_DATA_SOURCE=mock|api` (default `mock`). Em `mock` tudo vem de `apps/web/lib/mock-data.ts` e `localStorage`, como sempre foi. Em `api` os módulos já migrados chamam a API pelo client oRPC tipado (`apps/web/lib/api/`); os demais continuam em mock. A ordem de migração está em `docs/adr/README.md`. `apps/web/proxy.ts` (convenção do Next 16 que substitui `middleware.ts`) protege `(private)` e `(admin)` nos dois modos.
+O `apps/web` conecta-se 100% à API pelo client oRPC tipado (`apps/web/lib/api/`) e pelos clientes `better-auth`. Os mocks locais foram totalmente removidos (ADR-016). `apps/web/proxy.ts` (convenção do Next 16 que substitui `middleware.ts`) valida sessões chamando `/api/auth/get-session` e `/api/admin-auth/get-session` e protege as rotas de `(private)` e `(admin)`.
 
 ## Estrutura do web
 
@@ -51,7 +51,7 @@ compose.yaml         Postgres 17 + MinIO para desenvolvimento
 - `app/(private)` → rotas logadas fora das abas (conta, anúncios, assinatura premium)
 - `app/(admin)` → backoffice de administradores
 - `components/ui` → primitivos genéricos · `components/layout` → navbar/footer/sidebar · `components/screens` → blocos grandes de página
-- `lib/` → adaptadores (stores em `useSyncExternalStore`, `localStorage`), mocks, client da API. Tipos vêm de `@sigillus/contracts` (`lib/types.ts` e `lib/*-types.ts` são re-exports finos); regras puras vêm de `@sigillus/domain`.
+- `lib/` → adaptadores (stores em `useSyncExternalStore`), client da API. Tipos vêm de `@sigillus/contracts` (`lib/types.ts` e `lib/*-types.ts` são re-exports finos); regras puras vêm de `@sigillus/domain`.
 
 ## Estrutura da API
 
@@ -82,7 +82,7 @@ compose.yaml         Postgres 17 + MinIO para desenvolvimento
 ## Nunca faça
 
 - Nunca reintroduza intermediação de serviço: escrow, custódia, split, taxa sobre serviço, booking/agendamento, valor de atendimento, check-in/out de encontro — em schema, endpoint, tipo, tabela ou copy
-- Nunca chame API externa nem crie `fetch` solto no web: consuma a API pelo client oRPC em `apps/web/lib/api/` (módulos migrados) ou os mocks de `lib/` (módulos ainda em mock)
+- Nunca chame API externa nem crie `fetch` solto no web: consuma a API pelo client oRPC em `apps/web/lib/api/` ou pelos clientes better-auth (única exceção é o `PUT` na URL pré-assinada de upload de mídia)
 - Nunca declare tipo compartilhado fora de `packages/contracts`; nunca declare tipo à mão em paralelo a um schema Zod
 - Nunca coloque regra de negócio pura no web ou na API se ela couber em `packages/domain`
 - Nunca edite `.next/`, `node_modules/`, `dist/` ou `*.tsbuildinfo`

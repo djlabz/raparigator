@@ -45,7 +45,7 @@ const EnvSchema = z
     BILLING_FAKE_ACKNOWLEDGED: booleanFromEnv.default(false),
     BILLING_WEBHOOK_SECRET: z.string().min(16),
     JOBS_ENABLED: booleanFromEnv.default(true),
-    RATE_LIMIT_ENABLED: booleanFromEnv.default(true),
+    RATE_LIMIT_ENABLED: booleanFromEnv.default(false),
     SENTRY_DSN: optionalUrl,
     SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
     OPENAPI_DOCS_ENABLED: booleanFromEnv.optional(),

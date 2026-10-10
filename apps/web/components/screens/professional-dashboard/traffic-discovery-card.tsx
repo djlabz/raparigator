@@ -5,9 +5,28 @@ import { BarChart3, Lock, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ShinyButton } from "@/components/ui/shiny-button";
 import { PremiumConversionModal } from "@/components/ui/premium-conversion-modal";
-import { trafficDiscovery } from "@/lib/mock-data";
 import { usePremiumPlan } from "@/lib/premium-plan";
 import { cn } from "@/lib/utils";
+
+const trafficDiscovery = {
+  searchPosition: 14,
+  premiumSearchPosition: 1,
+  weeklyImpressions: [
+    { label: "Seg", value: 132 },
+    { label: "Ter", value: 168 },
+    { label: "Qua", value: 145 },
+    { label: "Qui", value: 210 },
+    { label: "Sex", value: 286 },
+    { label: "Sáb", value: 342 },
+    { label: "Dom", value: 298 },
+  ],
+  sources: [
+    { label: "Busca no feed", value: 46 },
+    { label: "Filtros da cidade", value: 27 },
+    { label: "Destaques Premium", value: 17 },
+    { label: "Link compartilhado", value: 10 },
+  ],
+};
 
 export function TrafficDiscoveryCard() {
   const { isPremium } = usePremiumPlan();

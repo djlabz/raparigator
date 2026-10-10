@@ -3,15 +3,11 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, Eye, EyeOff } from "lucide-react";
-import { useAdminSession } from "@/lib/admin-session";
-import { getMockAdminByEmail } from "@/lib/mock-users";
 import { adminAuthClient } from "@/lib/api/admin-auth-client";
-import { isApiDataSource } from "@/lib/data-source";
 import { translateAuthError } from "@/lib/auth-errors";
 
 export function AdminLoginScreen() {
   const router = useRouter();
-  const { login } = useAdminSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -23,36 +19,23 @@ export function AdminLoginScreen() {
     setError(null);
     setLoading(true);
 
-    if (isApiDataSource()) {
-      try {
-        const res = await adminAuthClient.signIn.email({
-          email: email.trim(),
-          password,
-        });
+    try {
+      const res = await adminAuthClient.signIn.email({
+        email: email.trim(),
+        password,
+      });
 
-        if (res.error) {
-          setError(translateAuthError(res.error.message || res.error.statusText));
-          setLoading(false);
-          return;
-        }
-
-        router.push("/admin");
-      } catch (err: unknown) {
-        setError(translateAuthError(err));
+      if (res.error) {
+        setError(translateAuthError(res.error.message || res.error.statusText));
         setLoading(false);
+        return;
       }
-      return;
-    }
 
-    const admin = getMockAdminByEmail(email.trim());
-    if (!admin || admin.password !== password) {
-      setError("Credenciais inválidas. Verifique o e-mail e senha.");
+      router.push("/admin");
+    } catch (err: unknown) {
+      setError(translateAuthError(err));
       setLoading(false);
-      return;
     }
-
-    login?.(admin);
-    router.push("/admin");
   };
 
   return (

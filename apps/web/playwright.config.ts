@@ -3,6 +3,7 @@ import ageVerifiedState from "./tests/storage/age-verified.json" with { type: "j
 
 const port = Number(process.env.PORT ?? 3000);
 const baseURL = `http://localhost:${port}`;
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001";
 const storageState = {
   ...ageVerifiedState,
   origins: ageVerifiedState.origins.map((entry) => ({ ...entry, origin: baseURL })),
@@ -10,6 +11,7 @@ const storageState = {
 
 export default defineConfig({
   testDir: "./tests",
+  globalSetup: "./tests/global-setup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -33,10 +35,22 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: {
-    command: `npm run dev -- --port ${port}`,
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: [
+    {
+      command: "npm run dev:api -w apps/api",
+      url: `${apiUrl}/healthz`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+    {
+      command: `npm run dev -- --port ${port}`,
+      url: baseURL,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+      env: {
+        PORT: String(port),
+        NEXT_PUBLIC_API_URL: apiUrl,
+      },
+    },
+  ],
 });

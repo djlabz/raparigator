@@ -10,10 +10,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { readRedirectTarget } from "../../lib/auth-return";
-import { useAuthSession } from "../../lib/auth-session";
-import { mockUsers } from "../../lib/mock-users";
 import { authClient } from "@/lib/api/auth-client";
-import { isApiDataSource } from "@/lib/data-source";
 import { translateAuthError } from "@/lib/auth-errors";
 
 const loginHeroImage = {
@@ -23,7 +20,6 @@ const loginHeroImage = {
 
 export function LoginScreen() {
   const router = useRouter();
-  const { setRole } = useAuthSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -32,40 +28,25 @@ export function LoginScreen() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    setSubmitting(true);
 
-    if (isApiDataSource()) {
-      setSubmitting(true);
-      try {
-        const res = await authClient.signIn.email({
-          email: email.trim(),
-          password,
-        });
+    try {
+      const res = await authClient.signIn.email({
+        email: email.trim(),
+        password,
+      });
 
-        if (res.error) {
-          setError(translateAuthError(res.error.message || res.error.statusText));
-          setSubmitting(false);
-          return;
-        }
-
-        router.push(readRedirectTarget());
-      } catch (err: unknown) {
-        setError(translateAuthError(err));
+      if (res.error) {
+        setError(translateAuthError(res.error.message || res.error.statusText));
         setSubmitting(false);
+        return;
       }
-      return;
+
+      router.push(readRedirectTarget());
+    } catch (err: unknown) {
+      setError(translateAuthError(err));
+      setSubmitting(false);
     }
-
-    const user = mockUsers.find(
-      (item) => item.email === email.trim() && item.password === password,
-    );
-
-    if (!user) {
-      setError("Credenciais inválidas. Verifique seu e-mail e senha.");
-      return;
-    }
-
-    setRole?.(user.role);
-    router.push(readRedirectTarget());
   };
 
   return (

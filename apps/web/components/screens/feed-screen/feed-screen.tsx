@@ -424,7 +424,14 @@ export function FeedScreen() {
                 )}
 
                 {visibleStandardAds.length > 0 && (
-                  <div ref={standardSectionRef} data-feed-standard-section className="relative">
+                  <div
+                    ref={standardSectionRef}
+                    data-feed-standard-section
+                    className={cn(
+                      "relative",
+                      premiumAds.length > 0 && "min-h-[calc(100vh-5rem)] pb-24",
+                    )}
+                  >
                     <FeedSectionDivider
                       variant="standard"
                       hasPremiumSection={premiumAds.length > 0}

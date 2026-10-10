@@ -6,7 +6,7 @@ test.describe("Detalhe do anúncio", () => {
   test("visitante vê perfil premium e CTA de login", async ({ page }) => {
     await page.goto(`/anuncio/${ads.premiumSlug}`);
 
-    await expect(page.getByText(ads.premiumName).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: ads.premiumName })).toBeVisible();
     await expect(page.getByText("Entrar para Interagir").first()).toBeVisible();
     await expect(page.getByRole("button", { name: "WhatsApp" }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Telegram" }).first()).toBeVisible();
@@ -15,7 +15,7 @@ test.describe("Detalhe do anúncio", () => {
   test("alias /p aponta para o mesmo anúncio", async ({ page }) => {
     await page.goto(`/p/${ads.premiumSlug}`);
 
-    await expect(page.getByText(ads.premiumName).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: ads.premiumName })).toBeVisible();
   });
 
   test("cliente logado vê CTA para iniciar chat", async ({ page }) => {

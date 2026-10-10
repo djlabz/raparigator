@@ -1,46 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { AuthRole, User } from "@/lib/types";
-import { getMockUserByRole } from "@/lib/mock-users";
-import { USER_ROLE_COOKIE, writeSessionCookie } from "@/lib/session-cookies";
 import { authClient } from "@/lib/api/auth-client";
 import { getApiClient } from "@/lib/api/client";
-import { isApiDataSource } from "@/lib/data-source";
-
-const STORAGE_KEY = "sigillus-user-role";
-
-const listeners = new Set<() => void>();
-
-function isAuthRole(value: string | null): value is AuthRole {
-  return value === "visitor" || value === "cliente" || value === "profissional";
-}
-
-function readStoredRole(): AuthRole {
-  if (typeof window === "undefined") {
-    return "visitor";
-  }
-
-  const storedRole = window.localStorage.getItem(STORAGE_KEY);
-  return isAuthRole(storedRole) ? storedRole : "visitor";
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-function emitChange() {
-  listeners.forEach((listener) => listener());
-}
-
-function setStoredRole(role: AuthRole) {
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(STORAGE_KEY, role);
-  }
-  writeSessionCookie(USER_ROLE_COOKIE, role === "visitor" ? null : role);
-  emitChange();
-}
 
 export function pathRequiresAuth(pathname: string) {
   return (
@@ -51,34 +14,7 @@ export function pathRequiresAuth(pathname: string) {
   );
 }
 
-function useMockAuthSession() {
-  const role = useSyncExternalStore<AuthRole>(subscribe, readStoredRole, () => "visitor");
-
-  const user = useMemo(() => {
-    if (role === "visitor") {
-      return null;
-    }
-    return getMockUserByRole(role);
-  }, [role]);
-
-  return {
-    role,
-    user,
-    isLoggedIn: role !== "visitor",
-    logout: () => {
-      setStoredRole("visitor");
-      if (typeof window === "undefined") {
-        return;
-      }
-      if (pathRequiresAuth(window.location.pathname)) {
-        window.location.href = "/feed";
-      }
-    },
-    setRole: (nextRole: AuthRole) => setStoredRole(nextRole),
-  };
-}
-
-function useApiAuthSession() {
+export function useAuthSession() {
   const session = authClient.useSession();
   const [apiUser, setApiUser] = useState<User | null>(null);
   const sessionUser = session.data?.user;
@@ -136,8 +72,5 @@ function useApiAuthSession() {
         window.location.href = "/feed";
       }
     },
-    setRole: undefined as ((nextRole: AuthRole) => void) | undefined,
   };
 }
-
-export const useAuthSession = isApiDataSource() ? useApiAuthSession : useMockAuthSession;
