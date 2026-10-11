@@ -6,7 +6,7 @@
 
 Desde o início da migração (ADR-008 a ADR-015, tasks T-10 a T-18), o frontend (`apps/web`) operava em modo dual controlado pela variável `NEXT_PUBLIC_DATA_SOURCE=mock|api`. Esse mecanismo permitiu que cada módulo fosse integrado incrementalmente à API TypeScript (`@sigillus/api`) mantendo a suíte de testes E2E Playwright verde a cada PR.
 
-Com a conclusão da Task T-18 (backoffice administrativo), 100% das áreas do sistema (Feed, Catálogos e Anúncios Públicos, Autenticação e Sessão com better-auth, Rascunho de Anúncios, Mídia e Galeria, Chat e Mensagens com SSE, Avaliações e Convites, Notificações, Assinatura Premium e Backoffice Administrativo) possuem implementações completas no servidor conectadas ao banco Postgres via Drizzle ORM e contratos oRPC.
+Com a conclusão da Task T-18 (backoffice administrativo), 100% das áreas do sistema (Feed, Catálogos e Anúncios Públicos, Autenticação e Sessão com better-auth, Rascunho de Anúncios, Mídia e Galeria, Chat e Mensagens com SSE, Avaliações e Convites, Notificações, Assinatura Premium e Backoffice Administrativo) possuem implementações no servidor conectadas ao banco Postgres via Drizzle ORM e contratos oRPC.
 
 Permaneciam no repositório artefatos legados de mock: `mock-data.ts`, `mock-users.ts`, flags e condicionais dual-mode em `data-source.ts`, além da suíte E2E rodando em memória sobre dados sintéticos locais.
 
@@ -17,7 +17,7 @@ Permaneciam no repositório artefatos legados de mock: `mock-data.ts`, `mock-use
 1. **Remoção de Mocks e Fontes Locais**:
    - Exclusão completa de `apps/web/lib/mock-data.ts` e `apps/web/lib/mock-users.ts`.
    - Simplificação de `apps/web/lib/data-source.ts`, mantendo apenas utilitários de URL da API (`getApiUrl()`), com `isApiDataSource()` fixado em `true`.
-   - Remoção de branches de fallback mock em stores e adaptadores (`account-notifications.ts`, `announcement-draft.ts`, `admin-service.ts`, etc.).
+   - Os ramos dual-mode atrás de `isApiDataSource()` (com fallback em `localStorage`) **não** foram removidos nesta etapa: continuaram em 8 arquivos do web como código morto. A remoção completa do dual-mode residual e do próprio `isApiDataSource` só aconteceu na T-47 (PR #71).
    - Remoção de domínios externos fictícios (`picsum.photos`, `images.pexels.com`) de `next.config.ts`, mantendo apenas o host de storage e CDNs homologadas.
 
 2. **Unificação da Suíte E2E contra a API**:
@@ -30,6 +30,6 @@ Permaneciam no repositório artefatos legados de mock: `mock-data.ts`, `mock-use
 ## Consequências
 
 - `grep -r mock-data apps/web` e `grep -r mock-users apps/web` não retornam nenhuma ocorrência.
-- A aplicação web conecta-se 100% à API pelo client oRPC tipado e clientes better-auth.
+- A aplicação web conecta-se à API pelo client oRPC tipado e clientes better-auth. Até a T-47 (PR #71) ainda havia ramos dual-mode inalcançáveis atrás de `isApiDataSource()`; desde então o web fala só com a API.
 - A suíte completa de testes E2E Playwright (71 testes em Chromium) passa 100% verde executando requisições reais contra a API e o Postgres.
 - A Fase 1 do roteiro de desenvolvimento está concluída com sucesso.

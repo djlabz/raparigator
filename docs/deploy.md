@@ -103,31 +103,39 @@ Preencha os valores obrigatórios:
 
 ## 5. Subindo a Aplicação
 
-1. Construa as imagens e inicie os containers em segundo plano:
+Todo comando `docker compose` deste guia passa `--env-file .env.prod`. Sem ele o Compose não interpola as variáveis obrigatórias do `compose.prod.yaml` e falha antes de executar qualquer coisa (`required variable POSTGRES_PASSWORD is missing a value`), inclusive em `ps`, `logs` e `exec`.
+
+1. Rode o pré-voo, que reprova placeholders `CHANGE_ME`, URLs fora de `https://` e segredos curtos:
+
+   ```bash
+   bash scripts/check-prod-env.sh .env.prod
+   ```
+
+2. Construa as imagens e inicie os containers em segundo plano:
 
    ```bash
    docker compose -f compose.prod.yaml --env-file .env.prod up -d --build
    ```
 
-2. Verifique o status dos serviços e healthchecks:
+3. Verifique o status dos serviços e healthchecks:
 
    ```bash
-   docker compose -f compose.prod.yaml ps
+   docker compose -f compose.prod.yaml --env-file .env.prod ps
    ```
 
-3. Verifique se as migrations foram aplicadas no boot:
+4. Verifique se as migrations foram aplicadas no boot:
 
    ```bash
-   docker compose -f compose.prod.yaml logs api | grep "migrations aplicadas no boot"
+   docker compose -f compose.prod.yaml --env-file .env.prod logs api | grep "migrations aplicadas no boot"
    ```
 
-4. Teste os endpoints de integridade da API:
+5. Teste os endpoints de integridade da API:
    ```bash
    curl -i https://api.seudominio.com/healthz
-   # Resposta esperada: HTTP/1.1 200 OK {"status":"healthy", ...}
+   # Resposta esperada: HTTP/1.1 200 OK {"status":"ok","db":"up"}
 
    curl -i https://api.seudominio.com/readyz
-   # Resposta esperada: HTTP/1.1 200 OK {"status":"ready", ...}
+   # Resposta esperada: HTTP/1.1 200 OK {"status":"ready"}
    ```
 
 ---
@@ -137,7 +145,7 @@ Preencha os valores obrigatórios:
 Após a subida inicial da stack, execute o comando CLI dentro do container da API para criar o administrador do backoffice:
 
 ```bash
-docker compose -f compose.prod.yaml exec api \
+docker compose -f compose.prod.yaml --env-file .env.prod exec api \
   node dist/create-admin.js \
   --email="admin@seudominio.com" \
   --name="Administrador Sigillus" \

@@ -1,6 +1,6 @@
 # ADR-006 — Deploy: agnóstico de provedor
 
-- Status: aceito (2026-08-15)
+- Status: aceito (2026-08-15) · **Parcialmente substituída pela [ADR-007](007-infra-escolhida.md)** (hospedagem em VPS única com Docker Compose, Postgres e MinIO self-hosted)
 
 ## Contexto
 
@@ -32,4 +32,4 @@ A infraestrutura de destino não está definida. O provedor de pagamentos (PSP) 
 ## Consequências
 
 - Nenhum arquivo do repo precisa mudar quando o provedor for escolhido — só env e pipeline de deploy.
-- Enquanto o PSP não existe, o fluxo premium roda com o provider fake atrás de `BILLING_PROVIDER=fake`, o que **nunca** deve ser o valor em produção (a API recusa subir com `NODE_ENV=production` e `BILLING_PROVIDER=fake`).
+- Enquanto o PSP não existe, o fluxo premium roda com o provider fake atrás de `BILLING_PROVIDER=fake`. Em produção a API só aceita `BILLING_PROVIDER=fake` junto com `BILLING_FAKE_ACKNOWLEDGED=true` (`apps/api/src/config.ts`); sem a confirmação, recusa subir. Pela decisão D-01 o lançamento é gratuito e o `compose.prod.yaml` sobe com o fake confirmado (`BILLING_FAKE_ACKNOWLEDGED` padrão `true`); com o fake em produção o billing fica desligado (`billingEnabled=false` no `config.ts`) e o checkout escondido (`PREMIUM_CHECKOUT_ENABLED=false`) até existir PSP.
