@@ -58,17 +58,11 @@ test.describe("Avaliação por convite", () => {
       AD_SLUG,
       credentials.profissional,
     );
-    const conversations = await professional.api.chat.listConversations();
-    const lastMessageAt = conversations.find(
-      (conversation) => conversation.id === conversationId,
-    )?.lastMessageAt;
-    expect(lastMessageAt).toBeTruthy();
-
     try {
       await seedUserRole(page, "profissional");
       await page.goto("/profissional/dashboard?tab=Contatos");
 
-      const row = page.getByText(`Último contato às ${lastMessageAt}`).locator("xpath=../..");
+      const row = page.getByText(client.alias, { exact: true }).locator("xpath=../..");
       await expect(row).toBeVisible();
 
       await row.getByRole("button", { name: "Convidar para avaliar" }).click();

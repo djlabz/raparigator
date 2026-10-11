@@ -52,13 +52,19 @@ export async function createPublishedProfile(
 
 export async function createChatFixture(
   harness: TestHarness,
-  options: { tag?: string; adTier?: "premium" | "normal"; chatEvents?: ChatEventBus } = {},
+  options: {
+    tag?: string;
+    adTier?: "premium" | "normal";
+    chatEvents?: ChatEventBus;
+    clientAlias?: string;
+  } = {},
 ): Promise<ChatFixture> {
   const tag = options.tag ?? newId().slice(0, 8);
   const clientUser = await signUp(harness, {
     email: `cli-${tag}@sigillus.dev`,
     name: "Carlos Cliente",
     role: "cliente",
+    alias: options.clientAlias,
   });
   const proUser = await signUp(harness, {
     email: `pro-${tag}@sigillus.dev`,

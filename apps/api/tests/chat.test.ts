@@ -304,6 +304,46 @@ describe("chat", () => {
     });
   });
 
+  it("profissional vê o apelido de cadastro do cliente, nunca o nome real", async () => {
+    const fx = await createChatFixture(harness, { clientAlias: "Lobo Discreto" });
+
+    const [proView] = await fx.chat.listConversations(fx.professional);
+    expect(proView!.clientAlias).toBe("Lobo Discreto");
+    expect(proView!.clientAlias).not.toBe("Carlos Cliente");
+    expect(proView!.currentUserAlias).toBeUndefined();
+
+    const [clientView] = await fx.chat.listConversations(fx.client);
+    expect(clientView!.clientAlias).toBeUndefined();
+    expect(clientView!.currentUserAlias).toBeUndefined();
+    expect(clientView!.contactName).toBe("Luna Teste");
+  });
+
+  it("apelido que o cliente define na conversa prevalece sobre o do cadastro", async () => {
+    const fx = await createChatFixture(harness, {
+      adTier: "premium",
+      clientAlias: "Lobo Discreto",
+    });
+    await fx.chat.updateAlias(fx.client, { conversationId: fx.conversationId, alias: "Anônimo" });
+    await fx.chat.updateAlias(fx.professional, {
+      conversationId: fx.conversationId,
+      alias: "Apelido da Pro",
+    });
+
+    const [proView] = await fx.chat.listConversations(fx.professional);
+    expect(proView!.clientAlias).toBe("Anônimo");
+    expect(proView!.currentUserAlias).toBe("Apelido da Pro");
+
+    const [clientView] = await fx.chat.listConversations(fx.client);
+    expect(clientView!.clientAlias).toBeUndefined();
+    expect(clientView!.currentUserAlias).toBe("Anônimo");
+  });
+
+  it("cliente sem apelido não expõe nome real no campo de apelido", async () => {
+    const fx = await createChatFixture(harness);
+    const [proView] = await fx.chat.listConversations(fx.professional);
+    expect(proView!.clientAlias).toBeUndefined();
+  });
+
   it("evento message.created chega ao outro participante e ao subscribe", async () => {
     const bus = createMemoryChatEventBus();
     const fx = await createChatFixture(harness, { chatEvents: bus });

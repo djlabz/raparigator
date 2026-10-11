@@ -51,13 +51,17 @@ async function authenticate(path: string, data: Record<string, string>): Promise
   }
 }
 
-export function signUpDisposableClient(prefix = "cliente") {
-  return authenticate("/api/auth/sign-up/email", {
-    email: `${prefix}-${uniqueSuffix()}@sigillus.dev`,
+export async function signUpDisposableClient(prefix = "cliente") {
+  const suffix = uniqueSuffix();
+  const alias = `Apelido ${suffix}`;
+  const session = await authenticate("/api/auth/sign-up/email", {
+    email: `${prefix}-${suffix}@sigillus.dev`,
     password: disposablePassword,
     name: "Cliente Descartável",
     role: "cliente",
+    alias,
   });
+  return { ...session, alias };
 }
 
 export function signInViaApi(user: { email: string; password: string }) {
