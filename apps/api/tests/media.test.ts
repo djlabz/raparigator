@@ -5,6 +5,7 @@ import { MEDIA_MAX_IMAGE_BYTES } from "@sigillus/contracts";
 import { professionalProfiles } from "../src/db/schema";
 import { createAnnouncementsService } from "../src/modules/announcements";
 import { createMediaService, registerMediaJobs } from "../src/modules/media";
+import { stripImageMetadata } from "../src/modules/media/jobs";
 import { createTestHarness } from "./helpers/app";
 import { signUp } from "./helpers/auth";
 
@@ -45,6 +46,14 @@ async function pngBuffer(width = 640, height = 400) {
   })
     .png()
     .toBuffer();
+}
+
+function hasGpsIfdTag(exif: Buffer | undefined) {
+  if (!exif) {
+    return false;
+  }
+  const littleEndian = exif[6] === 0x49;
+  return exif.includes(Buffer.from(littleEndian ? [0x25, 0x88] : [0x88, 0x25]));
 }
 
 async function uploadReadyImage(userId: string, purpose: "gallery" | "profile" | "chat") {
@@ -299,6 +308,108 @@ describe("media", () => {
     const asset = await svc.completeUpload(userId, created.asset.id);
     expect(asset.status).toBe("failed");
     expect(asset.url).toBeNull();
+  });
+
+  it("original sai sem EXIF/GPS e com a orientação aplicada", async () => {
+    await registerMediaJobs({
+      db: harness.db,
+      storage: harness.storage,
+      jobs: harness.jobs,
+      logger: harness.deps.logger,
+    });
+    const { userId } = await professionalWithProfile("pro@test.dev");
+    const jpeg = await sharp({
+      create: { width: 640, height: 400, channels: 3, background: { r: 30, g: 120, b: 200 } },
+    })
+      .jpeg()
+      .withMetadata({ orientation: 6 })
+      .withExifMerge({
+        IFD0: { Make: "Celular", Model: "Teste" },
+        IFD3: {
+          GPSLatitudeRef: "S",
+          GPSLatitude: "23/1 33/1 0/1",
+          GPSLongitudeRef: "W",
+          GPSLongitude: "46/1 38/1 0/1",
+        },
+      })
+      .toBuffer();
+    const input = await sharp(jpeg).metadata();
+    expect(input.orientation).toBe(6);
+    expect(hasGpsIfdTag(input.exif)).toBe(true);
+
+    const svc = mediaService();
+    const created = await svc.createUpload(userId, {
+      kind: "image",
+      purpose: "gallery",
+      contentType: "image/jpeg",
+      sizeBytes: jpeg.byteLength,
+    });
+    const storageKey = `public/media/${userId}/${created.asset.id}.jpg`;
+    await harness.storage.putObject(storageKey, new Uint8Array(jpeg), "image/jpeg");
+    const asset = await svc.completeUpload(userId, created.asset.id);
+
+    expect(asset.status).toBe("ready");
+    expect(asset.width).toBe(400);
+    expect(asset.height).toBe(640);
+    const stored = harness.storage.objects.get(storageKey);
+    expect(stored?.contentType).toBe("image/jpeg");
+    const output = await sharp(Buffer.from(stored!.body)).metadata();
+    expect(output.format).toBe("jpeg");
+    expect(output.exif).toBeUndefined();
+    expect(output.orientation).toBeUndefined();
+    expect(output.width).toBe(400);
+    expect(output.height).toBe(640);
+    expect(asset.sizeBytes).toBe(stored!.body.byteLength);
+    const thumb = harness.storage.objects.get(`${storageKey}.thumb.webp`);
+    const thumbMeta = await sharp(Buffer.from(thumb!.body)).metadata();
+    expect(thumbMeta.exif).toBeUndefined();
+    expect(thumbMeta.width).toBe(400);
+    expect(thumbMeta.height).toBe(640);
+  });
+
+  it("imagem em formato sem limpeza suportada fica failed", async () => {
+    await registerMediaJobs({
+      db: harness.db,
+      storage: harness.storage,
+      jobs: harness.jobs,
+      logger: harness.deps.logger,
+    });
+    const { userId } = await professionalWithProfile("pro@test.dev");
+    const png = await pngBuffer();
+    const svc = mediaService();
+    const created = await svc.createUpload(userId, {
+      kind: "image",
+      purpose: "gallery",
+      contentType: "image/heic",
+      sizeBytes: png.byteLength,
+    });
+    await harness.storage.putObject(
+      `public/media/${userId}/${created.asset.id}.heic`,
+      new Uint8Array(png),
+      "image/heic",
+    );
+    const asset = await svc.completeUpload(userId, created.asset.id);
+    expect(asset.status).toBe("failed");
+    expect(asset.url).toBeNull();
+  });
+
+  it("stripImageMetadata mantém o formato do contentType e recusa os demais", async () => {
+    const png = await pngBuffer(64, 32);
+    for (const [contentType, format] of [
+      ["image/jpeg", "jpeg"],
+      ["image/png", "png"],
+      ["image/webp", "webp"],
+      ["image/avif", "heif"],
+      ["image/gif", "gif"],
+    ] as const) {
+      const result = await stripImageMetadata(new Uint8Array(png), contentType);
+      const meta = await sharp(Buffer.from(result.data)).metadata();
+      expect(meta.format).toBe(format);
+      expect(meta.exif).toBeUndefined();
+      expect([result.width, result.height]).toEqual([64, 32]);
+    }
+    await expect(stripImageMetadata(new Uint8Array(png), "image/heic")).rejects.toThrow();
+    await expect(stripImageMetadata(new Uint8Array(png), "image/heif")).rejects.toThrow();
   });
 
   it("vídeo fica ready sem thumbnail", async () => {
