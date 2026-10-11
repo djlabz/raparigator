@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
@@ -17,7 +17,6 @@ import {
   chromeBelowHeaderStickyTop,
 } from "@/lib/chrome-styles";
 import { useAuthSession } from "@/lib/auth-session";
-import { useIsTabActive } from "@/components/layout/tab-activity";
 import { getNavigationItems } from "@/lib/navigation";
 import { useShellChrome } from "@/components/layout/shell-chrome";
 import { cn } from "@/lib/utils";
@@ -124,41 +123,12 @@ export function FeedScreen() {
   });
 
   const { role } = useAuthSession();
-  const isTabActive = useIsTabActive();
   const { hideDesktopNav } = useShellChrome();
   const hasDesktopNav = !hideDesktopNav && getNavigationItems(role).length > 0;
-  const filtersAnchorRef = useRef<HTMLDivElement>(null);
   const filtersScrollRef = useRef<HTMLDivElement | null>(null);
   const filtersScrollTopRef = useRef(0);
   const filtersUserScrollAllowedRef = useRef(false);
   const filtersUserScrollTimerRef = useRef(0);
-  const [filtersFixedBox, setFiltersFixedBox] = useState<{ left: number; width: number } | null>(
-    null,
-  );
-
-  useLayoutEffect(() => {
-    const anchor = filtersAnchorRef.current;
-    if (!anchor || !isTabActive) {
-      return;
-    }
-
-    const sync = () => {
-      const rect = anchor.getBoundingClientRect();
-      if (rect.width <= 0) {
-        return;
-      }
-      setFiltersFixedBox({ left: rect.left, width: rect.width });
-    };
-
-    sync();
-    const observer = new ResizeObserver(sync);
-    observer.observe(anchor);
-    window.addEventListener("resize", sync);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", sync);
-    };
-  }, [isTabActive]);
 
   const setFiltersScrollNode = useCallback((node: HTMLDivElement | null) => {
     const previous = filtersScrollRef.current as
@@ -307,28 +277,16 @@ export function FeedScreen() {
       <FeedMobileTitleFlight />
       <div className="relative space-y-6 select-none">
         <section className={FEED_CONTENT_GRID_CLASS}>
-          <div
-            ref={filtersAnchorRef}
-            className={cn(
-              "relative hidden lg:block",
-              FEED_SIDE_COLUMN_CLASS,
-              hasDesktopNav ? chromeBelowDesktopNavStickyMinH : chromeBelowHeaderStickyMinH,
-            )}
-          >
+          <div className={cn("relative hidden lg:block", FEED_SIDE_COLUMN_CLASS)}>
             <aside
               data-feed-filters-panel
               className={cn(
                 "z-10 flex h-fit w-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm",
                 FEED_SIDE_COLUMN_CLASS,
-                "lg:fixed",
+                "self-start lg:sticky",
                 hasDesktopNav ? chromeBelowDesktopNavStickyTop : chromeBelowHeaderStickyTop,
                 hasDesktopNav ? chromeBelowDesktopNavStickyMaxH : chromeBelowHeaderStickyMaxH,
               )}
-              style={
-                filtersFixedBox
-                  ? { left: filtersFixedBox.left, width: filtersFixedBox.width }
-                  : undefined
-              }
             >
               <div className="flex shrink-0 items-center justify-between border-b border-zinc-100 bg-zinc-50 p-5">
                 <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-900">
