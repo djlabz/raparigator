@@ -30,6 +30,18 @@ test.describe("Admin", () => {
     await expect(page.getByRole("link", { name: "Denúncias" })).toBeVisible();
   });
 
+  test("sessão que demora a carregar no navegador não manda para o login", async ({ page }) => {
+    await page.route("**/api/admin-auth/get-session**", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await route.continue();
+    });
+    await seedAdminSession(page);
+    await page.goto("/admin");
+
+    await expect(page.getByText("Total de Clientes").first()).toBeVisible();
+    await expect(page).toHaveURL(/\/admin$/);
+  });
+
   test("sem sessão redireciona para login admin", async ({ page }) => {
     await page.goto("/admin");
     await page.waitForURL(/\/admin\/login/);
