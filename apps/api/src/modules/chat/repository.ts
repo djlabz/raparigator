@@ -28,7 +28,7 @@ export type ConversationProfile = {
   services: string[];
 };
 
-export type ConversationUser = { id: string; name: string; alias: string | null };
+export type ConversationUser = { id: string; alias: string | null; deleted: boolean };
 
 export type ConversationContext = {
   conversation: ConversationRow;
@@ -84,13 +84,13 @@ export function createChatRepository(db: Database) {
         profile: profileColumns,
         clientUser: {
           id: sql<string>`coalesce(${clientUsers.id}, ${conversations.clientUserId})`,
-          name: sql<string>`coalesce(${clientUsers.name}, 'Conta encerrada')`,
           alias: sql<string | null>`${clientUsers.alias}`,
+          deleted: sql<boolean>`${clientUsers.id} is null`,
         },
         professionalUser: {
           id: sql<string>`coalesce(${professionalUsers.id}, ${conversations.professionalUserId})`,
-          name: sql<string>`coalesce(${professionalUsers.name}, 'Conta encerrada')`,
           alias: sql<string | null>`${professionalUsers.alias}`,
+          deleted: sql<boolean>`${professionalUsers.id} is null`,
         },
         clientParticipant: clientParticipants,
         professionalParticipant: professionalParticipants,

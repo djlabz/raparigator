@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
 import type { ChatEvent } from "@sigillus/contracts";
+import { CLIENT_ALIAS_PATTERN } from "@sigillus/domain";
+import { users } from "../src/db/schema";
 import { createMemoryChatEventBus } from "../src/lib/chat-events";
 import type { ChatActor } from "../src/modules/chat";
 import { createTestHarness } from "./helpers/app";
@@ -7,6 +10,14 @@ import { signUp } from "./helpers/auth";
 import { createChatAsset, createChatFixture, nextChatEvent } from "./helpers/conversations";
 
 const harness = createTestHarness();
+
+async function aliasOf(userId: string) {
+  const [row] = await harness.db
+    .select({ alias: users.alias })
+    .from(users)
+    .where(eq(users.id, userId));
+  return row?.alias ?? null;
+}
 
 describe("chat", () => {
   it("ensureConversationForAd é idempotente e restaura conversa removida da caixa", async () => {
@@ -51,13 +62,15 @@ describe("chat", () => {
     });
     expect(sent.message.from).toBe("me");
     expect(sent.message.status).toBe("sent");
-    expect(sent.message.senderDisplayName).toBe("Carlos Cliente");
+    const generatedAlias = await aliasOf(fx.client.id);
+    expect(generatedAlias).toMatch(CLIENT_ALIAS_PATTERN);
+    expect(sent.message.senderDisplayName).toBe(generatedAlias);
 
     const proInbox = await fx.chat.listConversations(fx.professional);
     expect(proInbox).toHaveLength(1);
     expect(proInbox[0]!.lastMessage).toBe("Olá!");
     expect(proInbox[0]!.unread).toBe(1);
-    expect(proInbox[0]!.contactName).toBe("Carlos Cliente");
+    expect(proInbox[0]!.contactName).toBe(generatedAlias);
     expect(proInbox[0]!.adSlug).toBe(fx.slug);
 
     const clientInbox = await fx.chat.listConversations(fx.client);
@@ -338,10 +351,53 @@ describe("chat", () => {
     expect(clientView!.currentUserAlias).toBe("Anônimo");
   });
 
-  it("cliente sem apelido não expõe nome real no campo de apelido", async () => {
+  it("anunciante nunca vê o name do cliente sem apelido", async () => {
+    const fx = await createChatFixture(harness);
+    const sent = await fx.chat.sendText(fx.client, {
+      conversationId: fx.conversationId,
+      content: "Olá, vi seu anúncio.",
+    });
+    expect(sent.message.senderDisplayName).not.toContain("Carlos Cliente");
+
+    expect(
+      await fx.chat.report(fx.professional, {
+        conversationId: fx.conversationId,
+        type: "harassment",
+        reason: "Mensagens ofensivas",
+      }),
+    ).toEqual({ ok: true });
+
+    const proInbox = await fx.chat.listConversations(fx.professional);
+    expect(proInbox).toHaveLength(1);
+    expect(JSON.stringify(proInbox)).not.toContain("Carlos Cliente");
+
+    const proMessages = await fx.chat.listMessages(fx.professional, {
+      conversationId: fx.conversationId,
+      limit: 20,
+    });
+    expect(proMessages.items.length).toBeGreaterThan(0);
+    for (const message of proMessages.items) {
+      expect(message.senderDisplayName).not.toContain("Carlos Cliente");
+    }
+
+    const reportRows = await harness.db.query.reports.findMany();
+    expect(reportRows).toHaveLength(1);
+    expect(reportRows[0]!.reportedName).not.toContain("Carlos Cliente");
+    expect(reportRows[0]!.reporterName).not.toContain("Paula Pro");
+
+    await harness.db.delete(users).where(eq(users.id, fx.client.id));
+    const afterDeletion = await fx.chat.listConversations(fx.professional);
+    expect(afterDeletion[0]!.contactName).toBe("Conta encerrada");
+    expect(JSON.stringify(afterDeletion)).not.toContain("Carlos Cliente");
+  });
+
+  it("cliente sem apelido aparece com o apelido gerado, nunca com o nome real", async () => {
     const fx = await createChatFixture(harness);
     const [proView] = await fx.chat.listConversations(fx.professional);
-    expect(proView!.clientAlias).toBeUndefined();
+    const generatedAlias = await aliasOf(fx.client.id);
+    expect(generatedAlias).toMatch(CLIENT_ALIAS_PATTERN);
+    expect(proView!.clientAlias).toBe(generatedAlias);
+    expect(proView!.contactName).toBe(generatedAlias);
   });
 
   it("evento message.created chega ao outro participante e ao subscribe", async () => {

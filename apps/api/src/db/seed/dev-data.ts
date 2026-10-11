@@ -23,8 +23,10 @@ import {
 import devData from "./fixtures/dev-data.json" with { type: "json" };
 import { DEV_USERS, upsertUserWithPassword } from "./users";
 
+type SeedAd = ProfessionalAd & { displayName: string };
+
 type DevData = {
-  ads: ProfessionalAd[];
+  ads: SeedAd[];
   reviews: Review[];
   mediaHighlights: MediaHighlight[];
   mockClients: ClientAccount[];
@@ -49,6 +51,7 @@ export async function seedDevData(db: Database) {
       id: index === 0 ? DEV_USERS[1]!.id : `pro-${ad.slug}`,
       role: "profissional",
       fullName: ad.displayName,
+      alias: ad.artisticName,
       email,
       password: DEV_PROFESSIONAL_PASSWORD,
       city: `${ad.city}, ${ad.state}`,
@@ -65,7 +68,7 @@ export async function seedDevData(db: Database) {
       id: profileId,
       userId,
       slug: ad.slug,
-      displayName: ad.displayName,
+      displayName: ad.artisticName,
       artisticName: ad.artisticName,
       city: ad.city,
       state: ad.state,

@@ -4,7 +4,6 @@ import { buildInitialState } from "@sigillus/domain";
 export function emptyDraft(): AnnouncementDraftState {
   return buildInitialState({
     slug: "x",
-    displayName: "X",
     artisticName: "X",
     city: "",
     state: "",

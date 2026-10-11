@@ -37,7 +37,6 @@ export function toProfessionalAd(row: ProfileRow, media: ProfileImages): Profess
   return {
     id: row.id,
     slug: row.slug,
-    displayName: row.displayName,
     artisticName: row.artisticName,
     city: row.city,
     state: row.state,
@@ -81,7 +80,6 @@ export function toFeedAdSummary(row: ProfileRow, media: ProfileImages): FeedAdSu
   return {
     id: row.id,
     slug: row.slug,
-    displayName: row.displayName,
     artisticName: row.artisticName,
     city: row.city,
     state: row.state,

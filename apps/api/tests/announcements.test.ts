@@ -17,9 +17,9 @@ function service() {
   });
 }
 
-async function professional(email: string, name = "Pro Teste") {
-  const user = await signUp(harness, { email, role: "profissional", name });
-  return { id: user.userId, name };
+async function professional(email: string, name = "Pro Teste", alias = name) {
+  const user = await signUp(harness, { email, role: "profissional", name, alias });
+  return { id: user.userId, name, alias };
 }
 
 async function profileOf(userId: string) {
@@ -43,6 +43,28 @@ describe("announcements", () => {
     expect(result.tips).toEqual([]);
     const again = await svc.getMine(owner);
     expect(again.ad?.id).toBe(result.ad?.id);
+  });
+
+  it("slug e displayName vêm do nome artístico, nunca do nome civil", async () => {
+    const owner = await professional("pro-civil@test.dev", "Nome Civil Reservado", "Ana Clara");
+    const result = await service().getMine(owner);
+    expect(result.ad?.slug).toMatch(/^ana-clara-[0-9a-f]{6}$/);
+    expect(JSON.stringify(result)).not.toContain("Nome Civil Reservado");
+    expect((await profileOf(owner.id)).displayName).toBe("Ana Clara");
+  });
+
+  it("sem nome artístico o perfil nasce com displayName vazio e slug perfil-<id>", async () => {
+    const user = await signUp(harness, {
+      email: "pro-sem-alias@test.dev",
+      role: "profissional",
+      name: "Nome Civil Reservado",
+    });
+    const result = await service().getMine({ id: user.userId, name: "Nome Civil Reservado" });
+    expect(result.ad?.slug).toMatch(/^perfil-[0-9a-f]{6}$/);
+    expect(JSON.stringify(result)).not.toContain("Nome Civil Reservado");
+    const profile = await profileOf(user.userId);
+    expect(profile.displayName).toBe("");
+    expect(profile.slug).not.toContain("nome-civil");
   });
 
   it("cada profissional só enxerga e edita o próprio perfil", async () => {

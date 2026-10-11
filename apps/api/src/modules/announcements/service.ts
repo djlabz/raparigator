@@ -38,7 +38,7 @@ export type AnnouncementsServiceDeps = {
 
 export type AnnouncementsService = ReturnType<typeof createAnnouncementsService>;
 
-export type AnnouncementOwner = { id: string; name: string };
+export type AnnouncementOwner = { id: string; name: string; alias?: string | null };
 
 type ProfileValues = Partial<typeof professionalProfiles.$inferInsert>;
 
@@ -160,8 +160,8 @@ export function draftToProfileValues(draft: AnnouncementDraftState): ProfileValu
 export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
   const { db, profiles, jobs, logger } = deps;
 
-  async function uniqueSlug(name: string): Promise<string> {
-    const base = slugify(name) || "perfil";
+  async function uniqueSlug(artisticName: string): Promise<string> {
+    const base = slugify(artisticName) || "perfil";
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const candidate = `${base}-${newId().slice(0, 6)}`;
       if (!(await profiles.findBySlug(candidate))) {
@@ -176,11 +176,12 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
     if (existing) {
       return existing;
     }
+    const artisticName = owner.alias?.trim() ?? "";
     const created = await profiles.insert({
       id: newId(),
       userId: owner.id,
-      slug: await uniqueSlug(owner.name),
-      displayName: owner.name,
+      slug: await uniqueSlug(artisticName),
+      displayName: artisticName,
       verificationStatus: "pending_review",
       listingStatus: "Pausado",
     });

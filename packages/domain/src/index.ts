@@ -7,3 +7,4 @@ export * from "./review-gate";
 export * from "./identity";
 export * from "./catalogs";
 export * from "./announcement-draft";
+export * from "./client-alias";

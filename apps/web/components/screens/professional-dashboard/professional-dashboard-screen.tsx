@@ -138,7 +138,6 @@ export function ProfessionalDashboardScreen() {
   const fallbackAd: ProfessionalAd = {
     id: "meu-perfil",
     slug: "meu-perfil",
-    displayName: "Meu Perfil",
     artisticName: "Meu Perfil",
     city: "São Paulo",
     state: "SP",
