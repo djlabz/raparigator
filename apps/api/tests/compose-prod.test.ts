@@ -23,6 +23,7 @@ const validEnv: Record<string, string> = {
   CORS_ORIGINS: "https://app.example.com",
   COOKIE_DOMAIN: ".example.com",
   NEXT_PUBLIC_API_URL: "https://api.example.com",
+  NEXT_PUBLIC_MEDIA_URL: "https://media.example.com/sigillus-media",
   AUTH_SECRET: "a".repeat(64),
   BILLING_WEBHOOK_SECRET: "b".repeat(64),
   RESEND_API_KEY: "re_test_fake",
