@@ -322,6 +322,22 @@ Verificado na máquina do Daniel, branch `main` em `462e015`, sem alterações l
   - **Passos:** corrigir ADR-007 linha 59 e acrescentar as emendas da T-40 (portas em loopback, imagem pinada, envs novas) e da T-43 (`S3_PUBLIC_ENDPOINT`, Caddy sem rewrite); nota no topo da ADR-006 "Parcialmente substituída pela ADR-007" e reescrever a linha 35 conforme D-01; ADR-016 com uma linha dizendo que o dual-mode residual foi removido na T-47; `deploy.md` alinhado com o que as T-40/T-43/T-48 já mudaram. Os comandos sem `--env-file` (seção 7) não entram aqui sem o Daniel incluir.
   - **Risco e cobertura:** só documentação. Fazer por último porque depende do texto final das T-40, T-43, T-47 e T-48.
 
+### Bloco D - achados promovidos a task (11/10, pedido do Daniel)
+
+- [ ] **T-50 `minio-init` de produção cria o bucket.**
+  - **Origem:** achado da T-48 (seção 7). O `minio-init` do `compose.prod.yaml` não tem `environment`, mas o entrypoint usa `$${MINIO_ROOT_USER}`, `$${MINIO_ROOT_PASSWORD}` e `$${S3_BUCKET}` do próprio container, que ficam vazios: `Unable to make bucket local/sigillus-media. Access Denied`. Em produção o bucket e a leitura pública de `public/` nunca são criados. O `compose.yaml` de dev não tem o bug (valores fixos).
+  - **Arquivos permitidos:** `compose.prod.yaml` (só o serviço `minio-init`), `apps/api/tests/compose-prod.test.ts`.
+  - **Fazer:** dar ao `minio-init` um `environment` com `MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-sigillus}`, `MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:?...}` e `S3_BUCKET: ${S3_BUCKET:-sigillus-media}` (as mesmas fontes que o serviço `minio` e a `api` usam), sem mudar o entrypoint.
+  - **Teste que falha antes:** em `compose-prod.test.ts`, o `environment` renderizado do `minio-init` tem `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` e `S3_BUCKET` iguais aos valores do env de teste.
+  - **Pronto quando:** o teste passa e uma execução real do `minio` + `minio-init` do `compose.prod.yaml` (projeto isolado, porta livre) cria o bucket com `public/` legível anonimamente e `private/` negado; descrever no PR.
+
+- [ ] **T-51 `review-invite.spec.ts` idempotente.**
+  - **Origem:** achado da seção 7 (CI do #70 e da `main`). O describe é `serial`; o `:25` consome o convite semeado da `valentina-noir-campinas`; qualquer falha transitória faz o retry rodar o grupo sobre o banco já alterado e o grupo falha nas 3 tentativas.
+  - **Arquivos permitidos:** `apps/web/tests/review-invite.spec.ts`, `apps/web/tests/helpers/*` (helper novo ou estendido para criar dados via API). Código de produto só se o teste revelar bug real (aí parar e descrever antes).
+  - **Fazer:** cada teste que muda estado cria os próprios dados via API (como o `account-deletion.spec.ts` da T-45): cliente descartável, conversa com mensagens dos dois lados com a profissional dona do anúncio, convite aberto. O `:42` usa uma conversa própria em vez de `.first()` sobre dados da seed. Os testes só de leitura (`:10`, `:18`) podem seguir na seed se não dependerem de estado alterado por outro teste. Remover `mode: "serial"` se os testes ficarem independentes.
+  - **Teste que falha antes:** `npx playwright test tests/review-invite.spec.ts --repeat-each=3 --retries=0 --workers=1` logo após `npm run db:seed -w apps/api` falha na `main` (o `:25` passa só na 1ª repetição).
+  - **Pronto quando:** o mesmo comando passa 3/3 sem `db:seed` entre as repetições e também com `--workers=3`; `npm run test:e2e` verde.
+
 ---
 
 ## 5. Decisões pendentes (perguntar ao Daniel, não executar)
@@ -364,4 +380,5 @@ Verificado na máquina do Daniel, branch `main` em `462e015`, sem alterações l
 ## Histórico deste arquivo
 
 - 10/10/2026: criado a partir da análise da `main` em `462e015` (Claude, chat). Aguarda verificação na máquina do Daniel antes da execução.
+- 11/10/2026: T-50 e T-51 criadas a partir dos achados da seção 7, a pedido do Daniel.
 - 10/10/2026: T-39 verificou E1-E9 (seção 2.1), escreveu os planos verificados das T-40 a T-49 (T-44 parada), adicionou P-14 na seção 5 e 4 achados na seção 7 (Claude Code).
