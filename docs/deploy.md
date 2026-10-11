@@ -11,9 +11,11 @@ Este documento descreve o procedimento operacional para colocar a plataforma Sig
   - Mínimo: 4 GB de memória RAM, 2 vCPUs, 40 GB SSD.
   - Recomendado: 8 GB de memória RAM, 4 vCPUs, 80 GB SSD (NVMe).
 - **Softwares instalados:**
-  - Docker Engine (v26+) e Docker Compose (v2.27+).
+  - Docker Engine (v28+) e Docker Compose (v2.27+). Antes da v28, uma porta publicada em `127.0.0.1` ainda pode ser alcançada por máquinas do mesmo segmento de rede.
   - Proxy reverso com TLS automático (ex.: **Caddy** ou **Nginx + Certbot**).
-  - Portas liberadas no firewall/UFW: `80` (HTTP), `443` (HTTPS) e `22` (SSH). As portas `3000`, `4000`, `5432` e `9000` devem ficar vinculadas a `127.0.0.1` ou protegidas pelo firewall.
+  - Portas liberadas no firewall/UFW: `80` (HTTP), `443` (HTTPS) e `22` (SSH).
+  - O UFW **não** protege portas publicadas pelo Docker (o Docker roteia o tráfego antes das regras do UFW). Por isso o `compose.prod.yaml` publica `3000`, `4000` e `9000` só em `127.0.0.1` e não publica o Postgres nem o console do MinIO.
+  - Acesso administrativo: Postgres com `docker compose -f compose.prod.yaml --env-file .env.prod exec postgres psql -U sigillus sigillus`; console do MinIO por túnel SSH até a porta `9001` do container `minio` (IP via `docker inspect`).
 
 ---
 
@@ -79,6 +81,7 @@ Preencha os valores obrigatórios:
 | `WEB_ORIGIN`                | `https://app.seudominio.com`             | Sim         | URL base do Web para validação de CORS e links           |
 | `CORS_ORIGINS`              | `https://app.seudominio.com`             | Sim         | Origens permitidas pela API                              |
 | `COOKIE_DOMAIN`             | `.seudominio.com`                        | Sim         | Permite compartilhamento de sessão entre `app.` e `api.` |
+| `API_ORIGIN`                | `https://api.seudominio.com`             | Sim         | URL pública da API (`baseURL` do better-auth)            |
 | `NEXT_PUBLIC_API_URL`       | `https://api.seudominio.com`             | Sim         | URL pública da API consumida pelo cliente Web            |
 | `S3_PUBLIC_BASE_URL`        | `https://media.seudominio.com`           | Sim         | URL pública para carregar imagens e vídeos               |
 | `S3_ACCESS_KEY_ID`          | `sigillus`                               | Sim         | Chave de acesso do MinIO                                 |
@@ -86,12 +89,14 @@ Preencha os valores obrigatórios:
 | `S3_BUCKET`                 | `sigillus-media`                         | Sim         | Nome do bucket                                           |
 | `BILLING_PROVIDER`          | `fake`                                   | Sim         | Enquanto lançamento for gratuito (ADR-006 / D-01)        |
 | `BILLING_FAKE_ACKNOWLEDGED` | `true`                                   | Sim         | Confirmação explícita de uso do billing gratuito         |
+| `BILLING_WEBHOOK_SECRET`    | `<64-hex-aleatorios>`                    | Sim         | Mínimo 16 caracteres; gere com `openssl rand -hex 32`    |
 | `MAIL_PROVIDER`             | `resend`                                 | Sim         | Provedor de e-mail transacional                          |
 | `RESEND_API_KEY`            | `re_123456789...`                        | Sim         | Chave de API do Resend                                   |
 | `MAIL_FROM`                 | `Sigillus <nao-responda@seudominio.com>` | Sim         | Remetente com domínio autenticado no Resend              |
 | `VERIFICATION_REQUIRED`     | `false`                                  | Sim         | Verificação de contato opcional no lançamento            |
 | `VERIFICATION_DEV_CODES`    | `false`                                  | Sim         | **Obrigatório false** em produção                        |
 | `OPENAPI_DOCS_ENABLED`      | `false`                                  | Sim         | Desativa Swagger/Docs públicos em produção               |
+| `RATE_LIMIT_ENABLED`        | `true`                                   | Sim         | Limita tentativas de login e envio (padrão `true`)       |
 
 ---
 

@@ -6,8 +6,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-sigillus}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}
       POSTGRES_DB: ${POSTGRES_DB:-sigillus}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -17,7 +15,7 @@ services:
       retries: 10
 
   minio:
-    image: cgr.dev/chainguard/minio:latest
+    image: cgr.dev/chainguard/minio@sha256:7df55d002b698e4494a131b848dd553361bbe58b7e19f62d9623c29af1ba9ccf
     user: "0:0"
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -25,8 +23,7 @@ services:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-sigillus}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:?Defina S3_SECRET_ACCESS_KEY no .env}
     ports:
-      - "${MINIO_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+      - "127.0.0.1:${MINIO_PORT:-9000}:9000"
     volumes:
       - minio-data:/data
     healthcheck:
@@ -36,7 +33,7 @@ services:
       retries: 10
 
   minio-init:
-    image: cgr.dev/chainguard/minio:latest
+    image: cgr.dev/chainguard/minio@sha256:7df55d002b698e4494a131b848dd553361bbe58b7e19f62d9623c29af1ba9ccf
     depends_on:
       minio:
         condition: service_healthy
@@ -55,7 +52,7 @@ services:
     image: sigillus-api:latest
     restart: unless-stopped
     ports:
-      - "${API_PORT:-4000}:4000"
+      - "127.0.0.1:${API_PORT:-4000}:4000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -68,6 +65,7 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-sigillus}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sigillus}
       MIGRATE_ON_BOOT: "true"
       AUTH_SECRET: ${AUTH_SECRET:?Defina AUTH_SECRET no .env}
+      API_ORIGIN: ${API_ORIGIN:?Defina API_ORIGIN no .env}
       WEB_ORIGIN: ${WEB_ORIGIN:?Defina WEB_ORIGIN no .env}
       CORS_ORIGINS: ${CORS_ORIGINS:?Defina CORS_ORIGINS no .env}
       COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
@@ -80,7 +78,7 @@ services:
       S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-true}
       BILLING_PROVIDER: ${BILLING_PROVIDER:-fake}
       BILLING_FAKE_ACKNOWLEDGED: ${BILLING_FAKE_ACKNOWLEDGED:-true}
-      BILLING_WEBHOOK_SECRET: ${BILLING_WEBHOOK_SECRET:-}
+      BILLING_WEBHOOK_SECRET: ${BILLING_WEBHOOK_SECRET:?Defina BILLING_WEBHOOK_SECRET no .env}
       MAIL_PROVIDER: ${MAIL_PROVIDER:-resend}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       MAIL_FROM: ${MAIL_FROM:-Sigillus <nao-responda@sigillus.dev>}
@@ -88,6 +86,7 @@ services:
       VERIFICATION_DEV_CODES: ${VERIFICATION_DEV_CODES:-false}
       PREMIUM_CHECKOUT_ENABLED: ${PREMIUM_CHECKOUT_ENABLED:-false}
       OPENAPI_DOCS_ENABLED: ${OPENAPI_DOCS_ENABLED:-false}
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
       SENTRY_DSN: ${SENTRY_DSN:-}
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4000/healthz || exit 1"]
@@ -106,7 +105,7 @@ services:
     image: sigillus-web:latest
     restart: unless-stopped
     ports:
-      - "${WEB_PORT:-3000}:3000"
+      - "127.0.0.1:${WEB_PORT:-3000}:3000"
     depends_on:
       api:
         condition: service_healthy
