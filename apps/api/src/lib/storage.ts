@@ -8,6 +8,13 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { AppConfig } from "../config";
 
+export const PUBLIC_STORAGE_PREFIX = "public/";
+export const PRIVATE_STORAGE_PREFIX = "private/";
+
+function isPublicKey(key: string): boolean {
+  return key.startsWith(PUBLIC_STORAGE_PREFIX);
+}
+
 export type PresignedUpload = {
   url: string;
   method: "PUT";
@@ -68,7 +75,7 @@ export function createS3Storage(config: AppConfig): ObjectStorage {
       });
     },
     publicUrl(key) {
-      if (!config.S3_PUBLIC_BASE_URL) {
+      if (!config.S3_PUBLIC_BASE_URL || !isPublicKey(key)) {
         return null;
       }
       return `${config.S3_PUBLIC_BASE_URL.replace(/\/$/, "")}/${key}`;
@@ -118,7 +125,7 @@ export function createMemoryStorage(baseUrl = "http://storage.test"): ObjectStor
       return `${baseUrl}/view/${encodeURIComponent(key)}?signed=1`;
     },
     publicUrl(key) {
-      return `${baseUrl}/public/${key}`;
+      return isPublicKey(key) ? `${baseUrl}/${key}` : null;
     },
     async head(key) {
       const object = objects.get(key);

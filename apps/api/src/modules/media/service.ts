@@ -12,7 +12,11 @@ import type { Database } from "../../db/client";
 import { newId } from "../../lib/ids";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
-import type { ObjectStorage } from "../../lib/storage";
+import {
+  PRIVATE_STORAGE_PREFIX,
+  PUBLIC_STORAGE_PREFIX,
+  type ObjectStorage,
+} from "../../lib/storage";
 import type { ProfileRepository } from "../profiles/repository";
 import { toMediaAsset, type MediaAssetRow } from "./mapper";
 import { createMediaRepository } from "./repository";
@@ -51,12 +55,18 @@ export function extensionFor(contentType: string): string {
   return subtype.replace(/[^a-z0-9]/g, "").slice(0, 8) || "bin";
 }
 
-export function storageKeyFor(ownerUserId: string, assetId: string, contentType: string): string {
-  return `media/${ownerUserId}/${assetId}.${extensionFor(contentType)}`;
-}
-
 function isProfileMedia(purpose: MediaPurpose): boolean {
   return purpose === "gallery" || purpose === "profile";
+}
+
+export function storageKeyFor(
+  ownerUserId: string,
+  assetId: string,
+  contentType: string,
+  purpose: MediaPurpose,
+): string {
+  const visibility = isProfileMedia(purpose) ? PUBLIC_STORAGE_PREFIX : PRIVATE_STORAGE_PREFIX;
+  return `${visibility}media/${ownerUserId}/${assetId}.${extensionFor(contentType)}`;
 }
 
 export function createMediaService(deps: MediaServiceDeps) {
@@ -120,7 +130,7 @@ export function createMediaService(deps: MediaServiceDeps) {
       }
 
       const assetId = newId();
-      const storageKey = storageKeyFor(ownerUserId, assetId, input.contentType);
+      const storageKey = storageKeyFor(ownerUserId, assetId, input.contentType, input.purpose);
       const row = await repo.insert({
         id: assetId,
         ownerUserId,

@@ -56,8 +56,9 @@ async function uploadReadyImage(userId: string, purpose: "gallery" | "profile" |
     contentType: "image/png",
     sizeBytes: png.byteLength,
   });
+  const prefix = purpose === "chat" ? "private" : "public";
   await harness.storage.putObject(
-    `media/${userId}/${created.asset.id}.png`,
+    `${prefix}/media/${userId}/${created.asset.id}.png`,
     new Uint8Array(png),
     "image/png",
   );
@@ -85,8 +86,8 @@ describe("media", () => {
       fileName: "foto.jpg",
     });
     expect(result.method).toBe("PUT");
-    expect(result.uploadUrl).toContain(
-      encodeURIComponent(`media/${userId}/${result.asset.id}.jpg`),
+    expect(result.uploadUrl).toBe(
+      `http://storage.test/upload/${encodeURIComponent(`public/media/${userId}/${result.asset.id}.jpg`)}`,
     );
     expect(result.asset).toMatchObject({
       ownerId: userId,
@@ -243,7 +244,7 @@ describe("media", () => {
     expect(asset.thumbnailUrl).toBe(
       `http://storage.test/public/media/${userId}/${asset.id}.png.thumb.webp`,
     );
-    const thumb = harness.storage.objects.get(`media/${userId}/${asset.id}.png.thumb.webp`);
+    const thumb = harness.storage.objects.get(`public/media/${userId}/${asset.id}.png.thumb.webp`);
     expect(thumb?.contentType).toBe("image/webp");
     const meta = await sharp(Buffer.from(thumb!.body)).metadata();
     expect(meta.width).toBe(480);
@@ -251,6 +252,28 @@ describe("media", () => {
       "media.process",
       "media.moderate",
     ]);
+  });
+
+  it("mídia de chat vai para private/ e fica sem URL pública mesmo pronta", async () => {
+    await registerMediaJobs({
+      db: harness.db,
+      storage: harness.storage,
+      jobs: harness.jobs,
+      logger: harness.deps.logger,
+    });
+    const { userId } = await signUp(harness, {
+      email: "cliente-chat@test.dev",
+      role: "cliente",
+      name: "Cliente Chat",
+    });
+    const asset = await uploadReadyImage(userId, "chat");
+    expect(asset.status).toBe("ready");
+    expect(asset.url).toBeNull();
+    expect(asset.thumbnailUrl).toBeNull();
+    expect(harness.storage.objects.has(`private/media/${userId}/${asset.id}.png`)).toBe(true);
+    expect(harness.storage.objects.has(`private/media/${userId}/${asset.id}.png.thumb.webp`)).toBe(
+      true,
+    );
   });
 
   it("worker marca failed quando a imagem é inválida", async () => {
@@ -269,7 +292,7 @@ describe("media", () => {
       sizeBytes: 3,
     });
     await harness.storage.putObject(
-      `media/${userId}/${created.asset.id}.png`,
+      `public/media/${userId}/${created.asset.id}.png`,
       new Uint8Array([1, 2, 3]),
       "image/png",
     );
@@ -294,14 +317,14 @@ describe("media", () => {
       sizeBytes: 3,
     });
     await harness.storage.putObject(
-      `media/${userId}/${created.asset.id}.mp4`,
+      `public/media/${userId}/${created.asset.id}.mp4`,
       new Uint8Array([1, 2, 3]),
       "video/mp4",
     );
     const asset = await svc.completeUpload(userId, created.asset.id);
     expect(asset.status).toBe("ready");
     expect(asset.thumbnailUrl).toBeNull();
-    expect(asset.url).toContain(".mp4");
+    expect(asset.url).toBe(`http://storage.test/public/media/${userId}/${created.asset.id}.mp4`);
   });
 
   it("dono só acessa, remove e reordena a própria mídia", async () => {
@@ -342,8 +365,10 @@ describe("media", () => {
       .from(professionalProfiles)
       .where(eq(professionalProfiles.id, a.profileId));
     expect(profile?.profileImageAssetId).toBeNull();
-    expect(harness.storage.objects.has(`media/${a.userId}/${first.id}.png`)).toBe(false);
-    expect(harness.storage.objects.has(`media/${a.userId}/${first.id}.png.thumb.webp`)).toBe(false);
+    expect(harness.storage.objects.has(`public/media/${a.userId}/${first.id}.png`)).toBe(false);
+    expect(harness.storage.objects.has(`public/media/${a.userId}/${first.id}.png.thumb.webp`)).toBe(
+      false,
+    );
     expect(await svc.listMine(a.userId, "gallery")).toHaveLength(1);
 
     await svc.setProfileImage(a.userId, null);

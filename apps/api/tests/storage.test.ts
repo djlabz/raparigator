@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { loadConfig } from "../src/config";
-import { createS3Storage } from "../src/lib/storage";
+import { createMemoryStorage, createS3Storage } from "../src/lib/storage";
 
 const baseEnv = {
   DATABASE_URL: "postgres://u:p@localhost:5432/db",
@@ -52,10 +52,30 @@ describe("storage S3", () => {
     );
   });
 
+  it("publicUrl devolve null para chave fora de public/", () => {
+    const storage = createS3Storage(loadConfig({ ...baseEnv }));
+    expect(storage.publicUrl("private/media/u/1.jpg")).toBeNull();
+    expect(storage.publicUrl("media/u/1.jpg")).toBeNull();
+    expect(storage.publicUrl("public/media/u/1.jpg")).toBe(
+      "https://media.example.com/sigillus-media/public/media/u/1.jpg",
+    );
+  });
+
   it("loadConfig aceita S3_PUBLIC_ENDPOINT vazio e rejeita valor que não é URL", () => {
     expect(loadConfig({ ...baseEnv, S3_PUBLIC_ENDPOINT: "" }).S3_PUBLIC_ENDPOINT).toBeUndefined();
     expect(() => loadConfig({ ...baseEnv, S3_PUBLIC_ENDPOINT: "media.example.com" })).toThrow(
       /S3_PUBLIC_ENDPOINT/,
     );
+  });
+});
+
+describe("storage em memória", () => {
+  it("publicUrl devolve a chave pública sem prefixo extra e null para chave privada", () => {
+    const storage = createMemoryStorage("http://storage.test");
+    expect(storage.publicUrl("public/media/u/1.jpg")).toBe(
+      "http://storage.test/public/media/u/1.jpg",
+    );
+    expect(storage.publicUrl("private/media/u/1.jpg")).toBeNull();
+    expect(storage.publicUrl("media/u/1.jpg")).toBeNull();
   });
 });
