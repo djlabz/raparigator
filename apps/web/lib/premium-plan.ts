@@ -4,7 +4,6 @@ import { useEffect, useSyncExternalStore } from "react";
 import type { PlanLimits, PlanTier, PremiumState } from "@sigillus/contracts";
 import { getPlanLimits } from "@sigillus/domain";
 import { getApiClient } from "@/lib/api/client";
-import { isApiDataSource } from "@/lib/data-source";
 
 export {
   PREMIUM_PHOTO_LIMIT,
@@ -14,7 +13,6 @@ export {
   STANDARD_VIDEO_LIMIT,
 } from "@sigillus/domain";
 
-const PLAN_STORAGE_KEY = "sigillus-premium-plan";
 const VIEW_ONCE_COUNT_KEY = "sigillus-view-once-count";
 
 export const PREMIUM_UPLOAD_ERROR_MESSAGE = "Houve um erro ao fazer o upload";
@@ -33,19 +31,6 @@ function emitChange() {
   listeners.forEach((listener) => listener());
 }
 
-function isPlanTier(value: string | null): value is PlanTier {
-  return value === "standard" || value === "premium";
-}
-
-function readStoredPlan(): PlanTier {
-  if (typeof window === "undefined") {
-    return "standard";
-  }
-
-  const stored = window.localStorage.getItem(PLAN_STORAGE_KEY);
-  return isPlanTier(stored) ? stored : "standard";
-}
-
 function readViewOnceCount(): number {
   if (typeof window === "undefined") {
     return 0;
@@ -56,10 +41,6 @@ function readViewOnceCount(): number {
 }
 
 export async function fetchPremiumState(): Promise<PremiumState | null> {
-  if (!isApiDataSource()) {
-    return null;
-  }
-
   try {
     const client = getApiClient();
     const state = await client.premium.getState();
@@ -77,57 +58,35 @@ const STANDARD_LIMITS = getPlanLimits("standard");
 const PREMIUM_LIMITS = getPlanLimits("premium");
 
 export function getCachedPlanTier(): PlanTier {
-  if (isApiDataSource()) {
-    return cachedApiState ? cachedApiState.plan : "standard";
-  }
-  return readStoredPlan();
+  return cachedApiState ? cachedApiState.plan : "standard";
 }
 
 export function getCachedPremiumLimits(): PlanLimits {
-  if (isApiDataSource()) {
-    return cachedApiState ? cachedApiState.limits : STANDARD_LIMITS;
-  }
-  const plan = readStoredPlan();
-  return plan === "premium" ? PREMIUM_LIMITS : STANDARD_LIMITS;
+  return cachedApiState ? cachedApiState.limits : STANDARD_LIMITS;
 }
 
 export function getCachedCheckoutEnabled(): boolean {
-  if (isApiDataSource()) {
-    return cachedApiState ? cachedApiState.checkoutEnabled : false;
-  }
-  return false;
+  return cachedApiState ? cachedApiState.checkoutEnabled : false;
 }
 
 export function activatePremium() {
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(PLAN_STORAGE_KEY, "premium");
-  }
-
-  if (isApiDataSource()) {
-    cachedApiState = {
-      plan: "premium",
-      limits: PREMIUM_LIMITS,
-      subscription: cachedApiState?.subscription ?? null,
-      checkoutEnabled: cachedApiState?.checkoutEnabled ?? false,
-    };
-  }
+  cachedApiState = {
+    plan: "premium",
+    limits: PREMIUM_LIMITS,
+    subscription: cachedApiState?.subscription ?? null,
+    checkoutEnabled: cachedApiState?.checkoutEnabled ?? false,
+  };
 
   emitChange();
 }
 
 export function deactivatePremium() {
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(PLAN_STORAGE_KEY, "standard");
-  }
-
-  if (isApiDataSource()) {
-    cachedApiState = {
-      plan: "standard",
-      limits: STANDARD_LIMITS,
-      subscription: null,
-      checkoutEnabled: cachedApiState?.checkoutEnabled ?? false,
-    };
-  }
+  cachedApiState = {
+    plan: "standard",
+    limits: STANDARD_LIMITS,
+    subscription: null,
+    checkoutEnabled: cachedApiState?.checkoutEnabled ?? false,
+  };
 
   emitChange();
 }
@@ -161,7 +120,7 @@ export function usePremiumPlan() {
   const viewOnceUsed = useSyncExternalStore<number>(subscribe, readViewOnceCount, () => 0);
 
   useEffect(() => {
-    if (isApiDataSource() && !cachedApiState && !apiFetchPromise) {
+    if (!cachedApiState && !apiFetchPromise) {
       apiFetchPromise = fetchPremiumState().finally(() => {
         apiFetchPromise = null;
       });
