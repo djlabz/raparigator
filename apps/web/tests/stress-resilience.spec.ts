@@ -39,13 +39,19 @@ test.describe("Estresse e resiliência na UI", () => {
     const preview = page.getByText("Seu interesse, pronto para enviar").first();
     await expect(preview).toBeVisible();
 
-    const countBefore = await page.getByText("Simulação de encontro").count();
+    const greeting = `Interesse único ${Date.now()}`;
+    await page.getByLabel("Sua mensagem").first().fill(greeting);
     const sendBtn = page.getByRole("button", { name: "Enviar interesse" }).first();
-    await sendBtn.click({ clickCount: 2 });
+    await sendBtn.evaluate((element) => {
+      const button = element as HTMLButtonElement;
+      button.click();
+      button.click();
+    });
 
     await expect(preview).toBeHidden();
-    const countAfter = await page.getByText("Simulação de encontro").count();
-    expect(countAfter).toBe(countBefore + 1);
+    await expect(page.getByText(greeting)).toHaveCount(1);
+    await page.reload();
+    await expect(page.getByText(greeting)).toHaveCount(1);
   });
 
   test("navegação rápida sequencial entre rotas públicas e anúncio preserva integridade", async ({
