@@ -1,8 +1,11 @@
 import sharp, { type Sharp } from "sharp";
+import { isBlockedHash } from "@sigillus/domain";
 import type { Database } from "../../db/client";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
 import type { ObjectStorage } from "../../lib/storage";
+import { computeImageHash } from "../reports/image-hash";
+import { createReportsRepository } from "../reports/repository";
 import { createMediaRepository } from "./repository";
 
 export type MediaJobsDeps = {
@@ -13,6 +16,7 @@ export type MediaJobsDeps = {
 };
 
 export const MEDIA_THUMBNAIL_WIDTH = 480;
+export const BLOCKED_MEDIA_MESSAGE = "Esta imagem não pode ser publicada.";
 
 export function thumbnailKeyFor(storageKey: string): string {
   return `${storageKey}.thumb.webp`;
@@ -53,6 +57,13 @@ export async function stripImageMetadata(
 export async function registerMediaJobs(deps: MediaJobsDeps): Promise<void> {
   const { db, storage, jobs, logger } = deps;
   const repo = createMediaRepository(db);
+  const reports = createReportsRepository(db);
+
+  async function findBlockingReport(hash: string): Promise<string | null> {
+    const blocked = await reports.listBlockedHashes();
+    const match = blocked.find((entry) => isBlockedHash(hash, [entry.hash]));
+    return match ? match.reportId : null;
+  }
 
   await jobs.work("media.process", async ({ assetId }) => {
     const row = await repo.findById(assetId);
@@ -67,6 +78,20 @@ export async function registerMediaJobs(deps: MediaJobsDeps): Promise<void> {
       if (row.kind === "image") {
         const bytes = await storage.getObject(row.storageKey);
         const clean = await stripImageMetadata(bytes, row.contentType);
+        const hash = await computeImageHash(clean.data);
+        const blockingReportId = await findBlockingReport(hash);
+        if (blockingReportId) {
+          await storage.deleteObject(row.storageKey).catch(() => undefined);
+          await repo.update(row.id, {
+            status: "blocked",
+            moderationReason: BLOCKED_MEDIA_MESSAGE,
+            blockReason: `Imagem semelhante à retirada pela Denúncia #${blockingReportId}`,
+            blockedByReportId: blockingReportId,
+            processedAt: new Date(),
+          });
+          logger.info({ assetId, reportId: blockingReportId }, "imagem bloqueada por denúncia");
+          return;
+        }
         await storage.putObject(row.storageKey, clean.data, row.contentType);
         const thumbnail = await sharp(Buffer.from(clean.data), { failOn: "none" })
           .resize({ width: MEDIA_THUMBNAIL_WIDTH, withoutEnlargement: true })

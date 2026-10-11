@@ -16,6 +16,7 @@ import { createMediaService } from "./modules/media/service";
 import { createNotificationsService } from "./modules/notifications/service";
 import { createPremiumService } from "./modules/premium/service";
 import { createProfileRepository } from "./modules/profiles/repository";
+import { createReportsService } from "./modules/reports/service";
 import { createReviewsService } from "./modules/reviews/service";
 import { createVerificationService } from "./modules/verification/service";
 
@@ -37,6 +38,7 @@ export function createServices(deps: ServiceDeps) {
   const profiles = createProfileRepository(db, storage);
   const notifications = createNotificationsService({ db });
   const premium = createPremiumService({ db, billing, config, jobs, logger });
+  const reports = createReportsService({ db, storage, jobs, logger, profiles });
   return {
     profiles,
     notifications,
@@ -45,13 +47,15 @@ export function createServices(deps: ServiceDeps) {
     ads: createAdsService(db, profiles),
     announcements: createAnnouncementsService({ db, profiles, jobs, logger }),
     media: createMediaService({ db, profiles, storage, jobs, logger }),
-    chat: createChatService({ db, profiles, storage, chatEvents, logger }),
+    reports,
+    chat: createChatService({ db, profiles, storage, chatEvents, logger, reports }),
     reviews: createReviewsService({ db, profiles, notifications, jobs, logger }),
     premium,
     verification: createVerificationService({ db, config, logger, mailer }),
     admin: createAdminService({
       db,
       profiles,
+      storage,
       logger,
       premium,
       notify: async (userId, item) => {

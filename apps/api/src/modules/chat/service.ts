@@ -15,6 +15,7 @@ import { newId } from "../../lib/ids";
 import type { Logger } from "../../lib/logger";
 import type { ObjectStorage } from "../../lib/storage";
 import type { ProfileRepository } from "../profiles/repository";
+import type { ReportsService } from "../reports/service";
 import {
   displayNameForRole,
   otherParticipant,
@@ -41,6 +42,7 @@ export type ChatServiceDeps = {
   storage: ObjectStorage;
   chatEvents: ChatEventBus;
   logger: Logger;
+  reports: Pick<ReportsService, "recordChatReport">;
   heartbeatMs?: number;
 };
 
@@ -436,8 +438,7 @@ export function createChatService(deps: ChatServiceDeps) {
         return { ok: false, reason: "not_found" };
       }
       const other = otherParticipant(ctx, actor.id);
-      await repo.insertReport({
-        id: newId(),
+      await deps.reports.recordChatReport({
         type: input.type,
         reporterUserId: actor.id,
         reporterName: displayNameForRole(ctx, actor.role),
@@ -446,13 +447,9 @@ export function createChatService(deps: ChatServiceDeps) {
         reportedName: displayNameForRole(ctx, other.role),
         reportedRole: other.role,
         conversationId: input.conversationId,
+        targetProfileId: other.role === "profissional" ? ctx.profile.id : null,
         description: input.reason,
-        status: "pending",
       });
-      logger.info(
-        { conversationId: input.conversationId, type: input.type },
-        "denúncia registrada",
-      );
       return { ok: true };
     },
 

@@ -17,6 +17,7 @@ import { registerAccessLogJobs } from "./modules/access-log";
 import { registerAdminReviewDigestJob } from "./modules/announcements";
 import { registerMediaJobs } from "./modules/media/jobs";
 import { registerBillingJobs } from "./modules/premium/jobs";
+import { registerAdminReportDigestJob } from "./modules/reports";
 import { registerReviewJobs } from "./modules/reviews/service";
 import { createServices } from "./services";
 import type { AppDeps } from "./deps";
@@ -67,6 +68,7 @@ async function main() {
   await registerReviewJobs({ jobs, logger });
   await registerAccessLogJobs({ db, jobs, logger });
   await registerAdminReviewDigestJob({ db, config, mailer, jobs, logger });
+  await registerAdminReportDigestJob({ db, config, mailer, jobs, logger });
   await registerBillingJobs({ db, premium: deps.services.premium, billing, jobs, logger });
   await jobs.work("premium.expire", async () => {
     await deps.services.premium.expireDueSubscriptions();

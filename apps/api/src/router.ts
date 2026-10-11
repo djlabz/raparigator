@@ -9,6 +9,7 @@ import { feedRouter } from "./modules/feed/router";
 import { mediaRouter } from "./modules/media/router";
 import { notificationsRouter } from "./modules/notifications/router";
 import { premiumRouter } from "./modules/premium/router";
+import { reportsRouter } from "./modules/reports/router";
 import { reviewsRouter } from "./modules/reviews/router";
 import { verificationRouter } from "./modules/verification/router";
 
@@ -23,6 +24,7 @@ export const router = os.router({
   reviews: reviewsRouter,
   notifications: notificationsRouter,
   premium: premiumRouter,
+  reports: reportsRouter,
   verification: verificationRouter,
   admin: adminRouter,
 });
