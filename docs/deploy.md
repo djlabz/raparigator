@@ -53,11 +53,11 @@ api.seudominio.com {
 }
 
 media.seudominio.com {
-    # Encaminha direto para o bucket de mídias públicas
-    rewrite * /sigillus-media{uri}
     reverse_proxy 127.0.0.1:9000
 }
 ```
+
+O bloco de `media.` não pode ter `rewrite`: as URLs pré-assinadas de upload e visualização são geradas pela API com `S3_PUBLIC_ENDPOINT` (path-style, bucket no caminho) e a assinatura SigV4 inclui o `Host` e o caminho. O `reverse_proxy` do Caddy preserva o `Host` original, que é o que o MinIO usa para validar a assinatura.
 
 ---
 
@@ -72,31 +72,32 @@ chmod 600 .env.prod
 
 Preencha os valores obrigatórios:
 
-| Chave                       | Exemplo de Produção                      | Obrigatório | Descrição                                                |
-| --------------------------- | ---------------------------------------- | ----------- | -------------------------------------------------------- |
-| `POSTGRES_USER`             | `sigillus`                               | Sim         | Usuário do banco de dados                                |
-| `POSTGRES_PASSWORD`         | `<senha-gerada-aleatoria>`               | Sim         | Senha forte exclusiva                                    |
-| `POSTGRES_DB`               | `sigillus`                               | Sim         | Nome da base de dados                                    |
-| `AUTH_SECRET`               | `<32-bytes-aleatorios-hex>`              | Sim         | Chave de criptografia de sessão (`openssl rand -hex 32`) |
-| `WEB_ORIGIN`                | `https://app.seudominio.com`             | Sim         | URL base do Web para validação de CORS e links           |
-| `CORS_ORIGINS`              | `https://app.seudominio.com`             | Sim         | Origens permitidas pela API                              |
-| `COOKIE_DOMAIN`             | `.seudominio.com`                        | Sim         | Permite compartilhamento de sessão entre `app.` e `api.` |
-| `API_ORIGIN`                | `https://api.seudominio.com`             | Sim         | URL pública da API (`baseURL` do better-auth)            |
-| `NEXT_PUBLIC_API_URL`       | `https://api.seudominio.com`             | Sim         | URL pública da API consumida pelo cliente Web            |
-| `S3_PUBLIC_BASE_URL`        | `https://media.seudominio.com`           | Sim         | URL pública para carregar imagens e vídeos               |
-| `S3_ACCESS_KEY_ID`          | `sigillus`                               | Sim         | Chave de acesso do MinIO                                 |
-| `S3_SECRET_ACCESS_KEY`      | `<secret-gerado-aleatorio>`              | Sim         | Chave secreta do MinIO (`openssl rand -hex 32`)          |
-| `S3_BUCKET`                 | `sigillus-media`                         | Sim         | Nome do bucket                                           |
-| `BILLING_PROVIDER`          | `fake`                                   | Sim         | Enquanto lançamento for gratuito (ADR-006 / D-01)        |
-| `BILLING_FAKE_ACKNOWLEDGED` | `true`                                   | Sim         | Confirmação explícita de uso do billing gratuito         |
-| `BILLING_WEBHOOK_SECRET`    | `<64-hex-aleatorios>`                    | Sim         | Mínimo 16 caracteres; gere com `openssl rand -hex 32`    |
-| `MAIL_PROVIDER`             | `resend`                                 | Sim         | Provedor de e-mail transacional                          |
-| `RESEND_API_KEY`            | `re_123456789...`                        | Sim         | Chave de API do Resend                                   |
-| `MAIL_FROM`                 | `Sigillus <nao-responda@seudominio.com>` | Sim         | Remetente com domínio autenticado no Resend              |
-| `VERIFICATION_REQUIRED`     | `false`                                  | Sim         | Verificação de contato opcional no lançamento            |
-| `VERIFICATION_DEV_CODES`    | `false`                                  | Sim         | **Obrigatório false** em produção                        |
-| `OPENAPI_DOCS_ENABLED`      | `false`                                  | Sim         | Desativa Swagger/Docs públicos em produção               |
-| `RATE_LIMIT_ENABLED`        | `true`                                   | Sim         | Limita tentativas de login e envio (padrão `true`)       |
+| Chave                       | Exemplo de Produção                           | Obrigatório | Descrição                                                  |
+| --------------------------- | --------------------------------------------- | ----------- | ---------------------------------------------------------- |
+| `POSTGRES_USER`             | `sigillus`                                    | Sim         | Usuário do banco de dados                                  |
+| `POSTGRES_PASSWORD`         | `<senha-gerada-aleatoria>`                    | Sim         | Senha forte exclusiva                                      |
+| `POSTGRES_DB`               | `sigillus`                                    | Sim         | Nome da base de dados                                      |
+| `AUTH_SECRET`               | `<32-bytes-aleatorios-hex>`                   | Sim         | Chave de criptografia de sessão (`openssl rand -hex 32`)   |
+| `WEB_ORIGIN`                | `https://app.seudominio.com`                  | Sim         | URL base do Web para validação de CORS e links             |
+| `CORS_ORIGINS`              | `https://app.seudominio.com`                  | Sim         | Origens permitidas pela API                                |
+| `COOKIE_DOMAIN`             | `.seudominio.com`                             | Sim         | Permite compartilhamento de sessão entre `app.` e `api.`   |
+| `API_ORIGIN`                | `https://api.seudominio.com`                  | Sim         | URL pública da API (`baseURL` do better-auth)              |
+| `NEXT_PUBLIC_API_URL`       | `https://api.seudominio.com`                  | Sim         | URL pública da API consumida pelo cliente Web              |
+| `S3_PUBLIC_ENDPOINT`        | `https://media.seudominio.com`                | Sim         | Endpoint público usado só para assinar URLs de upload/view |
+| `S3_PUBLIC_BASE_URL`        | `https://media.seudominio.com/sigillus-media` | Sim         | URL pública (com o bucket) para carregar imagens e vídeos  |
+| `S3_ACCESS_KEY_ID`          | `sigillus`                                    | Sim         | Chave de acesso do MinIO                                   |
+| `S3_SECRET_ACCESS_KEY`      | `<secret-gerado-aleatorio>`                   | Sim         | Chave secreta do MinIO (`openssl rand -hex 32`)            |
+| `S3_BUCKET`                 | `sigillus-media`                              | Sim         | Nome do bucket                                             |
+| `BILLING_PROVIDER`          | `fake`                                        | Sim         | Enquanto lançamento for gratuito (ADR-006 / D-01)          |
+| `BILLING_FAKE_ACKNOWLEDGED` | `true`                                        | Sim         | Confirmação explícita de uso do billing gratuito           |
+| `BILLING_WEBHOOK_SECRET`    | `<64-hex-aleatorios>`                         | Sim         | Mínimo 16 caracteres; gere com `openssl rand -hex 32`      |
+| `MAIL_PROVIDER`             | `resend`                                      | Sim         | Provedor de e-mail transacional                            |
+| `RESEND_API_KEY`            | `re_123456789...`                             | Sim         | Chave de API do Resend                                     |
+| `MAIL_FROM`                 | `Sigillus <nao-responda@seudominio.com>`      | Sim         | Remetente com domínio autenticado no Resend                |
+| `VERIFICATION_REQUIRED`     | `false`                                       | Sim         | Verificação de contato opcional no lançamento              |
+| `VERIFICATION_DEV_CODES`    | `false`                                       | Sim         | **Obrigatório false** em produção                          |
+| `OPENAPI_DOCS_ENABLED`      | `false`                                       | Sim         | Desativa Swagger/Docs públicos em produção                 |
+| `RATE_LIMIT_ENABLED`        | `true`                                        | Sim         | Limita tentativas de login e envio (padrão `true`)         |
 
 ---
 

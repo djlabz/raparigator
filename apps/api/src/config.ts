@@ -38,6 +38,7 @@ const EnvSchema = z
     S3_ACCESS_KEY_ID: z.string().min(1),
     S3_SECRET_ACCESS_KEY: z.string().min(1),
     S3_FORCE_PATH_STYLE: booleanFromEnv.default(true),
+    S3_PUBLIC_ENDPOINT: optionalUrl,
     S3_PUBLIC_BASE_URL: optionalUrl,
     MEDIA_UPLOAD_TTL_SECONDS: z.coerce.number().int().min(60).max(3600).default(900),
     MEDIA_VIEW_URL_TTL_SECONDS: z.coerce.number().int().min(30).max(3600).default(300),

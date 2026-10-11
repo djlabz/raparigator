@@ -16,6 +16,7 @@ const validEnv: Record<string, string> = {
   S3_ACCESS_KEY_ID: "sigillus",
   S3_SECRET_ACCESS_KEY: "s".repeat(64),
   S3_BUCKET: "sigillus-media",
+  S3_PUBLIC_ENDPOINT: "https://media.example.com",
   S3_PUBLIC_BASE_URL: "https://media.example.com/sigillus-media",
   API_ORIGIN: "https://api.example.com",
   WEB_ORIGIN: "https://app.example.com",

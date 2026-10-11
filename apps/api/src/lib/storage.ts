@@ -25,9 +25,9 @@ export interface ObjectStorage {
   deleteObject(key: string): Promise<void>;
 }
 
-export function createS3Storage(config: AppConfig): ObjectStorage {
-  const client = new S3Client({
-    endpoint: config.S3_ENDPOINT,
+function createS3Client(config: AppConfig, endpoint: string): S3Client {
+  return new S3Client({
+    endpoint,
     region: config.S3_REGION,
     forcePathStyle: config.S3_FORCE_PATH_STYLE,
     credentials: {
@@ -35,6 +35,13 @@ export function createS3Storage(config: AppConfig): ObjectStorage {
       secretAccessKey: config.S3_SECRET_ACCESS_KEY,
     },
   });
+}
+
+export function createS3Storage(config: AppConfig): ObjectStorage {
+  const client = createS3Client(config, config.S3_ENDPOINT);
+  const presignClient = config.S3_PUBLIC_ENDPOINT
+    ? createS3Client(config, config.S3_PUBLIC_ENDPOINT)
+    : client;
   const bucket = config.S3_BUCKET;
 
   return {
@@ -45,7 +52,7 @@ export function createS3Storage(config: AppConfig): ObjectStorage {
         ContentType: contentType,
         ContentLength: sizeBytes,
       });
-      const url = await getSignedUrl(client, command, {
+      const url = await getSignedUrl(presignClient, command, {
         expiresIn: config.MEDIA_UPLOAD_TTL_SECONDS,
       });
       return {
@@ -56,7 +63,7 @@ export function createS3Storage(config: AppConfig): ObjectStorage {
       };
     },
     async presignView(key, ttlSeconds = config.MEDIA_VIEW_URL_TTL_SECONDS) {
-      return getSignedUrl(client, new GetObjectCommand({ Bucket: bucket, Key: key }), {
+      return getSignedUrl(presignClient, new GetObjectCommand({ Bucket: bucket, Key: key }), {
         expiresIn: ttlSeconds,
       });
     },
