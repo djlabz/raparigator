@@ -37,6 +37,10 @@ services:
     depends_on:
       minio:
         condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-sigillus}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:?Defina S3_SECRET_ACCESS_KEY no .env}
+      S3_BUCKET: ${S3_BUCKET:-sigillus-media}
     entrypoint: >
       /bin/sh -c "
       mc alias set local http://minio:9000 $${MINIO_ROOT_USER:-sigillus} $${MINIO_ROOT_PASSWORD} &&
