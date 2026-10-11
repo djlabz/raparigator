@@ -4,7 +4,7 @@ import { createMemoryChatEventBus } from "../src/lib/chat-events";
 import type { ChatActor } from "../src/modules/chat";
 import { createTestHarness } from "./helpers/app";
 import { signUp } from "./helpers/auth";
-import { createChatAsset, createChatFixture } from "./helpers/conversations";
+import { createChatAsset, createChatFixture, nextChatEvent } from "./helpers/conversations";
 
 const harness = createTestHarness();
 
@@ -316,7 +316,7 @@ describe("chat", () => {
       { conversationId: fx.conversationId },
       controller.signal,
     );
-    const firstEvent = stream.next();
+    const firstEvent = nextChatEvent(stream);
     const sent = await fx.chat.sendText(fx.client, {
       conversationId: fx.conversationId,
       content: "ping",

@@ -4,7 +4,7 @@ import type { ChatEvent } from "@sigillus/contracts";
 import { createFeedFiltersCriteria } from "@sigillus/domain";
 import { createMemoryChatEventBus } from "../src/lib/chat-events";
 import { createTestHarness } from "./helpers/app";
-import { createChatFixture } from "./helpers/conversations";
+import { createChatFixture, nextChatEvent } from "./helpers/conversations";
 import { reviews, subscriptionEvents, subscriptions } from "../src/db/schema";
 import { newId } from "../src/lib/ids";
 import { signUp } from "./helpers/auth";
@@ -62,13 +62,15 @@ describe("estresse e concorrência na API", () => {
 
     const subscriberPromises = abortControllers.map(async (ac, subIndex) => {
       const stream = fx.chat.subscribe(fx.client, { conversationId: fx.conversationId }, ac.signal);
-      for await (const event of stream) {
-        receivedBySubscriber[subIndex]!.push(event);
-        if (receivedBySubscriber[subIndex]!.length >= eventsPerBurst) {
-          ac.abort();
+      while (receivedBySubscriber[subIndex]!.length < eventsPerBurst) {
+        const result = await nextChatEvent(stream);
+        if (result.done) {
           break;
         }
+        receivedBySubscriber[subIndex]!.push(result.value);
       }
+      ac.abort();
+      await stream.return(undefined);
     });
 
     await new Promise((resolve) => setTimeout(resolve, 30));
@@ -83,10 +85,13 @@ describe("estresse e concorrência na API", () => {
 
     await Promise.all(subscriberPromises);
 
+    const expected = Array.from({ length: eventsPerBurst }, (_, index) => ({
+      type: "message.created",
+      conversationId: fx.conversationId,
+      messageId: `burst-msg-${index}`,
+    }));
     for (let subIndex = 0; subIndex < subscriberCount; subIndex += 1) {
-      expect(receivedBySubscriber[subIndex]!.length).toBeGreaterThanOrEqual(eventsPerBurst);
-      const types = receivedBySubscriber[subIndex]!.map((e) => e.type);
-      expect(types).toContain("message.created");
+      expect(receivedBySubscriber[subIndex]).toEqual(expected);
     }
   });
 
