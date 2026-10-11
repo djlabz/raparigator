@@ -49,7 +49,7 @@ Ordem de execução (11/10, Daniel): T-61, T-64, T-70, T-68, T-63, T-62, T-60, T
 
 ### Bloco A - privacidade (bugs, primeiro)
 
-- [ ] **T-61 Nenhuma parte vê o nome real da outra (J-10).**
+- [x] **T-61 Nenhuma parte vê o nome real da outra (J-10).** (PR #86, 11/10)
   - **Problema:** `chat/repository.ts` usa `clientUsers.name` e `professionalUsers.name`; a anunciante vê o nome de cadastro do cliente sem apelido na lista do chat, nas mensagens, no link do WhatsApp e nas denúncias.
   - **Regra única:** em nenhuma resposta da API destinada à contraparte aparece `users.name`. Cliente é identificado pelo apelido; anunciante pelo nome artístico. Nome real só em rotas de admin e só onde já era usado.
   - **Apelido automático:** gerado no cadastro do cliente quando ele não informa, único, editável depois na conta, nunca derivado de nome, e-mail ou telefone. Formato sugerido: duas palavras neutras em português mais três dígitos (ex.: `Lua-Serena-482`); gerador em `packages/domain`, testado. Se o operador preferir outro formato, pergunte antes de implementar.
