@@ -17,6 +17,53 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - name: Pré-voo reprova o template .env.prod.example
+        run: |
+          if bash scripts/check-prod-env.sh .env.prod.example; then
+            echo "pré-voo aprovou o template"
+            exit 1
+          fi
+      - name: Gera env de produção válido (valores fake)
+        id: prod-env
+        run: |
+          ENV_PATH="$RUNNER_TEMP/prod.env"
+          cat > "$ENV_PATH" <<EOF
+          POSTGRES_USER=sigillus
+          POSTGRES_PASSWORD=$(openssl rand -hex 32)
+          POSTGRES_DB=sigillus
+          MINIO_PORT=9000
+          S3_ACCESS_KEY_ID=sigillus
+          S3_SECRET_ACCESS_KEY=$(openssl rand -hex 32)
+          S3_BUCKET=sigillus-media
+          S3_REGION=us-east-1
+          S3_ENDPOINT=http://minio:9000
+          S3_PUBLIC_BASE_URL=https://media.example.com/sigillus-media
+          S3_FORCE_PATH_STYLE=true
+          API_PORT=4000
+          WEB_PORT=3000
+          API_ORIGIN=https://api.example.com
+          WEB_ORIGIN=https://app.example.com
+          CORS_ORIGINS=https://app.example.com
+          COOKIE_DOMAIN=.example.com
+          NEXT_PUBLIC_API_URL=https://api.example.com
+          AUTH_SECRET=$(openssl rand -hex 32)
+          BILLING_PROVIDER=fake
+          BILLING_FAKE_ACKNOWLEDGED=true
+          BILLING_WEBHOOK_SECRET=$(openssl rand -hex 32)
+          MAIL_PROVIDER=resend
+          RESEND_API_KEY=re_ci_fake
+          MAIL_FROM=Sigillus <nao-responda@example.com>
+          VERIFICATION_REQUIRED=false
+          VERIFICATION_DEV_CODES=false
+          PREMIUM_CHECKOUT_ENABLED=false
+          OPENAPI_DOCS_ENABLED=false
+          RATE_LIMIT_ENABLED=true
+          SENTRY_DSN=
+          NEXT_PUBLIC_SENTRY_DSN=
+          EOF
+          echo "path=$ENV_PATH" >> "$GITHUB_OUTPUT"
+      - name: Pré-voo aprova env de produção válido
+        run: bash scripts/check-prod-env.sh "${{ steps.prod-env.outputs.path }}"
 
   test-domain:
     name: Testes do domain

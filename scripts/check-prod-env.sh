@@ -16,58 +16,104 @@ fi
 
 ERRORS=0
 
+read_var() {
+  grep -E "^${1}=" "$ENV_FILE" | head -n 1 | cut -d'=' -f2- | tr -d '\r"' || true
+}
+
+fail() {
+  echo "  [FALHA] $1"
+  ERRORS=$((ERRORS + 1))
+}
+
 check_var() {
   local var_name="$1"
   local val
-  val=$(grep -E "^${var_name}=" "$ENV_FILE" | head -n 1 | cut -d'=' -f2- | tr -d '\r"' || true)
+  val=$(read_var "$var_name")
 
   if [ -z "$val" ]; then
-    echo "  [FALHA] $var_name não está definida ou está vazia."
-    ERRORS=$((ERRORS + 1))
-    return
+    fail "$var_name não está definida ou está vazia."
+    return 1
   fi
 
-  if [[ "$val" == *"troque-por"* ]] || [[ "$val" == *"<senha"* ]] || [[ "$val" == *"<sua-"* ]] || [[ "$val" == *"<32-bytes"* ]] || [[ "$val" == *"<secret"* ]] || [[ "$val" == *"<re_"* ]] || [[ "$val" == *"<dominio"* ]]; then
-    echo "  [FALHA] $var_name contém valor de placeholder inseguro: '$val'"
-    ERRORS=$((ERRORS + 1))
-    return
+  if [[ "$val" == *"CHANGE_ME"* ]]; then
+    fail "$var_name ainda contém o placeholder CHANGE_ME do template: '$val'"
+    return 1
   fi
 
   echo "  [OK] $var_name está configurada."
 }
 
-echo "1. Validando credenciais de banco e chaves de segurança..."
-check_var "POSTGRES_PASSWORD"
-check_var "S3_SECRET_ACCESS_KEY"
+check_secret() {
+  local var_name="$1"
+  local val
+  check_var "$var_name" || return 0
+  val=$(read_var "$var_name")
+  if [ "${#val}" -lt 32 ]; then
+    fail "$var_name deve ter pelo menos 32 caracteres (atual: ${#val}). Gere com: openssl rand -hex 32"
+  else
+    echo "  [OK] $var_name possui tamanho seguro (${#val} caracteres)."
+  fi
+}
 
-AUTH_SECRET=$(grep -E "^AUTH_SECRET=" "$ENV_FILE" | head -n 1 | cut -d'=' -f2- | tr -d '\r"' || true)
-if [ "${#AUTH_SECRET}" -lt 32 ]; then
-  echo "  [FALHA] AUTH_SECRET deve ter pelo menos 32 caracteres (atual: ${#AUTH_SECRET}). Gere com: openssl rand -hex 32"
-  ERRORS=$((ERRORS + 1))
-else
-  echo "  [OK] AUTH_SECRET possui tamanho seguro (${#AUTH_SECRET} caracteres)."
-fi
+check_public_url() {
+  local var_name="$1"
+  local url="$2"
+  if [[ "$url" != https://* ]]; then
+    fail "$var_name deve começar com https:// em produção: '$url'"
+  elif [[ "$url" == *localhost* ]] || [[ "$url" == *127.0.0.1* ]]; then
+    fail "$var_name não pode apontar para localhost/127.0.0.1 em produção: '$url'"
+  else
+    echo "  [OK] $var_name usa HTTPS público: $url"
+  fi
+}
+
+check_url_var() {
+  local var_name="$1"
+  check_var "$var_name" || return 0
+  check_public_url "$var_name" "$(read_var "$var_name")"
+}
+
+echo "1. Validando credenciais de banco e chaves de segurança..."
+check_var "POSTGRES_PASSWORD" || true
+check_var "S3_SECRET_ACCESS_KEY" || true
+check_secret "AUTH_SECRET"
+check_secret "BILLING_WEBHOOK_SECRET"
 
 echo "2. Validando URLs e domínios..."
-check_var "WEB_ORIGIN"
-check_var "CORS_ORIGINS"
-check_var "NEXT_PUBLIC_API_URL"
-check_var "S3_PUBLIC_BASE_URL"
-
-WEB_ORIGIN=$(grep -E "^WEB_ORIGIN=" "$ENV_FILE" | head -n 1 | cut -d'=' -f2- | tr -d '\r"' || true)
-if [[ "$WEB_ORIGIN" != https://* ]] && [[ "$WEB_ORIGIN" != http://localhost* ]]; then
-  echo "  [AVISO] WEB_ORIGIN deveria usar HTTPS em produção: '$WEB_ORIGIN'"
+check_url_var "WEB_ORIGIN"
+check_url_var "API_ORIGIN"
+check_url_var "NEXT_PUBLIC_API_URL"
+check_url_var "S3_PUBLIC_BASE_URL"
+if grep -qE "^S3_PUBLIC_ENDPOINT=" "$ENV_FILE"; then
+  check_url_var "S3_PUBLIC_ENDPOINT"
 fi
 
-COOKIE_DOMAIN=$(grep -E "^COOKIE_DOMAIN=" "$ENV_FILE" | head -n 1 | cut -d'=' -f2- | tr -d '\r"' || true)
-if [ -n "$COOKIE_DOMAIN" ] && [[ "$COOKIE_DOMAIN" != .* ]]; then
-  echo "  [FALHA] COOKIE_DOMAIN deve começar com um ponto (ex: .seudominio.com). Valor atual: '$COOKIE_DOMAIN'"
-  ERRORS=$((ERRORS + 1))
-elif [ -n "$COOKIE_DOMAIN" ]; then
-  echo "  [OK] COOKIE_DOMAIN configurado com ponto inicial: $COOKIE_DOMAIN"
+if check_var "CORS_ORIGINS"; then
+  IFS=',' read -r -a CORS_LIST <<<"$(read_var "CORS_ORIGINS")"
+  for origin in "${CORS_LIST[@]}"; do
+    origin="${origin//[[:space:]]/}"
+    [ -z "$origin" ] && continue
+    check_public_url "CORS_ORIGINS ($origin)" "$origin"
+  done
+fi
+
+if check_var "COOKIE_DOMAIN"; then
+  COOKIE_DOMAIN=$(read_var "COOKIE_DOMAIN")
+  if [[ "$COOKIE_DOMAIN" != .* ]]; then
+    fail "COOKIE_DOMAIN deve começar com um ponto (ex: .seudominio.com). Valor atual: '$COOKIE_DOMAIN'"
+  else
+    echo "  [OK] COOKIE_DOMAIN configurado com ponto inicial: $COOKIE_DOMAIN"
+  fi
 fi
 
 echo "3. Validando flags de produção..."
+RATE_LIMIT=$(read_var "RATE_LIMIT_ENABLED")
+if [ "$RATE_LIMIT" != "true" ]; then
+  fail "RATE_LIMIT_ENABLED deve ser 'true' em produção (atual: '$RATE_LIMIT')."
+else
+  echo "  [OK] RATE_LIMIT_ENABLED=true."
+fi
+
 DEV_CODES=$(grep -E "^VERIFICATION_DEV_CODES=" "$ENV_FILE" | head -n 1 | cut -d'=' -f2- | tr -d '\r"' || true)
 if [ "$DEV_CODES" = "true" ]; then
   echo "  [FALHA] VERIFICATION_DEV_CODES não pode ser 'true' em produção."
@@ -97,8 +143,8 @@ fi
 echo "5. Validando e-mail transacional..."
 MAIL_PROVIDER=$(grep -E "^MAIL_PROVIDER=" "$ENV_FILE" | head -n 1 | cut -d'=' -f2- | tr -d '\r"' || true)
 if [ "$MAIL_PROVIDER" = "resend" ]; then
-  check_var "RESEND_API_KEY"
-  check_var "MAIL_FROM"
+  check_var "RESEND_API_KEY" || true
+  check_var "MAIL_FROM" || true
 fi
 
 echo ""
