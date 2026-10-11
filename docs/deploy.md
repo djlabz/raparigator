@@ -149,29 +149,96 @@ Acesse `https://app.seudominio.com/admin/login` e realize o login para validar o
 
 ## 7. Rotina de Backup Automático
 
-Crie um script `/opt/sigillus/backup.sh` com permissão `700`:
+O backup é feito pelo script versionado `scripts/backup.sh`, que gera a cada execução:
+
+- `postgres_<data>.sql.gz`: dump do Postgres (`pg_dump --clean --if-exists --no-owner`) com o `POSTGRES_USER` e o `POSTGRES_DB` lidos do arquivo de ambiente;
+- `media_<data>/`: cópia do bucket `S3_BUCKET` feita com `mc mirror`, rodando a imagem do serviço `minio-init` na rede do compose.
+
+Os dois seguem a mesma retenção. O backup externo (fora da VPS) ainda não está definido (P-11 em `docs/correcoes-pre-deploy.md`); o script tem um ponto de extensão comentado para isso.
+
+Parâmetros (variáveis de ambiente, todas opcionais):
+
+| Variável               | Padrão                       | Descrição                                      |
+| ---------------------- | ---------------------------- | ---------------------------------------------- |
+| `COMPOSE_FILE`         | `<repo>/compose.prod.yaml`   | Compose da stack de produção                   |
+| `ENV_FILE`             | `<repo>/.env.prod`           | Arquivo de ambiente usado na subida da stack   |
+| `BACKUP_DIR`           | `/var/backups/sigillus`      | Diretório local dos backups (criado com `700`) |
+| `RETENTION_DAYS`       | `14`                         | Dias de retenção dos dumps e cópias de mídia   |
+| `COMPOSE_PROJECT_NAME` | nome do diretório do compose | Só se a stack subiu com `-p` próprio           |
+
+Execução manual (como root, na raiz do projeto na VPS):
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-BACKUP_DIR="/var/backups/sigillus"
-DATE=$(date +%Y%m%d_%H%M%S)
-mkdir -p "$BACKUP_DIR"
-
-# 1. Backup do Postgres
-docker compose -f /opt/sigillus/compose.prod.yaml --env-file /opt/sigillus/.env.prod \
-  exec -T postgres pg_dump -U sigillus sigillus | gzip > "$BACKUP_DIR/postgres_$DATE.sql.gz"
-
-# 2. Retenção de 14 dias
-find "$BACKUP_DIR" -type f -name "*.sql.gz" -mtime +14 -delete
+cd /opt/sigillus
+./scripts/backup.sh
 ```
 
-Adicione ao cron diário (`crontab -e`):
+Adicione ao cron diário do root (`crontab -e`):
 
 ```cron
-0 3 * * * /opt/sigillus/backup.sh > /dev/null 2>&1
+0 3 * * * cd /opt/sigillus && ./scripts/backup.sh >> /var/log/sigillus-backup.log 2>&1
 ```
+
+### 7.1 Restauração do Postgres
+
+1. Escolha o dump e pare quem escreve no banco:
+
+   ```bash
+   cd /opt/sigillus
+   docker compose -f compose.prod.yaml --env-file .env.prod stop web api
+   ```
+
+2. Restaure. O dump já traz `DROP ... IF EXISTS`, então pode ser aplicado sobre o banco atual; o usuário e o banco vêm das variáveis do próprio container:
+
+   ```bash
+   gunzip -c /var/backups/sigillus/postgres_<data>.sql.gz |
+     docker compose -f compose.prod.yaml --env-file .env.prod exec -T postgres \
+     sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+   ```
+
+3. Suba de novo e confira os healthchecks:
+
+   ```bash
+   docker compose -f compose.prod.yaml --env-file .env.prod up -d api web
+   docker compose -f compose.prod.yaml --env-file .env.prod ps
+   ```
+
+Para conferir um dump sem tocar no banco de produção, restaure num banco vazio e compare contagens:
+
+```bash
+docker compose -f compose.prod.yaml --env-file .env.prod exec -T postgres \
+  sh -c 'createdb -U "$POSTGRES_USER" sigillus_restore'
+gunzip -c /var/backups/sigillus/postgres_<data>.sql.gz |
+  docker compose -f compose.prod.yaml --env-file .env.prod exec -T postgres \
+  sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d sigillus_restore'
+docker compose -f compose.prod.yaml --env-file .env.prod exec -T postgres \
+  sh -c 'psql -U "$POSTGRES_USER" -d sigillus_restore -c "select count(*) from \"user\""'
+docker compose -f compose.prod.yaml --env-file .env.prod exec -T postgres \
+  sh -c 'dropdb -U "$POSTGRES_USER" sigillus_restore'
+```
+
+### 7.2 Restauração da mídia
+
+O `mc mirror` copia de volta para o bucket o diretório `media_<data>` escolhido (objetos existentes com o mesmo nome são sobrescritos; objetos que não estão no backup são mantidos):
+
+```bash
+cd /opt/sigillus
+export S3_BUCKET="$(grep -E '^S3_BUCKET=' .env.prod | cut -d= -f2-)"
+export S3_ACCESS_KEY_ID="$(grep -E '^S3_ACCESS_KEY_ID=' .env.prod | cut -d= -f2-)"
+export S3_SECRET_ACCESS_KEY="$(grep -E '^S3_SECRET_ACCESS_KEY=' .env.prod | cut -d= -f2-)"
+
+docker compose -f compose.prod.yaml --env-file .env.prod run --rm --no-deps -T \
+  -e S3_BUCKET -e S3_ACCESS_KEY_ID -e S3_SECRET_ACCESS_KEY \
+  -v /var/backups/sigillus/media_<data>:/backup:ro \
+  --entrypoint /bin/sh minio-init -c '
+    mc --config-dir /tmp/mc alias set local http://minio:9000 "$S3_ACCESS_KEY_ID" "$S3_SECRET_ACCESS_KEY" >/dev/null &&
+    mc --config-dir /tmp/mc mb --ignore-existing local/"$S3_BUCKET" &&
+    mc --config-dir /tmp/mc mirror --overwrite /backup local/"$S3_BUCKET" &&
+    mc --config-dir /tmp/mc anonymous set download local/"$S3_BUCKET"/public
+  '
+```
+
+O `mb --ignore-existing` e o `anonymous set download` recriam o bucket e a leitura pública do prefixo `public/` quando a restauração é feita num MinIO novo (volume perdido). Confira a contagem de objetos contra o backup com `find /var/backups/sigillus/media_<data> -type f | wc -l`.
 
 ---
 
