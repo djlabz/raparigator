@@ -99,6 +99,8 @@ Logins de dev (seeds): `cliente@sigillus.dev` / `Cliente@123`, `profissional@sig
 
 Pode intercalar com o fim da fase 1; T-20 e T-21 não dependem de nada.
 
+Correções pré-deploy em `docs/correcoes-pre-deploy.md` (Fase 2.1), obrigatórias antes do deploy. Evidências verificadas e planos por task registrados na T-39.
+
 - [x] **T-20 CLI `create-admin`.** `apps/api/src/cli/create-admin.ts` + script `admin:create -w apps/api`, lendo e-mail, nome e senha de argumentos ou env, reaproveitando `upsertAdminWithPassword` de `src/db/seed/users.ts`. Hoje não existe forma de criar o primeiro admin em produção (sign-up de admin é desligado e as seeds de admin não rodam com `NODE_ENV=production`). Testar que roda contra o banco de teste. (PR #53, 10/10)
 
 - [x] **T-21 Verificação opcional por flag** (D-03). API: env `VERIFICATION_REQUIRED` (default `false`), exposto em `verification.getState` como `required: boolean` (adicionar ao schema em `contracts`). Nenhum endpoint passa a exigir verificação; a flag só informa a UI. Web: `account-screen.tsx` e `professional-dashboard-screen.tsx` mostram a seção de verificação como "opcional" quando `required=false` e escondem o botão de enviar código enquanto não houver provedor (sem provedor, `sendCode` só loga; não prometer ao usuário um código que não chega). Pronto quando: cadastro e publicação funcionam sem verificar nada, e a UI não oferece envio de código. (PR #54, 10/10)
