@@ -9,6 +9,11 @@ export const credentials = {
     password: "Profissional@123",
     role: "profissional" as const,
   },
+  profissionalValentina: {
+    email: "valentina-noir-campinas@sigillus.dev",
+    password: "Profissional@123",
+    role: "profissional" as const,
+  },
   admin: {
     email: "admin@sigillus.dev",
     password: "Admin@123",
