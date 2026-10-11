@@ -78,6 +78,7 @@ export function rateLimited(name: string, rule: RateLimitRule) {
     const decision = context.deps.rateLimiter.hit(key, rule);
     if (!decision.allowed) {
       throw new ORPCError("RATE_LIMITED", {
+        status: 429,
         data: { retryAfterMs: decision.retryAfterMs },
       });
     }

@@ -7,6 +7,7 @@ import {
   professionalProfiles,
   reportEvidence,
   reports,
+  users,
 } from "../src/db/schema";
 import { DEV_ADMINS, upsertAdminWithPassword } from "../src/db/seed/users";
 import { registerMediaJobs } from "../src/modules/media";
@@ -17,7 +18,7 @@ import {
   registerAdminReportDigestJob,
 } from "../src/modules/reports";
 import { createTestHarness } from "./helpers/app";
-import { signInAdmin, signUp } from "./helpers/auth";
+import { cookieHeader, signInAdmin, signUp } from "./helpers/auth";
 import { createChatFixture, createPublishedProfile } from "./helpers/conversations";
 
 const ADMIN_EMAIL = "denuncias@sigillus.test";
@@ -449,6 +450,28 @@ describe("canal de denúncia e retirada", () => {
       .from(professionalProfiles)
       .where(eq(professionalProfiles.id, pro.id));
     expect(profile?.verificationStatus).toBe("published");
+  });
+
+  it("chat.report também responde 429 ao passar do limite", async () => {
+    const fx = await createChatFixture(harness);
+    const [client] = await harness.db.select().from(users).where(eq(users.id, fx.client.id));
+    const login = await harness.fetch("/api/auth/sign-in/email", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: harness.config.WEB_ORIGIN },
+      body: JSON.stringify({ email: client!.email, password: "Senha@12345" }),
+    });
+    const cookie = cookieHeader(login);
+    const statuses: number[] = [];
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const response = await harness.rpc(
+        "chat/report",
+        { conversationId: fx.conversationId, type: "other", reason: "teste de limite" },
+        { cookie },
+      );
+      statuses.push(response.status);
+    }
+    expect(statuses.slice(0, 5)).toEqual([200, 200, 200, 200, 200]);
+    expect(statuses[5]).toBe(429);
   });
 
   it("denúncia do chat continua pelo contrato antigo, grava source=chat e agenda o e-mail", async () => {
