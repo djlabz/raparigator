@@ -37,7 +37,7 @@ Adota-se o modelo de **VPS única com Docker Compose** e **subdomínios separado
 - Na VPS, utiliza-se um proxy reverso (ex.: Caddy ou Nginx com Certbot) gerenciando certificados SSL/TLS automáticos da Let's Encrypt:
   - `https://app.<dominio>` → encaminha para `http://127.0.0.1:3000` (Web)
   - `https://api.<dominio>` → encaminha para `http://127.0.0.1:4000` (API)
-  - `https://media.<dominio>` → encaminha para `http://127.0.0.1:9000/sigillus-media` (MinIO público com cache de imagens/vídeos)
+  - `https://media.<dominio>` → encaminha para `http://127.0.0.1:9000` sem reescrita de caminho (MinIO; bucket no caminho, path-style)
 
 ### 3. Autenticação e Cookies
 
@@ -63,3 +63,7 @@ Adota-se o modelo de **VPS única com Docker Compose** e **subdomínios separado
 
 - **Positivas**: Custo mensal reduzido e previsível; instalação e restauração simples através de um único arquivo declarativo (`compose.prod.yaml` e `.env.prod`); baixa latência de comunicação interna entre API, Postgres e MinIO pela rede Docker bridge; arquitetura resiliente e independente.
 - **Pontos de atenção**: Como todos os componentes residem na mesma VPS, recursos de CPU e memória devem ser dimensionados conforme a carga de mídia e acessos (mínimo recomendado: 4 GB de RAM, 2 vCPUs e 40 GB de SSD/NVMe).
+
+## Emendas
+
+- **T-43 (10/2026)**: as URLs pré-assinadas são geradas por um segundo client S3 com `S3_PUBLIC_ENDPOINT` (`https://media.<dominio>`), porque a assinatura SigV4 inclui o host e o navegador não alcança `http://minio:9000`. Operações servidor→MinIO continuam em `S3_ENDPOINT`. `S3_PUBLIC_BASE_URL` passa a incluir o bucket e o Caddy de `media.` não usa `rewrite`.
