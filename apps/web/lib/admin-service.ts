@@ -8,6 +8,7 @@ import type {
   ReportStatus,
   VerificationStatus,
 } from "@/lib/types";
+import type { ReportAction, ReportEvidence, ReportTargetMedia } from "@sigillus/contracts";
 import { getApiClient } from "@/lib/api/client";
 
 export async function getDashboardStats(): Promise<DashboardStats> {
@@ -89,6 +90,23 @@ export async function resolveReport(
   note: string,
 ): Promise<void> {
   await getApiClient().admin.resolveReport({ id, resolution, note });
+}
+
+export async function getReportEvidence(id: string): Promise<ReportEvidence[]> {
+  return getApiClient().admin.reportEvidence({ id });
+}
+
+export async function getReportTargetMedia(id: string): Promise<ReportTargetMedia[]> {
+  return getApiClient().admin.reportTargetMedia({ id });
+}
+
+export async function actOnReport(
+  id: string,
+  action: ReportAction,
+  note: string,
+  assetId?: string,
+): Promise<void> {
+  await getApiClient().admin.actOnReport({ id, action, note, assetId });
 }
 
 export async function globalSearch(query: string): Promise<GlobalSearchResult[]> {

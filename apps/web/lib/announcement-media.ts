@@ -342,6 +342,9 @@ export async function pollMediaUntilReady(
     if (asset.status === "ready") {
       return asset;
     }
+    if (asset.status === "blocked") {
+      throw new Error("Esta imagem não pode ser publicada.");
+    }
     if (asset.status === "failed" || asset.status === "rejected") {
       throw new Error(asset.moderationReason ?? "Falha no processamento da mídia.");
     }
