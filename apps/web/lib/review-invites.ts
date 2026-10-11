@@ -25,6 +25,28 @@ let cachedMockState: ReviewInvitesState | null = null;
 let apiState: ReviewInvitesState = { invites: [], reviews: [] };
 let apiInitialLoaded = false;
 const inFlightInvites = new Set<string>();
+const inviteGenerations = new Map<string, number>();
+const pendingInviteRequests = new Map<string, Promise<unknown>>();
+
+function nextInviteGeneration(conversationId: string): number {
+  const generation = (inviteGenerations.get(conversationId) ?? 0) + 1;
+  inviteGenerations.set(conversationId, generation);
+  return generation;
+}
+
+function isCurrentInviteGeneration(conversationId: string, generation: number): boolean {
+  return inviteGenerations.get(conversationId) === generation;
+}
+
+function trackInviteRequest(conversationId: string, request: Promise<unknown>) {
+  const tracked = request.catch(() => {});
+  pendingInviteRequests.set(conversationId, tracked);
+  void tracked.then(() => {
+    if (pendingInviteRequests.get(conversationId) === tracked) {
+      pendingInviteRequests.delete(conversationId);
+    }
+  });
+}
 
 function emitChange() {
   listeners.forEach((listener) => listener());
@@ -169,9 +191,14 @@ export function inviteToReview(conversationId: string, adSlug: string): boolean 
     ],
   });
 
-  getApiClient()
-    .reviews.invite({ conversationId })
+  const generation = nextInviteGeneration(conversationId);
+  const previous = pendingInviteRequests.get(conversationId) ?? Promise.resolve();
+  const request = previous
+    .then(() => getApiClient().reviews.invite({ conversationId }))
     .then(({ invite }) => {
+      if (!isCurrentInviteGeneration(conversationId, generation)) {
+        return;
+      }
       writeApiState({
         ...apiState,
         invites: [
@@ -181,11 +208,15 @@ export function inviteToReview(conversationId: string, adSlug: string): boolean 
       });
     })
     .catch(() => {
+      if (!isCurrentInviteGeneration(conversationId, generation)) {
+        return;
+      }
       writeApiState({
         ...apiState,
         invites: apiState.invites.filter((item) => item.conversationId !== conversationId),
       });
     });
+  trackInviteRequest(conversationId, request);
 
   return true;
 }
@@ -217,14 +248,20 @@ export function cancelInvite(conversationId: string): boolean {
     invites: apiState.invites.filter((invite) => invite.conversationId !== conversationId),
   });
 
-  getApiClient()
-    .reviews.withdrawInvite({ conversationId })
+  const generation = nextInviteGeneration(conversationId);
+  const previous = pendingInviteRequests.get(conversationId) ?? Promise.resolve();
+  const request = previous
+    .then(() => getApiClient().reviews.withdrawInvite({ conversationId }))
     .catch(() => {
+      if (!isCurrentInviteGeneration(conversationId, generation)) {
+        return;
+      }
       writeApiState({
         ...apiState,
         invites: [...apiState.invites, existing],
       });
     });
+  trackInviteRequest(conversationId, request);
 
   return true;
 }
@@ -375,11 +412,20 @@ export function useReviewInvites() {
       if (found) {
         return found;
       }
-      if (useApi && conversationId && !inFlightInvites.has(conversationId)) {
+      if (
+        useApi &&
+        conversationId &&
+        !inFlightInvites.has(conversationId) &&
+        !pendingInviteRequests.has(conversationId)
+      ) {
         inFlightInvites.add(conversationId);
+        const generation = inviteGenerations.get(conversationId) ?? 0;
         getApiClient()
           .reviews.getInvite({ conversationId })
           .then((res) => {
+            if ((inviteGenerations.get(conversationId) ?? 0) !== generation) {
+              return;
+            }
             if (res.invite) {
               writeApiState({
                 ...apiState,
