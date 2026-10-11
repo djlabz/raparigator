@@ -1,4 +1,4 @@
-import sharp from "sharp";
+import sharp, { type Sharp } from "sharp";
 import type { Database } from "../../db/client";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
@@ -18,6 +18,38 @@ export function thumbnailKeyFor(storageKey: string): string {
   return `${storageKey}.thumb.webp`;
 }
 
+export type StrippedImage = {
+  data: Uint8Array;
+  width: number;
+  height: number;
+};
+
+function encodeAs(image: Sharp, contentType: string): Sharp {
+  switch (contentType) {
+    case "image/jpeg":
+      return image.jpeg({ quality: 90, mozjpeg: true });
+    case "image/png":
+      return image.png();
+    case "image/webp":
+      return image.webp({ quality: 90 });
+    case "image/avif":
+      return image.avif();
+    case "image/gif":
+      return image.gif();
+    default:
+      throw new Error(`formato de imagem sem limpeza de metadados: ${contentType}`);
+  }
+}
+
+export async function stripImageMetadata(
+  bytes: Uint8Array,
+  contentType: string,
+): Promise<StrippedImage> {
+  const image = encodeAs(sharp(Buffer.from(bytes), { failOn: "none" }).rotate(), contentType);
+  const { data, info } = await image.toBuffer({ resolveWithObject: true });
+  return { data: new Uint8Array(data), width: info.width, height: info.height };
+}
+
 export async function registerMediaJobs(deps: MediaJobsDeps): Promise<void> {
   const { db, storage, jobs, logger } = deps;
   const repo = createMediaRepository(db);
@@ -34,11 +66,9 @@ export async function registerMediaJobs(deps: MediaJobsDeps): Promise<void> {
     try {
       if (row.kind === "image") {
         const bytes = await storage.getObject(row.storageKey);
-        const image = sharp(Buffer.from(bytes), { failOn: "none" });
-        const metadata = await image.metadata();
-        const thumbnail = await image
-          .clone()
-          .rotate()
+        const clean = await stripImageMetadata(bytes, row.contentType);
+        await storage.putObject(row.storageKey, clean.data, row.contentType);
+        const thumbnail = await sharp(Buffer.from(clean.data), { failOn: "none" })
           .resize({ width: MEDIA_THUMBNAIL_WIDTH, withoutEnlargement: true })
           .webp({ quality: 80 })
           .toBuffer();
@@ -46,8 +76,9 @@ export async function registerMediaJobs(deps: MediaJobsDeps): Promise<void> {
         await storage.putObject(thumbnailKey, new Uint8Array(thumbnail), "image/webp");
         await repo.update(row.id, {
           status: "ready",
-          width: metadata.width ?? null,
-          height: metadata.height ?? null,
+          width: clean.width,
+          height: clean.height,
+          sizeBytes: clean.data.byteLength,
           thumbnailKey,
           processedAt: new Date(),
         });
