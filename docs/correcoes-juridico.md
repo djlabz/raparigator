@@ -126,7 +126,7 @@ Ordem de execução (11/10, Daniel): T-61, T-64, T-70, T-68, T-63, T-62, T-60, T
   - **Passos:** (1) testes vermelhos (colar saída); (2) `storageKeyFor(owner, id, contentType, purpose)` com prefixo por `purpose`; `createUpload` passa o `purpose`; (3) `publicUrl` com a regra do prefixo nos dois storages; (4) ajustar asserções existentes que dependem do `/public/` injetado (`media.test.ts:242-245` e afins) e helpers; (5) `ci.yml`: steps do MinIO e `S3_*` no step do Vitest; (6) `check`, `test`, E2E (`gallery-profile-photo.spec.ts` agora exercita a URL pública real).
   - **Risco e cobertura:** objetos já gravados em `media/` no MinIO de dev ficam órfãos (nada no ar; dev pode limpar o volume). A exclusão de conta e a remoção usam `storageKey` do banco, então continuam certas. `thumbnailKey` deriva da `storageKey` e herda o prefixo. O teste depende do MinIO de pé, como os testes já dependem do Postgres (`npm run db:up` sobe os dois).
 
-- [ ] **T-68 Original de mídia sem metadados (EXIF e GPS).**
+- [x] **T-68 Original de mídia sem metadados (EXIF e GPS).** (PR #89, 11/10)
   - **Problema:** o navegador envia a foto direto ao storage via URL pré-assinada; o job gera miniatura mas deixa o original intacto, com coordenadas GPS do celular da anunciante.
   - **Fazer:** no job de processamento, reprocessar o original com `sharp` (`rotate()` para aplicar a orientação, saída no mesmo formato ou WebP, sem `withMetadata()`), gravar por cima da `storageKey` e só então marcar como pronto. Vídeos: fora desta task; registrar na seção 5.
   - **Arquivos permitidos:** `apps/api/src/modules/media/jobs.ts`, testes de mídia.
