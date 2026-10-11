@@ -3,3 +3,4 @@ export * from "./profiles";
 export * from "./media";
 export * from "./chat";
 export * from "./social";
+export * from "./access-log";

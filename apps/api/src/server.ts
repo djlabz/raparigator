@@ -13,6 +13,7 @@ import { createPgNotifyChatEventBus } from "./lib/chat-events";
 import { createInlineQueue, createPgBossQueue } from "./lib/jobs";
 import { createMailer } from "./lib/mail";
 import { createS3Storage } from "./lib/storage";
+import { registerAccessLogJobs } from "./modules/access-log";
 import { registerAdminReviewDigestJob } from "./modules/announcements";
 import { registerMediaJobs } from "./modules/media/jobs";
 import { registerBillingJobs } from "./modules/premium/jobs";
@@ -51,7 +52,7 @@ async function main() {
     config,
     db,
     logger,
-    auth: createUserAuth(db, config, mailer),
+    auth: createUserAuth(db, config, mailer, jobs),
     adminAuth: createAdminAuth(db, config),
     rateLimiter: config.RATE_LIMIT_ENABLED ? new MemoryRateLimiter() : new NoopRateLimiter(),
     billing,
@@ -64,6 +65,7 @@ async function main() {
 
   await registerMediaJobs({ db, storage, jobs, logger });
   await registerReviewJobs({ jobs, logger });
+  await registerAccessLogJobs({ db, jobs, logger });
   await registerAdminReviewDigestJob({ db, config, mailer, jobs, logger });
   await registerBillingJobs({ db, premium: deps.services.premium, billing, jobs, logger });
   await jobs.work("premium.expire", async () => {

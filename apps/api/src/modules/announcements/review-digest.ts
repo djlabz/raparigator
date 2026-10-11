@@ -124,7 +124,12 @@ export async function registerAdminReviewDigestJob(deps: AdminReviewDigestDeps):
       (a, b) => (a.submittedAt?.getTime() ?? 0) - (b.submittedAt?.getTime() ?? 0),
     );
     const { subject, text } = buildAdminReviewDigestEmail(ordered, config.WEB_ORIGIN);
-    const result = await mailer.send({ to: config.ADMIN_NOTIFY_EMAIL, subject, text });
+    const result = await mailer.send({
+      kind: "admin-notify",
+      to: config.ADMIN_NOTIFY_EMAIL,
+      subject,
+      text,
+    });
     if (!result.ok) {
       await db
         .update(professionalProfiles)

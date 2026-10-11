@@ -18,19 +18,39 @@ const PII_PATHS = [
   "*.content",
   "greeting",
   "*.greeting",
+  "to",
+  "*.to",
+  "name",
+  "*.name",
+  "alias",
+  "*.alias",
+  "ip",
+  "*.ip",
+  "body",
+  "*.body",
   "req.headers.authorization",
   "req.headers.cookie",
   'res.headers["set-cookie"]',
 ];
 
-export function createLogger(options?: { level?: string; pretty?: boolean }) {
+export function createLogger(options?: {
+  level?: string;
+  pretty?: boolean;
+  destination?: pino.DestinationStream;
+}) {
   const config = getConfig();
   const level = options?.level ?? config.LOG_LEVEL;
   const pretty = options?.pretty ?? (!config.isProduction && !config.isTest);
-  return pino({
+  const base = {
     level,
     redact: { paths: PII_PATHS, censor: "[redacted]" },
     base: { service: "sigillus-api" },
+  };
+  if (options?.destination) {
+    return pino(base, options.destination);
+  }
+  return pino({
+    ...base,
     ...(pretty
       ? {
           transport: {

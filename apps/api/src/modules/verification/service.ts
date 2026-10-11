@@ -101,6 +101,7 @@ export function createEmailVerificationNotifier(
     async sendCode(channel, target, code) {
       if (channel === "email") {
         await mailer.send({
+          kind: "verification-code",
           to: target,
           subject: "Seu código de confirmação — Sigillus",
           text: `Seu código de confirmação no Sigillus é: ${code}\n\nEste código expira em 10 minutos.`,

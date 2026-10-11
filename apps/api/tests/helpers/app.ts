@@ -22,6 +22,7 @@ export type TestHarness = {
   storage: ReturnType<typeof createMemoryStorage>;
   jobs: ReturnType<typeof createInlineQueue>;
   mailer: MemoryMailer;
+  logs: () => string;
   fetch: (input: string, init?: RequestInit) => Promise<Response>;
   rpc: <T>(
     path: string,
@@ -34,16 +35,28 @@ export type TestHarness = {
   }>;
 };
 
-export function createTestHarness(): TestHarness {
+export function createTestHarness(options?: { captureLogs?: boolean }): TestHarness {
   const harness = {} as TestHarness;
   let pool: { end(): Promise<void> } | null = null;
+  const captured: string[] = [];
+  harness.logs = () => captured.join("");
 
   beforeAll(async () => {
     const databaseUrl = await ensureTestDatabase();
     const config = loadConfig({ ...process.env, DATABASE_URL: databaseUrl, NODE_ENV: "test" });
     const database = createDatabase(config);
     pool = database.pool;
-    const logger = createLogger({ level: "fatal", pretty: false });
+    const logger = options?.captureLogs
+      ? createLogger({
+          level: "info",
+          pretty: false,
+          destination: {
+            write(chunk: string) {
+              captured.push(chunk);
+            },
+          },
+        })
+      : createLogger({ level: "fatal", pretty: false });
     const storage = createMemoryStorage();
     const jobs = createInlineQueue(logger);
     const mailer = createMemoryMailer();
@@ -51,7 +64,7 @@ export function createTestHarness(): TestHarness {
       config,
       db: database.db,
       logger,
-      auth: createUserAuth(database.db, config, mailer),
+      auth: createUserAuth(database.db, config, mailer, jobs),
       adminAuth: createAdminAuth(database.db, config),
       rateLimiter: new MemoryRateLimiter(),
       billing: createFakeBillingProvider(config.BILLING_WEBHOOK_SECRET),
@@ -100,6 +113,7 @@ export function createTestHarness(): TestHarness {
     await truncateAll(harness.db);
     await seedCatalogs(harness.db);
     harness.mailer.clear();
+    captured.length = 0;
   });
 
   afterAll(async () => {
