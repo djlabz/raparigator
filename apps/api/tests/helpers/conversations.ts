@@ -1,3 +1,4 @@
+import type { ChatEvent } from "@sigillus/contracts";
 import { createMemoryChatEventBus, type ChatEventBus } from "../../src/lib/chat-events";
 import { newId } from "../../src/lib/ids";
 import { mediaAssets, professionalProfiles } from "../../src/db/schema";
@@ -121,4 +122,17 @@ export async function createChatAsset(
     ...overrides,
   });
   return id;
+}
+
+export async function nextChatEvent(
+  stream: AsyncIterator<ChatEvent>,
+  maxHeartbeats = 20,
+): Promise<IteratorResult<ChatEvent>> {
+  for (let heartbeats = 0; heartbeats <= maxHeartbeats; heartbeats += 1) {
+    const result = await stream.next();
+    if (result.done || result.value.type !== "heartbeat") {
+      return result;
+    }
+  }
+  throw new Error(`nenhum evento além de heartbeat após ${maxHeartbeats} heartbeats`);
 }
