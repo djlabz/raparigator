@@ -94,6 +94,12 @@ describe("compose.prod.yaml", () => {
     expect(loaded.RATE_LIMIT_ENABLED).toBe(true);
   });
 
+  it("ADMIN_NOTIFY_EMAIL é opcional e chega à API quando definida", () => {
+    expect(loadConfig(apiEnvironment(config)).ADMIN_NOTIFY_EMAIL).toBeUndefined();
+    const withAdmin = renderCompose({ ...validEnv, ADMIN_NOTIFY_EMAIL: "revisao@example.com" });
+    expect(loadConfig(apiEnvironment(withAdmin)).ADMIN_NOTIFY_EMAIL).toBe("revisao@example.com");
+  });
+
   it("publica portas só no loopback e não expõe Postgres nem o console do MinIO", () => {
     const published = Object.entries(config.services).flatMap(([name, service]) =>
       (service.ports ?? []).map((port) => ({ name, ...port })),

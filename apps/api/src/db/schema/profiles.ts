@@ -77,6 +77,7 @@ export const professionalProfiles = pgTable(
       .notNull()
       .default("pending_review"),
     submittedAt: timestamp({ withTimezone: true }),
+    reviewNotifiedAt: timestamp({ withTimezone: true }),
     reviewedAt: timestamp({ withTimezone: true }),
     rejectionReason: text(),
     isSuspended: boolean().notNull().default(false),

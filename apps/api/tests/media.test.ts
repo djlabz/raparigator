@@ -25,6 +25,7 @@ async function professionalWithProfile(email: string, tier: "normal" | "premium"
   const announcements = createAnnouncementsService({
     db: harness.db,
     profiles: harness.deps.services.profiles,
+    jobs: harness.jobs,
     logger: harness.deps.logger,
   });
   const mine = await announcements.getMine({ id: user.userId, name: "Pro Mídia" });

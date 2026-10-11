@@ -43,7 +43,7 @@ export function createServices(deps: ServiceDeps) {
     catalogs: createCatalogsService(db),
     feed: createFeedService(profiles),
     ads: createAdsService(db, profiles),
-    announcements: createAnnouncementsService({ db, profiles, logger }),
+    announcements: createAnnouncementsService({ db, profiles, jobs, logger }),
     media: createMediaService({ db, profiles, storage, jobs, logger }),
     chat: createChatService({ db, profiles, storage, chatEvents, logger }),
     reviews: createReviewsService({ db, profiles, notifications, jobs, logger }),

@@ -15,6 +15,13 @@
       "when": 1791646311748,
       "tag": "0001_rich_silver_fox",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791736625569,
+      "tag": "0002_admin_review_notified",
+      "breakpoints": true
     }
   ]
 }

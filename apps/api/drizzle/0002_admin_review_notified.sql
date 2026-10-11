@@ -1,0 +1,1 @@
+ALTER TABLE "professional_profile" ADD COLUMN "review_notified_at" timestamp with time zone;
