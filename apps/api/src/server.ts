@@ -13,6 +13,7 @@ import { createPgNotifyChatEventBus } from "./lib/chat-events";
 import { createInlineQueue, createPgBossQueue } from "./lib/jobs";
 import { createMailer } from "./lib/mail";
 import { createS3Storage } from "./lib/storage";
+import { registerAdminReviewDigestJob } from "./modules/announcements";
 import { registerMediaJobs } from "./modules/media/jobs";
 import { registerBillingJobs } from "./modules/premium/jobs";
 import { registerReviewJobs } from "./modules/reviews/service";
@@ -63,6 +64,7 @@ async function main() {
 
   await registerMediaJobs({ db, storage, jobs, logger });
   await registerReviewJobs({ jobs, logger });
+  await registerAdminReviewDigestJob({ db, config, mailer, jobs, logger });
   await registerBillingJobs({ db, premium: deps.services.premium, billing, jobs, logger });
   await jobs.work("premium.expire", async () => {
     await deps.services.premium.expireDueSubscriptions();

@@ -23,13 +23,16 @@ import {
 import type { Database } from "../../db/client";
 import { adminActivityLogs, professionalProfiles } from "../../db/schema";
 import { newId } from "../../lib/ids";
+import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
 import { toProfessionalAd } from "../profiles/mapper";
 import type { ProfileRepository } from "../profiles/repository";
+import { enqueueAdminReviewDigest } from "./review-digest";
 
 export type AnnouncementsServiceDeps = {
   db: Database;
   profiles: ProfileRepository;
+  jobs: JobQueue;
   logger: Logger;
 };
 
@@ -155,7 +158,7 @@ export function draftToProfileValues(draft: AnnouncementDraftState): ProfileValu
 }
 
 export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
-  const { db, profiles, logger } = deps;
+  const { db, profiles, jobs, logger } = deps;
 
   async function uniqueSlug(name: string): Promise<string> {
     const base = slugify(name) || "perfil";
@@ -263,6 +266,7 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
           targetName: updated.artisticName || owner.name,
           targetId: updated.id,
         });
+        await enqueueAdminReviewDigest(jobs, now);
       }
       return { ok: true };
     },

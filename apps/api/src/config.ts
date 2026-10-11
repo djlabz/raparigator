@@ -57,6 +57,7 @@ const EnvSchema = z
     MAIL_PROVIDER: z.enum(["log", "resend"]).default("log"),
     RESEND_API_KEY: z.union([emptyStringToUndefined, z.string()]).optional(),
     MAIL_FROM: z.string().default("Sigillus <nao-responda@sigillus.dev>"),
+    ADMIN_NOTIFY_EMAIL: z.union([emptyStringToUndefined, z.email()]).optional(),
   })
   .superRefine((env, ctx) => {
     if (
