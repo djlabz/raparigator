@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
+import { addSessionToPage, createEligibleConversation, uniqueText } from "./helpers/api";
 import { seedUserRole } from "./helpers/auth";
+import { credentials } from "./helpers/credentials";
 
 const AD_SLUG = "luna-velvet-sao-paulo";
 const AD_WITH_INVITE_SLUG = "valentina-noir-campinas";
 
 test.describe("Avaliação por convite", () => {
-  test.describe.configure({ mode: "serial" });
-
   test("cliente sem convite não consegue avaliar", async ({ page }) => {
     await seedUserRole(page, "cliente");
     await page.goto(`/anuncio/${AD_SLUG}`);
@@ -23,32 +23,67 @@ test.describe("Avaliação por convite", () => {
   });
 
   test("com convite aberto, cliente avalia uma única vez", async ({ page }) => {
-    await seedUserRole(page, "cliente");
-    await page.goto(`/anuncio/${AD_WITH_INVITE_SLUG}`);
+    const { client, professional, conversationId } = await createEligibleConversation(
+      AD_WITH_INVITE_SLUG,
+      credentials.profissionalValentina,
+    );
+    await professional.api.reviews.invite({ conversationId });
+    const comment = uniqueText("Conversa ótima.");
 
-    await page.getByRole("button", { name: "Avaliar este perfil" }).click();
+    try {
+      await addSessionToPage(page, client);
+      await page.goto(`/anuncio/${AD_WITH_INVITE_SLUG}`);
 
-    await page.locator("label", { has: page.getByRole("radio", { name: "5 estrelas" }) }).click();
-    await expect(page.getByRole("radio", { name: "5 estrelas" })).toBeChecked();
+      await page.getByRole("button", { name: "Avaliar este perfil" }).click();
 
-    await page.getByPlaceholder("Conte como foi o contato (opcional)").fill("Conversa ótima.");
-    await page.getByRole("button", { name: "Enviar avaliação" }).click();
+      await page.locator("label", { has: page.getByRole("radio", { name: "5 estrelas" }) }).click();
+      await expect(page.getByRole("radio", { name: "5 estrelas" })).toBeChecked();
 
-    await expect(page.getByText("Você já avaliou este perfil.")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Avaliar este perfil" })).toHaveCount(0);
-    await expect(page.getByText("Conversa ótima.")).toBeVisible();
+      await page.getByPlaceholder("Conte como foi o contato (opcional)").fill(comment);
+      await page.getByRole("button", { name: "Enviar avaliação" }).click();
+
+      await expect(page.getByText("Você já avaliou este perfil.")).toBeVisible();
+      await expect(page.getByRole("button", { name: "Avaliar este perfil" })).toHaveCount(0);
+      await expect(page.getByText(comment)).toBeVisible();
+
+      const { status } = await client.api.reviews.getInvite({ conversationId });
+      expect(status).toBe("used");
+    } finally {
+      await professional.api.chat.deleteFromInbox({ conversationId });
+    }
   });
 
   test("profissional convida um contato pela aba Contatos", async ({ page }) => {
-    await seedUserRole(page, "profissional");
-    await page.goto("/profissional/dashboard?tab=Contatos");
+    const { client, professional, conversationId } = await createEligibleConversation(
+      AD_SLUG,
+      credentials.profissional,
+    );
+    const conversations = await professional.api.chat.listConversations();
+    const lastMessageAt = conversations.find(
+      (conversation) => conversation.id === conversationId,
+    )?.lastMessageAt;
+    expect(lastMessageAt).toBeTruthy();
 
-    await expect(page.getByText("Cliente reservado").first()).toBeVisible();
+    try {
+      await seedUserRole(page, "profissional");
+      await page.goto("/profissional/dashboard?tab=Contatos");
 
-    await page.getByRole("button", { name: "Convidar para avaliar" }).first().click();
-    await expect(page.getByText(/Convite enviado · expira em/)).toBeVisible();
+      const row = page.getByText(`Último contato às ${lastMessageAt}`).locator("xpath=../..");
+      await expect(row).toBeVisible();
 
-    await page.getByRole("button", { name: "Retirar" }).first().click();
-    await expect(page.getByRole("button", { name: "Convidar para avaliar" }).first()).toBeVisible();
+      await row.getByRole("button", { name: "Convidar para avaliar" }).click();
+      await expect(row.getByText(/Convite enviado · expira em/)).toBeVisible();
+      await expect
+        .poll(async () => (await client.api.reviews.getInvite({ conversationId })).status)
+        .toBe("open");
+
+      await row.getByRole("button", { name: "Retirar" }).click();
+      await expect(row.getByRole("button", { name: "Convidar para avaliar" })).toBeEnabled();
+      await expect
+        .poll(async () => (await client.api.reviews.getInvite({ conversationId })).status)
+        .toBe("none");
+    } finally {
+      await professional.api.chat.deleteFromInbox({ conversationId });
+    }
   });
 });
