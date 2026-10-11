@@ -124,7 +124,7 @@ export async function createChatAsset(
     contentType: "image/jpeg",
     sizeBytes: 1024,
     fileName: "foto.jpg",
-    storageKey: `chat/${ownerUserId}/${id}.jpg`,
+    storageKey: `private/media/${ownerUserId}/${id}.jpg`,
     ...overrides,
   });
   return id;

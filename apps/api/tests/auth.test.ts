@@ -356,7 +356,7 @@ async function createDeletionFixture(prefix: string) {
   });
   const pro = await signUp(harness, { email: `${prefix}-pro@teste.dev`, role: "profissional" });
 
-  const mediaKey = `users/${client.userId}/foto.jpg`;
+  const mediaKey = `public/media/${client.userId}/foto.jpg`;
   await harness.storage.putObject(mediaKey, new Uint8Array([1, 2, 3]), "image/jpeg");
   expect(harness.storage.objects.has(mediaKey)).toBe(true);
 
