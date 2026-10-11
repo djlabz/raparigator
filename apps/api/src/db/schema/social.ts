@@ -61,21 +61,37 @@ export const reports = pgTable(
   "report",
   {
     id: text().primaryKey(),
+    source: text({ enum: ["chat", "public"] })
+      .notNull()
+      .default("chat"),
     type: text({ enum: ["fake_profile", "scam", "harassment", "inappropriate_content", "other"] })
       .notNull()
       .default("other"),
+    reason: text({
+      enum: ["photo_without_consent", "minor", "coercion", "illegal_content", "other"],
+    }),
     reporterUserId: text().references(() => users.id, { onDelete: "set null" }),
-    reporterName: text().notNull(),
-    reporterRole: text({ enum: ["cliente", "profissional"] }).notNull(),
+    reporterName: text(),
+    reporterRole: text({ enum: ["cliente", "profissional"] }),
     reportedUserId: text().references(() => users.id, { onDelete: "set null" }),
-    reportedName: text().notNull(),
-    reportedRole: text({ enum: ["cliente", "profissional"] }).notNull(),
+    reportedName: text(),
+    reportedRole: text({ enum: ["cliente", "profissional"] }),
     conversationId: text().references(() => conversations.id, { onDelete: "set null" }),
+    targetProfileId: text().references(() => professionalProfiles.id, { onDelete: "set null" }),
+    targetUrl: text(),
+    profileSlug: text(),
+    contactEmail: text(),
     description: text().notNull(),
     status: text({ enum: ["pending", "under_review", "resolved", "dismissed"] })
       .notNull()
       .default("pending"),
     resolution: text(),
+    action: text({ enum: ["remove_media", "unpublish_profile", "dismiss"] }),
+    actionTargetId: text(),
+    actionAdminId: text(),
+    actionAdminEmail: text(),
+    respondedAt: timestamp({ withTimezone: true }),
+    adminNotifiedAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }),
   },

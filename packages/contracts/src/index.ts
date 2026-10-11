@@ -10,4 +10,5 @@ export * from "./schemas/identity";
 export * from "./schemas/reviews";
 export * from "./schemas/notifications";
 export * from "./schemas/premium";
+export * from "./schemas/reports";
 export * from "./router";
