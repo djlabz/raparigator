@@ -37,6 +37,7 @@ jobs:
           S3_BUCKET=sigillus-media
           S3_REGION=us-east-1
           S3_ENDPOINT=http://minio:9000
+          S3_PUBLIC_ENDPOINT=https://media.example.com
           S3_PUBLIC_BASE_URL=https://media.example.com/sigillus-media
           S3_FORCE_PATH_STYLE=true
           API_PORT=4000
@@ -133,6 +134,99 @@ jobs:
           tags: sigillus-api:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  api-prod-boot:
+    name: API sobe com o env de produção do compose
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: sigillus
+          POSTGRES_PASSWORD: sigillus
+          POSTGRES_DB: sigillus
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sigillus -d sigillus"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          load: true
+          tags: sigillus-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Gera env de produção válido (valores fake)
+        id: prod-env
+        run: |
+          ENV_PATH="$RUNNER_TEMP/prod.env"
+          cat > "$ENV_PATH" <<EOF
+          POSTGRES_USER=sigillus
+          POSTGRES_PASSWORD=$(openssl rand -hex 32)
+          POSTGRES_DB=sigillus
+          MINIO_PORT=9000
+          S3_ACCESS_KEY_ID=sigillus
+          S3_SECRET_ACCESS_KEY=$(openssl rand -hex 32)
+          S3_BUCKET=sigillus-media
+          S3_REGION=us-east-1
+          S3_ENDPOINT=http://minio:9000
+          S3_PUBLIC_ENDPOINT=https://media.example.com
+          S3_PUBLIC_BASE_URL=https://media.example.com/sigillus-media
+          S3_FORCE_PATH_STYLE=true
+          API_PORT=4000
+          WEB_PORT=3000
+          API_ORIGIN=https://api.example.com
+          WEB_ORIGIN=https://app.example.com
+          CORS_ORIGINS=https://app.example.com
+          COOKIE_DOMAIN=.example.com
+          NEXT_PUBLIC_API_URL=https://api.example.com
+          AUTH_SECRET=$(openssl rand -hex 32)
+          BILLING_PROVIDER=fake
+          BILLING_FAKE_ACKNOWLEDGED=true
+          BILLING_WEBHOOK_SECRET=$(openssl rand -hex 32)
+          MAIL_PROVIDER=resend
+          RESEND_API_KEY=re_ci_fake
+          MAIL_FROM=Sigillus <nao-responda@example.com>
+          VERIFICATION_REQUIRED=false
+          VERIFICATION_DEV_CODES=false
+          PREMIUM_CHECKOUT_ENABLED=false
+          OPENAPI_DOCS_ENABLED=false
+          RATE_LIMIT_ENABLED=true
+          SENTRY_DSN=
+          NEXT_PUBLIC_SENTRY_DSN=
+          EOF
+          echo "path=$ENV_PATH" >> "$GITHUB_OUTPUT"
+      - name: Extrai o env do serviço api do compose de produção
+        run: |
+          docker compose -f compose.prod.yaml --env-file "${{ steps.prod-env.outputs.path }}" config --format json \
+            | jq -r '.services.api.environment | to_entries[] | "\(.key)=\(.value // "")"' > "$RUNNER_TEMP/api.env"
+          cut -d= -f1 "$RUNNER_TEMP/api.env"
+      - name: Sobe a API e espera o /healthz
+        run: |
+          docker run -d --name api --network host \
+            --env-file "$RUNNER_TEMP/api.env" \
+            -e DATABASE_URL=postgres://sigillus:sigillus@localhost:5432/sigillus \
+            sigillus-api:ci
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:4000/healthz; then
+              exit 0
+            fi
+            if [ "$(docker inspect -f '{{.State.Running}}' api)" != "true" ]; then
+              break
+            fi
+            sleep 1
+          done
+          docker logs api
+          exit 1
 
   docker-web:
     name: Build da imagem do Web
