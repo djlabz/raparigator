@@ -13,6 +13,7 @@ export async function signUp(
     password?: string;
     name?: string;
     role?: "cliente" | "profissional";
+    alias?: string;
   },
 ): Promise<SignedUp> {
   const response = await harness.fetch("/api/auth/sign-up/email", {
@@ -23,6 +24,7 @@ export async function signUp(
       password: input.password ?? "Senha@12345",
       name: input.name ?? "Pessoa Teste",
       role: input.role ?? "cliente",
+      alias: input.alias,
     }),
   });
   if (!response.ok) {

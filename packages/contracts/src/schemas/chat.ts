@@ -9,6 +9,7 @@ export const ConversationSchema = z.object({
   lastMessageAt: z.string(),
   unread: z.number(),
   currentUserAlias: z.string().optional(),
+  clientAlias: z.string().optional(),
   isBlocked: z.boolean().optional(),
   deletedFromInboxAt: z.string().nullable().optional(),
   adSlug: z.string().optional(),

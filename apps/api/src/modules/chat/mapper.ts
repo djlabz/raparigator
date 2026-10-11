@@ -23,6 +23,10 @@ export function clientDisplayName(ctx: ConversationContext): string {
   return ctx.clientParticipant.alias?.trim() || ctx.clientUser.name;
 }
 
+export function clientChosenAlias(ctx: ConversationContext): string | undefined {
+  return ctx.clientParticipant.alias?.trim() || ctx.clientUser.alias?.trim() || undefined;
+}
+
 export function displayNameForRole(ctx: ConversationContext, role: MessageSenderRole): string {
   if (role === "profissional") {
     return ctx.profile.artisticName;
@@ -51,6 +55,7 @@ export function toConversation(
     lastMessageAt: (ctx.conversation.lastMessageAt ?? ctx.conversation.createdAt).toISOString(),
     unread: me.unreadCount,
     currentUserAlias: me.alias ?? undefined,
+    clientAlias: isClientView ? undefined : clientChosenAlias(ctx),
     isBlocked: me.isBlocked,
     deletedFromInboxAt: me.deletedFromInboxAt?.toISOString() ?? null,
     adSlug: ctx.profile.slug,

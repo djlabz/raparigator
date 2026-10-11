@@ -69,8 +69,7 @@ export function ContactsTab({ adSlug, professionalName }: ContactsTabProps) {
 
         return {
           conversationId: conversation.id,
-          // A profissional vê o apelido que o cliente usa na conversa, nunca o nome real.
-          name: conversation.currentUserAlias || "Cliente reservado",
+          name: conversation.clientAlias || "Cliente reservado",
           lastMessageAt: conversation.lastMessageAt,
           isBlocked: Boolean(conversation.isBlocked),
           eligible: hasTwoWayConversation(messages),
