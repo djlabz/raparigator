@@ -63,7 +63,16 @@ export const adminRouter = {
     context.deps.services.admin.startReportReview(input),
   ),
   resolveReport: admin.admin.resolveReport.handler(({ context, input }) =>
-    context.deps.services.admin.resolveReport(input),
+    context.deps.services.admin.resolveReport(context.admin, input),
+  ),
+  reportEvidence: admin.admin.reportEvidence.handler(({ context, input }) =>
+    context.deps.services.admin.reportEvidence(input),
+  ),
+  reportTargetMedia: admin.admin.reportTargetMedia.handler(({ context, input }) =>
+    context.deps.services.admin.reportTargetMedia(input),
+  ),
+  actOnReport: admin.admin.actOnReport.handler(({ context, input }) =>
+    context.deps.services.admin.actOnReport(context.admin, input),
   ),
   search: admin.admin.search.handler(({ context, input }) =>
     context.deps.services.admin.search(input),

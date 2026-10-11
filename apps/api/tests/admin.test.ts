@@ -26,6 +26,7 @@ function setup() {
   const admin = createAdminService({
     db: harness.db,
     profiles: harness.deps.services.profiles,
+    storage: harness.storage,
     logger: harness.deps.logger,
     premium: harness.deps.services.premium,
     notify: async (userId, notification) => {

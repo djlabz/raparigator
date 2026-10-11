@@ -9,6 +9,7 @@ export type JobPayloads = {
   "billing.webhook": { deliveryId: string };
   "premium.expire": Record<string, never>;
   "admin.review-digest": Record<string, never>;
+  "admin.report-digest": Record<string, never>;
   "access-log.record": {
     userId: string;
     event: AccessLogEvent;
@@ -24,6 +25,7 @@ export type JobName = keyof JobPayloads;
 
 export const JOB_QUEUE_POLICIES: Partial<Record<JobName, QueuePolicy>> = {
   "admin.review-digest": "short",
+  "admin.report-digest": "short",
 };
 
 export type JobHandler<TName extends JobName> = (payload: JobPayloads[TName]) => Promise<void>;

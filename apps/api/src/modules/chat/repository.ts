@@ -7,7 +7,6 @@ import {
   mediaAssets,
   messages,
   professionalProfiles,
-  reports,
   users,
 } from "../../db/schema";
 import { newId } from "../../lib/ids";
@@ -16,7 +15,6 @@ export type ConversationRow = typeof conversations.$inferSelect;
 export type ParticipantRow = typeof conversationParticipants.$inferSelect;
 export type MessageRow = typeof messages.$inferSelect;
 export type MessageInsert = typeof messages.$inferInsert;
-export type ReportInsert = typeof reports.$inferInsert;
 
 export type ConversationProfile = {
   id: string;
@@ -44,7 +42,7 @@ export type ChatMediaAsset = {
   ownerUserId: string;
   kind: "image" | "video";
   purpose: "gallery" | "profile" | "chat";
-  status: "pending_upload" | "processing" | "ready" | "rejected" | "failed";
+  status: "pending_upload" | "processing" | "ready" | "rejected" | "failed" | "blocked";
   fileName: string | null;
   storageKey: string;
 };
@@ -324,10 +322,6 @@ export function createChatRepository(db: Database) {
         result.set(row.id, row);
       }
       return result;
-    },
-
-    async insertReport(values: ReportInsert) {
-      await db.insert(reports).values(values);
     },
   };
 }

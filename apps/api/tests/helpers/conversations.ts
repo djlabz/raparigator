@@ -84,6 +84,7 @@ export async function createChatFixture(
     storage: harness.storage,
     chatEvents,
     logger,
+    reports: harness.deps.services.reports,
     heartbeatMs: 50,
   });
   const reviews = createReviewsService({

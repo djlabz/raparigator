@@ -1,6 +1,8 @@
 import { and, count, desc, eq, gte, ilike, inArray, or, sql } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
+import { isInformativeHash } from "@sigillus/domain";
 import type {
+  ActOnReportInput,
   AdminActivityLog,
   AdminReviewAction,
   ClientAccount,
@@ -9,7 +11,9 @@ import type {
   PaginationInput,
   ProfessionalAd,
   Report,
+  ReportEvidence,
   ReportStatus,
+  ReportTargetMedia,
   VerificationStatus,
   WeeklySignup,
 } from "@sigillus/contracts";
@@ -18,12 +22,15 @@ import {
   adminActivityLogs,
   conversations,
   professionalProfiles,
-  reports,
   sessions,
   users,
 } from "../../db/schema";
 import { newId } from "../../lib/ids";
 import type { Logger } from "../../lib/logger";
+import type { ObjectStorage } from "../../lib/storage";
+import { createMediaRepository } from "../media/repository";
+import { computeImageHash } from "../reports/image-hash";
+import { createReportsRepository, type ReportRow } from "../reports/repository";
 import { toProfessionalAd, type ProfileRow } from "../profiles/mapper";
 import type { ProfileRepository } from "../profiles/repository";
 import type { PremiumService } from "../premium/service";
@@ -37,6 +44,7 @@ export type AdminNotify = (userId: string, notification: AdminNotification) => P
 export type AdminServiceDeps = {
   db: Database;
   profiles: ProfileRepository;
+  storage: ObjectStorage;
   logger: Logger;
   notify?: AdminNotify;
   premium?: PremiumService;
@@ -45,7 +53,6 @@ export type AdminServiceDeps = {
 export type AdminService = ReturnType<typeof createAdminService>;
 
 type ActivityRow = typeof adminActivityLogs.$inferSelect;
-type ReportRow = typeof reports.$inferSelect;
 type UserRow = typeof users.$inferSelect;
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -53,6 +60,7 @@ const WEEKLY_SIGNUP_WEEKS = 7;
 const SEARCH_LIMIT = 5;
 const RECENT_ACTIVITY_LIMIT = 8;
 const PROFESSIONAL_ADS_HREF = "/profissional/anuncios";
+const REMOVED_MEDIA_MESSAGE = "Mídia retirada após análise de denúncia.";
 
 export function splitCityState(value: string | null): { city: string; state: string } {
   if (!value) {
@@ -102,21 +110,35 @@ function toActivityLog(row: ActivityRow): AdminActivityLog {
   };
 }
 
-function toReport(row: ReportRow): Report {
+function toReport(row: ReportRow, evidenceCount: number): Report {
   return {
     id: row.id,
+    source: row.source,
     type: row.type,
-    reporterName: row.reporterName,
-    reporterRole: row.reporterRole,
-    reportedName: row.reportedName,
+    reason: row.reason ?? undefined,
+    reporterName: row.reporterName ?? undefined,
+    reporterRole: row.reporterRole ?? undefined,
+    reportedName: row.reportedName ?? undefined,
     reportedId: row.reportedUserId ?? undefined,
-    reportedRole: row.reportedRole,
+    reportedRole: row.reportedRole ?? undefined,
+    targetProfileId: row.targetProfileId ?? undefined,
+    targetUrl: row.targetUrl ?? undefined,
+    profileSlug: row.profileSlug ?? undefined,
     description: row.description,
     status: row.status,
     resolution: row.resolution ?? undefined,
+    action: row.action ?? undefined,
+    actionByEmail: row.actionAdminEmail ?? undefined,
+    respondedAt: row.respondedAt?.toISOString(),
+    hasContactEmail: Boolean(row.contactEmail),
+    evidenceCount,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt?.toISOString(),
   };
+}
+
+function reportReason(reportId: string, note: string): string {
+  return note ? `Denúncia #${reportId}: ${note}` : `Denúncia #${reportId}`;
 }
 
 function profileLabel(row: ProfileRow): string {
@@ -124,7 +146,9 @@ function profileLabel(row: ProfileRow): string {
 }
 
 export function createAdminService(deps: AdminServiceDeps) {
-  const { db, profiles, logger, notify, premium } = deps;
+  const { db, profiles, storage, logger, notify, premium } = deps;
+  const reportsRepo = createReportsRepository(db);
+  const media = createMediaRepository(db);
 
   async function logActivity(entry: {
     action: ActivityRow["action"];
@@ -168,11 +192,147 @@ export function createAdminService(deps: AdminServiceDeps) {
   }
 
   async function requireReport(id: string): Promise<ReportRow> {
-    const [row] = await db.select().from(reports).where(eq(reports.id, id)).limit(1);
+    const row = await reportsRepo.findById(id);
     if (!row) {
       throw new ORPCError("NOT_FOUND", { message: "Denúncia não encontrada." });
     }
     return row;
+  }
+
+  function requireOpenReport(row: ReportRow) {
+    if (row.status === "resolved" || row.status === "dismissed") {
+      throw new ORPCError("CONFLICT", { message: "Denúncia já foi encerrada." });
+    }
+  }
+
+  async function requireTargetProfile(row: ReportRow): Promise<ProfileRow> {
+    if (!row.targetProfileId) {
+      throw new ORPCError("CONFLICT", {
+        message: "A denúncia não aponta para um anúncio cadastrado.",
+      });
+    }
+    return requireProfile(row.targetProfileId);
+  }
+
+  async function closeReport(
+    row: ReportRow,
+    admin: AdminActor,
+    values: {
+      status: "resolved" | "dismissed";
+      resolution: string | null;
+      action: ReportRow["action"];
+      actionTargetId: string | null;
+    },
+  ) {
+    const now = new Date();
+    await reportsRepo.update(row.id, {
+      ...values,
+      actionAdminId: admin.id,
+      actionAdminEmail: admin.email,
+      respondedAt: now,
+      updatedAt: now,
+    });
+  }
+
+  async function blockImageHash(row: ReportRow, asset: { id: string; storageKey: string }) {
+    let hash: string;
+    try {
+      hash = await computeImageHash(await storage.getObject(asset.storageKey));
+    } catch (error) {
+      logger.warn(
+        { err: error, reportId: row.id, assetId: asset.id },
+        "hash da mídia indisponível",
+      );
+      return;
+    }
+    if (!isInformativeHash(hash)) {
+      logger.info({ reportId: row.id, assetId: asset.id }, "hash pouco informativo não gravado");
+      return;
+    }
+    await reportsRepo.insertBlockedHash({
+      id: newId(),
+      hash,
+      reportId: row.id,
+      sourceAssetId: asset.id,
+    });
+  }
+
+  async function removeMediaByReport(admin: AdminActor, row: ReportRow, input: ActOnReportInput) {
+    if (!input.assetId) {
+      throw new ORPCError("CONFLICT", { message: "Informe a mídia a remover." });
+    }
+    const profile = await requireTargetProfile(row);
+    const asset = await media.findById(input.assetId);
+    if (!asset || asset.profileId !== profile.id || asset.purpose === "chat") {
+      throw new ORPCError("CONFLICT", { message: "A mídia não pertence ao anúncio denunciado." });
+    }
+    if (asset.kind === "image") {
+      await blockImageHash(row, asset);
+    }
+    await storage.deleteObject(asset.storageKey).catch(() => undefined);
+    if (asset.thumbnailKey) {
+      await storage.deleteObject(asset.thumbnailKey).catch(() => undefined);
+    }
+    if (profile.profileImageAssetId === asset.id) {
+      await profiles.update(profile.id, { profileImageAssetId: null });
+    }
+    await media.update(asset.id, {
+      status: "rejected",
+      thumbnailKey: null,
+      moderationReason: REMOVED_MEDIA_MESSAGE,
+      blockReason: reportReason(row.id, input.note),
+      blockedByReportId: row.id,
+    });
+    await closeReport(row, admin, {
+      status: "resolved",
+      resolution: input.note || null,
+      action: "remove_media",
+      actionTargetId: asset.id,
+    });
+    await notifyProfileOwner(profile.userId, {
+      key: `report-media-removed:${asset.id}`,
+      title: "Mídia retirada do anúncio",
+      message: "Uma mídia do seu anúncio foi retirada após análise de denúncia.",
+      href: PROFESSIONAL_ADS_HREF,
+    });
+    logger.info(
+      { adminId: admin.id, reportId: row.id, assetId: asset.id },
+      "mídia removida por denúncia",
+    );
+  }
+
+  async function unpublishByReport(admin: AdminActor, row: ReportRow, input: ActOnReportInput) {
+    const profile = await requireTargetProfile(row);
+    const reason = reportReason(row.id, input.note);
+    const now = new Date();
+    await profiles.update(profile.id, {
+      verificationStatus: "rejected",
+      rejectionReason: reason,
+      reviewedAt: now,
+    });
+    await logActivity({
+      action: "profile_rejected",
+      targetName: profileLabel(profile),
+      targetId: profile.id,
+      adminEmail: admin.email,
+      reason,
+    });
+    await closeReport(row, admin, {
+      status: "resolved",
+      resolution: input.note || null,
+      action: "unpublish_profile",
+      actionTargetId: profile.id,
+    });
+    await notifyProfileOwner(profile.userId, {
+      key: `report-unpublished:${profile.id}:${now.getTime()}`,
+      title: "Anúncio retirado do ar",
+      message: `Seu anúncio foi retirado do ar após análise de denúncia: ${reason}`,
+      href: PROFESSIONAL_ADS_HREF,
+    });
+    logger.info(
+      { adminId: admin.id, reportId: row.id, profileId: profile.id },
+      "anúncio despublicado por denúncia",
+    );
   }
 
   async function toAds(rows: ProfileRow[]): Promise<ProfessionalAd[]> {
@@ -445,11 +605,69 @@ export function createAdminService(deps: AdminServiceDeps) {
     },
 
     async reports(filter: { status?: ReportStatus }): Promise<Report[]> {
-      const query = db.select().from(reports).orderBy(desc(reports.createdAt));
-      const rows = filter.status
-        ? await query.where(eq(reports.status, filter.status))
-        : await query;
-      return rows.map(toReport);
+      const rows = await reportsRepo.list(filter.status);
+      const counts = await reportsRepo.countEvidence(rows.map((row) => row.id));
+      return rows.map((row) => toReport(row, counts.get(row.id) ?? 0));
+    },
+
+    async reportEvidence(input: { id: string }): Promise<ReportEvidence[]> {
+      const row = await requireReport(input.id);
+      const files = await reportsRepo.listEvidence(row.id);
+      return Promise.all(
+        files.map(async (file) => ({
+          id: file.id,
+          contentType: file.contentType,
+          sizeBytes: file.sizeBytes,
+          url: await storage.presignView(file.storageKey),
+          createdAt: file.createdAt.toISOString(),
+        })),
+      );
+    },
+
+    async reportTargetMedia(input: { id: string }): Promise<ReportTargetMedia[]> {
+      const row = await requireReport(input.id);
+      if (!row.targetProfileId) {
+        return [];
+      }
+      const profile = await profiles.findById(row.targetProfileId);
+      if (!profile) {
+        return [];
+      }
+      const assets = await media.listByOwner(profile.userId);
+      const visible = assets.filter(
+        (asset) =>
+          asset.profileId === profile.id && asset.purpose !== "chat" && asset.status === "ready",
+      );
+      return Promise.all(
+        visible.map(async (asset) => ({
+          id: asset.id,
+          kind: asset.kind,
+          status: asset.status,
+          contentType: asset.contentType,
+          url: await storage.presignView(asset.storageKey),
+          isProfileImage: profile.profileImageAssetId === asset.id,
+          createdAt: asset.createdAt.toISOString(),
+        })),
+      );
+    },
+
+    async actOnReport(admin: AdminActor, input: ActOnReportInput) {
+      const row = await requireReport(input.id);
+      requireOpenReport(row);
+      if (input.action === "remove_media") {
+        await removeMediaByReport(admin, row, input);
+      } else if (input.action === "unpublish_profile") {
+        await unpublishByReport(admin, row, input);
+      } else {
+        await closeReport(row, admin, {
+          status: "dismissed",
+          resolution: input.note || null,
+          action: "dismiss",
+          actionTargetId: null,
+        });
+        logger.info({ adminId: admin.id, reportId: row.id }, "denúncia encerrada sem ação");
+      }
+      return { ok: true as const };
     },
 
     async startReportReview(input: { id: string }) {
@@ -457,22 +675,23 @@ export function createAdminService(deps: AdminServiceDeps) {
       if (row.status !== "pending") {
         throw new ORPCError("CONFLICT", { message: "Denúncia já está em análise ou encerrada." });
       }
-      await db
-        .update(reports)
-        .set({ status: "under_review", updatedAt: new Date() })
-        .where(eq(reports.id, row.id));
+      await reportsRepo.update(row.id, { status: "under_review", updatedAt: new Date() });
       return { ok: true as const };
     },
 
-    async resolveReport(input: { id: string; resolution: "resolved" | "dismissed"; note: string }) {
+    async resolveReport(
+      admin: AdminActor,
+      input: { id: string; resolution: "resolved" | "dismissed"; note: string },
+    ) {
       const row = await requireReport(input.id);
-      if (row.status === "resolved" || row.status === "dismissed") {
-        throw new ORPCError("CONFLICT", { message: "Denúncia já foi encerrada." });
-      }
-      await db
-        .update(reports)
-        .set({ status: input.resolution, resolution: input.note, updatedAt: new Date() })
-        .where(eq(reports.id, row.id));
+      requireOpenReport(row);
+      await closeReport(row, admin, {
+        status: input.resolution,
+        resolution: input.note,
+        action: row.action,
+        actionTargetId: row.actionTargetId,
+      });
+      logger.info({ adminId: admin.id, reportId: row.id }, "denúncia encerrada");
       return { ok: true as const };
     },
 
