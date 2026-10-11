@@ -39,7 +39,6 @@ import {
   isSelectUnselected,
   OPTIMIZE_SECTION_ORDER,
   SECTION_LABELS,
-  syncDraftToMockAd,
 } from "@/lib/announcement-draft";
 import type {
   AnnouncementCharacteristics,
@@ -789,7 +788,6 @@ export function AnnouncementTab({
           coverIndex: current.images.length > 0 ? 0 : current.coverIndex,
           profileIndex: remapIndexAfterMoveToFront(current.profileIndex, safeIndex),
         };
-        syncDraftToMockAd(ad.slug, next);
         return next;
       }
 
@@ -823,7 +821,6 @@ export function AnnouncementTab({
         profilePreviews: nextProfilePreviews,
         profileIndex: safeIndex,
       };
-      syncDraftToMockAd(ad.slug, next);
       return next;
     });
 
@@ -863,7 +860,6 @@ export function AnnouncementTab({
         coverIndex: 0,
         profileIndex: remapIndexAfterMoveToFront(current.profileIndex, safeIndex),
       };
-      syncDraftToMockAd(ad.slug, next);
       return next;
     });
   };
@@ -882,7 +878,6 @@ export function AnnouncementTab({
         ...current,
         profileIndex: resolveCoverIndex(index, current.images.length),
       };
-      syncDraftToMockAd(ad.slug, next);
       return next;
     });
   };
