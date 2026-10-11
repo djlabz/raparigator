@@ -5,6 +5,7 @@ import type { User } from "@sigillus/contracts";
 import { mediaAssets, professionalProfiles } from "../../db/schema";
 import { os } from "../../orpc/base";
 import { getUserSession, type AppContext } from "../../orpc/context";
+import { recordAccess } from "../access-log";
 
 const DELETE_ACCOUNT_ERRORS: Record<string, string> = {
   INVALID_PASSWORD: "Senha incorreta.",
@@ -70,6 +71,12 @@ export const authRouter = {
       context.deps.logger.error({ err, userId }, "Erro em deleteAccount");
       throw err;
     }
+
+    await recordAccess(context.deps.jobs, {
+      userId,
+      event: "account_delete",
+      headers: context.request.headers,
+    });
 
     for (const asset of userMedia) {
       try {

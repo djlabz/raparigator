@@ -1,7 +1,10 @@
 import type { AppConfig } from "../config";
 import type { Logger } from "./logger";
 
+export type EmailKind = "reset" | "admin-notify" | "verification-code";
+
 export type EmailMessage = {
+  kind: EmailKind;
   to: string;
   subject: string;
   text: string;
@@ -21,14 +24,7 @@ export function createLogMailer(logger: Logger): Mailer {
   return {
     async send(message: EmailMessage): Promise<SendEmailResult> {
       const id = `log_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      logger.info(
-        {
-          mailId: id,
-          to: message.to,
-          subject: message.subject,
-        },
-        "e-mail transacional registrado em log",
-      );
+      logger.info({ mailId: id, kind: message.kind }, "e-mail transacional registrado em log");
       return { id, ok: true };
     },
   };
@@ -62,14 +58,8 @@ export function createResendMailer(options: ResendMailerOptions): Mailer {
         });
 
         if (!response.ok) {
-          const errorText = await response.text().catch(() => "");
           logger.error(
-            {
-              status: response.status,
-              to: message.to,
-              subject: message.subject,
-              error: errorText,
-            },
+            { kind: message.kind, status: response.status },
             "falha ao enviar e-mail via Resend",
           );
           return { ok: false };
@@ -77,13 +67,13 @@ export function createResendMailer(options: ResendMailerOptions): Mailer {
 
         const data = (await response.json().catch(() => ({}))) as { id?: string };
         logger.info(
-          { mailId: data.id, to: message.to, subject: message.subject },
+          { mailId: data.id, kind: message.kind },
           "e-mail enviado com sucesso via Resend",
         );
         return { id: data.id, ok: true };
       } catch (error) {
         logger.error(
-          { err: error, to: message.to, subject: message.subject },
+          { kind: message.kind, errorName: error instanceof Error ? error.name : "unknown" },
           "erro inesperado ao enviar e-mail via Resend",
         );
         return { ok: false };

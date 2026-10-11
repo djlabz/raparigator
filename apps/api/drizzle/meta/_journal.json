@@ -29,6 +29,13 @@
       "when": 1791754937680,
       "tag": "0003_user_alias_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791756420225,
+      "tag": "0004_access_log",
+      "breakpoints": true
     }
   ]
 }

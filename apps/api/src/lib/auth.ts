@@ -5,12 +5,21 @@ import { eq, or } from "drizzle-orm";
 import type { AppConfig } from "../config";
 import type { Database } from "../db/client";
 import * as schema from "../db/schema";
+import type { JobQueue } from "./jobs";
 import type { Mailer } from "./mail";
 import { newId } from "./ids";
+import { recordAccess } from "../modules/access-log";
 import { assertAliasAvailable, assignClientAlias, normalizeAlias } from "../modules/auth/alias";
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const SESSION_UPDATE_AGE_SECONDS = 60 * 60 * 24;
+const SESSION_CREATE_EVENTS = { "/sign-up/email": "signup", "/sign-in/email": "login" } as const;
+
+type HookContext = { path?: string; headers?: Headers; request?: Request } | null;
+
+function hookHeaders(ctx: HookContext) {
+  return ctx?.headers ?? ctx?.request?.headers ?? null;
+}
 
 function cookieOptions(config: AppConfig) {
   return {
@@ -21,7 +30,7 @@ function cookieOptions(config: AppConfig) {
   };
 }
 
-export function createUserAuth(db: Database, config: AppConfig, mailer?: Mailer) {
+export function createUserAuth(db: Database, config: AppConfig, mailer?: Mailer, jobs?: JobQueue) {
   return betterAuth({
     appName: "Sigillus",
     baseURL: config.API_ORIGIN,
@@ -47,6 +56,7 @@ export function createUserAuth(db: Database, config: AppConfig, mailer?: Mailer)
         }
         const resetUrl = `${config.WEB_ORIGIN}/auth/redefinir-senha?token=${token}`;
         await mailer.send({
+          kind: "reset",
           to: user.email,
           subject: "Redefinição de senha — Sigillus",
           text: `Olá ${user.name || ""},\n\nRecebemos uma solicitação para redefinir a senha da sua conta no Sigillus.\n\nAcesse o link abaixo para criar uma nova senha:\n${resetUrl}\n\nO link é válido por 1 hora. Se você não solicitou a alteração, ignore esta mensagem.`,
@@ -134,6 +144,34 @@ export function createUserAuth(db: Database, config: AppConfig, mailer?: Mailer)
               await assertAliasAvailable(db, alias, ctx?.context.session?.user.id);
             }
             return { data: { ...data, alias } };
+          },
+        },
+      },
+      session: {
+        create: {
+          after: async (session, ctx) => {
+            const path = ctx?.path as keyof typeof SESSION_CREATE_EVENTS | undefined;
+            const event = path ? SESSION_CREATE_EVENTS[path] : undefined;
+            if (!jobs || !event) {
+              return;
+            }
+            await recordAccess(jobs, {
+              userId: session.userId,
+              event,
+              headers: hookHeaders(ctx),
+            });
+          },
+        },
+        delete: {
+          before: async (session, ctx) => {
+            if (!jobs || ctx?.path !== "/sign-out") {
+              return;
+            }
+            await recordAccess(jobs, {
+              userId: session.userId,
+              event: "logout",
+              headers: hookHeaders(ctx),
+            });
           },
         },
       },

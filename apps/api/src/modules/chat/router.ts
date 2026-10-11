@@ -1,5 +1,6 @@
 import { RATE_LIMITS } from "../../lib/rate-limit";
 import { os, rateLimited, requireRole, withUser } from "../../orpc/base";
+import { recordAccess } from "../access-log";
 
 const sendLimit = rateLimited("chat.send", RATE_LIMITS.chatSend);
 
@@ -49,7 +50,15 @@ export const chatRouter = {
   report: os.chat.report
     .use(withUser)
     .use(rateLimited("chat.report", RATE_LIMITS.report))
-    .handler(({ context, input }) => context.deps.services.chat.report(context.user, input)),
+    .handler(async ({ context, input }) => {
+      const result = await context.deps.services.chat.report(context.user, input);
+      await recordAccess(context.deps.jobs, {
+        userId: context.user.id,
+        event: "report_create",
+        headers: context.request.headers,
+      });
+      return result;
+    }),
   updateAlias: os.chat.updateAlias
     .use(withUser)
     .handler(({ context, input }) => context.deps.services.chat.updateAlias(context.user, input)),

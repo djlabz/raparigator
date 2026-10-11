@@ -14,6 +14,7 @@ describe("lib / mail", () => {
   it("LogMailer registra envio e retorna ok", async () => {
     const mailer = createLogMailer(logger);
     const result = await mailer.send({
+      kind: "reset",
       to: "cliente@teste.dev",
       subject: "Assunto Teste",
       text: "Mensagem de texto",
@@ -22,11 +23,75 @@ describe("lib / mail", () => {
     expect(result.id).toMatch(/^log_/);
   });
 
+  it("LogMailer não loga o destinatário e registra mailId e kind", async () => {
+    const lines: string[] = [];
+    const capturing = createLogger({
+      level: "info",
+      pretty: false,
+      destination: {
+        write(chunk: string) {
+          lines.push(chunk);
+        },
+      },
+    });
+    const mailer = createLogMailer(capturing);
+    const result = await mailer.send({
+      to: "alvo@teste.dev",
+      subject: "Redefinição de senha",
+      text: "Link",
+      kind: "reset",
+    });
+
+    const output = lines.join("");
+    expect(result.ok).toBe(true);
+    expect(output).not.toContain("alvo@teste.dev");
+    expect(output).not.toContain("Redefinição de senha");
+    expect(output).toContain(`"mailId":"${result.id}"`);
+    expect(output).toContain('"kind":"reset"');
+  });
+
+  it("ResendMailer com erro não loga destinatário, assunto nem o corpo da resposta", async () => {
+    const lines: string[] = [];
+    const capturing = createLogger({
+      level: "info",
+      pretty: false,
+      destination: {
+        write(chunk: string) {
+          lines.push(chunk);
+        },
+      },
+    });
+    const mailer = createResendMailer({
+      apiKey: "chave",
+      from: "teste@sigillus.dev",
+      logger: capturing,
+      fetchFn: (async () =>
+        new Response(JSON.stringify({ message: "invalid recipient alvo@teste.dev" }), {
+          status: 422,
+        })) as typeof fetch,
+    });
+
+    const result = await mailer.send({
+      to: "alvo@teste.dev",
+      subject: "Seu código de confirmação",
+      text: "Código",
+      kind: "verification-code",
+    });
+
+    const output = lines.join("");
+    expect(result).toEqual({ ok: false });
+    expect(output).not.toContain("alvo@teste.dev");
+    expect(output).not.toContain("Seu código de confirmação");
+    expect(output).toContain('"kind":"verification-code"');
+    expect(output).toContain('"status":422');
+  });
+
   it("MemoryMailer armazena mensagens e limpa o buffer", async () => {
     const mailer = createMemoryMailer();
     expect(mailer.sent).toHaveLength(0);
 
     const result = await mailer.send({
+      kind: "reset",
       to: "usuario@teste.dev",
       subject: "Redefinir senha",
       text: "Link de redefinição",
@@ -62,6 +127,7 @@ describe("lib / mail", () => {
     });
 
     const result = await mailer.send({
+      kind: "verification-code",
       to: "destino@teste.dev",
       subject: "Confirmação",
       text: "Código: 123456",
@@ -102,6 +168,7 @@ describe("lib / mail", () => {
     });
 
     const httpError = await mailer.send({
+      kind: "admin-notify",
       to: "alvo@teste.dev",
       subject: "Teste",
       text: "Texto",
@@ -120,6 +187,7 @@ describe("lib / mail", () => {
     });
 
     const networkError = await networkMailer.send({
+      kind: "admin-notify",
       to: "alvo@teste.dev",
       subject: "Teste",
       text: "Texto",

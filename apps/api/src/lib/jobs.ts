@@ -1,4 +1,5 @@
 import { PgBoss, type QueuePolicy } from "pg-boss";
+import type { AccessLogEvent } from "@sigillus/contracts";
 import type { Logger } from "./logger";
 
 export type JobPayloads = {
@@ -8,6 +9,15 @@ export type JobPayloads = {
   "billing.webhook": { deliveryId: string };
   "premium.expire": Record<string, never>;
   "admin.review-digest": Record<string, never>;
+  "access-log.record": {
+    userId: string;
+    event: AccessLogEvent;
+    ip: string | null;
+    userAgent: string | null;
+    occurredAt: string;
+  };
+  "access-log.purge": Record<string, never>;
+  "session.purge": Record<string, never>;
 };
 
 export type JobName = keyof JobPayloads;

@@ -1,6 +1,8 @@
 import { eventIterator, oc } from "@orpc/contract";
 import { z } from "zod";
 import {
+  AccessLogSchema,
+  AccessLogsInputSchema,
   AdminActivityLogSchema,
   DashboardStatsSchema,
   GlobalSearchResultSchema,
@@ -365,6 +367,10 @@ export const adminContract = {
     .route({ method: "GET", path: "/admin/activity" })
     .input(PaginationInputSchema)
     .output(paginated(AdminActivityLogSchema)),
+  accessLogs: base
+    .route({ method: "GET", path: "/admin/access-logs" })
+    .input(AccessLogsInputSchema)
+    .output(paginated(AccessLogSchema)),
   clients: base
     .route({ method: "GET", path: "/admin/clients" })
     .input(z.object({ status: z.enum(["active", "suspended"]).optional() }))

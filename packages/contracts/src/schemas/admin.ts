@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { IdSchema } from "./common";
+import { IdSchema, PaginationInputSchema } from "./common";
 
 export const AdminActivityActionSchema = z.enum([
   "profile_approved",
@@ -22,6 +22,34 @@ export const AdminActivityLogSchema = z.object({
   timestamp: z.string(),
 });
 export type AdminActivityLog = z.infer<typeof AdminActivityLogSchema>;
+
+export const AccessLogEventSchema = z.enum([
+  "login",
+  "logout",
+  "signup",
+  "profile_publish",
+  "media_upload",
+  "report_create",
+  "account_delete",
+]);
+export type AccessLogEvent = z.infer<typeof AccessLogEventSchema>;
+
+export const AccessLogSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  event: AccessLogEventSchema,
+  ip: z.string().nullable(),
+  userAgent: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type AccessLog = z.infer<typeof AccessLogSchema>;
+
+export const AccessLogsInputSchema = PaginationInputSchema.extend({
+  userId: IdSchema.optional(),
+  from: z.iso.datetime({ offset: true }).optional(),
+  to: z.iso.datetime({ offset: true }).optional(),
+});
+export type AccessLogsInput = z.infer<typeof AccessLogsInputSchema>;
 
 export const WeeklySignupSchema = z.object({
   label: z.string(),
