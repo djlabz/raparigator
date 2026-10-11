@@ -74,7 +74,7 @@ Ordem de execução (11/10, Daniel): T-61, T-64, T-70, T-68, T-63, T-62, T-60, T
   - **Passos:** (1) gerador no domain com teste; (2) testes 1-3 vermelhos, colar saída; (3) repository sem `name` (seleciona `alias` e `deleted`), mapper com ordem `participant.alias` → `users.alias` → "Conta encerrada" (deletado) → "Cliente"; `grep` vazio; (4) `alias.ts` + hooks (item 1) + índice (item 2); (5) feed e seeds (item 3); (6) web da conta e do cadastro; (7) ajustar `chat.test.ts:341-345` (hoje espera `clientAlias` indefinido para cliente sem apelido; passa a esperar o gerado); (8) `check`, `test`, E2E.
   - **Risco e cobertura:** conta excluída continua "Conta encerrada" (asserção nova no teste 1); apelido por conversa continua vencendo (teste existente `chat.test.ts:321-339`); denúncias antigas guardam o nome já gravado em `report.reportedName` (nada no ar, sem impacto); E2E de cadastro e conta cobre o `updateUser`. `reviews/service.ts:229` usa `participant.alias || "Cliente"` (seguro, ignora `users.alias`; fora da lista, fica como está).
 
-- [ ] **T-64 Registros de acesso com retenção e logs sem dado pessoal (J-5).**
+- [x] **T-64 Registros de acesso com retenção e logs sem dado pessoal (J-5).** (PR #87, 11/10)
   - **Fazer:**
     - Tabela `access_log`: `id`, `userId` (texto, **sem FK**, para sobreviver à exclusão da conta), `event` (`login`, `logout`, `signup`, `profile_publish`, `media_upload`, `report_create`, `account_delete`), `ip`, `userAgent` (truncado a 256), `createdAt`. Índice por `createdAt` e por `userId`.
     - Gravação assíncrona via pg-boss (nunca inline na request) nos pontos acima. O IP vem do mesmo helper que o rate limit já usa (`x-forwarded-for` do Caddy).
