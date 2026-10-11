@@ -47,6 +47,7 @@ jobs:
           CORS_ORIGINS=https://app.example.com
           COOKIE_DOMAIN=.example.com
           NEXT_PUBLIC_API_URL=https://api.example.com
+          NEXT_PUBLIC_MEDIA_URL=https://media.example.com/sigillus-media
           AUTH_SECRET=$(openssl rand -hex 32)
           BILLING_PROVIDER=fake
           BILLING_FAKE_ACKNOWLEDGED=true
@@ -189,6 +190,7 @@ jobs:
           CORS_ORIGINS=https://app.example.com
           COOKIE_DOMAIN=.example.com
           NEXT_PUBLIC_API_URL=https://api.example.com
+          NEXT_PUBLIC_MEDIA_URL=https://media.example.com/sigillus-media
           AUTH_SECRET=$(openssl rand -hex 32)
           BILLING_PROVIDER=fake
           BILLING_FAKE_ACKNOWLEDGED=true
