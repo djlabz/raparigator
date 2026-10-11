@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { getApiClient } from "@/lib/api/client";
-import { isApiDataSource } from "@/lib/data-source";
 import type { AccountNotificationItem, AuthRole } from "@sigillus/contracts";
 import { formatRelativeTime } from "@sigillus/domain";
 
@@ -120,42 +119,7 @@ function unreadIds(items: AccountNotificationItem[]) {
   return items.filter((item) => !item.read).map((item) => item.id);
 }
 
-export function pushNotification(
-  role: Exclude<AuthRole, "visitor">,
-  item: Omit<AccountNotificationItem, "read">,
-) {
-  const current = getSnapshot(role);
-  const others = current.items.filter((existing) => existing.id !== item.id);
-
-  writeState(role, {
-    ...current,
-    items: [{ ...item, read: false }, ...others],
-    navbarAckedUnreadIds: current.navbarAckedUnreadIds.filter((ackedId) => ackedId !== item.id),
-  });
-}
-
-export function removeNotification(role: Exclude<AuthRole, "visitor">, id: string) {
-  const current = getSnapshot(role);
-
-  if (!current.items.some((item) => item.id === id)) {
-    return;
-  }
-
-  writeState(role, {
-    ...current,
-    items: current.items.filter((item) => item.id !== id),
-    navbarAckedUnreadIds: current.navbarAckedUnreadIds.filter((ackedId) => ackedId !== id),
-  });
-
-  if (isApiDataSource()) {
-    getApiClient()
-      .notifications.remove({ id })
-      .catch(() => {});
-  }
-}
-
 export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
-  const useApi = isApiDataSource();
   const state = useSyncExternalStore(
     subscribe,
     () => getSnapshot(role),
@@ -163,7 +127,7 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
   );
 
   useEffect(() => {
-    if (!useApi || apiInFlight) {
+    if (apiInFlight) {
       return;
     }
     apiInFlight = true;
@@ -179,7 +143,7 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
       .finally(() => {
         apiInFlight = false;
       });
-  }, [useApi, role]);
+  }, [role]);
 
   const unreadCount = useMemo(() => state.items.filter((item) => !item.read).length, [state.items]);
 
@@ -193,9 +157,6 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
 
   const refresh = useMemo(() => {
     return async () => {
-      if (!useApi) {
-        return;
-      }
       try {
         const items = await getApiClient().notifications.list();
         apiItems = items;
@@ -204,7 +165,7 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
         emitChange();
       } catch {}
     };
-  }, [useApi, role]);
+  }, [role]);
 
   const markAllAsRead = useMemo(() => {
     return () => {
@@ -215,13 +176,11 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
         navbarAckedUnreadIds: [],
         swingPaused: false,
       });
-      if (useApi) {
-        getApiClient()
-          .notifications.markAllRead()
-          .catch(() => {});
-      }
+      getApiClient()
+        .notifications.markAllRead()
+        .catch(() => {});
     };
-  }, [role, useApi]);
+  }, [role]);
 
   const markAsRead = useMemo(() => {
     return (id: string) => {
@@ -235,13 +194,11 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
         navbarAckedUnreadIds: current.navbarAckedUnreadIds.filter((ackedId) => ackedId !== id),
         swingPaused: unreadIds(nextItems).length === 0 ? false : current.swingPaused,
       });
-      if (useApi) {
-        getApiClient()
-          .notifications.markRead({ id })
-          .catch(() => {});
-      }
+      getApiClient()
+        .notifications.markRead({ id })
+        .catch(() => {});
     };
-  }, [role, useApi]);
+  }, [role]);
 
   return {
     notifications: state.items,

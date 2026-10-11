@@ -1,9 +1,5 @@
-export const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001";
+const DEFAULT_API_URL = "http://localhost:4001";
 
 export function getApiUrl(): string {
   return (process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_URL).replace(/\/$/, "");
-}
-
-export function isApiDataSource(): boolean {
-  return true;
 }

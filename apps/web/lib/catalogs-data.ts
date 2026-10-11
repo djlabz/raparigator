@@ -15,7 +15,6 @@ import {
   CATALOG_STATES,
 } from "@sigillus/domain";
 import { getApiClient } from "@/lib/api/client";
-import { isApiDataSource } from "@/lib/data-source";
 
 const LOCAL_CATALOGS: Catalogs = {
   states: CATALOG_STATES,
@@ -50,11 +49,10 @@ function loadCatalogs(): Promise<Catalogs> {
 }
 
 export function useCatalogs(): Catalogs {
-  const useApi = isApiDataSource();
   const [catalogs, setCatalogs] = useState<Catalogs | null>(cachedCatalogs);
 
   useEffect(() => {
-    if (!useApi || cachedCatalogs) {
+    if (cachedCatalogs) {
       return;
     }
     let cancelled = false;
@@ -68,10 +66,7 @@ export function useCatalogs(): Catalogs {
     return () => {
       cancelled = true;
     };
-  }, [useApi]);
+  }, []);
 
-  if (!useApi) {
-    return LOCAL_CATALOGS;
-  }
   return catalogs ?? cachedCatalogs ?? LOCAL_CATALOGS;
 }

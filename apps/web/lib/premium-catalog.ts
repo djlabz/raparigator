@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import type { PremiumPlanOption } from "@sigillus/contracts";
 import { PREMIUM_PLAN_OPTIONS, getBillingSavingsPercent, getPlanOption } from "@sigillus/domain";
 import { getApiClient } from "@/lib/api/client";
-import { isApiDataSource } from "@/lib/data-source";
 
 export type { PremiumPlanOption };
 export { PREMIUM_PLAN_OPTIONS, getBillingSavingsPercent, getPlanOption };
@@ -13,9 +12,6 @@ let cachedApiPlans: PremiumPlanOption[] | null = null;
 let apiPlansPromise: Promise<PremiumPlanOption[]> | null = null;
 
 export async function fetchPremiumPlans(): Promise<PremiumPlanOption[]> {
-  if (!isApiDataSource()) {
-    return PREMIUM_PLAN_OPTIONS;
-  }
   if (cachedApiPlans) {
     return cachedApiPlans;
   }
@@ -38,7 +34,7 @@ export async function fetchPremiumPlans(): Promise<PremiumPlanOption[]> {
 }
 
 export function getCachedPremiumPlans(): PremiumPlanOption[] {
-  if (isApiDataSource() && cachedApiPlans) {
+  if (cachedApiPlans) {
     return cachedApiPlans;
   }
   return PREMIUM_PLAN_OPTIONS;
@@ -48,9 +44,6 @@ export function usePremiumPlans(): PremiumPlanOption[] {
   const [plans, setPlans] = useState<PremiumPlanOption[]>(getCachedPremiumPlans);
 
   useEffect(() => {
-    if (!isApiDataSource()) {
-      return;
-    }
     let active = true;
     void fetchPremiumPlans().then((fetched) => {
       if (active) {

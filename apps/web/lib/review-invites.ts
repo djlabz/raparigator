@@ -1,16 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useSyncExternalStore } from "react";
-import { pushNotification, removeNotification } from "@/lib/account-notifications";
 import { getApiClient } from "@/lib/api/client";
-import { isApiDataSource } from "@/lib/data-source";
 import type { InviteStatus, ReviewInvite, SubmittedReview } from "@sigillus/contracts";
-import { REVIEW_INVITE_TTL_MS, getInviteStatus } from "@sigillus/domain";
+import { REVIEW_INVITE_TTL_MS } from "@sigillus/domain";
 
 export type { InviteStatus, ReviewInvite, SubmittedReview };
 export { getInviteDaysLeft, getInviteStatus, hasTwoWayConversation } from "@sigillus/domain";
-
-const STORAGE_KEY = "sigillus-review-invites";
 
 interface ReviewInvitesState {
   invites: ReviewInvite[];
@@ -21,7 +17,6 @@ const EMPTY_STATE: ReviewInvitesState = { invites: [], reviews: [] };
 
 const listeners = new Set<() => void>();
 
-let cachedMockState: ReviewInvitesState | null = null;
 let apiState: ReviewInvitesState = { invites: [], reviews: [] };
 let apiInitialLoaded = false;
 const inFlightInvites = new Set<string>();
@@ -57,81 +52,12 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-function isInvite(value: unknown): value is ReviewInvite {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const candidate = value as Partial<ReviewInvite>;
-  return (
-    typeof candidate.conversationId === "string" &&
-    typeof candidate.adSlug === "string" &&
-    typeof candidate.invitedAt === "string" &&
-    typeof candidate.expiresAt === "string"
-  );
-}
-
-function isSubmittedReview(value: unknown): value is SubmittedReview {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const candidate = value as Partial<SubmittedReview>;
-  return (
-    typeof candidate.id === "string" &&
-    typeof candidate.adSlug === "string" &&
-    typeof candidate.conversationId === "string" &&
-    typeof candidate.author === "string" &&
-    typeof candidate.score === "number" &&
-    typeof candidate.createdAt === "string"
-  );
-}
-
-function readMockState(): ReviewInvitesState {
-  if (typeof window === "undefined") {
-    return EMPTY_STATE;
-  }
-
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
-    return EMPTY_STATE;
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as Partial<ReviewInvitesState>;
-    return {
-      invites: Array.isArray(parsed.invites) ? parsed.invites.filter(isInvite) : [],
-      reviews: Array.isArray(parsed.reviews) ? parsed.reviews.filter(isSubmittedReview) : [],
-    };
-  } catch {
-    return EMPTY_STATE;
-  }
-}
-
 function getSnapshot(): ReviewInvitesState {
-  if (isApiDataSource()) {
-    return apiState;
-  }
-
-  if (!cachedMockState) {
-    cachedMockState = readMockState();
-  }
-
-  return cachedMockState;
+  return apiState;
 }
 
 function getServerSnapshot(): ReviewInvitesState {
   return EMPTY_STATE;
-}
-
-function writeMockState(next: ReviewInvitesState) {
-  cachedMockState = next;
-
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  }
-
-  emitChange();
 }
 
 function writeApiState(next: ReviewInvitesState) {
@@ -144,31 +70,6 @@ function findInvite(state: ReviewInvitesState, conversationId: string) {
 }
 
 export function inviteToReview(conversationId: string, adSlug: string): boolean {
-  if (!isApiDataSource()) {
-    const state = getSnapshot();
-    const existing = findInvite(state, conversationId);
-
-    if (existing?.usedAt) {
-      return false;
-    }
-
-    const now = Date.now();
-    const invite: ReviewInvite = {
-      conversationId,
-      adSlug,
-      invitedAt: new Date(now).toISOString(),
-      expiresAt: new Date(now + REVIEW_INVITE_TTL_MS).toISOString(),
-      usedAt: null,
-    };
-
-    writeMockState({
-      ...state,
-      invites: [...state.invites.filter((item) => item.conversationId !== conversationId), invite],
-    });
-
-    return true;
-  }
-
   const existing = findInvite(apiState, conversationId);
   if (existing?.usedAt) {
     return false;
@@ -222,22 +123,6 @@ export function inviteToReview(conversationId: string, adSlug: string): boolean 
 }
 
 export function cancelInvite(conversationId: string): boolean {
-  if (!isApiDataSource()) {
-    const state = getSnapshot();
-    const existing = findInvite(state, conversationId);
-
-    if (!existing || existing.usedAt) {
-      return false;
-    }
-
-    writeMockState({
-      ...state,
-      invites: state.invites.filter((invite) => invite.conversationId !== conversationId),
-    });
-
-    return true;
-  }
-
   const existing = findInvite(apiState, conversationId);
   if (!existing || existing.usedAt) {
     return false;
@@ -273,35 +158,6 @@ export async function submitReview(input: {
   score: number;
   comment: string;
 }): Promise<boolean> {
-  if (!isApiDataSource()) {
-    const state = getSnapshot();
-    const invite = findInvite(state, input.conversationId);
-
-    if (getInviteStatus(invite) !== "open" || !invite) {
-      return false;
-    }
-
-    const now = new Date().toISOString();
-    const review: SubmittedReview = {
-      id: `local-${input.conversationId}-${Date.parse(now)}`,
-      adSlug: input.adSlug,
-      conversationId: input.conversationId,
-      author: input.author,
-      score: input.score,
-      comment: input.comment.trim(),
-      createdAt: now,
-    };
-
-    writeMockState({
-      invites: state.invites.map((item) =>
-        item.conversationId === input.conversationId ? { ...item, usedAt: now } : item,
-      ),
-      reviews: [...state.reviews, review],
-    });
-
-    return true;
-  }
-
   try {
     const { reviewId } = await getApiClient().reviews.submit({
       conversationId: input.conversationId,
@@ -333,10 +189,6 @@ export async function submitReview(input: {
   }
 }
 
-function inviteNotificationId(conversationId: string) {
-  return `review-invite-${conversationId}`;
-}
-
 export function sendReviewInvite(input: {
   conversationId: string;
   adSlug: string;
@@ -344,16 +196,6 @@ export function sendReviewInvite(input: {
 }): boolean {
   if (!inviteToReview(input.conversationId, input.adSlug)) {
     return false;
-  }
-
-  if (!isApiDataSource()) {
-    pushNotification("cliente", {
-      id: inviteNotificationId(input.conversationId),
-      title: "Avaliação disponível",
-      message: `${input.professionalName} liberou uma avaliação do perfil. Conte como foi o contato.`,
-      time: "Agora",
-      href: `/anuncio/${input.adSlug}?avaliar=${input.conversationId}`,
-    });
   }
 
   return true;
@@ -364,19 +206,14 @@ export function withdrawReviewInvite(conversationId: string): boolean {
     return false;
   }
 
-  if (!isApiDataSource()) {
-    removeNotification("cliente", inviteNotificationId(conversationId));
-  }
-
   return true;
 }
 
 export function useReviewInvites() {
-  const useApi = isApiDataSource();
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   useEffect(() => {
-    if (!useApi || apiInitialLoaded) {
+    if (apiInitialLoaded) {
       return;
     }
     let cancelled = false;
@@ -404,7 +241,7 @@ export function useReviewInvites() {
     return () => {
       cancelled = true;
     };
-  }, [useApi]);
+  }, []);
 
   const getInvite = useMemo(() => {
     return (conversationId: string) => {
@@ -413,7 +250,6 @@ export function useReviewInvites() {
         return found;
       }
       if (
-        useApi &&
         conversationId &&
         !inFlightInvites.has(conversationId) &&
         !pendingInviteRequests.has(conversationId)
@@ -443,7 +279,7 @@ export function useReviewInvites() {
       }
       return undefined;
     };
-  }, [state, useApi]);
+  }, [state]);
 
   return useMemo(
     () => ({

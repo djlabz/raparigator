@@ -51,7 +51,6 @@ import type {
   AnnouncementDraftState,
   AvailabilityDay,
 } from "@/lib/announcement-draft-types";
-import { isApiDataSource } from "@/lib/data-source";
 import { ImageCropperModal, type Area } from "@/components/ui/image-cropper-modal";
 import { ImageBlurModal, type ImageBlurResult } from "@/components/ui/image-blur-modal";
 import { aspectsMatch } from "@/components/ui/image-selection-utils";
@@ -459,7 +458,6 @@ export function AnnouncementTab({
   onToggleStatus: () => void;
   initialDraft?: AnnouncementDraftState | null;
 }) {
-  const useApi = isApiDataSource();
   const assetMapRef = useRef<Map<string, string>>(new Map());
   const {
     form,
@@ -491,7 +489,6 @@ export function AnnouncementTab({
   const [uploadToast, setUploadToast] = useState<{ title: string; message: string } | null>(null);
 
   useEffect(() => {
-    if (!useApi) return;
     let active = true;
     listMyMedia("gallery")
       .then((assets) => {
@@ -505,7 +502,7 @@ export function AnnouncementTab({
     return () => {
       active = false;
     };
-  }, [useApi]);
+  }, []);
 
   const findAssetIdForUrl = useCallback((url: string): string | null => {
     if (!url) return null;
@@ -542,48 +539,6 @@ export function AnnouncementTab({
     input.onchange = async (e) => {
       const files = Array.from((e.target as HTMLInputElement).files || []);
       if (!files.length) return;
-
-      if (!useApi) {
-        let currentVideos = form.images.filter((img) => isVideoSrc(img)).length;
-        let currentPhotos = form.images.length - currentVideos;
-        let blockedByLimit = false;
-
-        files.forEach((file) => {
-          const isVid = file.type.startsWith("video/");
-          if (isVid && currentVideos >= videoLimit) {
-            blockedByLimit = true;
-            return;
-          }
-          if (!isVid && currentPhotos >= photoLimit) {
-            blockedByLimit = true;
-            return;
-          }
-
-          if (isVid) currentVideos++;
-          else currentPhotos++;
-
-          const reader = new FileReader();
-          reader.onload = (readerEvent) => {
-            const result = readerEvent.target?.result as string;
-            updateForm((current) => ({
-              ...current,
-              images: [...current.images, result],
-              coverPreviews: [...current.coverPreviews, ""],
-              profilePreviews: [...current.profilePreviews, ""],
-            }));
-          };
-          reader.readAsDataURL(file);
-        });
-
-        if (blockedByLimit) {
-          if (isPremium) {
-            showUploadError();
-          } else {
-            openConversion("portfolio", "portfolio");
-          }
-        }
-        return;
-      }
 
       let currentVideos = form.images.filter((img) => isVideoSrc(img)).length;
       let currentPhotos = form.images.length - currentVideos;
@@ -819,13 +774,11 @@ export function AnnouncementTab({
         const safeIndex = resolveCoverIndex(index, current.images.length);
         const nextImages = moveItemToFront(current.images, safeIndex);
 
-        if (useApi) {
-          const assetIds = nextImages
-            .map((img) => findAssetIdForUrl(img))
-            .filter((id): id is string => Boolean(id));
-          if (assetIds.length === nextImages.length) {
-            void reorderMedia(assetIds);
-          }
+        const assetIds = nextImages
+          .map((img) => findAssetIdForUrl(img))
+          .filter((id): id is string => Boolean(id));
+        if (assetIds.length === nextImages.length) {
+          void reorderMedia(assetIds);
         }
 
         const next = {
@@ -850,12 +803,10 @@ export function AnnouncementTab({
   };
 
   const updateProfilePreview = (index: number, previewSrc: string) => {
-    if (useApi) {
-      const targetUrl = form.images[index];
-      const assetId = targetUrl ? findAssetIdForUrl(targetUrl) : null;
-      if (assetId) {
-        void setProfileImageMedia(assetId);
-      }
+    const targetUrl = form.images[index];
+    const assetId = targetUrl ? findAssetIdForUrl(targetUrl) : null;
+    if (assetId) {
+      void setProfileImageMedia(assetId);
     }
 
     updateForm((current) => {
@@ -880,7 +831,7 @@ export function AnnouncementTab({
   };
 
   const setCoverIndex = (index: number) => {
-    if (useApi && form.images.length > 0) {
+    if (form.images.length > 0) {
       const safeIndex = resolveCoverIndex(index, form.images.length);
       const nextImages = moveItemToFront(form.images, safeIndex);
       const assetIds = nextImages
@@ -918,11 +869,9 @@ export function AnnouncementTab({
   };
 
   const setProfileIndex = (index: number) => {
-    if (useApi) {
-      const targetUrl = form.images[index];
-      const assetId = targetUrl ? findAssetIdForUrl(targetUrl) : null;
-      void setProfileImageMedia(assetId);
-    }
+    const targetUrl = form.images[index];
+    const assetId = targetUrl ? findAssetIdForUrl(targetUrl) : null;
+    void setProfileImageMedia(assetId);
 
     updateForm((current) => {
       if (current.images.length === 0) {
@@ -940,7 +889,7 @@ export function AnnouncementTab({
 
   const deleteMediaAtIndex = (index: number) => {
     const targetUrl = form.images[index];
-    if (useApi && targetUrl) {
+    if (targetUrl) {
       const assetId = findAssetIdForUrl(targetUrl);
       if (assetId) {
         void removeMedia(assetId);
@@ -1277,9 +1226,6 @@ export function AnnouncementTab({
   } as const;
 
   const handleViewPublicAd = () => {
-    if (!isApiDataSource()) {
-      syncDraftToMockAd(ad.slug, form);
-    }
     router.push(`/anuncio/${ad.slug}`);
   };
 
