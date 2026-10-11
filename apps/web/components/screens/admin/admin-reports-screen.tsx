@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Flag,
@@ -13,9 +14,27 @@ import {
   User,
   Users,
   X,
+  Globe,
+  ImageOff,
+  EyeOff,
+  Paperclip,
+  Mail,
 } from "lucide-react";
+import type {
+  PublicReportReason,
+  ReportAction,
+  ReportEvidence,
+  ReportTargetMedia,
+} from "@sigillus/contracts";
 import { AdminLayoutShell } from "./admin-layout-shell";
-import { getReports, startReview, resolveReport } from "@/lib/admin-service";
+import {
+  actOnReport,
+  getReportEvidence,
+  getReportTargetMedia,
+  getReports,
+  resolveReport,
+  startReview,
+} from "@/lib/admin-service";
 import type { Report, ReportStatus, ReportType } from "@/lib/types";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -33,6 +52,46 @@ function typeLabel(t: ReportType): string {
     case "other":
       return "Outro";
   }
+}
+
+function publicReasonLabel(reason: PublicReportReason | undefined): string {
+  switch (reason) {
+    case "photo_without_consent":
+      return "Foto sem consentimento";
+    case "minor":
+      return "Menor de idade";
+    case "coercion":
+      return "Coação";
+    case "illegal_content":
+      return "Conteúdo ilegal";
+    default:
+      return "Outro";
+  }
+}
+
+function reportLabel(report: Report): string {
+  return report.source === "public" ? publicReasonLabel(report.reason) : typeLabel(report.type);
+}
+
+function actionLabel(action: ReportAction): string {
+  switch (action) {
+    case "remove_media":
+      return "Mídia removida";
+    case "unpublish_profile":
+      return "Anúncio despublicado";
+    case "dismiss":
+      return "Encerrada sem ação";
+  }
+}
+
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function typeBadge(t: ReportType) {
@@ -161,8 +220,12 @@ function ResolveModal({ report, onClose, onResolve }: ResolveModalProps) {
 
         <p className="mb-4 text-xs text-zinc-400 leading-relaxed bg-zinc-900/50 p-3 rounded-xl border border-zinc-800/60">
           Denúncia registrada por{" "}
-          <span className="font-bold text-zinc-200">{report.reporterName}</span> contra{" "}
-          <span className="font-bold text-zinc-200">{report.reportedName}</span>.
+          <span className="font-bold text-zinc-200">{report.reporterName ?? "Canal público"}</span>{" "}
+          contra{" "}
+          <span className="font-bold text-zinc-200">
+            {report.reportedName ?? report.profileSlug ?? "anúncio não identificado"}
+          </span>
+          .
         </p>
 
         {/* Escolha */}
@@ -229,6 +292,237 @@ function ResolveModal({ report, onClose, onResolve }: ResolveModalProps) {
   );
 }
 
+interface ActionRequest {
+  report: Report;
+  action: ReportAction;
+  asset?: ReportTargetMedia;
+}
+
+const ACTION_TITLES: Record<ReportAction, string> = {
+  remove_media: "Remover mídia",
+  unpublish_profile: "Despublicar anúncio",
+  dismiss: "Encerrar sem ação",
+};
+
+const ACTION_DESCRIPTIONS: Record<ReportAction, string> = {
+  remove_media:
+    "A mídia sai do anúncio e do armazenamento. Imagens parecidas ficam bloqueadas para novo envio.",
+  unpublish_profile:
+    "O anúncio sai do ar com o motivo vinculado a esta denúncia. A conta não é suspensa.",
+  dismiss: "A denúncia é arquivada sem alterar o anúncio.",
+};
+
+function ActionModal({
+  request,
+  onClose,
+  onConfirm,
+}: {
+  request: ActionRequest;
+  onClose: () => void;
+  onConfirm: (note: string) => Promise<void>;
+}) {
+  const [note, setNote] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    setLoading(true);
+    await onConfirm(note.trim());
+    setLoading(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/80 backdrop-blur-md"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl shadow-black/80"
+      >
+        <div className="mb-4 flex items-center justify-between border-b border-zinc-800/80 pb-4">
+          <h2 className="font-bold text-zinc-100 text-base">{ACTION_TITLES[request.action]}</h2>
+          <button
+            onClick={onClose}
+            aria-label="Fechar"
+            className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="mb-4 text-xs text-zinc-400 leading-relaxed">
+          {ACTION_DESCRIPTIONS[request.action]}
+        </p>
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          rows={3}
+          maxLength={1000}
+          aria-label="Observação da moderação"
+          placeholder="Observação da moderação (opcional)"
+          className="w-full resize-none rounded-xl border border-zinc-800 bg-zinc-900/80 p-3 text-xs text-zinc-200 placeholder-zinc-500 outline-none focus:border-wine-700 focus:ring-1 focus:ring-wine-500/40 font-medium"
+        />
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-zinc-800 px-4 py-2 text-xs font-bold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={loading}
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-wine-600 to-wine-700 px-4 py-2 text-xs font-bold text-white shadow-md transition-all hover:from-wine-500 hover:to-wine-600 disabled:opacity-50"
+          >
+            {loading && (
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            )}
+            Confirmar
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function ReportEvidenceList({ report }: { report: Report }) {
+  const [items, setItems] = useState<ReportEvidence[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  if (report.evidenceCount === 0) {
+    return null;
+  }
+
+  const handleLoad = async () => {
+    setLoading(true);
+    setItems(await getReportEvidence(report.id));
+    setLoading(false);
+  };
+
+  return (
+    <div className="mx-5 mb-4 space-y-2">
+      {items === null ? (
+        <button
+          onClick={handleLoad}
+          disabled={loading}
+          className="flex items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs font-bold text-zinc-300 hover:text-zinc-100 disabled:opacity-60"
+        >
+          <Paperclip className="h-3.5 w-3.5" />
+          Ver provas ({report.evidenceCount})
+        </button>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {items.map((item, index) => (
+            <a
+              key={item.id}
+              href={item.url}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs font-bold text-zinc-300 hover:text-zinc-100"
+            >
+              Prova {index + 1}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReportModeration({
+  report,
+  disabled,
+  onRequest,
+}: {
+  report: Report;
+  disabled: boolean;
+  onRequest: (request: ActionRequest) => void;
+}) {
+  const [media, setMedia] = useState<ReportTargetMedia[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleLoadMedia = async () => {
+    setLoading(true);
+    setMedia(await getReportTargetMedia(report.id));
+    setLoading(false);
+  };
+
+  return (
+    <div className="space-y-3 border-t border-zinc-800/60 bg-zinc-950/40 px-5 py-3">
+      <div className="flex flex-wrap items-center gap-2">
+        {report.targetProfileId && media === null && (
+          <button
+            onClick={handleLoadMedia}
+            disabled={loading || disabled}
+            className="flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-bold text-zinc-200 hover:bg-zinc-800 disabled:opacity-60"
+          >
+            <ImageOff className="h-3.5 w-3.5" />
+            Ver mídias do anúncio
+          </button>
+        )}
+        {report.targetProfileId && (
+          <button
+            onClick={() => onRequest({ report, action: "unpublish_profile" })}
+            disabled={disabled}
+            className="flex items-center gap-1.5 rounded-xl border border-red-800/60 bg-red-950/50 px-3 py-2 text-xs font-bold text-red-200 hover:bg-red-900/60 disabled:opacity-60"
+          >
+            <EyeOff className="h-3.5 w-3.5" />
+            Despublicar anúncio
+          </button>
+        )}
+        <button
+          onClick={() => onRequest({ report, action: "dismiss" })}
+          disabled={disabled}
+          className="flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-bold text-zinc-300 hover:bg-zinc-800 disabled:opacity-60"
+        >
+          <Archive className="h-3.5 w-3.5" />
+          Encerrar sem ação
+        </button>
+      </div>
+      {media !== null &&
+        (media.length === 0 ? (
+          <p className="text-xs text-zinc-500">O anúncio não tem mídias publicadas.</p>
+        ) : (
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {media.map((item) => (
+              <li
+                key={item.id}
+                className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900"
+              >
+                {item.url && item.kind === "image" ? (
+                  <Image
+                    src={item.url}
+                    alt="Mídia do anúncio denunciado"
+                    width={240}
+                    height={240}
+                    unoptimized
+                    className="aspect-square w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex aspect-square items-center justify-center text-[11px] text-zinc-500">
+                    Vídeo
+                  </div>
+                )}
+                <button
+                  onClick={() => onRequest({ report, action: "remove_media", asset: item })}
+                  disabled={disabled}
+                  className="w-full border-t border-zinc-800 px-2 py-1.5 text-[11px] font-bold text-red-300 hover:bg-red-950/50 disabled:opacity-60"
+                >
+                  Remover mídia
+                </button>
+              </li>
+            ))}
+          </ul>
+        ))}
+    </div>
+  );
+}
+
 // ── Screen principal ──────────────────────────────────────────────────────────
 
 export function AdminReportsScreen() {
@@ -237,6 +531,7 @@ export function AdminReportsScreen() {
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
   const [search, setSearch] = useState("");
   const [resolveTarget, setResolveTarget] = useState<Report | null>(null);
+  const [actionRequest, setActionRequest] = useState<ActionRequest | null>(null);
   const [actionId, setActionId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -265,9 +560,10 @@ export function AdminReportsScreen() {
     const q = search.toLowerCase();
     const matchSearch =
       !q ||
-      r.reporterName.toLowerCase().includes(q) ||
-      r.reportedName.toLowerCase().includes(q) ||
-      typeLabel(r.type).toLowerCase().includes(q);
+      (r.reporterName ?? "").toLowerCase().includes(q) ||
+      (r.reportedName ?? "").toLowerCase().includes(q) ||
+      (r.profileSlug ?? "").toLowerCase().includes(q) ||
+      reportLabel(r).toLowerCase().includes(q);
     return matchTab && matchSearch;
   });
 
@@ -287,8 +583,27 @@ export function AdminReportsScreen() {
     setActionId(null);
   };
 
+  const handleAction = async (note: string) => {
+    if (!actionRequest) return;
+    const { report, action, asset } = actionRequest;
+    setActionId(report.id);
+    await actOnReport(report.id, action, note, asset?.id);
+    setActionRequest(null);
+    await load();
+    setActionId(null);
+  };
+
   return (
     <AdminLayoutShell breadcrumb="Denúncias & Moderação">
+      <AnimatePresence>
+        {actionRequest && (
+          <ActionModal
+            request={actionRequest}
+            onClose={() => setActionRequest(null)}
+            onConfirm={handleAction}
+          />
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {resolveTarget && (
           <ResolveModal
@@ -374,6 +689,7 @@ export function AdminReportsScreen() {
               return (
                 <motion.div
                   key={report.id}
+                  data-testid={`report-card-${report.id}`}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25, delay: i * 0.03 }}
@@ -390,8 +706,14 @@ export function AdminReportsScreen() {
                           <span
                             className={`inline-flex items-center rounded-full border px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${typeBadge(report.type)}`}
                           >
-                            {typeLabel(report.type)}
+                            {reportLabel(report)}
                           </span>
+                          {report.source === "public" && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/40 bg-sky-950/60 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-sky-300">
+                              <Globe className="h-3 w-3" />
+                              Canal público
+                            </span>
+                          )}
                           <span className="text-[11px] text-zinc-500 font-mono">
                             {timeAgo(report.createdAt)}
                           </span>
@@ -410,20 +732,53 @@ export function AdminReportsScreen() {
                   {/* Reporter vs Reported Parties */}
                   <div className="flex flex-wrap items-center gap-3 bg-zinc-950/60 px-5 py-3 text-xs border-b border-zinc-800/40">
                     <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5">
-                      {roleIcon(report.reporterRole)}
-                      <span className="font-bold text-zinc-200">{report.reporterName}</span>
-                      <span className="text-[10px] text-zinc-500 font-medium">
-                        ({report.reporterRole})
+                      {report.reporterRole ? (
+                        roleIcon(report.reporterRole)
+                      ) : (
+                        <Globe className="h-3.5 w-3.5 text-sky-400" />
+                      )}
+                      <span className="font-bold text-zinc-200">
+                        {report.reporterName ?? "Denúncia pública"}
                       </span>
+                      {report.reporterRole && (
+                        <span className="text-[10px] text-zinc-500 font-medium">
+                          ({report.reporterRole})
+                        </span>
+                      )}
                     </div>
                     <span className="text-zinc-600 font-bold">→ denunciou →</span>
                     <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5">
-                      {roleIcon(report.reportedRole)}
-                      <span className="font-bold text-zinc-200">{report.reportedName}</span>
-                      <span className="text-[10px] text-zinc-500 font-medium">
-                        ({report.reportedRole})
+                      {report.reportedRole && roleIcon(report.reportedRole)}
+                      <span className="font-bold text-zinc-200">
+                        {report.reportedName ?? "Anúncio não identificado"}
                       </span>
+                      {report.reportedRole && (
+                        <span className="text-[10px] text-zinc-500 font-medium">
+                          ({report.reportedRole})
+                        </span>
+                      )}
                     </div>
+                    {report.profileSlug && (
+                      <a
+                        href={`/anuncio/${report.profileSlug}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] font-bold text-wine-300 underline-offset-2 hover:underline"
+                      >
+                        /anuncio/{report.profileSlug}
+                      </a>
+                    )}
+                    {!report.profileSlug && report.targetUrl && (
+                      <span className="text-[11px] font-mono text-zinc-400 break-all">
+                        {report.targetUrl}
+                      </span>
+                    )}
+                    {report.hasContactEmail && (
+                      <span className="flex items-center gap-1 text-[11px] text-zinc-400">
+                        <Mail className="h-3 w-3" />
+                        Deixou e-mail de contato
+                      </span>
+                    )}
                   </div>
 
                   {/* Body Description */}
@@ -432,6 +787,16 @@ export function AdminReportsScreen() {
                       {report.description}
                     </p>
                   </div>
+
+                  <ReportEvidenceList report={report} />
+
+                  {report.action && (
+                    <div className="mx-5 mb-4 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 text-xs text-zinc-300">
+                      <span className="font-bold text-zinc-100">{actionLabel(report.action)}</span>
+                      {report.actionByEmail && <span> · por {report.actionByEmail}</span>}
+                      {report.respondedAt && <span> · {formatDateTime(report.respondedAt)}</span>}
+                    </div>
+                  )}
 
                   {/* Existing Resolution Note */}
                   {report.resolution && (
@@ -444,6 +809,14 @@ export function AdminReportsScreen() {
                   )}
 
                   {/* Action Buttons */}
+                  {(report.status === "pending" || report.status === "under_review") && (
+                    <ReportModeration
+                      report={report}
+                      disabled={actionId === report.id}
+                      onRequest={setActionRequest}
+                    />
+                  )}
+
                   {(report.status === "pending" || report.status === "under_review") && (
                     <div className="flex flex-wrap items-center gap-3 border-t border-zinc-800/60 bg-zinc-950/40 px-5 py-3">
                       {report.status === "pending" && (
