@@ -46,6 +46,7 @@ export function useAdminSession() {
 
   return {
     isAdmin: Boolean(sessionAdmin),
+    isPending: session.isPending,
     admin,
     logout: async () => {
       await adminAuthClient.signOut();

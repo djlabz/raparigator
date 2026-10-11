@@ -48,7 +48,7 @@ const navSections = [
 ];
 
 export function AdminLayoutShell({ children, breadcrumb }: AdminLayoutShellProps) {
-  const { isAdmin, admin, logout } = useAdminSession();
+  const { isAdmin, isPending, admin, logout } = useAdminSession();
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -61,10 +61,10 @@ export function AdminLayoutShell({ children, breadcrumb }: AdminLayoutShellProps
 
   // Guard: redireciona para login se não autenticado
   useEffect(() => {
-    if (!isAdmin) {
+    if (!isPending && !isAdmin) {
       router.replace("/admin/login");
     }
-  }, [isAdmin, router]);
+  }, [isAdmin, isPending, router]);
 
   if (!isAdmin) {
     return (
