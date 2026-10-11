@@ -101,17 +101,7 @@ export function TabsKeepAlive({ children }: PropsWithChildren) {
     return () => window.cancelAnimationFrame(frame);
   }, [pathname, items]);
 
-  const hrefOrder = items.map((item) => item.href);
-  const entries = cache.order
-    .filter((href) => cache.nodes[href])
-    .slice()
-    .sort((a, b) => {
-      const aIndex = hrefOrder.indexOf(a);
-      const bIndex = hrefOrder.indexOf(b);
-      const safeA = aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex;
-      const safeB = bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex;
-      return safeA - safeB;
-    });
+  const entries = cache.nodes[activeHref] ? [activeHref] : [];
 
   return (
     <>

@@ -364,6 +364,7 @@ export function ChatScreen() {
     getServerBriefHandoff,
   );
   const [briefSending, setBriefSending] = useState(false);
+  const briefSendingRef = useRef(false);
   // O chat costuma montar já com um interesse pendente (o clique em "Chat Direto" cria
   // o handoff antes de navegar), então a saudação precisa nascer preenchida — não só ser
   // sincronizada depois, quando "anterior" e "atual" já seriam a mesma referência.
@@ -595,37 +596,40 @@ export function ChatScreen() {
       !briefHandoff ||
       !activeConversation ||
       activeConversation.isBlocked ||
-      briefSending ||
+      briefSendingRef.current ||
       !trimmedGreeting
     )
       return;
 
     const { brief } = briefHandoff;
+    briefSendingRef.current = true;
     setBriefSending(true);
-    const result = await sendChatBrief(
-      activeConversation.id,
-      brief,
-      trimmedGreeting,
-      currentDisplayName,
-    );
-    setBriefSending(false);
-
-    if (result.messageId) {
-      // A bolha já está no thread (confirmada ou marcada como falha), então a prévia sai
-      // de cena para não permitir um segundo envio do mesmo interesse.
-      setLastSentMessageId(result.messageId);
-      clearBriefHandoff();
-    }
-
-    if (!result.ok) {
-      showToast({
-        type: "error",
-        title: "Não deu para enviar",
-        message:
-          result.reason === "blocked"
-            ? "Esta conversa está bloqueada."
-            : "Tenta de novo em instantes.",
-      });
+    try {
+      const result = await sendChatBrief(
+        activeConversation.id,
+        brief,
+        trimmedGreeting,
+        currentDisplayName,
+      );
+      if (result.messageId) {
+        // A bolha já está no thread (confirmada ou marcada como falha), então a prévia sai
+        // de cena para não permitir um segundo envio do mesmo interesse.
+        setLastSentMessageId(result.messageId);
+        clearBriefHandoff();
+      }
+      if (!result.ok) {
+        showToast({
+          type: "error",
+          title: "Não deu para enviar",
+          message:
+            result.reason === "blocked"
+              ? "Esta conversa está bloqueada."
+              : "Tenta de novo em instantes.",
+        });
+      }
+    } finally {
+      briefSendingRef.current = false;
+      setBriefSending(false);
     }
   };
 

@@ -112,7 +112,7 @@ test.describe("Briefing de encontro", () => {
       .locator(`a[href*="/anuncio/${ads.premiumSlug}"]`)
       .first();
     await expect(adCard).toBeVisible();
-    await adCard.click({ force: true });
+    await adCard.click();
     await page.waitForURL(`**/anuncio/${ads.premiumSlug}`);
 
     await buildSimulation(page);
