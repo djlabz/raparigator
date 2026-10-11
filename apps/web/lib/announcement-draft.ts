@@ -137,10 +137,6 @@ export async function updateContact(contact: {
   await getApiClient().announcements.setContact(contact);
 }
 
-export function syncDraftToMockAd(_slug: string, _form: AnnouncementDraftState) {
-  return true;
-}
-
 export type AnnouncementPublishOptions = {
   status: "Ativo" | "Pausado";
   onActivate: () => void;
