@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { APIError } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { eq, or } from "drizzle-orm";
 import type { AppConfig } from "../config";
 import type { Database } from "../db/client";
 import * as schema from "../db/schema";
@@ -64,6 +65,26 @@ export function createUserAuth(db: Database, config: AppConfig, mailer?: Mailer)
     user: {
       deleteUser: {
         enabled: true,
+        beforeDelete: async (user) => {
+          await db
+            .update(schema.messages)
+            .set({
+              content: "[Mensagem apagada devido à exclusão da conta]",
+              mediaAssetId: null,
+              brief: null,
+              editedAt: new Date(),
+            })
+            .where(eq(schema.messages.senderUserId, user.id));
+          await db
+            .update(schema.conversations)
+            .set({ lastMessagePreview: "[Mensagem apagada]" })
+            .where(
+              or(
+                eq(schema.conversations.clientUserId, user.id),
+                eq(schema.conversations.professionalUserId, user.id),
+              ),
+            );
+        },
       },
       additionalFields: {
         role: {

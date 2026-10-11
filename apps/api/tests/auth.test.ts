@@ -106,101 +106,224 @@ describe("autenticação e sessão", () => {
   });
 
   it("auth.deleteAccount exige autenticação", async () => {
-    const res = await harness.rpc("auth/deleteAccount");
+    const res = await harness.rpc("auth/deleteAccount", { password: "Senha@12345" });
     expect(res.status).toBe(401);
   });
 
   it("auth.deleteAccount apaga mídias do storage, anonimiza mensagens enviadas e remove usuário", async () => {
-    const client = await signUp(harness, {
-      email: "del-client@teste.dev",
-      password: "Senha@12345",
-    });
-    const pro = await signUp(harness, { email: "del-pro@teste.dev", role: "profissional" });
-
-    const mediaKey = `users/${client.userId}/foto.jpg`;
-    await harness.storage.putObject(mediaKey, new Uint8Array([1, 2, 3]), "image/jpeg");
-    expect(harness.storage.objects.has(mediaKey)).toBe(true);
-
-    const assetId = "asset-test-1";
-    await harness.db.insert(schema.mediaAssets).values({
-      id: assetId,
-      ownerUserId: client.userId,
-      kind: "image",
-      purpose: "profile",
-      status: "ready",
-      contentType: "image/jpeg",
-      sizeBytes: 3,
-      storageKey: mediaKey,
-    });
-
-    const profileId = "prof-test-1";
-    await harness.db.insert(schema.professionalProfiles).values({
-      id: profileId,
-      userId: pro.userId,
-      slug: "pro-del-teste",
-      displayName: "Pro Teste",
-      artisticName: "Pro Teste",
-      city: "São Paulo",
-      state: "SP",
-    });
-
-    const convId = "conv-test-1";
-    await harness.db.insert(schema.conversations).values({
-      id: convId,
-      profileId,
-      clientUserId: client.userId,
-      professionalUserId: pro.userId,
-      lastMessagePreview: "Olá, tenho uma pergunta pessoal",
-    });
-
-    await harness.db.insert(schema.conversationParticipants).values([
-      { id: "part-1", conversationId: convId, userId: client.userId, role: "cliente" },
-      { id: "part-2", conversationId: convId, userId: pro.userId, role: "profissional" },
-    ]);
-
-    const msgId = "msg-test-1";
-    await harness.db.insert(schema.messages).values({
-      id: msgId,
-      conversationId: convId,
-      senderUserId: client.userId,
-      senderRole: "cliente",
-      messageType: "text",
-      content: "Olá, tenho uma pergunta pessoal",
-    });
+    const fx = await createDeletionFixture("del");
 
     const deleteRes = await harness.rpc<{ ok: boolean }>(
       "auth/deleteAccount",
-      {},
-      { cookie: client.cookie },
+      { password: "Senha@12345" },
+      { cookie: fx.client.cookie },
     );
     expect(deleteRes.status).toBe(200);
     expect(deleteRes.body).toEqual({ ok: true });
 
-    expect(harness.storage.objects.has(mediaKey)).toBe(false);
+    expect(harness.storage.objects.has(fx.mediaKey)).toBe(false);
 
     const [msgAfter] = await harness.db
       .select()
       .from(schema.messages)
-      .where(eq(schema.messages.id, msgId));
+      .where(eq(schema.messages.id, fx.msgId));
     expect(msgAfter).toBeDefined();
-    expect(msgAfter!.senderUserId).toBe(client.userId);
+    expect(msgAfter!.senderUserId).toBe(fx.client.userId);
     expect(msgAfter!.content).toBe("[Mensagem apagada devido à exclusão da conta]");
 
     const [convAfter] = await harness.db
       .select()
       .from(schema.conversations)
-      .where(eq(schema.conversations.id, convId));
+      .where(eq(schema.conversations.id, fx.convId));
     expect(convAfter).toBeDefined();
     expect(convAfter!.lastMessagePreview).toBe("[Mensagem apagada]");
 
-    const meRes = await harness.rpc<{ user: null }>("auth/me", {}, { cookie: client.cookie });
+    const meRes = await harness.rpc<{ user: null }>("auth/me", {}, { cookie: fx.client.cookie });
     expect(meRes.body).toEqual({ user: null });
 
     const loginRes = await harness.fetch("/api/auth/sign-in/email", {
       method: "POST",
       headers: { "content-type": "application/json", origin: harness.config.WEB_ORIGIN },
-      body: JSON.stringify({ email: "del-client@teste.dev", password: "Senha@12345" }),
+      body: JSON.stringify({ email: fx.client.email, password: "Senha@12345" }),
     });
     expect(loginRes.ok).toBe(false);
   });
+
+  it("auth.deleteAccount com senha errada não apaga nada", async () => {
+    const fx = await createDeletionFixture("wrong");
+
+    const deleteRes = await harness.rpc<{ message: string }>(
+      "auth/deleteAccount",
+      { password: "errada" },
+      { cookie: fx.client.cookie },
+    );
+    expect(deleteRes.status).toBe(400);
+    expect(deleteRes.body.message).toBe("Senha incorreta.");
+
+    const [userAfter] = await harness.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, fx.client.userId));
+    expect(userAfter).toBeDefined();
+
+    expect(harness.storage.objects.has(fx.mediaKey)).toBe(true);
+    const [assetAfter] = await harness.db
+      .select()
+      .from(schema.mediaAssets)
+      .where(eq(schema.mediaAssets.id, fx.assetId));
+    expect(assetAfter).toBeDefined();
+
+    const [msgAfter] = await harness.db
+      .select()
+      .from(schema.messages)
+      .where(eq(schema.messages.id, fx.msgId));
+    expect(msgAfter!.content).toBe(fx.originalContent);
+
+    const [convAfter] = await harness.db
+      .select()
+      .from(schema.conversations)
+      .where(eq(schema.conversations.id, fx.convId));
+    expect(convAfter!.lastMessagePreview).toBe(fx.originalContent);
+
+    const meRes = await harness.rpc<{ user: { id: string } }>(
+      "auth/me",
+      {},
+      { cookie: fx.client.cookie },
+    );
+    expect(meRes.body.user.id).toBe(fx.client.userId);
+  });
+
+  it("auth.deleteAccount com sessão antiga e senha certa exclui a conta", async () => {
+    const fx = await createDeletionFixture("old");
+
+    await harness.db
+      .update(schema.sessions)
+      .set({ createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) })
+      .where(eq(schema.sessions.userId, fx.client.userId));
+
+    const deleteRes = await harness.rpc<{ ok: boolean }>(
+      "auth/deleteAccount",
+      { password: "Senha@12345" },
+      { cookie: fx.client.cookie },
+    );
+    expect(deleteRes.status).toBe(200);
+    expect(deleteRes.body).toEqual({ ok: true });
+
+    const meRes = await harness.rpc<{ user: null }>("auth/me", {}, { cookie: fx.client.cookie });
+    expect(meRes.body).toEqual({ user: null });
+
+    const [msgAfter] = await harness.db
+      .select()
+      .from(schema.messages)
+      .where(eq(schema.messages.id, fx.msgId));
+    expect(msgAfter!.content).toBe("[Mensagem apagada devido à exclusão da conta]");
+
+    const [convAfter] = await harness.db
+      .select()
+      .from(schema.conversations)
+      .where(eq(schema.conversations.id, fx.convId));
+    expect(convAfter!.lastMessagePreview).toBe("[Mensagem apagada]");
+
+    expect(harness.storage.objects.has(fx.mediaKey)).toBe(false);
+  });
+
+  it("auth.deleteAccount sem senha é erro de validação", async () => {
+    const client = await signUp(harness, { email: "nopass@teste.dev" });
+
+    const deleteRes = await harness.rpc("auth/deleteAccount", {}, { cookie: client.cookie });
+    expect(deleteRes.status).toBe(400);
+
+    const meRes = await harness.rpc<{ user: { id: string } }>(
+      "auth/me",
+      {},
+      { cookie: client.cookie },
+    );
+    expect(meRes.body.user.id).toBe(client.userId);
+  });
+
+  it("auth.deleteAccount de profissional com senha certa exclui a conta", async () => {
+    const pro = await signUp(harness, { email: "pro-del@teste.dev", role: "profissional" });
+    await harness.db.insert(schema.professionalProfiles).values({
+      id: "prof-del-only",
+      userId: pro.userId,
+      slug: "pro-del-only",
+      displayName: "Pro Del",
+      artisticName: "Pro Del",
+      city: "São Paulo",
+      state: "SP",
+    });
+
+    const deleteRes = await harness.rpc<{ ok: boolean }>(
+      "auth/deleteAccount",
+      { password: "Senha@12345" },
+      { cookie: pro.cookie },
+    );
+    expect(deleteRes.status).toBe(200);
+    expect(deleteRes.body).toEqual({ ok: true });
+
+    const meRes = await harness.rpc<{ user: null }>("auth/me", {}, { cookie: pro.cookie });
+    expect(meRes.body).toEqual({ user: null });
+  });
 });
+
+async function createDeletionFixture(prefix: string) {
+  const client = await signUp(harness, {
+    email: `${prefix}-client@teste.dev`,
+    password: "Senha@12345",
+  });
+  const pro = await signUp(harness, { email: `${prefix}-pro@teste.dev`, role: "profissional" });
+
+  const mediaKey = `users/${client.userId}/foto.jpg`;
+  await harness.storage.putObject(mediaKey, new Uint8Array([1, 2, 3]), "image/jpeg");
+  expect(harness.storage.objects.has(mediaKey)).toBe(true);
+
+  const assetId = `${prefix}-asset-1`;
+  await harness.db.insert(schema.mediaAssets).values({
+    id: assetId,
+    ownerUserId: client.userId,
+    kind: "image",
+    purpose: "profile",
+    status: "ready",
+    contentType: "image/jpeg",
+    sizeBytes: 3,
+    storageKey: mediaKey,
+  });
+
+  const profileId = `${prefix}-prof-1`;
+  await harness.db.insert(schema.professionalProfiles).values({
+    id: profileId,
+    userId: pro.userId,
+    slug: `${prefix}-pro-teste`,
+    displayName: "Pro Teste",
+    artisticName: "Pro Teste",
+    city: "São Paulo",
+    state: "SP",
+  });
+
+  const originalContent = "Olá, tenho uma pergunta pessoal";
+  const convId = `${prefix}-conv-1`;
+  await harness.db.insert(schema.conversations).values({
+    id: convId,
+    profileId,
+    clientUserId: client.userId,
+    professionalUserId: pro.userId,
+    lastMessagePreview: originalContent,
+  });
+
+  await harness.db.insert(schema.conversationParticipants).values([
+    { id: `${prefix}-part-1`, conversationId: convId, userId: client.userId, role: "cliente" },
+    { id: `${prefix}-part-2`, conversationId: convId, userId: pro.userId, role: "profissional" },
+  ]);
+
+  const msgId = `${prefix}-msg-1`;
+  await harness.db.insert(schema.messages).values({
+    id: msgId,
+    conversationId: convId,
+    senderUserId: client.userId,
+    senderRole: "cliente",
+    messageType: "text",
+    content: originalContent,
+  });
+
+  return { client, pro, mediaKey, assetId, convId, msgId, originalContent };
+}
