@@ -107,6 +107,14 @@ describe("compose.prod.yaml", () => {
     expect(published.some((port) => port.target === 9001)).toBe(false);
   });
 
+  it("passa ao minio-init as credenciais e o bucket que o entrypoint usa", () => {
+    expect(config.services["minio-init"]?.environment).toMatchObject({
+      MINIO_ROOT_USER: validEnv.S3_ACCESS_KEY_ID,
+      MINIO_ROOT_PASSWORD: validEnv.S3_SECRET_ACCESS_KEY,
+      S3_BUCKET: validEnv.S3_BUCKET,
+    });
+  });
+
   it("pina as imagens de terceiros", () => {
     for (const name of ["minio", "minio-init"]) {
       expect(config.services[name]?.image).toMatch(/@sha256:[0-9a-f]{64}$/);
