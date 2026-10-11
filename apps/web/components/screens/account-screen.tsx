@@ -24,6 +24,7 @@ import { updateContact } from "@/lib/announcement-draft";
 import { getApiClient } from "@/lib/api/client";
 import { authClient } from "@/lib/api/auth-client";
 import type { AuthRole, User } from "../../lib/types";
+import { CLIENT_ALIAS_TAKEN_MESSAGE } from "@sigillus/domain";
 
 interface ProfileFormState {
   fullName: string;
@@ -107,6 +108,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
   const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [form, setForm] = useState<ProfileFormState>(() =>
     readStoredForm(profileFormKey(role, user.email), user),
   );
@@ -247,10 +249,29 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
     return isValid;
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (!validateForm()) {
       setSaveMessage(null);
       return;
+    }
+    const nextAlias = form.alias.trim();
+    if (nextAlias && nextAlias !== (user.alias ?? "").trim()) {
+      setIsSavingProfile(true);
+      const result = await authClient.updateUser({ alias: nextAlias }).catch(() => null);
+      setIsSavingProfile(false);
+      if (!result || result.error) {
+        const aliasTaken = result?.error?.message === CLIENT_ALIAS_TAKEN_MESSAGE;
+        setSaveMessage(null);
+        if (aliasTaken) {
+          setFieldErrors((current) => ({ ...current, alias: CLIENT_ALIAS_TAKEN_MESSAGE }));
+        }
+        setFormError(
+          aliasTaken
+            ? CLIENT_ALIAS_TAKEN_MESSAGE
+            : "Não foi possível salvar os dados da conta. Tente novamente.",
+        );
+        return;
+      }
     }
     markAllAsRead();
     setBannerClosed(true);
@@ -380,6 +401,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
                 }
                 value={form.alias}
                 onChange={updateField("alias")}
+                error={fieldErrors.alias}
               />
             </div>
 
@@ -534,7 +556,12 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
               </p>
             ) : null}
             <div className="flex justify-end">
-              <Button type="button" onClick={handleSaveProfile} className="w-full sm:w-auto">
+              <Button
+                type="button"
+                onClick={handleSaveProfile}
+                disabled={isSavingProfile}
+                className="w-full sm:w-auto"
+              >
                 Salvar dados da conta
               </Button>
             </div>

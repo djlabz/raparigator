@@ -48,7 +48,7 @@ async function register(adminEmail: string | undefined, logger = captureLogger()
 
 async function publishProfile(email: string, name: string) {
   const user = await signUp(harness, { email, role: "profissional", name });
-  const owner = { id: user.userId, name };
+  const owner = { id: user.userId, name, alias: name };
   const result = await harness.deps.services.announcements.publish(owner, completeDraft());
   expect(result.ok).toBe(true);
   const [row] = await harness.db

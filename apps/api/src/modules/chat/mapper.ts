@@ -2,6 +2,8 @@ import type { Conversation, Message, MessageSenderRole } from "@sigillus/contrac
 import type { ChatMediaAsset, ConversationContext, MessageRow, ParticipantRow } from "./repository";
 
 export const ONLINE_WINDOW_MS = 2 * 60 * 1000;
+export const DELETED_ACCOUNT_NAME = "Conta encerrada";
+export const FALLBACK_CLIENT_NAME = "Cliente";
 
 export function participantFor(ctx: ConversationContext, userId: string): ParticipantRow | null {
   if (ctx.clientParticipant.userId === userId) {
@@ -20,7 +22,11 @@ export function otherParticipant(ctx: ConversationContext, userId: string): Part
 }
 
 export function clientDisplayName(ctx: ConversationContext): string {
-  return ctx.clientParticipant.alias?.trim() || ctx.clientUser.name;
+  const chosen = clientChosenAlias(ctx);
+  if (chosen) {
+    return chosen;
+  }
+  return ctx.clientUser.deleted ? DELETED_ACCOUNT_NAME : FALLBACK_CLIENT_NAME;
 }
 
 export function clientChosenAlias(ctx: ConversationContext): string | undefined {

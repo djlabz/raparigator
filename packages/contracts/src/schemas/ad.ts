@@ -10,7 +10,6 @@ export type PricingTableItem = z.infer<typeof PricingTableItemSchema>;
 export const ProfessionalAdSchema = z.object({
   id: z.string(),
   slug: z.string(),
-  displayName: z.string(),
   artisticName: z.string(),
   city: z.string(),
   state: z.string(),
@@ -53,7 +52,6 @@ export type ProfessionalAd = z.infer<typeof ProfessionalAdSchema>;
 export const FeedAdSummarySchema = ProfessionalAdSchema.pick({
   id: true,
   slug: true,
-  displayName: true,
   artisticName: true,
   city: true,
   state: true,

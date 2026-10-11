@@ -7,6 +7,7 @@ import type { Database } from "../db/client";
 import * as schema from "../db/schema";
 import type { Mailer } from "./mail";
 import { newId } from "./ids";
+import { assertAliasAvailable, assignClientAlias, normalizeAlias } from "../modules/auth/alias";
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const SESSION_UPDATE_AGE_SECONDS = 60 * 60 * 24;
@@ -115,7 +116,24 @@ export function createUserAuth(db: Database, config: AppConfig, mailer?: Mailer)
             if (role !== "cliente" && role !== "profissional") {
               throw new APIError("BAD_REQUEST", { message: "Papel inválido." });
             }
-            return { data: { ...user, role } };
+            const chosenAlias = normalizeAlias((user as { alias?: unknown }).alias);
+            if (chosenAlias) {
+              await assertAliasAvailable(db, chosenAlias);
+            }
+            const alias = chosenAlias ?? (role === "cliente" ? await assignClientAlias(db) : null);
+            return { data: { ...user, role, alias } };
+          },
+        },
+        update: {
+          before: async (data, ctx) => {
+            if (!("alias" in data)) {
+              return { data };
+            }
+            const alias = normalizeAlias((data as { alias?: unknown }).alias);
+            if (alias) {
+              await assertAliasAvailable(db, alias, ctx?.context.session?.user.id);
+            }
+            return { data: { ...data, alias } };
           },
         },
       },

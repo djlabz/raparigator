@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
+import { CLIENT_ALIAS_PATTERN, CLIENT_ALIAS_TAKEN_MESSAGE } from "@sigillus/domain";
 import { DEV_ADMINS, upsertAdminWithPassword } from "../src/db/seed/users";
 import * as schema from "../src/db/schema";
 import { createTestHarness } from "./helpers/app";
@@ -62,6 +63,88 @@ describe("autenticação e sessão", () => {
       body: JSON.stringify({ email: "novo@admin.dev", password: "Senha@12345", name: "Novo" }),
     });
     expect(response.ok).toBe(false);
+  });
+
+  it("cadastro de cliente sem apelido gera alias único", async () => {
+    const people = [
+      { email: "joana.prado@teste.dev", name: "Joana Prado", phone: "11987654321" },
+      { email: "rui.bastos@teste.dev", name: "Rui Bastos", phone: "21912345678" },
+    ];
+    const aliases: string[] = [];
+    for (const person of people) {
+      const response = await harness.fetch("/api/auth/sign-up/email", {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: harness.config.WEB_ORIGIN },
+        body: JSON.stringify({ ...person, password: "Senha@12345", role: "cliente" }),
+      });
+      expect(response.ok).toBe(true);
+      const [row] = await harness.db
+        .select({ alias: schema.users.alias })
+        .from(schema.users)
+        .where(eq(schema.users.email, person.email));
+      const alias = row?.alias ?? "";
+      expect(alias).toMatch(CLIENT_ALIAS_PATTERN);
+      const lower = alias.toLowerCase();
+      for (const part of [...person.name.split(" "), person.email.split("@")[0]!, person.phone]) {
+        expect(lower).not.toContain(part.toLowerCase());
+      }
+      aliases.push(alias);
+    }
+    expect(aliases[0]).not.toBe(aliases[1]);
+
+    const pro = await signUp(harness, { email: "sem-alias-pro@teste.dev", role: "profissional" });
+    const [proRow] = await harness.db
+      .select({ alias: schema.users.alias })
+      .from(schema.users)
+      .where(eq(schema.users.id, pro.userId));
+    expect(proRow?.alias ?? null).toBeNull();
+  });
+
+  it("apelido duplicado é recusado no cadastro e na edição, sem diferenciar maiúsculas", async () => {
+    const first = await signUp(harness, { email: "alias-a@teste.dev", alias: "Lobo Discreto" });
+
+    const duplicated = await harness.fetch("/api/auth/sign-up/email", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: harness.config.WEB_ORIGIN },
+      body: JSON.stringify({
+        email: "alias-b@teste.dev",
+        password: "Senha@12345",
+        name: "Outra Pessoa",
+        role: "cliente",
+        alias: "lobo discreto",
+      }),
+    });
+    expect(duplicated.ok).toBe(false);
+    expect(((await duplicated.json()) as { message?: string }).message).toBe(
+      CLIENT_ALIAS_TAKEN_MESSAGE,
+    );
+
+    const second = await signUp(harness, { email: "alias-c@teste.dev" });
+    const update = (cookie: string, alias: string) =>
+      harness.fetch("/api/auth/update-user", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: harness.config.WEB_ORIGIN,
+          cookie,
+        },
+        body: JSON.stringify({ alias }),
+      });
+
+    const taken = await update(second.cookie, "LOBO DISCRETO");
+    expect(taken.ok).toBe(false);
+    expect(((await taken.json()) as { message?: string }).message).toBe(CLIENT_ALIAS_TAKEN_MESSAGE);
+
+    expect((await update(second.cookie, "Coruja Atenta")).ok).toBe(true);
+    expect((await update(first.cookie, "lobo discreto")).ok).toBe(true);
+
+    const rows = await harness.db
+      .select({ id: schema.users.id, alias: schema.users.alias })
+      .from(schema.users)
+      .where(inArray(schema.users.id, [first.userId, second.userId]));
+    const byId = new Map(rows.map((row) => [row.id, row.alias]));
+    expect(byId.get(first.userId)).toBe("lobo discreto");
+    expect(byId.get(second.userId)).toBe("Coruja Atenta");
   });
 
   it("recuperação de senha envia e-mail com token e permite redefinir com sucesso", async () => {

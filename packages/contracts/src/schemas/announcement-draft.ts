@@ -10,7 +10,6 @@ export type AvailabilityDay = z.infer<typeof AvailabilityDaySchema>;
 
 export const AnnouncementAdPreviewSchema = z.object({
   slug: z.string(),
-  displayName: z.string(),
   artisticName: z.string(),
   city: z.string(),
   state: z.string(),
