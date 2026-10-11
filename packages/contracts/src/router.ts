@@ -81,7 +81,7 @@ export const authContract = {
   me: base.route({ method: "GET", path: "/auth/me" }).output(SessionSchema),
   deleteAccount: base
     .route({ method: "POST", path: "/auth/delete-account" })
-    .input(z.object({ confirmation: z.literal(true).optional() }).default({}))
+    .input(z.object({ password: z.string().min(1) }))
     .output(OkSchema),
 };
 

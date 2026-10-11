@@ -118,6 +118,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletePassword, setDeletePassword] = useState("");
   const profileCompleted = isProfileFormComplete(role, form);
 
   const clearFieldError = <FieldName extends keyof ProfileFormState>(fieldName: FieldName) => {
@@ -170,11 +171,14 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
   };
 
   const handleDeleteAccount = async () => {
+    if (!deletePassword) {
+      return;
+    }
     setIsDeletingAccount(true);
     setDeleteError(null);
     try {
       const client = getApiClient();
-      await client.auth.deleteAccount({});
+      await client.auth.deleteAccount({ password: deletePassword });
       await authClient.signOut();
       window.location.href = "/";
     } catch (err: unknown) {
@@ -650,6 +654,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
             className="bg-red-700 hover:bg-red-800 focus-visible:ring-red-500"
             onClick={() => {
               setDeleteError(null);
+              setDeletePassword("");
               setShowDeleteModal(true);
             }}
             data-testid="delete-account-button"
@@ -752,6 +757,20 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
             fotos enviadas e histórico de credenciais serão excluídos de acordo com a LGPD.
           </p>
 
+          <Input
+            id="delete-account-password"
+            label="Digite sua senha para confirmar"
+            type="password"
+            autoComplete="current-password"
+            placeholder="••••••••"
+            value={deletePassword}
+            disabled={isDeletingAccount}
+            onChange={(e) => {
+              setDeletePassword(e.target.value);
+              setDeleteError(null);
+            }}
+          />
+
           {deleteError ? (
             <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {deleteError}
@@ -766,6 +785,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
               onClick={() => {
                 setShowDeleteModal(false);
                 setDeleteError(null);
+                setDeletePassword("");
               }}
             >
               Cancelar
@@ -773,7 +793,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
             <Button
               type="button"
               variant="danger"
-              disabled={isDeletingAccount}
+              disabled={isDeletingAccount || !deletePassword}
               className="bg-red-700 hover:bg-red-800 focus-visible:ring-red-500"
               onClick={handleDeleteAccount}
               data-testid="confirm-delete-account-button"
