@@ -12,7 +12,9 @@ export const mediaAssets = pgTable(
     profileId: text().references(() => professionalProfiles.id, { onDelete: "cascade" }),
     kind: text({ enum: ["image", "video"] }).notNull(),
     purpose: text({ enum: ["gallery", "profile", "chat"] }).notNull(),
-    status: text({ enum: ["pending_upload", "processing", "ready", "rejected", "failed"] })
+    status: text({
+      enum: ["pending_upload", "processing", "ready", "rejected", "failed", "blocked"],
+    })
       .notNull()
       .default("pending_upload"),
     contentType: text().notNull(),
@@ -24,6 +26,8 @@ export const mediaAssets = pgTable(
     height: integer(),
     position: smallint(),
     moderationReason: text(),
+    blockReason: text(),
+    blockedByReportId: text(),
     processedAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

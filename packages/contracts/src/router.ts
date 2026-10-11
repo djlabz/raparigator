@@ -58,6 +58,13 @@ import {
   StartSubscriptionOutputSchema,
 } from "./schemas/premium";
 import {
+  ActOnReportInputSchema,
+  CreatePublicReportInputSchema,
+  CreatePublicReportOutputSchema,
+  ReportEvidenceSchema,
+  ReportTargetMediaSchema,
+} from "./schemas/reports";
+import {
   AdReviewsSummarySchema,
   InviteStatusSchema,
   ReviewInviteSchema,
@@ -75,7 +82,7 @@ const base = oc.errors({
   FORBIDDEN: { message: "Sem permissão para este recurso." },
   NOT_FOUND: { message: "Recurso não encontrado." },
   CONFLICT: { message: "Estado atual não permite a operação." },
-  RATE_LIMITED: { message: "Muitas tentativas. Aguarde um instante." },
+  RATE_LIMITED: { status: 429, message: "Muitas tentativas. Aguarde um instante." },
   PLAN_LIMIT: { message: "Limite do plano atingido." },
 });
 
@@ -346,6 +353,13 @@ export const notificationsContract = {
     .output(OkSchema),
 };
 
+export const reportsContract = {
+  createPublic: base
+    .route({ method: "POST", path: "/reports/public" })
+    .input(CreatePublicReportInputSchema)
+    .output(CreatePublicReportOutputSchema),
+};
+
 export const premiumContract = {
   getState: base.route({ method: "GET", path: "/premium" }).output(PremiumStateSchema),
   plans: base
@@ -425,6 +439,18 @@ export const adminContract = {
       }),
     )
     .output(OkSchema),
+  reportEvidence: base
+    .route({ method: "GET", path: "/admin/reports/{id}/evidence" })
+    .input(z.object({ id: IdSchema }))
+    .output(z.array(ReportEvidenceSchema)),
+  reportTargetMedia: base
+    .route({ method: "GET", path: "/admin/reports/{id}/target-media" })
+    .input(z.object({ id: IdSchema }))
+    .output(z.array(ReportTargetMediaSchema)),
+  actOnReport: base
+    .route({ method: "POST", path: "/admin/reports/{id}/act" })
+    .input(ActOnReportInputSchema)
+    .output(OkSchema),
   search: base
     .route({ method: "GET", path: "/admin/search" })
     .input(z.object({ q: z.string().trim().min(1).max(100) }))
@@ -447,6 +473,7 @@ export const contract = {
   verification: verificationContract,
   notifications: notificationsContract,
   premium: premiumContract,
+  reports: reportsContract,
   admin: adminContract,
 };
 

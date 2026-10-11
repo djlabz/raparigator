@@ -67,6 +67,7 @@ export const MediaAssetStatusSchema = z.enum([
   "ready",
   "rejected",
   "failed",
+  "blocked",
 ]);
 export type MediaAssetStatus = z.infer<typeof MediaAssetStatusSchema>;
 

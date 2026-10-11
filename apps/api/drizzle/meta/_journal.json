@@ -36,6 +36,13 @@
       "when": 1791756420225,
       "tag": "0004_access_log",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791762270461,
+      "tag": "0005_report_channel",
+      "breakpoints": true
     }
   ]
 }

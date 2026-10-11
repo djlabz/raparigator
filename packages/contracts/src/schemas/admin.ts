@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { IdSchema, PaginationInputSchema } from "./common";
+import { PublicReportReasonSchema, ReportActionSchema, ReportSourceSchema } from "./reports";
 
 export const AdminActivityActionSchema = z.enum([
   "profile_approved",
@@ -84,15 +85,25 @@ export const ReportPartyRoleSchema = z.enum(["cliente", "profissional"]);
 
 export const ReportSchema = z.object({
   id: z.string(),
+  source: ReportSourceSchema,
   type: ReportTypeSchema,
-  reporterName: z.string(),
-  reporterRole: ReportPartyRoleSchema,
-  reportedName: z.string(),
+  reason: PublicReportReasonSchema.optional(),
+  reporterName: z.string().optional(),
+  reporterRole: ReportPartyRoleSchema.optional(),
+  reportedName: z.string().optional(),
   reportedId: z.string().optional(),
-  reportedRole: ReportPartyRoleSchema,
+  reportedRole: ReportPartyRoleSchema.optional(),
+  targetProfileId: z.string().optional(),
+  targetUrl: z.string().optional(),
+  profileSlug: z.string().optional(),
   description: z.string(),
   status: ReportStatusSchema,
   resolution: z.string().optional(),
+  action: ReportActionSchema.optional(),
+  actionByEmail: z.string().optional(),
+  respondedAt: z.string().optional(),
+  hasContactEmail: z.boolean(),
+  evidenceCount: z.number(),
   createdAt: z.string(),
   updatedAt: z.string().optional(),
 });
