@@ -10,6 +10,7 @@ import type { Mailer } from "./mail";
 import { newId } from "./ids";
 import { recordAccess } from "../modules/access-log";
 import { assertAliasAvailable, assignClientAlias, normalizeAlias } from "../modules/auth/alias";
+import { createIdentityRepository } from "../modules/identity/repository";
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const SESSION_UPDATE_AGE_SECONDS = 60 * 60 * 24;
@@ -77,6 +78,10 @@ export function createUserAuth(db: Database, config: AppConfig, mailer?: Mailer,
       deleteUser: {
         enabled: true,
         beforeDelete: async (user) => {
+          const identityKeys = await createIdentityRepository(db).fileKeysForUser(user.id);
+          if (jobs && identityKeys.length > 0) {
+            await jobs.enqueue("identity.delete-files", { userId: user.id, keys: identityKeys });
+          }
           await db
             .update(schema.messages)
             .set({

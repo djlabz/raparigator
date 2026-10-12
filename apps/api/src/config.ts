@@ -52,6 +52,7 @@ const EnvSchema = z
     OPENAPI_DOCS_ENABLED: booleanFromEnv.optional(),
     VERIFICATION_DEV_CODES: booleanFromEnv.default(false),
     VERIFICATION_REQUIRED: booleanFromEnv.default(false),
+    IDENTITY_REQUIRED: booleanFromEnv.default(false),
     PREMIUM_CHECKOUT_ENABLED: booleanFromEnv.default(false),
     SEED_ON_BOOT: booleanFromEnv.default(false),
     MAIL_PROVIDER: z.enum(["log", "resend"]).default("log"),
@@ -77,6 +78,14 @@ const EnvSchema = z
         code: "custom",
         path: ["VERIFICATION_DEV_CODES"],
         message: "VERIFICATION_DEV_CODES não pode estar ligado em produção.",
+      });
+    }
+    if (env.NODE_ENV === "production" && !env.IDENTITY_REQUIRED) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["IDENTITY_REQUIRED"],
+        message:
+          "IDENTITY_REQUIRED precisa ser true em produção (verificação de identidade da anunciante).",
       });
     }
     if (env.NODE_ENV === "production" && env.MAIL_PROVIDER === "resend" && !env.RESEND_API_KEY) {

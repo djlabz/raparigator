@@ -15,6 +15,12 @@ import { createMailer } from "./lib/mail";
 import { createS3Storage } from "./lib/storage";
 import { registerAccessLogJobs } from "./modules/access-log";
 import { registerAdminReviewDigestJob } from "./modules/announcements";
+import {
+  IDENTITY_RETENTION_CRON,
+  IDENTITY_RETENTION_JOB,
+  registerAdminIdentityDigestJob,
+  registerIdentityJobs,
+} from "./modules/identity";
 import { registerMediaJobs } from "./modules/media/jobs";
 import { registerBillingJobs } from "./modules/premium/jobs";
 import { registerAdminReportDigestJob } from "./modules/reports";
@@ -69,6 +75,9 @@ async function main() {
   await registerAccessLogJobs({ db, jobs, logger });
   await registerAdminReviewDigestJob({ db, config, mailer, jobs, logger });
   await registerAdminReportDigestJob({ db, config, mailer, jobs, logger });
+  await registerAdminIdentityDigestJob({ db, config, mailer, jobs, logger });
+  await registerIdentityJobs({ db, storage, jobs, logger });
+  await jobs.schedule(IDENTITY_RETENTION_JOB, IDENTITY_RETENTION_CRON);
   await registerBillingJobs({ db, premium: deps.services.premium, billing, jobs, logger });
   await jobs.work("premium.expire", async () => {
     await deps.services.premium.expireDueSubscriptions();

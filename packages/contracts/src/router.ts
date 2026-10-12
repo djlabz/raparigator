@@ -50,6 +50,16 @@ import {
 } from "./schemas/common";
 import { FeedFiltersCriteriaSchema, FeedSortSchema } from "./schemas/feed";
 import { VerificationChannelSchema, VerificationPublicStateSchema } from "./schemas/identity";
+import {
+  IdentityVerificationFilesSchema,
+  IdentityVerificationListInputSchema,
+  IdentityVerificationMineSchema,
+  IdentityVerificationRejectInputSchema,
+  IdentityVerificationSubmitInputSchema,
+  IdentityVerificationSummarySchema,
+  IdentityVerificationUploadInputSchema,
+  IdentityVerificationUploadOutputSchema,
+} from "./schemas/identity-verification";
 import { AccountNotificationItemSchema } from "./schemas/notifications";
 import {
   PremiumPlanOptionSchema,
@@ -360,6 +370,18 @@ export const reportsContract = {
     .output(CreatePublicReportOutputSchema),
 };
 
+export const identityContract = {
+  getMine: base.route({ method: "GET", path: "/identity" }).output(IdentityVerificationMineSchema),
+  createUpload: base
+    .route({ method: "POST", path: "/identity/uploads" })
+    .input(IdentityVerificationUploadInputSchema)
+    .output(IdentityVerificationUploadOutputSchema),
+  submit: base
+    .route({ method: "POST", path: "/identity/submit" })
+    .input(IdentityVerificationSubmitInputSchema)
+    .output(IdentityVerificationMineSchema),
+};
+
 export const premiumContract = {
   getState: base.route({ method: "GET", path: "/premium" }).output(PremiumStateSchema),
   plans: base
@@ -451,6 +473,22 @@ export const adminContract = {
     .route({ method: "POST", path: "/admin/reports/{id}/act" })
     .input(ActOnReportInputSchema)
     .output(OkSchema),
+  identityVerifications: base
+    .route({ method: "GET", path: "/admin/identity-verifications" })
+    .input(IdentityVerificationListInputSchema)
+    .output(z.array(IdentityVerificationSummarySchema)),
+  identityFileUrl: base
+    .route({ method: "GET", path: "/admin/identity-verifications/{id}/files" })
+    .input(z.object({ id: IdSchema }))
+    .output(IdentityVerificationFilesSchema),
+  approveIdentity: base
+    .route({ method: "POST", path: "/admin/identity-verifications/{id}/approve" })
+    .input(z.object({ id: IdSchema }))
+    .output(OkSchema),
+  rejectIdentity: base
+    .route({ method: "POST", path: "/admin/identity-verifications/{id}/reject" })
+    .input(IdentityVerificationRejectInputSchema)
+    .output(OkSchema),
   search: base
     .route({ method: "GET", path: "/admin/search" })
     .input(z.object({ q: z.string().trim().min(1).max(100) }))
@@ -474,6 +512,7 @@ export const contract = {
   notifications: notificationsContract,
   premium: premiumContract,
   reports: reportsContract,
+  identity: identityContract,
   admin: adminContract,
 };
 

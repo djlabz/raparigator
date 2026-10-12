@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   User,
   ClipboardCheck,
+  IdCard,
   Menu,
   X,
 } from "lucide-react";
@@ -42,6 +43,12 @@ const navSections = [
     label: "Moderação & Segurança",
     items: [
       { label: "Validação de Perfis", href: "/admin/perfis", icon: ClipboardCheck, exact: false },
+      {
+        label: "Verificações de Identidade",
+        href: "/admin/verificacoes",
+        icon: IdCard,
+        exact: false,
+      },
       { label: "Denúncias", href: "/admin/denuncias", icon: Flag, exact: false },
     ],
   },

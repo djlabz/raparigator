@@ -94,6 +94,24 @@ describe("compose.prod.yaml", () => {
     expect(loaded.RATE_LIMIT_ENABLED).toBe(true);
   });
 
+  it("liga IDENTITY_REQUIRED por padrão e a API recusa subir com false", () => {
+    expect(loadConfig(apiEnvironment(config)).IDENTITY_REQUIRED).toBe(true);
+    const disabled = renderCompose({ ...validEnv, IDENTITY_REQUIRED: "false" });
+    expect(() => loadConfig(apiEnvironment(disabled))).toThrow(/IDENTITY_REQUIRED/);
+  });
+
+  it("o minio-init só libera leitura anônima em public/", () => {
+    const service = config.services["minio-init"] as ComposeService & {
+      entrypoint?: string[] | string;
+    };
+    const entrypoint = [service.entrypoint ?? []].flat().join(" ");
+    const anonymous = entrypoint.match(/mc anonymous set [^&]+/g) ?? [];
+    expect(anonymous.length).toBeGreaterThan(0);
+    for (const rule of anonymous) {
+      expect(rule.trim()).toMatch(/\/public$/);
+    }
+  });
+
   it("ADMIN_NOTIFY_EMAIL é opcional e chega à API quando definida", () => {
     expect(loadConfig(apiEnvironment(config)).ADMIN_NOTIFY_EMAIL).toBeUndefined();
     const withAdmin = renderCompose({ ...validEnv, ADMIN_NOTIFY_EMAIL: "revisao@example.com" });

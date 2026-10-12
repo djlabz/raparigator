@@ -114,6 +114,13 @@ else
   echo "  [OK] RATE_LIMIT_ENABLED=true."
 fi
 
+IDENTITY_REQUIRED=$(read_var "IDENTITY_REQUIRED")
+if [ "$IDENTITY_REQUIRED" != "true" ]; then
+  fail "IDENTITY_REQUIRED deve ser 'true' em produção (atual: '$IDENTITY_REQUIRED')."
+else
+  echo "  [OK] IDENTITY_REQUIRED=true."
+fi
+
 DEV_CODES=$(grep -E "^VERIFICATION_DEV_CODES=" "$ENV_FILE" | head -n 1 | cut -d'=' -f2- | tr -d '\r"' || true)
 if [ "$DEV_CODES" = "true" ]; then
   echo "  [FALHA] VERIFICATION_DEV_CODES não pode ser 'true' em produção."

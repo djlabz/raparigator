@@ -56,6 +56,7 @@ jobs:
           RESEND_API_KEY=re_ci_fake
           MAIL_FROM=Sigillus <nao-responda@example.com>
           VERIFICATION_REQUIRED=false
+          IDENTITY_REQUIRED=true
           VERIFICATION_DEV_CODES=false
           PREMIUM_CHECKOUT_ENABLED=false
           OPENAPI_DOCS_ENABLED=false
@@ -210,6 +211,7 @@ jobs:
           RESEND_API_KEY=re_ci_fake
           MAIL_FROM=Sigillus <nao-responda@example.com>
           VERIFICATION_REQUIRED=false
+          IDENTITY_REQUIRED=true
           VERIFICATION_DEV_CODES=false
           PREMIUM_CHECKOUT_ENABLED=false
           OPENAPI_DOCS_ENABLED=false

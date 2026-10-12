@@ -7,6 +7,7 @@ export * from "./schemas/announcement-draft";
 export * from "./schemas/announcement-media";
 export * from "./schemas/feed";
 export * from "./schemas/identity";
+export * from "./schemas/identity-verification";
 export * from "./schemas/reviews";
 export * from "./schemas/notifications";
 export * from "./schemas/premium";

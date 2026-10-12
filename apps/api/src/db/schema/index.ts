@@ -5,3 +5,4 @@ export * from "./chat";
 export * from "./social";
 export * from "./access-log";
 export * from "./reports";
+export * from "./identity";
