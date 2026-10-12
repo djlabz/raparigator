@@ -1,7 +1,10 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { TrafficDiscoveryCard } from "@/components/screens/professional-dashboard/traffic-discovery-card";
+import { isEarningsSimulatorEnabled } from "@/lib/earnings-simulator-flag";
 const DEFAULT_METRICS = {
   monthRevenue: 3200,
   contacts: 48,
@@ -80,6 +83,21 @@ export function SummaryTab() {
       </section>
 
       <TrafficDiscoveryCard />
+
+      {isEarningsSimulatorEnabled() ? (
+        <Link
+          href="/profissional/simulador"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm shadow-zinc-200/70 transition-colors hover:border-wine-200"
+        >
+          <span className="min-w-0">
+            <span className="block font-semibold text-zinc-900">Simulador de projeção</span>
+            <span className="block text-sm text-zinc-600">
+              Simule a projeção por mês e por ano com os seus números.
+            </span>
+          </span>
+          <ChevronRight className="size-5 shrink-0 text-zinc-500" aria-hidden />
+        </Link>
+      ) : null}
 
       {/* Card de Dicas e Orientações */}
       <Card className="bg-linear-to-r from-wine-50 to-wine-100/50 border border-wine-200 p-4 sm:p-6">

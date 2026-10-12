@@ -81,6 +81,19 @@ jobs:
       - run: npm ci
       - run: npm run test -w packages/domain
 
+  test-web:
+    name: Testes do web (Vitest)
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test -w apps/web
+
   test-api:
     name: Testes da API (Postgres)
     timeout-minutes: 20
