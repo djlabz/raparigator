@@ -1,10 +1,5 @@
 export const popularSections = [
   {
-    label: "Independencia Financeira",
-    href: "/popular/independencia-financeira",
-    description: "Simule renda e tempo para chegar no primeiro milhao.",
-  },
-  {
     label: "Mais avaliadas",
     href: "/popular/mais-avaliadas",
     description: "Veja as profissionais com maior media por categoria.",

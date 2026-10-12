@@ -1,8 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getApiUrl } from "@/lib/data-source";
+import { isEarningsSimulatorEnabled } from "@/lib/earnings-simulator-flag";
 
 const ADMIN_LOGIN_PATH = "/admin/login";
 const USER_LOGIN_PATH = "/auth/login";
+const EARNINGS_SIMULATOR_PATH = "/profissional/simulador";
 
 async function hasApiSession(request: NextRequest, path: string): Promise<boolean> {
   const cookie = request.headers.get("cookie");
@@ -35,6 +37,10 @@ function redirectToLogin(request: NextRequest, loginPath: string) {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  if (pathname.startsWith(EARNINGS_SIMULATOR_PATH) && !isEarningsSimulatorEnabled()) {
+    return NextResponse.rewrite(new URL("/404", request.url));
+  }
+
   if (pathname.startsWith("/admin")) {
     if (pathname === ADMIN_LOGIN_PATH) {
       return NextResponse.next();
@@ -52,6 +58,7 @@ export const config = {
     "/conta/:path*",
     "/profissional/anuncios/:path*",
     "/profissional/assinatura-premium/:path*",
+    "/profissional/simulador/:path*",
     "/admin/:path*",
   ],
 };

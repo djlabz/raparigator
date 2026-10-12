@@ -1,14 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
+import { seedUserRole } from "./helpers/auth";
 
 async function openPremiumCompareStep(page: Page, width: number, height: number) {
   await page.setViewportSize({ width, height });
-  await page.goto("/popular/independencia-financeira");
-  await page.getByRole("button", { name: /Ver meu Painel da Liberdade/i }).click();
-  await page.getByRole("switch", { name: /Topo das Pesquisas/i }).click();
-  await page
-    .getByTestId("freedom-premium-cta")
-    .getByRole("button", { name: /Experimentar o Premium/i })
-    .click();
+  await seedUserRole(page, "profissional");
+  await page.goto("/profissional/simulador");
+  await page.getByRole("button", { name: /Experimentar o Premium/i }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.getByRole("button", { name: /^Continuar$/i }).click();
   await expect(page.getByText(/2 · Comparar/i)).toBeVisible();
