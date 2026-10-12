@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   useCallback,
@@ -610,6 +611,7 @@ export function AnnouncementTab({
   const visibilityStatus: VisibilityStatus = status === "Pausado" ? "Pausado" : "Ativo";
   const [publishError, setPublishError] = useState<string | null>(null);
   const [publishErrorItems, setPublishErrorItems] = useState<AnnouncementPublishWarningItem[]>([]);
+  const [publishNeedsIdentity, setPublishNeedsIdentity] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [availabilityCloseSignal, setAvailabilityCloseSignal] = useState(0);
   const [isGallerySectionOpen, setIsGallerySectionOpen] = useState(true);
@@ -1234,12 +1236,14 @@ export function AnnouncementTab({
     if (!result.ok) {
       setPublishError(result.message);
       setPublishErrorItems(result.reason === "blocked" ? result.items : []);
+      setPublishNeedsIdentity(result.reason === "identity_required");
       setIsPublishing(false);
       return;
     }
 
     setPublishError(null);
     setPublishErrorItems([]);
+    setPublishNeedsIdentity(false);
     setIsPublishing(false);
   };
 
@@ -1328,6 +1332,14 @@ export function AnnouncementTab({
             {publishError ? (
               <div className="mt-2 space-y-1 text-sm font-medium text-red-600">
                 <p>{publishError}</p>
+                {publishNeedsIdentity ? (
+                  <Link
+                    href="/profissional/anuncios/verificacao"
+                    className="inline-flex items-center rounded-md border border-red-200 bg-red-50 px-1.5 py-0.5 font-semibold text-red-700 underline decoration-red-300 underline-offset-2 transition hover:bg-red-100 hover:text-red-800"
+                  >
+                    Abrir verificação de identidade
+                  </Link>
+                ) : null}
                 {publishErrorItems.length > 0 ? (
                   <ol className="space-y-1 text-red-600">
                     {publishErrorItems.map((item, index) => (

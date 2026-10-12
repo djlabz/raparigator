@@ -6,6 +6,7 @@ import { authRouter } from "./modules/auth/router";
 import { catalogsRouter } from "./modules/catalogs/router";
 import { chatRouter } from "./modules/chat/router";
 import { feedRouter } from "./modules/feed/router";
+import { identityAdminRouter, identityRouter } from "./modules/identity/router";
 import { mediaRouter } from "./modules/media/router";
 import { notificationsRouter } from "./modules/notifications/router";
 import { premiumRouter } from "./modules/premium/router";
@@ -26,7 +27,8 @@ export const router = os.router({
   premium: premiumRouter,
   reports: reportsRouter,
   verification: verificationRouter,
-  admin: adminRouter,
+  identity: identityRouter,
+  admin: { ...adminRouter, ...identityAdminRouter },
 });
 
 export type AppRouter = typeof router;

@@ -43,6 +43,13 @@
       "when": 1791762270461,
       "tag": "0005_report_channel",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791763755637,
+      "tag": "0006_identity_verification",
+      "breakpoints": true
     }
   ]
 }

@@ -33,11 +33,25 @@ describe("config", () => {
     ).toThrow(/VERIFICATION_DEV_CODES/);
   });
 
+  it("recusa subir em produção sem IDENTITY_REQUIRED=true", () => {
+    const production = { ...baseEnv, NODE_ENV: "production", BILLING_FAKE_ACKNOWLEDGED: "true" };
+    expect(() => loadConfig({ ...production, IDENTITY_REQUIRED: "false" })).toThrow(
+      /IDENTITY_REQUIRED/,
+    );
+    expect(() => loadConfig(production)).toThrow(/IDENTITY_REQUIRED/);
+    expect(loadConfig({ ...production, IDENTITY_REQUIRED: "true" }).IDENTITY_REQUIRED).toBe(true);
+  });
+
+  it("IDENTITY_REQUIRED é false por padrão fora de produção", () => {
+    expect(loadConfig({ ...baseEnv }).IDENTITY_REQUIRED).toBe(false);
+  });
+
   it("em produção com fake reconhecido, sobe com billing desabilitado e sem docs", () => {
     const config = loadConfig({
       ...baseEnv,
       NODE_ENV: "production",
       BILLING_FAKE_ACKNOWLEDGED: "true",
+      IDENTITY_REQUIRED: "true",
     });
     expect(config.billingEnabled).toBe(false);
     expect(config.docsEnabled).toBe(false);

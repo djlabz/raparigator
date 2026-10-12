@@ -216,6 +216,11 @@ export const AnnouncementPublishResultSchema = z.union([
     reason: z.literal("error"),
     message: z.string(),
   }),
+  z.object({
+    ok: z.literal(false),
+    reason: z.literal("identity_required"),
+    message: z.string(),
+  }),
 ]);
 export type AnnouncementPublishResult = z.infer<typeof AnnouncementPublishResultSchema>;
 

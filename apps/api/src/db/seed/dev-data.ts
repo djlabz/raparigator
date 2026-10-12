@@ -12,6 +12,7 @@ import {
   adminActivityLogs,
   conversationParticipants,
   conversations,
+  identityVerifications,
   mediaHighlights,
   messages,
   professionalProfiles,
@@ -37,6 +38,7 @@ type DevData = {
 const fixtures = devData as unknown as DevData;
 
 export const DEV_PROFESSIONAL_PASSWORD = "Profissional@123";
+export const SEED_IDENTITY_REVIEWER = "seed";
 
 function professionalEmailFor(ad: ProfessionalAd, index: number) {
   return index === 0 ? DEV_USERS[1]!.email : `${ad.slug}@sigillus.dev`;
@@ -56,6 +58,19 @@ export async function seedDevData(db: Database) {
       password: DEV_PROFESSIONAL_PASSWORD,
       city: `${ad.city}, ${ad.state}`,
     });
+
+    const seededAt = new Date();
+    await db
+      .insert(identityVerifications)
+      .values({
+        id: `identity-${userId}`,
+        userId,
+        status: "approved",
+        reviewedBy: SEED_IDENTITY_REVIEWER,
+        reviewedAt: seededAt,
+        adminNotifiedAt: seededAt,
+      })
+      .onConflictDoNothing();
 
     const [existing] = await db
       .select({ id: professionalProfiles.id })

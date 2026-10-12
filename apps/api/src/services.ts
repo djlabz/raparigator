@@ -12,6 +12,7 @@ import { createAnnouncementsService } from "./modules/announcements/service";
 import { createCatalogsService } from "./modules/catalogs/service";
 import { createChatService } from "./modules/chat/service";
 import { createFeedService } from "./modules/feed/service";
+import { createIdentityService } from "./modules/identity/service";
 import { createMediaService } from "./modules/media/service";
 import { createNotificationsService } from "./modules/notifications/service";
 import { createPremiumService } from "./modules/premium/service";
@@ -39,15 +40,23 @@ export function createServices(deps: ServiceDeps) {
   const notifications = createNotificationsService({ db });
   const premium = createPremiumService({ db, billing, config, jobs, logger });
   const reports = createReportsService({ db, storage, jobs, logger, profiles });
+  const identity = createIdentityService({ db, storage, jobs, logger, config });
   return {
     profiles,
     notifications,
     catalogs: createCatalogsService(db),
     feed: createFeedService(profiles),
     ads: createAdsService(db, profiles),
-    announcements: createAnnouncementsService({ db, profiles, jobs, logger }),
+    announcements: createAnnouncementsService({
+      db,
+      profiles,
+      jobs,
+      logger,
+      identityGate: (userId) => identity.publishGate(userId),
+    }),
     media: createMediaService({ db, profiles, storage, jobs, logger }),
     reports,
+    identity,
     chat: createChatService({ db, profiles, storage, chatEvents, logger, reports }),
     reviews: createReviewsService({ db, profiles, notifications, jobs, logger }),
     premium,

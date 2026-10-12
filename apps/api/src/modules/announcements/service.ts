@@ -29,11 +29,16 @@ import { toProfessionalAd } from "../profiles/mapper";
 import type { ProfileRepository } from "../profiles/repository";
 import { enqueueAdminReviewDigest } from "./review-digest";
 
+export type AnnouncementIdentityGate = (
+  userId: string,
+) => Promise<{ ok: true } | { ok: false; message: string }>;
+
 export type AnnouncementsServiceDeps = {
   db: Database;
   profiles: ProfileRepository;
   jobs: JobQueue;
   logger: Logger;
+  identityGate?: AnnouncementIdentityGate;
 };
 
 export type AnnouncementsService = ReturnType<typeof createAnnouncementsService>;
@@ -158,7 +163,7 @@ export function draftToProfileValues(draft: AnnouncementDraftState): ProfileValu
 }
 
 export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
-  const { db, profiles, jobs, logger } = deps;
+  const { db, profiles, jobs, logger, identityGate } = deps;
 
   async function uniqueSlug(artisticName: string): Promise<string> {
     const base = slugify(artisticName) || "perfil";
@@ -246,6 +251,13 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
           items,
         };
       }
+      const needsReview = profile.verificationStatus !== "published";
+      if (needsReview && identityGate) {
+        const gate = await identityGate(owner.id);
+        if (!gate.ok) {
+          return { ok: false, reason: "identity_required", message: gate.message };
+        }
+      }
       const now = new Date();
       const values: ProfileValues = {
         draft,
@@ -253,7 +265,6 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
         ...draftToProfileValues(draft),
         listingStatus: "Ativo",
       };
-      const needsReview = profile.verificationStatus !== "published";
       if (needsReview) {
         values.verificationStatus = "pending_review";
         values.submittedAt = now;

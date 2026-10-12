@@ -42,6 +42,9 @@ export default defineConfig({
       url: `${apiUrl}/healthz`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
+      env: {
+        IDENTITY_REQUIRED: "true",
+      },
     },
     {
       command: `npm run dev -- --port ${port}`,
