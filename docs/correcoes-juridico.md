@@ -186,7 +186,7 @@ Ordem de execução (11/10, Daniel): T-61, T-64, T-70, T-68, T-63, T-62, T-60, T
   - **Risco e cobertura:** a T-61 mexe em `reporterName`/`reportedName` antes; rebase em cima dela. `contactEmail` e IP nunca em log (regra 3; o redact da T-64 cobre `ip`, falta `contactEmail`: usar o id). Abuso de storage: 5/min × 3 × 15 MB por IP. Imagem quase lisa gera hash com quase todos os bits iguais; o filtro de popcount da P-21 evita bloqueio em massa. O rate limit só vale com `RATE_LIMIT_ENABLED=true` (obrigatório em produção pelo pré-voo). Imagens do chat também passam pela checagem.
   - **Aplicação da `validacao-juridica` (T-66) a esta task:** registrar no PR da T-66, como a task pede.
 
-- [ ] **T-62 Verificação de identidade obrigatória para anunciante (J-3).**
+- [x] **T-62 Verificação de identidade obrigatória para anunciante (J-3).** (PR #91, 11/10)
   - **Fazer:**
     - Módulo `identity`: tabela `identity_verification` (`userId`, `status` pendente/aprovada/reprovada, `documentKey`, `selfieKey`, `reviewedBy`, `reviewedAt`, `rejectReason`, `createdAt`). Um registro ativo por usuário.
     - Upload de documento e selfie pelo mesmo fluxo de presign, em prefixo `identity/` **privado**, nunca servido sem URL assinada e nunca listado fora do admin. Metadados removidos (T-68 cobre).
