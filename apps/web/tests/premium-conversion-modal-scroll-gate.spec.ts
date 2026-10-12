@@ -1,5 +1,15 @@
 import { test, expect, type Page } from "@playwright/test";
 import { seedUserRole } from "./helpers/auth";
+import { signInViaApi } from "./helpers/api";
+import { credentials } from "./helpers/credentials";
+
+let flagOn = false;
+
+test.beforeAll(async () => {
+  const session = await signInViaApi(credentials.profissional);
+  const state = await session.api.premium.getState();
+  flagOn = state.checkoutEnabled;
+});
 
 async function openPremiumCompareStep(page: Page, width: number, height: number) {
   await page.setViewportSize({ width, height });
@@ -12,6 +22,10 @@ async function openPremiumCompareStep(page: Page, width: number, height: number)
 }
 
 test.describe("Premium conversion modal scroll gate", () => {
+  test.beforeEach(() => {
+    test.skip(!flagOn, "checkout desligado");
+  });
+
   test("no mobile trava Continuar até rolar o passo Comparar", async ({ page }) => {
     await openPremiumCompareStep(page, 375, 700);
 

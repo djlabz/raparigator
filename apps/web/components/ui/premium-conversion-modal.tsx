@@ -13,6 +13,7 @@ import {
   PREMIUM_EXCLUSIVE_FEATURES,
   usePremiumPlans,
 } from "@/lib/premium-catalog";
+import { usePremiumPlan } from "@/lib/premium-plan";
 import type { PremiumBillingCycle } from "@/lib/types";
 import { cn, currency } from "@/lib/utils";
 
@@ -87,6 +88,7 @@ export function PremiumConversionModal({
   from,
 }: PremiumConversionModalProps) {
   const router = useRouter();
+  const { checkoutEnabled } = usePremiumPlan();
   const [step, setStep] = useState<1 | 2>(1);
   const [wasOpen, setWasOpen] = useState(open);
   const [billingCycle, setBillingCycle] = useState<PremiumBillingCycle>("semiannual");
@@ -137,6 +139,10 @@ export function PremiumConversionModal({
     handleClose();
     router.push(`/profissional/assinatura-premium?${params.toString()}`);
   };
+
+  if (!checkoutEnabled) {
+    return null;
+  }
 
   return (
     <Modal
