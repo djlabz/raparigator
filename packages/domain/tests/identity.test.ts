@@ -3,6 +3,7 @@ import {
   formatCpf,
   formatPhone,
   getProfileFieldErrors,
+  isValidCpf,
   validateCpf,
   validateEmailPair,
   validatePasswordPair,
@@ -14,6 +15,18 @@ describe("identidade", () => {
     expect(formatCpf("12345678900")).toBe("123.456.789-00");
     expect(validateCpf("123.456.789-00")).toBeNull();
     expect(validateCpf("123")).toBe("Informe um CPF válido.");
+  });
+
+  it("valida CPF pelos dígitos verificadores", () => {
+    expect(isValidCpf("529.982.247-25")).toBe(true);
+    expect(isValidCpf("52998224725")).toBe(true);
+    expect(isValidCpf("111.444.777-35")).toBe(true);
+    expect(isValidCpf("529.982.247-24")).toBe(false);
+    expect(isValidCpf("123.456.789-00")).toBe(false);
+    expect(isValidCpf("111.111.111-11")).toBe(false);
+    expect(isValidCpf("5299822472")).toBe(false);
+    expect(isValidCpf("529.982.247-255")).toBe(false);
+    expect(isValidCpf("")).toBe(false);
   });
 
   it("formata telefone internacional e aceita DDI 55", () => {

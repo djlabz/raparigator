@@ -6,6 +6,7 @@ import type {
   VerificationPublicChannelState,
   VerificationPublicState,
 } from "@sigillus/contracts";
+import { validatePhone } from "@sigillus/domain";
 import type { AppConfig } from "../../config";
 import type { Database } from "../../db/client";
 import { users, verificationChannels } from "../../db/schema";
@@ -153,6 +154,46 @@ export function createVerificationService(deps: VerificationServiceDeps) {
       .where(eq(verificationChannels.id, id));
   }
 
+  async function sendCode(
+    user: VerificationUser,
+    channel: VerificationChannel,
+  ): Promise<{ expiresAt: string; devCode: string | null }> {
+    const target = targetFor(user, channel);
+    if (!target) {
+      throw new ORPCError("CONFLICT", {
+        message:
+          channel === "email"
+            ? "Cadastre um e-mail antes de verificar."
+            : "Cadastre um telefone antes de verificar.",
+      });
+    }
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + VERIFICATION_CODE_TTL_MS);
+    const code = generateCode();
+    const values = {
+      target,
+      codeHash: hashCode(user.id, channel, code),
+      codeSentAt: now,
+      expiresAt,
+      attempts: 0,
+      verifiedAt: null,
+      updatedAt: now,
+    };
+    await db
+      .insert(verificationChannels)
+      .values({ id: newId(), userId: user.id, channel, ...values })
+      .onConflictDoUpdate({
+        target: [verificationChannels.userId, verificationChannels.channel],
+        set: values,
+      });
+    await notifier.sendCode(channel, target, code);
+    logger.info({ userId: user.id, channel }, "código de verificação gerado");
+    return {
+      expiresAt: expiresAt.toISOString(),
+      devCode: config.VERIFICATION_DEV_CODES ? code : null,
+    };
+  }
+
   return {
     async getState(user: VerificationUser): Promise<VerificationPublicState> {
       const now = new Date();
@@ -168,44 +209,34 @@ export function createVerificationService(deps: VerificationServiceDeps) {
       };
     },
 
-    async sendCode(
+    sendCode,
+
+    async changePhone(
       user: VerificationUser,
-      channel: VerificationChannel,
+      phone: string,
     ): Promise<{ expiresAt: string; devCode: string | null }> {
-      const target = targetFor(user, channel);
-      if (!target) {
-        throw new ORPCError("CONFLICT", {
-          message:
-            channel === "email"
-              ? "Cadastre um e-mail antes de verificar."
-              : "Cadastre um telefone antes de verificar.",
-        });
+      const nextPhone = phone.trim();
+      const phoneError = validatePhone(nextPhone);
+      if (phoneError) {
+        throw new ORPCError("BAD_REQUEST", { message: phoneError });
       }
       const now = new Date();
-      const expiresAt = new Date(now.getTime() + VERIFICATION_CODE_TTL_MS);
-      const code = generateCode();
-      const values = {
-        target,
-        codeHash: hashCode(user.id, channel, code),
-        codeSentAt: now,
-        expiresAt,
-        attempts: 0,
-        verifiedAt: null,
-        updatedAt: now,
-      };
-      await db
-        .insert(verificationChannels)
-        .values({ id: newId(), userId: user.id, channel, ...values })
-        .onConflictDoUpdate({
-          target: [verificationChannels.userId, verificationChannels.channel],
-          set: values,
-        });
-      await notifier.sendCode(channel, target, code);
-      logger.info({ userId: user.id, channel }, "código de verificação gerado");
-      return {
-        expiresAt: expiresAt.toISOString(),
-        devCode: config.VERIFICATION_DEV_CODES ? code : null,
-      };
+      await db.transaction(async (tx) => {
+        await tx
+          .update(users)
+          .set({ phone: nextPhone, phoneVerified: false, updatedAt: now })
+          .where(eq(users.id, user.id));
+        await tx
+          .delete(verificationChannels)
+          .where(
+            and(
+              eq(verificationChannels.userId, user.id),
+              eq(verificationChannels.channel, "phone"),
+            ),
+          );
+      });
+      logger.info({ userId: user.id }, "telefone alterado");
+      return sendCode({ ...user, phone: nextPhone }, "phone");
     },
 
     async confirmCode(

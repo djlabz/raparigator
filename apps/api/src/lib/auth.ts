@@ -1,5 +1,4 @@
 import { betterAuth } from "better-auth";
-import { APIError } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { eq, or } from "drizzle-orm";
 import type { AppConfig } from "../config";
@@ -10,6 +9,7 @@ import type { Mailer } from "./mail";
 import { newId } from "./ids";
 import { recordAccess } from "../modules/access-log";
 import { assertAliasAvailable, assignClientAlias, normalizeAlias } from "../modules/auth/alias";
+import { readSignupSensitiveFields } from "../modules/auth/signup-fields";
 import { createIdentityRepository } from "../modules/identity/repository";
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
@@ -107,12 +107,12 @@ export function createUserAuth(db: Database, config: AppConfig, mailer?: Mailer,
           type: ["cliente", "profissional"],
           required: false,
           defaultValue: "cliente",
-          input: true,
+          input: false,
         },
-        cpf: { type: "string", required: false, input: true },
-        phone: { type: "string", required: false, input: true },
+        cpf: { type: "string", required: false, defaultValue: null, input: false },
+        phone: { type: "string", required: false, defaultValue: null, input: false },
         phoneVerified: { type: "boolean", required: false, defaultValue: false, input: false },
-        city: { type: "string", required: false, input: true },
+        city: { type: "string", required: false, defaultValue: null, input: false },
         alias: { type: "string", required: false, input: true },
         status: {
           type: ["active", "suspended"],
@@ -126,17 +126,17 @@ export function createUserAuth(db: Database, config: AppConfig, mailer?: Mailer,
     databaseHooks: {
       user: {
         create: {
-          before: async (user) => {
-            const role = (user as { role?: unknown }).role ?? "cliente";
-            if (role !== "cliente" && role !== "profissional") {
-              throw new APIError("BAD_REQUEST", { message: "Papel inválido." });
-            }
+          before: async (user, ctx) => {
+            const sensitive = readSignupSensitiveFields(
+              (ctx?.body ?? user) as Record<string, unknown>,
+            );
             const chosenAlias = normalizeAlias((user as { alias?: unknown }).alias);
             if (chosenAlias) {
               await assertAliasAvailable(db, chosenAlias);
             }
-            const alias = chosenAlias ?? (role === "cliente" ? await assignClientAlias(db) : null);
-            return { data: { ...user, role, alias } };
+            const alias =
+              chosenAlias ?? (sensitive.role === "cliente" ? await assignClientAlias(db) : null);
+            return { data: { ...user, ...sensitive, alias } };
           },
         },
         update: {

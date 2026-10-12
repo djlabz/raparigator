@@ -49,7 +49,11 @@ import {
   paginated,
 } from "./schemas/common";
 import { FeedFiltersCriteriaSchema, FeedSortSchema } from "./schemas/feed";
-import { VerificationChannelSchema, VerificationPublicStateSchema } from "./schemas/identity";
+import {
+  ChangePhoneInputSchema,
+  VerificationChannelSchema,
+  VerificationPublicStateSchema,
+} from "./schemas/identity";
 import {
   IdentityVerificationFilesSchema,
   IdentityVerificationListInputSchema,
@@ -85,6 +89,7 @@ import {
   AdminSessionSchema,
   ClientAccountSchema,
   SessionSchema,
+  UpdateProfileInputSchema,
 } from "./schemas/user";
 
 const base = oc.errors({
@@ -101,6 +106,10 @@ export const authContract = {
   deleteAccount: base
     .route({ method: "POST", path: "/auth/delete-account" })
     .input(z.object({ password: z.string().min(1) }))
+    .output(OkSchema),
+  updateProfile: base
+    .route({ method: "POST", path: "/auth/profile" })
+    .input(UpdateProfileInputSchema)
     .output(OkSchema),
 };
 
@@ -346,6 +355,10 @@ export const verificationContract = {
     .route({ method: "POST", path: "/verification/{channel}/confirm" })
     .input(z.object({ channel: VerificationChannelSchema, code: z.string().regex(/^\d{6}$/) }))
     .output(z.object({ success: z.boolean(), message: z.string() })),
+  changePhone: base
+    .route({ method: "POST", path: "/verification/phone" })
+    .input(ChangePhoneInputSchema)
+    .output(z.object({ expiresAt: z.string(), devCode: z.string().nullable() })),
 };
 
 export const notificationsContract = {

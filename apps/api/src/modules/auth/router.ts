@@ -2,8 +2,9 @@ import { eq } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
 import { isAPIError } from "better-auth/api";
 import type { User } from "@sigillus/contracts";
-import { mediaAssets, professionalProfiles } from "../../db/schema";
-import { os } from "../../orpc/base";
+import { INVALID_CPF_MESSAGE, isValidCpf } from "@sigillus/domain";
+import { mediaAssets, professionalProfiles, users } from "../../db/schema";
+import { authed, os } from "../../orpc/base";
 import { getUserSession, type AppContext } from "../../orpc/context";
 import { recordAccess } from "../access-log";
 
@@ -38,6 +39,25 @@ export async function resolveSessionUser(context: AppContext): Promise<User | nu
     user.plan = profile?.adTier === "premium" ? "premium" : "standard";
   }
   return user;
+}
+
+function profileChanges(input: { cpf?: string; city?: string }) {
+  const changes: { cpf?: string; city?: string } = {};
+  if (input.cpf !== undefined) {
+    const cpf = input.cpf.trim();
+    if (!isValidCpf(cpf)) {
+      throw new ORPCError("BAD_REQUEST", { message: INVALID_CPF_MESSAGE });
+    }
+    changes.cpf = cpf;
+  }
+  if (input.city !== undefined) {
+    const city = input.city.trim();
+    if (!city) {
+      throw new ORPCError("BAD_REQUEST", { message: "Informe sua cidade." });
+    }
+    changes.city = city;
+  }
+  return changes;
 }
 
 export const authRouter = {
@@ -92,6 +112,16 @@ export const authRouter = {
       }
     }
 
+    return { ok: true as const };
+  }),
+  updateProfile: authed.auth.updateProfile.handler(async ({ context, input }) => {
+    const changes = profileChanges(input);
+    if (Object.keys(changes).length > 0) {
+      await context.deps.db
+        .update(users)
+        .set({ ...changes, updatedAt: new Date() })
+        .where(eq(users.id, context.user.id));
+    }
     return { ok: true as const };
   }),
 };

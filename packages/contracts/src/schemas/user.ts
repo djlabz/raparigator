@@ -55,3 +55,9 @@ export const AdminSessionSchema = z.object({
   admin: AdminUserSchema.nullable(),
 });
 export type AdminSession = z.infer<typeof AdminSessionSchema>;
+
+export const UpdateProfileInputSchema = z.strictObject({
+  cpf: z.string().max(20).optional(),
+  city: z.string().max(120).optional(),
+});
+export type UpdateProfileInput = z.infer<typeof UpdateProfileInputSchema>;
