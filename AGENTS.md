@@ -71,6 +71,7 @@ O `apps/web` conecta-se 100% à API pelo client oRPC tipado (`apps/web/lib/api/`
 - Textos de UI em português (PT-BR)
 - Não escreva comentários no código
 - Versões de dependência sempre pinadas (sem `^`, `~`, `*` ou `latest`); Renovate cuida das atualizações
+- Toda feature nova que toque anúncio, contato, mídia, pagamento ou dados pessoais passa pelo checklist de `validacao-juridica` antes da implementação; o resultado vai na descrição do PR (skill em `.agents/skills/validacao-juridica/SKILL.md`)
 
 ## Verificação de motion / browser ad hoc
 

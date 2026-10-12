@@ -4,28 +4,30 @@ Leia, nesta ordem, antes de qualquer coisa:
 
 1. `AGENTS.md` — stack, comandos, estrutura, convenções e a lista "Nunca faça". É a regra do repo e prevalece sobre este arquivo.
 2. `docs/roteiro.md` — fases, decisões tomadas (seção 2) e decisões pendentes (seção 7).
-3. `docs/correcoes-pre-deploy.md` — **fase atual (2.1)**, obrigatória antes do deploy e antes da Fase 3. Leia o arquivo inteiro: regras duras (seção 0), evidências verificadas (seção 2.1), tasks T-40 a T-49 e o "Plano verificado" de cada uma.
+3. `docs/correcoes-juridico.md` — **fase atual (Fase J, jurídica e de privacidade)**. Leia o arquivo inteiro: regras adicionais (seção 0), verificação (seção 1.1), ordem de execução, tasks e o "Plano verificado" de cada uma, decisões (seção 4), dívida (seção 5) e achados (seção 6).
+   - As regras duras da seção 0 de `docs/correcoes-pre-deploy.md` (Fase 2.1, concluída) continuam valendo integralmente.
 4. `docs/adr/README.md` — a restrição de produto (vitrine, sem intermediação).
 
 ## Qual task pegar
 
-- A primeira `[ ]` da seção 4 de `docs/correcoes-pre-deploy.md`, na ordem. Não pegue nada da Fase 3 do roteiro (T-30 a T-34): está fora de escopo.
-- Pule uma task só se o "Plano verificado" dela disser **PARADO** e a pergunta correspondente na seção 5 ainda estiver sem resposta. Hoje: T-44 (P-14 e arquivo de teste fora da lista).
+- A primeira `[ ]` da seção 3 de `docs/correcoes-juridico.md`, na "Ordem de execução" escrita no topo da seção. A T-69 não inicia (aguarda a lista do operador). Não pegue nada da Fase 3 do roteiro (T-30 a T-34): está fora de escopo.
+- Pule uma task só se o "Plano verificado" dela disser **PARADO** e a pergunta correspondente na seção 4 ainda estiver sem resposta.
 
-## Como executar uma task da Fase 2.1
+## Como executar uma task da Fase J
 
 1. Siga o "Plano verificado" da task: os arquivos listados ali, o teste vermelho ali descrito, os passos na ordem. Se o código atual divergir do plano (linha mudou, arquivo não existe), pare e descreva a diferença em vez de improvisar.
 2. Primeiro o teste que falha na `main`; cole a saída da falha na descrição do PR. Depois implemente até passar.
 3. Só toque nos "Arquivos permitidos" da task. Precisou de outro arquivo: pare e pergunte.
-4. Achou outro problema: registre na seção 7 de `docs/correcoes-pre-deploy.md` (data, task, arquivo/evidência, impacto, sugestão) e siga. Não corrija.
-5. Ao concluir: marque `[x]` com `(PR #nn, dd/mm)` em `docs/correcoes-pre-deploy.md`; se a task mudou algo que afeta uma task seguinte, ajuste o plano da seguinte no mesmo PR.
+4. Achou outro problema: registre na seção 6 de `docs/correcoes-juridico.md` (data, task, arquivo/evidência, impacto, sugestão) e siga. Não corrija.
+5. Ao concluir: marque `[x]` com `(PR #nn, dd/mm)` em `docs/correcoes-juridico.md`; se a task mudou algo que afeta uma task seguinte, ajuste o plano da seguinte no mesmo PR.
 
 ## Regras que você precisa seguir à risca
 
 **Escopo**
 
 - Uma task por vez, um PR por task. Faça só o que a task pede.
-- Se a task depender de uma decisão que não está escrita (`docs/roteiro.md` seções 2 e 7, `docs/correcoes-pre-deploy.md` seção 5), **pare e pergunte**. Não invente regra de produto, preço, texto legal ou fluxo.
+- Se a task depender de uma decisão que não está escrita (`docs/roteiro.md` seções 2 e 7, `docs/correcoes-pre-deploy.md` seção 5, `docs/correcoes-juridico.md` seção 4), **pare e pergunte**. Não invente regra de produto, preço, texto legal ou fluxo.
+- Toda feature nova que toque anúncio, contato, mídia, pagamento ou dados pessoais passa pelo checklist de `validacao-juridica` antes da implementação; o resultado vai na descrição do PR (skill em `.agents/skills/validacao-juridica/SKILL.md`).
 - Nunca mexa em `packages/domain/src/premium.ts` (`PREMIUM_PLAN_OPTIONS`) sem pedido explícito.
 
 **Código**
@@ -46,8 +48,8 @@ Leia, nesta ordem, antes de qualquer coisa:
 
 **Git**
 
-- Branch `fix/T-4x-nome-curto` (Fase 2.1) ou `feat/T-xx-nome-curto` a partir da `main`; PR para a `main`; commit convencional em português (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `ci:`).
-- Ao concluir a task, marque `[x]` com `(PR #nn, dd/mm)` no arquivo onde ela está (`docs/correcoes-pre-deploy.md` na Fase 2.1), no mesmo PR.
+- Branch `feat/T-xx-nome-curto` ou `fix/T-xx-nome-curto` a partir da `main`; PR para a `main`; commit convencional em português (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `ci:`).
+- Ao concluir a task, marque `[x]` com `(PR #nn, dd/mm)` no arquivo onde ela está (`docs/correcoes-juridico.md` na Fase J), no mesmo PR.
 - PR entra com `gh pr merge <n> --rebase --delete-branch` (histórico linear). Pronto = CI verde no PR **e** no push da `main` depois do merge.
 
 **Quando terminar uma task, responda em 5 linhas no máximo**: o que mudou, como verificou, o que ficou pendente, qual é a próxima task.
