@@ -279,7 +279,7 @@ Ordem de execução (11/10, Daniel): T-61, T-64, T-70, T-68, T-63, T-62, T-60, T
 
 ### Bloco D - guarda-corpo para os agentes
 
-- [ ] **T-66 Skill de validação jurídica (J-8).**
+- [x] **T-66 Skill de validação jurídica (J-8).** (PR #94, 11/10)
   - **Fazer:** criar `.claude/skills/validacao-juridica/SKILL.md` e referenciá-la em `AGENTS.md`, `CLAUDE.md` e `GEMINI.md` com uma linha: "Toda feature nova que toque anúncio, contato, mídia, pagamento ou dados pessoais passa pelo checklist de `validacao-juridica` antes da implementação; o resultado vai na descrição do PR".
   - **Conteúdo da skill (copiar, não inventar):**
     1. **Tese da plataforma:** site de anúncios de autônomas adultas; gratuito; sem intermediação, custódia, cobrança ou registro de pagamento; a plataforma exibe, não organiza.
