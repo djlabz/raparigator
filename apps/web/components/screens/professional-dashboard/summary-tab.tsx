@@ -6,12 +6,11 @@ import { ChevronRight } from "lucide-react";
 import { TrafficDiscoveryCard } from "@/components/screens/professional-dashboard/traffic-discovery-card";
 import { isEarningsSimulatorEnabled } from "@/lib/earnings-simulator-flag";
 const DEFAULT_METRICS = {
-  monthRevenue: 3200,
   contacts: 48,
   profileViews: 1240,
   conversionRate: 18.2,
 };
-import { currency, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 function MetricCardComDica({
   title,
@@ -50,15 +49,7 @@ function MetricCardComDica({
 export function SummaryTab() {
   return (
     <div className="space-y-4 lg:space-y-6">
-      {/* Grid Principal - 4 Métricas */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCardComDica
-          title="Receita do mês"
-          value={currency(DEFAULT_METRICS.monthRevenue)}
-          change={12}
-          icon="💰"
-          tip="R$ 200 acima da meta"
-        />
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <MetricCardComDica
           title="Contatos"
           value={String(DEFAULT_METRICS.contacts)}
@@ -120,10 +111,6 @@ export function SummaryTab() {
       <Card className="space-y-4 p-4 sm:p-6">
         <h3 className="font-bold text-lg text-zinc-900">Comparativo - Mês Anterior</h3>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-            <p className="text-xs text-emerald-600 font-semibold uppercase">Receita ↑</p>
-            <p className="text-lg font-bold text-emerald-900 mt-1">+12% (R$ 3.200)</p>
-          </div>
           <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
             <p className="text-xs text-emerald-600 font-semibold uppercase">Contatos ↑</p>
             <p className="text-lg font-bold text-emerald-900 mt-1">+8% (4 contatos)</p>

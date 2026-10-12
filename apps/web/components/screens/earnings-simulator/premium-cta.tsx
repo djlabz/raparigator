@@ -7,8 +7,12 @@ import { ShinyButton } from "@/components/ui/shiny-button";
 import { usePremiumPlan } from "@/lib/premium-plan";
 
 export function PremiumCta() {
-  const { isPremium } = usePremiumPlan();
+  const { isPremium, checkoutEnabled } = usePremiumPlan();
   const [open, setOpen] = useState(false);
+
+  if (!checkoutEnabled) {
+    return null;
+  }
 
   return (
     <>
