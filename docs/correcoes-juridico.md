@@ -45,7 +45,7 @@ Verificado na máquina do Daniel. `git rev-parse v0.1.0^{commit}` = `3760f34` = 
 
 ## 3. Tasks (ordem obrigatória)
 
-Ordem de execução (11/10, Daniel): T-61, T-64, T-70, T-68, T-63, T-62, T-60, T-65, T-66. T-69 não inicia.
+Ordem de execução (11/10, Daniel): T-61, T-64, T-70, T-68, T-63, T-62, T-60, T-65, T-66. Depois (12/10): T-72, T-73, T-74 (Bloco F). T-69 não inicia.
 
 ### Bloco A - privacidade (bugs, primeiro)
 
@@ -298,6 +298,29 @@ Ordem de execução (11/10, Daniel): T-61, T-64, T-70, T-68, T-63, T-62, T-60, T
   - **Teste que falha primeiro:** não há comportamento de produto. Vermelho: `test -f .claude/skills/validacao-juridica/SKILL.md` (pelo symlink) e `grep -l "validacao-juridica" AGENTS.md CLAUDE.md GEMINI.md` falham hoje; depois passam. Colar antes e depois no PR.
   - **Passos:** (1) criar o arquivo copiando os itens 1-5; (2) as três linhas; (3) `npm run format:check` (Markdown); (4) descrição do PR com o checklist aplicado à T-63 (oito respostas com justificativa e o resultado).
   - **Risco e cobertura:** só documentação.
+
+### Bloco F - complementos antes de encerrar a Fase J (12/10, Daniel)
+
+Ordem: T-72, T-73, T-74. Uma por PR, mesmas regras da seção 0.
+
+- [ ] **T-72 Campos sensíveis fora do `update-user` (segurança).** Origem: achado da T-61 na seção 6, confirmado em teste em 11/10 (cliente logado troca `role` e `cpf` com `POST /api/auth/update-user`, HTTP 200, gravado no banco).
+  - **Fazer:** em `lib/auth.ts`, `role`, `cpf`, `phone` e `city` passam a `input: false`; `alias` continua `input: true`. Como `input: false` também tira esses campos do cadastro, o hook `user.create.before` já existente passa a lê-los do corpo do cadastro (`ctx.body`), com a mesma validação de hoje (papel só `cliente`/`profissional`, CPF válido). Troca de telefone vira rota própria no módulo `verification`: grava o telefone novo, zera `phoneVerified` e dispara novo código. CPF e cidade: rota própria em `modules/auth/router.ts`, com validação, só para o próprio usuário. `role` nunca muda por rota de usuário.
+  - **Arquivos permitidos:** `apps/api/src/lib/auth.ts` (só `additionalFields` e o hook `user.create.before`), `apps/api/src/modules/verification/*`, `apps/api/src/modules/auth/*`, `packages/contracts`, `packages/domain` (validação de CPF, se ainda não existir lá), testes. Web só se o typecheck apontar consumidor.
+  - **Testes que falham antes:** (a) cliente logado faz `POST /api/auth/update-user` com `role: "profissional"` → 200 ou 400, mas o `role` no banco continua `cliente`; (b) idem para `cpf` e `city`, nada gravado; (c) `update-user` com `phone` → não gravado; (d) rota nova de telefone → `phoneVerified` volta a `false` e um código é gerado/enviado; (e) a rota de CPF recusa CPF inválido. Regressão: cadastro de cliente e de profissional continua gravando `role`, `cpf`, `phone` e `city`.
+  - **No PR:** a reprodução atual (HTTP 200 e banco alterado).
+  - **Pronto quando:** os testes passam; check, test e E2E verdes.
+
+- [ ] **T-73 Denúncia: provas, retenção e contato (completa o J-4).**
+  - **Fazer:** provas passam pela `stripImageMetadata` da T-68 antes de ficarem disponíveis ao admin; `completeUpload` obrigatório como na mídia comum (prova sem confirmação não aparece para o admin e é apagada em 24 h); retenção `REPORT_EVIDENCE_RETENTION_DAYS = 180`, contados do encerramento da denúncia, em job diário (registro da denúncia mantido); e-mail de contato visível ao admin só por ação explícita "ver contato", que grava `access_log` com `event: "report_contact_view"`.
+  - **Arquivos permitidos:** `apps/api/src/modules/reports/*`, `apps/api/src/modules/access-log/*`, `apps/api/src/modules/admin/*`, schema e migration, `apps/api/src/lib/jobs.ts`, `apps/api/src/server.ts`, `packages/contracts`, `apps/web/app/(public)/denuncia/*`, `apps/web/components/screens/admin/admin-reports-screen.tsx`, `apps/web/lib/admin-service.ts`, testes.
+  - **Testes que falham antes:** prova com GPS → admin recebe sem EXIF; prova sem `completeUpload` → não listada e apagada pelo job; denúncia encerrada há 181 dias → provas apagadas, registro mantido; "ver contato" → `access_log` gravado.
+  - **Pronto quando:** os testes passam; check, test e E2E verdes.
+
+- [ ] **T-74 Painel sem número inventado.**
+  - **Fazer:** em `summary-tab.tsx` e onde mais houver no painel, remover todo número fixo ou variação inventada (48 contatos, 1240 visualizações, 18,2%, "↑ 8%" etc.). Só fica métrica com dado real da API; o que não tem dado real não aparece.
+  - **Arquivos permitidos:** `apps/web/components/screens/professional-dashboard/*`, `apps/web` onde o `grep` achar os literais, testes.
+  - **Teste que falha antes:** render do Resumo com API vazia não contém nenhum dígito fora de datas; `grep` pelos literais em `apps/web` sai vazio.
+  - **Pronto quando:** o teste passa; check, test e E2E verdes.
 
 ### Bloco E - aguarda insumo
 

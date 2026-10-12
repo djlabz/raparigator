@@ -140,6 +140,11 @@ Abrir quando o Daniel iniciar a etapa de CI/CD. Nada aqui bloqueia o ar.
   - **Arquivos prováveis:** `apps/web/playwright.config.ts`, `.github/workflows/playwright.yml`.
   - **Pronto quando:** uma run com a API derrubada de propósito (numa branch) mostra a saída da API no log e termina em poucos minutos.
 
+- [ ] **CI com o checkout ligado.** Job de Playwright com `PREMIUM_CHECKOUT_ENABLED=true` para cobrir o `PremiumConversionModal` (com o checkout desligado o `premium-conversion-modal-scroll-gate.spec.ts` fica sempre pulado). Registrado em 12/10.
+- [ ] **E2E com upload real de mídia.** Nenhum spec envia arquivo; a URL pública e o job de mídia só são cobertos pelos testes da API. Registrado em 12/10.
+- [ ] **Ordem seed/migrate na E2E local.** `npm run test:e2e` roda a seed antes de as migrations novas estarem aplicadas no banco local. Registrado em 12/10.
+- [ ] **Build do web sem rede para fontes.** O `next build` busca fontes no Google (`next/font/google`) e falhou uma vez por rede (#93). Avaliar `next/font/local`. Registrado em 12/10.
+
 ## 7. Decisões pendentes (perguntar ao Daniel antes de executar a task que depende)
 
 | #    | Pergunta                                                                                                               | Opções                                                                                                                               | Bloqueia  |
