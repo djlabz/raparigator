@@ -15,4 +15,9 @@ export const verificationRouter = {
     .handler(({ context, input }) =>
       context.deps.services.verification.confirmCode(context.user, input.channel, input.code),
     ),
+  changePhone: authed.verification.changePhone
+    .use(rateLimited("verification.send", RATE_LIMITS.verificationSend))
+    .handler(({ context, input }) =>
+      context.deps.services.verification.changePhone(context.user, input.phone),
+    ),
 };

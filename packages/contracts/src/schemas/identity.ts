@@ -32,6 +32,11 @@ export type PasswordPairErrors = z.infer<typeof PasswordPairErrorsSchema>;
 export const VerificationChannelSchema = z.enum(["email", "phone"]);
 export type VerificationChannel = z.infer<typeof VerificationChannelSchema>;
 
+export const ChangePhoneInputSchema = z.strictObject({
+  phone: z.string().max(30),
+});
+export type ChangePhoneInput = z.infer<typeof ChangePhoneInputSchema>;
+
 export const VerificationChannelStateSchema = z.object({
   target: z.string(),
   verified: z.boolean(),

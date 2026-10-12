@@ -12,6 +12,8 @@ const CPF_LENGTH = 11;
 const MIN_PHONE_DIGITS = 10;
 const MAX_PHONE_DIGITS = 13;
 
+export const INVALID_CPF_MESSAGE = "Informe um CPF válido.";
+
 export function sanitizeCpfDigits(value: string): string {
   return value.replace(/\D/g, "").slice(0, CPF_LENGTH);
 }
@@ -56,9 +58,29 @@ export function formatPhone(value: string): string {
 
 export function validateCpf(value: string): string | null {
   if (sanitizeCpfDigits(value).length !== CPF_LENGTH) {
-    return "Informe um CPF válido.";
+    return INVALID_CPF_MESSAGE;
   }
   return null;
+}
+
+function cpfCheckDigit(digits: string, length: number): number {
+  let sum = 0;
+  for (let index = 0; index < length; index += 1) {
+    sum += Number(digits[index]) * (length + 1 - index);
+  }
+  const rest = (sum * 10) % 11;
+  return rest === 10 ? 0 : rest;
+}
+
+export function isValidCpf(value: string): boolean {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length !== CPF_LENGTH || /^(\d)\1+$/.test(digits)) {
+    return false;
+  }
+  return (
+    cpfCheckDigit(digits, 9) === Number(digits[9]) &&
+    cpfCheckDigit(digits, 10) === Number(digits[10])
+  );
 }
 
 export function validateRequiredName(value: string, kind: "full" | "civil"): string | null {
