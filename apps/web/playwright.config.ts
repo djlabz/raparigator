@@ -48,7 +48,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: withLog(`sh -c 'npm run dev:api & sleep 60; pkill -f "src/serve[r].ts"; echo API_DERRUBADA_DE_PROPOSITO; sleep 900'`, "api"),
+      command: withLog("npm run dev:api", "api"),
       cwd: "../..",
       url: `${apiUrl}/healthz`,
       reuseExistingServer: !isCI,
