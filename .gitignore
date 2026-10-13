@@ -81,6 +81,7 @@ next-env.d.ts
 # Playwright
 test-results/
 playwright-report/
+webserver-logs/
 blob-report/
 playwright/.cache/
 playwright/.auth/

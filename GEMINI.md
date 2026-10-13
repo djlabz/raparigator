@@ -50,6 +50,6 @@ Leia, nesta ordem, antes de qualquer coisa:
 
 - Branch `feat/T-xx-nome-curto` ou `fix/T-xx-nome-curto` a partir da `main`; PR para a `main`; commit convencional em português (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `ci:`).
 - Ao concluir a task, marque `[x]` com `(PR #nn, dd/mm)` no arquivo onde ela está (`docs/correcoes-juridico.md` na Fase J), no mesmo PR.
-- PR entra com `gh pr merge <n> --rebase --delete-branch` (histórico linear). Pronto = CI verde no PR **e** no push da `main` depois do merge.
+- PR entra só por `scripts/merge-pr.sh <n>` (nunca `gh pr merge` direto). Pronto = CI verde no PR **e** no push da `main` depois do merge, inclusive em PR só de docs; run cancelada ou estourada é falha, não se re-roda para passar.
 
 **Quando terminar uma task, responda em 5 linhas no máximo**: o que mudou, como verificou, o que ficou pendente, qual é a próxima task.

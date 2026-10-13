@@ -8,10 +8,29 @@ on:
 
 jobs:
   test:
-    timeout-minutes: 60
+    name: E2E (${{ matrix.name }})
+    timeout-minutes: 20
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: suite
+            simulator: "true"
+            checkout: "false"
+            specs: ""
+          - name: simulador-desligado
+            simulator: "false"
+            checkout: "false"
+            specs: tests/earnings-simulator-disabled.spec.ts
+          - name: checkout-ligado
+            simulator: "true"
+            checkout: "true"
+            specs: tests/premium-conversion-modal-scroll-gate.spec.ts tests/no-pricing-without-flag.spec.ts
     env:
       NEXT_PUBLIC_API_URL: http://localhost:4000
+      NEXT_PUBLIC_FINANCIAL_SIMULATOR_ENABLED: ${{ matrix.simulator }}
+      PREMIUM_CHECKOUT_ENABLED: ${{ matrix.checkout }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,22 +50,26 @@ jobs:
           npm run db:migrate -w apps/api
           npm run db:seed -w apps/api
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install --with-deps chromium
         working-directory: apps/web
+      - name: Build do web
+        run: npm run build:web
       - name: Run Playwright tests
-        run: npx playwright test --project=chromium
+        run: npx playwright test --project=chromium ${{ matrix.specs }}
         working-directory: apps/web
-      - name: Simulador de projeção desligado (flag false)
-        run: npx playwright test --project=chromium tests/earnings-simulator-disabled.spec.ts
-        working-directory: apps/web
-        env:
-          NEXT_PUBLIC_FINANCIAL_SIMULATOR_ENABLED: "false"
-          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report-simulador-desligado
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
+      - name: Logs dos webServers
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: |
-            apps/web/playwright-report/
-            apps/web/playwright-report-simulador-desligado/
+          name: webserver-logs-${{ matrix.name }}
+          path: apps/web/webserver-logs/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Relatório HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.name }}
+          path: apps/web/playwright-report/
+          if-no-files-found: warn
           retention-days: 30

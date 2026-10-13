@@ -66,7 +66,8 @@ O `apps/web` conecta-se 100% à API pelo client oRPC tipado (`apps/web/lib/api/`
 - Componentes React em PascalCase; hooks começam com `use`
 - Commits: conventional (`feat:`, `fix:`, `chore:`, `style:`, `docs:`, `refactor:`, `ci:`), mensagem em português
 - Branches descritivas (`feat/T-xx-nome-curto`, `fix/...`); PRs contra `main`; nunca commite direto na `main`
-- A main exige histórico linear: PRs entram com `gh pr merge <n> --rebase --delete-branch` (ou --squash quando o PR tiver commits de ajuste). Merge commit é bloqueado pelo ruleset.
+- Merge só por `scripts/merge-pr.sh <n>` (`--squash` quando o PR tiver commits de ajuste): ele espera a lista fixa de checks obrigatórios (CI e os três jobs E2E), trata estouro de tempo e run cancelada como falha, faz o merge com histórico linear e confere a CI do push na `main`. `gh pr merge` direto é proibido para agentes. A lista de checks do script é a mesma do `required_status_checks` do ruleset da `main`; mudou nome de job, atualize os dois no mesmo PR.
+- CI verde antes do merge vale para todo PR, inclusive os só de docs. Nunca re-rode run cancelada ou estourada para fazer o PR passar: leia o artifact `webserver-logs-*` do Playwright e corrija a causa.
 - Em sequências de comandos com efeito destrutivo (merge, delete de branch, reset, rm), rode um comando por vez e confirme o resultado antes do próximo.
 - Textos de UI em português (PT-BR)
 - Não escreva comentários no código
