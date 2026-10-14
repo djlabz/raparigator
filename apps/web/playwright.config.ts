@@ -24,7 +24,7 @@ export default defineConfig({
   globalSetup: "./tests/global-setup.ts",
   fullyParallel: true,
   forbidOnly: isCI,
-  retries: isCI ? 2 : 0,
+  retries: 0,
   maxFailures: isCI ? 5 : 0,
   workers: isCI ? 1 : undefined,
   reporter: isCI ? [["list"], ["github"], ["html", { open: "never" }]] : "list",
