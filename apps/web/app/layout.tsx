@@ -1,18 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Manrope } from "next/font/google";
+import localFont from "next/font/local";
 import { AgeGateGate } from "@/components/layout/age-gate-gate";
 import { MobileNavHost } from "@/components/layout/mobile-nav-host";
 import "./globals.css";
 
-const manrope = Manrope({
+const manrope = localFont({
+  src: "./fonts/manrope-latin-variable.woff2",
   variable: "--font-manrope",
-  subsets: ["latin"],
+  weight: "200 800",
+  style: "normal",
+  display: "swap",
 });
 
-const cormorant = Cormorant_Garamond({
+const cormorant = localFont({
+  src: "./fonts/cormorant-garamond-latin-variable.woff2",
   variable: "--font-cormorant",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: "500 700",
+  style: "normal",
+  display: "swap",
+  adjustFontFallback: "Times New Roman",
 });
 
 export const viewport: Viewport = {

@@ -135,15 +135,15 @@ Reabrir quando o Daniel decidir cobrar. Nada aqui bloqueia o ar.
 
 Abrir quando o Daniel iniciar a etapa de CI/CD. Nada aqui bloqueia o ar.
 
-- [ ] **T-71 Playwright da CI com log da API e falha cedo.** Origem: achado de 11/10 em `docs/correcoes-juridico.md` seção 6 (run 38179815732 da `main` em `aa2dc30`: 51 testes falharam desde o primeiro, 45 s × 3 tentativas cada, até o timeout de 60 min; o rerun do mesmo commit passou 84/84 em 2,8 min; o log não tinha a saída da API, então a causa ficou desconhecida).
+- [x] **T-71 Playwright da CI com log da API e falha cedo.** (PR #98, 12/10: logs dos dois webServers em artifact `webserver-logs-*`, `maxFailures: 5`, `timeout-minutes: 20`, E2E da CI contra o build standalone igual ao do Dockerfile, ruleset da `main` com `required_status_checks` estrito e merge só por `gh pr merge --auto`) Origem: achado de 11/10 em `docs/correcoes-juridico.md` seção 6 (run 38179815732 da `main` em `aa2dc30`: 51 testes falharam desde o primeiro, 45 s × 3 tentativas cada, até o timeout de 60 min; o rerun do mesmo commit passou 84/84 em 2,8 min; o log não tinha a saída da API, então a causa ficou desconhecida).
   - **Fazer:** (1) o webServer da API no `apps/web/playwright.config.ts` passa a mandar stdout e stderr para o log da CI (`stdout: "pipe"`, `stderr: "pipe"`), sem dado pessoal (o redact do pino já cobre); (2) `maxFailures` na CI para encerrar a run quando muitos testes falham em sequência, em vez de queimar o timeout do workflow (valor a definir na task); (3) conferir se o `timeout-minutes` do `playwright.yml` ainda faz sentido com isso.
   - **Arquivos prováveis:** `apps/web/playwright.config.ts`, `.github/workflows/playwright.yml`.
   - **Pronto quando:** uma run com a API derrubada de propósito (numa branch) mostra a saída da API no log e termina em poucos minutos.
 
-- [ ] **CI com o checkout ligado.** Job de Playwright com `PREMIUM_CHECKOUT_ENABLED=true` para cobrir o `PremiumConversionModal` (com o checkout desligado o `premium-conversion-modal-scroll-gate.spec.ts` fica sempre pulado). Registrado em 12/10.
+- [x] **CI com o checkout ligado.** (job `E2E (checkout-ligado)`, PR #98) Job de Playwright com `PREMIUM_CHECKOUT_ENABLED=true` para cobrir o `PremiumConversionModal` (com o checkout desligado o `premium-conversion-modal-scroll-gate.spec.ts` fica sempre pulado). Registrado em 12/10.
 - [ ] **E2E com upload real de mídia.** Nenhum spec envia arquivo; a URL pública e o job de mídia só são cobertos pelos testes da API. Registrado em 12/10.
-- [ ] **Ordem seed/migrate na E2E local.** `npm run test:e2e` roda a seed antes de as migrations novas estarem aplicadas no banco local. Registrado em 12/10.
-- [ ] **Build do web sem rede para fontes.** O `next build` busca fontes no Google (`next/font/google`) e falhou uma vez por rede (#93). Avaliar `next/font/local`. Registrado em 12/10.
+- [x] **Ordem seed/migrate na E2E local.** (PR #98) `npm run test:e2e` roda a seed antes de as migrations novas estarem aplicadas no banco local. Registrado em 12/10.
+- [x] **Build do web sem rede para fontes.** (`next/font/local` com os `.woff2` e licenças OFL em `apps/web/app/fonts/`, PR #98) O `next build` busca fontes no Google (`next/font/google`) e falhou uma vez por rede (#93). Avaliar `next/font/local`. Registrado em 12/10.
 
 ## 7. Decisões pendentes (perguntar ao Daniel antes de executar a task que depende)
 
