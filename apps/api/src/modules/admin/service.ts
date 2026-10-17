@@ -11,6 +11,7 @@ import type {
   PaginationInput,
   ProfessionalAd,
   Report,
+  ReportContact,
   ReportEvidence,
   ReportStatus,
   ReportTargetMedia,
@@ -622,6 +623,12 @@ export function createAdminService(deps: AdminServiceDeps) {
           createdAt: file.createdAt.toISOString(),
         })),
       );
+    },
+
+    async reportContact(admin: AdminActor, input: { id: string }): Promise<ReportContact> {
+      const row = await requireReport(input.id);
+      logger.info({ adminId: admin.id, reportId: row.id }, "contato da denúncia visualizado");
+      return { contactEmail: row.contactEmail ?? null };
     },
 
     async reportTargetMedia(input: { id: string }): Promise<ReportTargetMedia[]> {

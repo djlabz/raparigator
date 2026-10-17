@@ -16,6 +16,7 @@ import {
   ADMIN_REPORT_DIGEST_JOB,
   PUBLIC_REPORT_RATE_LIMIT,
   registerAdminReportDigestJob,
+  registerReportEvidenceJobs,
 } from "../src/modules/reports";
 import { createTestHarness } from "./helpers/app";
 import { cookieHeader, signInAdmin, signUp } from "./helpers/auth";
@@ -124,6 +125,12 @@ async function assetRow(id: string) {
 }
 
 beforeAll(async () => {
+  await registerReportEvidenceJobs({
+    db: harness.db,
+    storage: harness.storage,
+    jobs: harness.jobs,
+    logger: harness.deps.logger,
+  });
   await registerMediaJobs({
     db: harness.db,
     storage: harness.storage,
@@ -332,6 +339,21 @@ describe("canal de denúncia e retirada", () => {
       { cookie: user.cookie },
     );
     expect(asUser.status).toBe(401);
+
+    const png = await sharp({
+      create: { width: 16, height: 16, channels: 3, background: { r: 10, g: 20, b: 30 } },
+    })
+      .png()
+      .toBuffer();
+    for (const row of rows) {
+      await harness.storage.putObject(row.storageKey, new Uint8Array(png), "image/png");
+    }
+    const confirmed = await harness.rpc<{ confirmed: number }>(
+      "reports/completeEvidence",
+      { reportId },
+      { "x-forwarded-for": `${nextIp()}, 10.0.0.1` },
+    );
+    expect(confirmed.body).toEqual({ confirmed: 3 });
 
     const cookie = await adminCookie();
     const listed = await harness.rpc<Array<{ id: string; url: string }>>(

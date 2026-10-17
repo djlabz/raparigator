@@ -1,10 +1,13 @@
 import {
   REPORT_RESPONSE_SLA_HOURS,
+  type CompleteReportEvidenceInput,
+  type CompleteReportEvidenceOutput,
   type CreatePublicReportInput,
   type CreatePublicReportOutput,
   type ReportType,
   type UserRole,
 } from "@sigillus/contracts";
+import { ORPCError } from "@orpc/server";
 import type { Database } from "../../db/client";
 import { newId } from "../../lib/ids";
 import type { JobQueue } from "../../lib/jobs";
@@ -14,6 +17,7 @@ import { PRIVATE_STORAGE_PREFIX, type ObjectStorage } from "../../lib/storage";
 import { extensionFor } from "../media/service";
 import type { ProfileRepository } from "../profiles/repository";
 import { enqueueAdminReportDigest } from "./digest";
+import { REPORT_EVIDENCE_PROCESS_JOB, isEvidenceUploadOpen } from "./evidence";
 import { createReportsRepository } from "./repository";
 
 export const PUBLIC_REPORT_RATE_LIMIT = { windowMs: 60_000, max: 5 } satisfies RateLimitRule;
@@ -140,6 +144,33 @@ export function createReportsService(deps: ReportsServiceDeps) {
         "denúncia pública registrada",
       );
       return { reportId, responseSlaHours: REPORT_RESPONSE_SLA_HOURS, evidenceUploads };
+    },
+
+    async completeEvidence(
+      input: CompleteReportEvidenceInput,
+    ): Promise<CompleteReportEvidenceOutput> {
+      const report = await repo.findById(input.reportId);
+      if (!report || report.source !== "public") {
+        throw new ORPCError("NOT_FOUND", { message: "Denúncia não encontrada." });
+      }
+      const pending = await repo.listUnconfirmedEvidence(report.id);
+      const now = new Date();
+      let confirmed = 0;
+      for (const file of pending) {
+        if (!isEvidenceUploadOpen(file.createdAt, now) || !(await storage.head(file.storageKey))) {
+          continue;
+        }
+        await jobs.enqueue(
+          REPORT_EVIDENCE_PROCESS_JOB,
+          { evidenceId: file.id },
+          {
+            singletonKey: file.id,
+          },
+        );
+        confirmed += 1;
+      }
+      logger.info({ reportId: report.id, confirmed }, "provas da denúncia confirmadas");
+      return { confirmed };
     },
   };
 }

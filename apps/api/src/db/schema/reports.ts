@@ -11,6 +11,7 @@ export const reportEvidence = pgTable(
     storageKey: text().notNull(),
     contentType: text().notNull(),
     sizeBytes: integer().notNull(),
+    confirmedAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index("report_evidence_report_idx").on(table.reportId)],

@@ -1,0 +1,1 @@
+ALTER TABLE "report_evidence" ADD COLUMN "confirmed_at" timestamp with time zone;

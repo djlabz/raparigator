@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNotNull, isNull, lt } from "drizzle-orm";
 import type { Database } from "../../db/client";
 import { blockedImageHashes, reportEvidence, reports } from "../../db/schema";
 
@@ -40,8 +40,50 @@ export function createReportsRepository(db: Database) {
       return db
         .select()
         .from(reportEvidence)
-        .where(eq(reportEvidence.reportId, reportId))
+        .where(and(eq(reportEvidence.reportId, reportId), isNotNull(reportEvidence.confirmedAt)))
         .orderBy(reportEvidence.createdAt);
+    },
+
+    async listUnconfirmedEvidence(reportId: string): Promise<ReportEvidenceRow[]> {
+      return db
+        .select()
+        .from(reportEvidence)
+        .where(and(eq(reportEvidence.reportId, reportId), isNull(reportEvidence.confirmedAt)));
+    },
+
+    async findEvidence(id: string): Promise<ReportEvidenceRow | null> {
+      const [row] = await db
+        .select()
+        .from(reportEvidence)
+        .where(eq(reportEvidence.id, id))
+        .limit(1);
+      return row ?? null;
+    },
+
+    async confirmEvidence(id: string, confirmedAt: Date): Promise<void> {
+      await db.update(reportEvidence).set({ confirmedAt }).where(eq(reportEvidence.id, id));
+    },
+
+    async deleteEvidence(id: string): Promise<void> {
+      await db.delete(reportEvidence).where(eq(reportEvidence.id, id));
+    },
+
+    async listUnconfirmedBefore(cutoff: Date): Promise<ReportEvidenceRow[]> {
+      return db
+        .select()
+        .from(reportEvidence)
+        .where(and(isNull(reportEvidence.confirmedAt), lt(reportEvidence.createdAt, cutoff)));
+    },
+
+    async listEvidenceOfReportsClosedBefore(cutoff: Date): Promise<ReportEvidenceRow[]> {
+      const rows = await db
+        .select({ evidence: reportEvidence })
+        .from(reportEvidence)
+        .innerJoin(reports, eq(reports.id, reportEvidence.reportId))
+        .where(
+          and(inArray(reports.status, ["resolved", "dismissed"]), lt(reports.respondedAt, cutoff)),
+        );
+      return rows.map((row) => row.evidence);
     },
 
     async countEvidence(reportIds: string[]): Promise<Map<string, number>> {
@@ -52,7 +94,9 @@ export function createReportsRepository(db: Database) {
       const rows = await db
         .select({ reportId: reportEvidence.reportId, total: count() })
         .from(reportEvidence)
-        .where(inArray(reportEvidence.reportId, reportIds))
+        .where(
+          and(inArray(reportEvidence.reportId, reportIds), isNotNull(reportEvidence.confirmedAt)),
+        )
         .groupBy(reportEvidence.reportId);
       for (const row of rows) {
         result.set(row.reportId, row.total);

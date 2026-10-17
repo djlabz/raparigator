@@ -112,6 +112,9 @@ export function ReportForm() {
           }),
         ),
       );
+      if (result.evidenceUploads.length > 0) {
+        await getApiClient().reports.completeEvidence({ reportId: result.reportId });
+      }
       setProtocol(result.reportId);
     } catch (submitError) {
       setError(errorMessage(submitError));

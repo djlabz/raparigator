@@ -73,8 +73,11 @@ import {
 } from "./schemas/premium";
 import {
   ActOnReportInputSchema,
+  CompleteReportEvidenceInputSchema,
+  CompleteReportEvidenceOutputSchema,
   CreatePublicReportInputSchema,
   CreatePublicReportOutputSchema,
+  ReportContactSchema,
   ReportEvidenceSchema,
   ReportTargetMediaSchema,
 } from "./schemas/reports";
@@ -381,6 +384,10 @@ export const reportsContract = {
     .route({ method: "POST", path: "/reports/public" })
     .input(CreatePublicReportInputSchema)
     .output(CreatePublicReportOutputSchema),
+  completeEvidence: base
+    .route({ method: "POST", path: "/reports/public/{reportId}/evidence/complete" })
+    .input(CompleteReportEvidenceInputSchema)
+    .output(CompleteReportEvidenceOutputSchema),
 };
 
 export const identityContract = {
@@ -478,6 +485,10 @@ export const adminContract = {
     .route({ method: "GET", path: "/admin/reports/{id}/evidence" })
     .input(z.object({ id: IdSchema }))
     .output(z.array(ReportEvidenceSchema)),
+  reportContact: base
+    .route({ method: "GET", path: "/admin/reports/{id}/contact" })
+    .input(z.object({ id: IdSchema }))
+    .output(ReportContactSchema),
   reportTargetMedia: base
     .route({ method: "GET", path: "/admin/reports/{id}/target-media" })
     .input(z.object({ id: IdSchema }))

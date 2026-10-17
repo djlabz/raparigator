@@ -32,6 +32,7 @@ export const AccessLogEventSchema = z.enum([
   "media_upload",
   "report_create",
   "account_delete",
+  "report_contact_view",
 ]);
 export type AccessLogEvent = z.infer<typeof AccessLogEventSchema>;
 

@@ -29,6 +29,7 @@ import type {
 import { AdminLayoutShell } from "./admin-layout-shell";
 import {
   actOnReport,
+  getReportContact,
   getReportEvidence,
   getReportTargetMedia,
   getReports,
@@ -387,6 +388,41 @@ function ActionModal({
         </div>
       </motion.div>
     </div>
+  );
+}
+
+function ReportContactReveal({ reportId }: { reportId: string }) {
+  const [contact, setContact] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleReveal = async () => {
+    setLoading(true);
+    try {
+      const result = await getReportContact(reportId);
+      setContact(result.contactEmail ?? "");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (contact !== null) {
+    return (
+      <span className="flex items-center gap-1 text-[11px] text-zinc-300">
+        <Mail className="h-3 w-3" />
+        {contact || "Sem e-mail de contato"}
+      </span>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleReveal}
+      disabled={loading}
+      className="flex items-center gap-1 text-[11px] font-bold text-zinc-400 hover:text-zinc-100 disabled:opacity-60"
+    >
+      <Mail className="h-3 w-3" />
+      Ver contato
+    </button>
   );
 }
 
@@ -773,12 +809,7 @@ export function AdminReportsScreen() {
                         {report.targetUrl}
                       </span>
                     )}
-                    {report.hasContactEmail && (
-                      <span className="flex items-center gap-1 text-[11px] text-zinc-400">
-                        <Mail className="h-3 w-3" />
-                        Deixou e-mail de contato
-                      </span>
-                    )}
+                    {report.hasContactEmail && <ReportContactReveal reportId={report.id} />}
                   </div>
 
                   {/* Body Description */}

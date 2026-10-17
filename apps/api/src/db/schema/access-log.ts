@@ -14,6 +14,7 @@ export const accessLogs = pgTable(
         "media_upload",
         "report_create",
         "account_delete",
+        "report_contact_view",
       ],
     }).notNull(),
     ip: text(),
