@@ -1,9 +1,19 @@
+import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 import ageVerifiedState from "./tests/storage/age-verified.json" with { type: "json" };
 
 const port = Number(process.env.PORT ?? 3100);
 const baseURL = `http://localhost:${port}`;
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001";
+const isCI = !!process.env.CI;
+const logDir = path.join(__dirname, "webserver-logs");
+const webCommand = isCI ? "npm run start" : `npm run dev -- --port ${port}`;
+
+function withLog(command: string, name: string) {
+  const file = path.join(logDir, `webserver-${name}.log`);
+  return `mkdir -p "${logDir}" && exec ${command} > "${file}" 2>&1`;
+}
+
 const storageState = {
   ...ageVerifiedState,
   origins: ageVerifiedState.origins.map((entry) => ({ ...entry, origin: baseURL })),
@@ -13,10 +23,11 @@ export default defineConfig({
   testDir: "./tests",
   globalSetup: "./tests/global-setup.ts",
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
+  forbidOnly: isCI,
+  retries: 0,
+  maxFailures: isCI ? 5 : 0,
+  workers: isCI ? 1 : undefined,
+  reporter: isCI ? [["list"], ["github"], ["html", { open: "never" }]] : "list",
   timeout: 45_000,
   expect: {
     timeout: 10_000,
@@ -37,23 +48,24 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "npm run dev:api",
+      command: withLog("npm run dev:api", "api"),
       cwd: "../..",
       url: `${apiUrl}/healthz`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !isCI,
       timeout: 120_000,
       env: {
         IDENTITY_REQUIRED: "true",
       },
     },
     {
-      command: `npm run dev -- --port ${port}`,
+      command: withLog(webCommand, "web"),
       url: baseURL,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !isCI,
       timeout: 120_000,
       env: {
         PORT: String(port),
         NEXT_PUBLIC_API_URL: apiUrl,
+        ...(isCI ? { HOSTNAME: "0.0.0.0" } : {}),
       },
     },
   ],

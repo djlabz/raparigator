@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack -p 3100",
     "dev:legacy": "next dev -p 3100",
     "build": "next build",
-    "start": "next start -p 3100",
+    "start": "mkdir -p .next/standalone/apps/web/.next/static .next/standalone/apps/web/public && cp -R .next/static/. .next/standalone/apps/web/.next/static/ && cp -R public/. .next/standalone/apps/web/public/ && node .next/standalone/apps/web/server.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test --project=chromium",
