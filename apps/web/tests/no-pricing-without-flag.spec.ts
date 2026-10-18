@@ -65,7 +65,7 @@ test.describe("Sem preço nem apelo de ganho com o checkout desligado", () => {
   test("painel da anunciante: Resumo sem receita nem meta fictícias", async ({ page }) => {
     await seedUserRole(page, "profissional");
     await page.goto("/profissional/dashboard?tab=Resumo");
-    await expect(page.getByText("Comparativo - Mês Anterior")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Dica para aumentar conversão" })).toBeVisible();
     const text = await expectNoPricing(page);
     expect(text).not.toMatch(FICTITIOUS_SUMMARY);
   });

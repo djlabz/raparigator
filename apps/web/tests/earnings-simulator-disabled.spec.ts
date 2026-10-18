@@ -12,7 +12,7 @@ test.describe("Simulador de projeção desligado", () => {
     expect(response?.status()).toBe(404);
 
     await page.goto("/profissional/dashboard?tab=Resumo");
-    await expect(page.getByRole("heading", { name: "Tráfego e Descoberta" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Dica para aumentar conversão" })).toBeVisible();
     await expect(page.getByRole("link", { name: /Simulador de projeção/ })).toHaveCount(0);
   });
 });
