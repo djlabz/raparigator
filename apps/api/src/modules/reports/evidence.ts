@@ -15,6 +15,7 @@ export { REPORT_EVIDENCE_RETENTION_DAYS, REPORT_EVIDENCE_UNCONFIRMED_HOURS };
 export const REPORT_EVIDENCE_PROCESS_JOB = "report.evidence-process";
 export const REPORT_EVIDENCE_RETENTION_JOB = "report.evidence-retention";
 export const REPORT_EVIDENCE_RETENTION_CRON = "30 4 * * *";
+export const REPORT_EVIDENCE_PURGE_MARGIN_HOURS = 1;
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -59,7 +60,14 @@ export async function processReportEvidence(deps: ReportEvidenceDeps, evidenceId
   const { storage, logger } = deps;
   const repo = createReportsRepository(deps.db);
   const row = await repo.findEvidence(evidenceId);
-  if (!row || row.confirmedAt) {
+  if (!row) {
+    return;
+  }
+  if (row.confirmedAt) {
+    await storage.deleteObject(uploadEvidenceKey(row.storageKey));
+    return;
+  }
+  if (!isEvidenceUploadOpen(row.createdAt)) {
     return;
   }
   const head = await storage.head(row.storageKey);
@@ -91,7 +99,10 @@ export async function purgeReportEvidence(
 ): Promise<{ unconfirmed: number; expired: number; failed: number }> {
   const repo = createReportsRepository(deps.db);
   const unconfirmed = await repo.listUnconfirmedBefore(
-    new Date(now.getTime() - REPORT_EVIDENCE_UNCONFIRMED_HOURS * HOUR_MS),
+    new Date(
+      now.getTime() -
+        (REPORT_EVIDENCE_UNCONFIRMED_HOURS + REPORT_EVIDENCE_PURGE_MARGIN_HOURS) * HOUR_MS,
+    ),
   );
   const expired = await repo.listEvidenceOfReportsClosedBefore(
     new Date(now.getTime() - REPORT_EVIDENCE_RETENTION_DAYS * DAY_MS),
