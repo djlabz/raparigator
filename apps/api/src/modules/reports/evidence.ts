@@ -29,9 +29,30 @@ export function isEvidenceUploadOpen(createdAt: Date, now = new Date()): boolean
   return now.getTime() - createdAt.getTime() < REPORT_EVIDENCE_UNCONFIRMED_HOURS * HOUR_MS;
 }
 
+const CLEAN_SUFFIX = ".clean";
+
+export function cleanEvidenceKey(uploadKey: string): string {
+  return uploadKey.replace(/(\.[a-z0-9]+)$/, `${CLEAN_SUFFIX}$1`);
+}
+
+export function uploadEvidenceKey(storageKey: string): string {
+  return storageKey.replace(`${CLEAN_SUFFIX}.`, ".");
+}
+
 async function discardEvidence(deps: ReportEvidenceDeps, row: ReportEvidenceRow) {
-  await deps.storage.deleteObject(row.storageKey).catch(() => undefined);
+  const keys = new Set([row.storageKey, uploadEvidenceKey(row.storageKey)]);
+  for (const key of keys) {
+    await deps.storage.deleteObject(key);
+  }
   await createReportsRepository(deps.db).deleteEvidence(row.id);
+}
+
+async function cleanImage(bytes: Uint8Array, contentType: string) {
+  try {
+    return await stripImageMetadata(bytes, contentType);
+  } catch {
+    return null;
+  }
 }
 
 export async function processReportEvidence(deps: ReportEvidenceDeps, evidenceId: string) {
@@ -51,23 +72,23 @@ export async function processReportEvidence(deps: ReportEvidenceDeps, evidenceId
     logger.warn({ evidenceId, reportId: row.reportId }, "prova recusada: tipo ou tamanho");
     return;
   }
-  try {
-    const bytes = await storage.getObject(row.storageKey);
-    const clean = await stripImageMetadata(bytes, contentType);
-    await storage.putObject(row.storageKey, clean.data, contentType);
-  } catch (err) {
+  const clean = await cleanImage(await storage.getObject(row.storageKey), contentType);
+  if (!clean) {
     await discardEvidence(deps, row);
-    logger.warn({ err, evidenceId, reportId: row.reportId }, "prova recusada: falha na limpeza");
+    logger.warn({ evidenceId, reportId: row.reportId }, "prova recusada: imagem ilegível");
     return;
   }
-  await repo.confirmEvidence(row.id, new Date());
+  const cleanKey = cleanEvidenceKey(row.storageKey);
+  await storage.putObject(cleanKey, clean.data, contentType);
+  await repo.confirmEvidence(row.id, { storageKey: cleanKey, confirmedAt: new Date() });
+  await storage.deleteObject(row.storageKey);
   logger.info({ evidenceId, reportId: row.reportId }, "prova confirmada sem metadados");
 }
 
 export async function purgeReportEvidence(
   deps: ReportEvidenceDeps,
   now: Date = new Date(),
-): Promise<{ unconfirmed: number; expired: number }> {
+): Promise<{ unconfirmed: number; expired: number; failed: number }> {
   const repo = createReportsRepository(deps.db);
   const unconfirmed = await repo.listUnconfirmedBefore(
     new Date(now.getTime() - REPORT_EVIDENCE_UNCONFIRMED_HOURS * HOUR_MS),
@@ -75,10 +96,20 @@ export async function purgeReportEvidence(
   const expired = await repo.listEvidenceOfReportsClosedBefore(
     new Date(now.getTime() - REPORT_EVIDENCE_RETENTION_DAYS * DAY_MS),
   );
+  let failed = 0;
   for (const row of [...unconfirmed, ...expired]) {
-    await discardEvidence(deps, row);
+    try {
+      await discardEvidence(deps, row);
+    } catch (err) {
+      failed += 1;
+      deps.logger.warn({ err, evidenceId: row.id }, "falha ao apagar prova de denúncia");
+    }
   }
-  const result = { unconfirmed: unconfirmed.length, expired: expired.length };
+  const result = {
+    unconfirmed: unconfirmed.length,
+    expired: expired.length,
+    failed,
+  };
   if (result.unconfirmed + result.expired > 0) {
     deps.logger.info(result, "provas de denúncia apagadas pela retenção");
   }

@@ -60,8 +60,11 @@ export function createReportsRepository(db: Database) {
       return row ?? null;
     },
 
-    async confirmEvidence(id: string, confirmedAt: Date): Promise<void> {
-      await db.update(reportEvidence).set({ confirmedAt }).where(eq(reportEvidence.id, id));
+    async confirmEvidence(
+      id: string,
+      values: { storageKey: string; confirmedAt: Date },
+    ): Promise<void> {
+      await db.update(reportEvidence).set(values).where(eq(reportEvidence.id, id));
     },
 
     async deleteEvidence(id: string): Promise<void> {

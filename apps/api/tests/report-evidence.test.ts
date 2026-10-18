@@ -7,6 +7,7 @@ import { registerAccessLogJobs } from "../src/modules/access-log";
 import {
   REPORT_EVIDENCE_RETENTION_DAYS,
   REPORT_EVIDENCE_UNCONFIRMED_HOURS,
+  processReportEvidence,
   purgeReportEvidence,
   registerReportEvidenceJobs,
 } from "../src/modules/reports";
@@ -136,12 +137,95 @@ describe("provas da denúncia: limpeza, confirmação, retenção e contato", ()
     expect(listed.status).toBe(200);
     expect(listed.body).toHaveLength(1);
 
-    const stored = await harness.storage.getObject(rows[0]!.storageKey);
+    const [confirmedRow] = await harness.db
+      .select()
+      .from(reportEvidence)
+      .where(eq(reportEvidence.id, rows[0]!.id));
+    expect(confirmedRow!.storageKey).not.toBe(rows[0]!.storageKey);
+    expect(await harness.storage.head(rows[0]!.storageKey)).toBeNull();
+    expect(listed.body[0]!.url).toContain(encodeURIComponent(confirmedRow!.storageKey));
+    const stored = await harness.storage.getObject(confirmedRow!.storageKey);
     const metadata = await sharp(Buffer.from(stored)).metadata();
     expect(metadata.exif).toBeUndefined();
     expect(metadata.orientation).toBeUndefined();
     expect(metadata.width).toBe(200);
     expect(metadata.height).toBe(320);
+  });
+
+  it("novo PUT no URL de upload depois da confirmação não troca a prova limpa", async () => {
+    const { reportId, rows, bytes } = await publicReportWithEvidence("toctou", 1);
+    const uploadKey = rows[0]!.storageKey;
+    await harness.storage.putObject(uploadKey, new Uint8Array(bytes), "image/jpeg");
+    expect((await completeEvidence(reportId)).body.confirmed).toBe(1);
+
+    await harness.storage.putObject(uploadKey, new Uint8Array(bytes), "image/jpeg");
+    expect((await completeEvidence(reportId)).body.confirmed).toBe(0);
+
+    const [row] = await harness.db
+      .select()
+      .from(reportEvidence)
+      .where(eq(reportEvidence.id, rows[0]!.id));
+    const served = await harness.storage.getObject(row!.storageKey);
+    expect((await sharp(Buffer.from(served)).metadata()).exif).toBeUndefined();
+
+    await harness.db
+      .update(reports)
+      .set({
+        status: "dismissed",
+        respondedAt: new Date(Date.now() - (REPORT_EVIDENCE_RETENTION_DAYS + 1) * DAY_MS),
+      })
+      .where(eq(reports.id, reportId));
+    await purgeReportEvidence({
+      db: harness.db,
+      storage: harness.storage,
+      logger: harness.deps.logger,
+    });
+    expect(await harness.storage.head(row!.storageKey)).toBeNull();
+    expect(await harness.storage.head(uploadKey)).toBeNull();
+  });
+
+  it("falha transitória do storage não descarta a prova e o job pode tentar de novo", async () => {
+    const { reportId, rows, bytes } = await publicReportWithEvidence("transitoria", 1);
+    await harness.storage.putObject(rows[0]!.storageKey, new Uint8Array(bytes), "image/jpeg");
+    const storage = {
+      ...harness.storage,
+      getObject: async () => {
+        throw new Error("storage indisponível");
+      },
+    };
+    await expect(
+      processReportEvidence({ db: harness.db, storage, logger: harness.deps.logger }, rows[0]!.id),
+    ).rejects.toThrow("storage indisponível");
+    const [row] = await harness.db
+      .select()
+      .from(reportEvidence)
+      .where(eq(reportEvidence.id, rows[0]!.id));
+    expect(row).toMatchObject({ confirmedAt: null, storageKey: rows[0]!.storageKey });
+    expect(await harness.storage.head(rows[0]!.storageKey)).not.toBeNull();
+
+    expect((await completeEvidence(reportId)).body.confirmed).toBe(1);
+  });
+
+  it("falha ao apagar o arquivo na retenção mantém o registro para a próxima execução", async () => {
+    const { rows, bytes } = await publicReportWithEvidence("apagar", 1);
+    await harness.storage.putObject(rows[0]!.storageKey, new Uint8Array(bytes), "image/jpeg");
+    const storage = {
+      ...harness.storage,
+      deleteObject: async () => {
+        throw new Error("storage indisponível");
+      },
+    };
+    const later = new Date(rows[0]!.createdAt.getTime() + 25 * HOUR_MS);
+    const result = await purgeReportEvidence(
+      { db: harness.db, storage, logger: harness.deps.logger },
+      later,
+    );
+    expect(result.failed).toBeGreaterThanOrEqual(1);
+    const [row] = await harness.db
+      .select()
+      .from(reportEvidence)
+      .where(eq(reportEvidence.id, rows[0]!.id));
+    expect(row).toBeDefined();
   });
 
   it("prova sem confirmação não aparece para o admin e o job apaga depois de 24 h", async () => {
@@ -194,6 +278,13 @@ describe("provas da denúncia: limpeza, confirmação, retenção e contato", ()
       expect((await completeEvidence(item.reportId)).body.confirmed).toBe(1);
     }
 
+    const currentKey = async (id: string) => {
+      const [row] = await harness.db.select().from(reportEvidence).where(eq(reportEvidence.id, id));
+      return row!.storageKey;
+    };
+    const oldKey = await currentKey(old.rows[0]!.id);
+    const recentKey = await currentKey(recent.rows[0]!.id);
+
     const now = new Date();
     await harness.db
       .update(reports)
@@ -215,8 +306,8 @@ describe("provas da denúncia: limpeza, confirmação, retenção e contato", ()
       now,
     );
 
-    expect(await harness.storage.head(old.rows[0]!.storageKey)).toBeNull();
-    expect(await harness.storage.head(recent.rows[0]!.storageKey)).not.toBeNull();
+    expect(await harness.storage.head(oldKey)).toBeNull();
+    expect(await harness.storage.head(recentKey)).not.toBeNull();
     const [oldReport] = await harness.db.select().from(reports).where(eq(reports.id, old.reportId));
     expect(oldReport).toMatchObject({ status: "dismissed" });
 

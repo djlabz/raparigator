@@ -394,12 +394,16 @@ function ActionModal({
 function ReportContactReveal({ reportId }: { reportId: string }) {
   const [contact, setContact] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const handleReveal = async () => {
     setLoading(true);
+    setFailed(false);
     try {
       const result = await getReportContact(reportId);
       setContact(result.contactEmail ?? "");
+    } catch {
+      setFailed(true);
     } finally {
       setLoading(false);
     }
@@ -421,7 +425,7 @@ function ReportContactReveal({ reportId }: { reportId: string }) {
       className="flex items-center gap-1 text-[11px] font-bold text-zinc-400 hover:text-zinc-100 disabled:opacity-60"
     >
       <Mail className="h-3 w-3" />
-      Ver contato
+      {failed ? "Não foi possível carregar o contato. Tentar de novo" : "Ver contato"}
     </button>
   );
 }

@@ -311,9 +311,9 @@ Ordem: T-72, T-73, T-74. Uma por PR, mesmas regras da seção 0.
   - **Pronto quando:** os testes passam; check, test e E2E verdes.
 
 - [x] **T-73 Denúncia: provas, retenção e contato (completa o J-4).** (PR #99, 17/10)
-  - **Fazer:** provas passam pela `stripImageMetadata` da T-68 antes de ficarem disponíveis ao admin; `completeUpload` obrigatório como na mídia comum (prova sem confirmação não aparece para o admin e é apagada em 24 h); retenção `REPORT_EVIDENCE_RETENTION_DAYS = 180`, contados do encerramento da denúncia, em job diário (registro da denúncia mantido); e-mail de contato visível ao admin só por ação explícita "ver contato", que grava `access_log` com `event: "report_contact_view"`.
+  - **Fazer:** provas passam pela `stripImageMetadata` da T-68 antes de ficarem disponíveis ao admin; `reports.completeEvidence` obrigatório, como o `completeUpload` da mídia comum (prova sem confirmação não aparece para o admin e é apagada em 24 h); retenção `REPORT_EVIDENCE_RETENTION_DAYS = 180`, contados do encerramento da denúncia, em job diário (registro da denúncia mantido); e-mail de contato visível ao admin só por ação explícita "ver contato", que grava `access_log` com `event: "report_contact_view"`.
   - **Arquivos permitidos:** `apps/api/src/modules/reports/*`, `apps/api/src/modules/access-log/*`, `apps/api/src/modules/admin/*`, schema e migration, `apps/api/src/lib/jobs.ts`, `apps/api/src/server.ts`, `packages/contracts`, `apps/web/app/(public)/denuncia/*`, `apps/web/components/screens/admin/admin-reports-screen.tsx`, `apps/web/lib/admin-service.ts`, testes.
-  - **Testes que falham antes:** prova com GPS → admin recebe sem EXIF; prova sem `completeUpload` → não listada e apagada pelo job; denúncia encerrada há 181 dias → provas apagadas, registro mantido; "ver contato" → `access_log` gravado.
+  - **Testes que falham antes:** prova com GPS → admin recebe sem EXIF; prova sem `reports.completeEvidence` → não listada e apagada pelo job; denúncia encerrada há 181 dias → provas apagadas, registro mantido; "ver contato" → `access_log` gravado.
   - **Pronto quando:** os testes passam; check, test e E2E verdes.
 
 - [ ] **T-74 Painel sem número inventado.**
