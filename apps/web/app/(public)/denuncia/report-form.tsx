@@ -63,6 +63,7 @@ export function ReportForm() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [protocol, setProtocol] = useState<string | null>(null);
+  const [missingEvidence, setMissingEvidence] = useState(0);
 
   const handleFiles = (list: FileList | null) => {
     const selected = Array.from(list ?? []);
@@ -103,7 +104,7 @@ export function ReportForm() {
         contactEmail: contactEmail.trim() || undefined,
         evidence: files.map((file) => ({ contentType: file.type, sizeBytes: file.size })),
       });
-      await Promise.all(
+      const uploads = await Promise.allSettled(
         result.evidenceUploads.map((upload, index) =>
           fetch(upload.uploadUrl, {
             method: upload.method,
@@ -112,6 +113,17 @@ export function ReportForm() {
           }),
         ),
       );
+      const uploaded = uploads.filter(
+        (upload) => upload.status === "fulfilled" && upload.value.ok,
+      ).length;
+      let confirmed = 0;
+      if (uploaded > 0) {
+        confirmed = await getApiClient()
+          .reports.completeEvidence({ reportId: result.reportId })
+          .then((completion) => completion.confirmed)
+          .catch(() => 0);
+      }
+      setMissingEvidence(result.evidenceUploads.length - confirmed);
       setProtocol(result.reportId);
     } catch (submitError) {
       setError(errorMessage(submitError));
@@ -128,6 +140,13 @@ export function ReportForm() {
           Protocolo <span className="font-mono text-zinc-900">{protocol}</span>. A moderação analisa
           o pedido em até {REPORT_RESPONSE_SLA_HOURS} horas.
         </p>
+        {missingEvidence > 0 ? (
+          <p className="text-sm text-amber-700">
+            {missingEvidence === 1
+              ? "Uma prova não foi enviada. A denúncia foi registrada sem ela."
+              : `${missingEvidence} provas não foram enviadas. A denúncia foi registrada sem elas.`}
+          </p>
+        ) : null}
       </Card>
     );
   }

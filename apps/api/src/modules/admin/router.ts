@@ -1,7 +1,7 @@
 import type { AdminSession } from "@sigillus/contracts";
 import { admin, os } from "../../orpc/base";
 import { getAdminSession, type AppContext } from "../../orpc/context";
-import { listAccessLogs } from "../access-log";
+import { listAccessLogs, recordAccess } from "../access-log";
 
 export async function resolveAdminSession(context: AppContext): Promise<AdminSession> {
   const session = await getAdminSession(context);
@@ -68,6 +68,15 @@ export const adminRouter = {
   reportEvidence: admin.admin.reportEvidence.handler(({ context, input }) =>
     context.deps.services.admin.reportEvidence(input),
   ),
+  reportContact: admin.admin.reportContact.handler(async ({ context, input }) => {
+    const result = await context.deps.services.admin.reportContact(context.admin, input);
+    await recordAccess(context.deps.jobs, {
+      userId: context.admin.id,
+      event: "report_contact_view",
+      headers: context.request.headers,
+    });
+    return result;
+  }),
   reportTargetMedia: admin.admin.reportTargetMedia.handler(({ context, input }) =>
     context.deps.services.admin.reportTargetMedia(input),
   ),

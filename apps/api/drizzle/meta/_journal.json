@@ -50,6 +50,13 @@
       "when": 1791763755637,
       "tag": "0006_identity_verification",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792280875303,
+      "tag": "0007_report_evidence_confirmed",
+      "breakpoints": true
     }
   ]
 }

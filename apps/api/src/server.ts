@@ -23,7 +23,7 @@ import {
 } from "./modules/identity";
 import { registerMediaJobs } from "./modules/media/jobs";
 import { registerBillingJobs } from "./modules/premium/jobs";
-import { registerAdminReportDigestJob } from "./modules/reports";
+import { registerAdminReportDigestJob, registerReportEvidenceJobs } from "./modules/reports";
 import { registerReviewJobs } from "./modules/reviews/service";
 import { createServices } from "./services";
 import type { AppDeps } from "./deps";
@@ -77,6 +77,7 @@ async function main() {
   await registerAdminReportDigestJob({ db, config, mailer, jobs, logger });
   await registerAdminIdentityDigestJob({ db, config, mailer, jobs, logger });
   await registerIdentityJobs({ db, storage, jobs, logger });
+  await registerReportEvidenceJobs({ db, storage, jobs, logger });
   await jobs.schedule(IDENTITY_RETENTION_JOB, IDENTITY_RETENTION_CRON);
   await registerBillingJobs({ db, premium: deps.services.premium, billing, jobs, logger });
   await jobs.work("premium.expire", async () => {

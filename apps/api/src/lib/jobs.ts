@@ -21,6 +21,8 @@ export type JobPayloads = {
     occurredAt: string;
   };
   "access-log.purge": Record<string, never>;
+  "report.evidence-process": { evidenceId: string };
+  "report.evidence-retention": Record<string, never>;
   "session.purge": Record<string, never>;
 };
 

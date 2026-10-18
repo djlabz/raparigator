@@ -9,6 +9,8 @@ import { IdSchema, SlugSchema } from "./common";
 export const REPORT_RESPONSE_SLA_HOURS = 48;
 export const REPORT_EVIDENCE_MAX_FILES = 3;
 export const REPORT_EVIDENCE_MAX_BYTES = MEDIA_MAX_IMAGE_BYTES;
+export const REPORT_EVIDENCE_RETENTION_DAYS = 180;
+export const REPORT_EVIDENCE_UNCONFIRMED_HOURS = 24;
 
 export const ReportSourceSchema = z.enum(["chat", "public"]);
 export type ReportSource = z.infer<typeof ReportSourceSchema>;
@@ -88,3 +90,12 @@ export const ActOnReportInputSchema = z.object({
   note: z.string().trim().max(1000).default(""),
 });
 export type ActOnReportInput = z.infer<typeof ActOnReportInputSchema>;
+
+export const CompleteReportEvidenceInputSchema = z.object({ reportId: IdSchema });
+export type CompleteReportEvidenceInput = z.infer<typeof CompleteReportEvidenceInputSchema>;
+
+export const CompleteReportEvidenceOutputSchema = z.object({ confirmed: z.number().int() });
+export type CompleteReportEvidenceOutput = z.infer<typeof CompleteReportEvidenceOutputSchema>;
+
+export const ReportContactSchema = z.object({ contactEmail: z.string().nullable() });
+export type ReportContact = z.infer<typeof ReportContactSchema>;

@@ -1,7 +1,7 @@
 import { expect, request, test, type Page } from "@playwright/test";
 import { createApiClient, type ApiClient } from "@/lib/api/client";
 import { apiUrl } from "./helpers/api";
-import { clearAgeGate } from "./helpers/age-gate";
+import { clearAgeGate, seedAgeVerified } from "./helpers/age-gate";
 import { seedAdminSession } from "./helpers/auth";
 
 const password = "Descartavel@123";
@@ -145,5 +145,39 @@ test.describe("Página pública de denúncia", () => {
     await page.getByRole("button", { name: "Enviar denúncia" }).click();
 
     await expect(page.getByRole("heading", { name: "Denúncia recebida" })).toBeVisible();
+  });
+
+  test("prova enviada chega ao admin e o contato só aparece em Ver contato", async ({ page }) => {
+    const professional = await signUpProfessional();
+    const { ad } = await professional.announcements.getMine();
+    const contact = `contato-${uniqueSuffix()}@denuncia.dev`;
+    await seedAgeVerified(page);
+    await page.goto("/denuncia");
+
+    await page.getByLabel("Link do anúncio").fill(`http://localhost/anuncio/${ad!.slug}`);
+    await page.getByLabel("Motivo").selectOption("photo_without_consent");
+    await page.getByLabel("O que está errado").fill("Foto publicada sem o meu consentimento.");
+    await page.getByLabel("E-mail para contato (opcional)").fill(contact);
+    await page.getByLabel(/^Provas/).setInputFiles({
+      name: "prova.png",
+      mimeType: "image/png",
+      buffer: tinyPng,
+    });
+    await page.getByRole("button", { name: "Enviar denúncia" }).click();
+    await expect(page.getByRole("heading", { name: "Denúncia recebida" })).toBeVisible();
+    const reportId = (await page.locator("span.font-mono").first().innerText()).trim();
+
+    const card = page.getByTestId(`report-card-${reportId}`);
+    await expect(async () => {
+      await openQueueFor(page, ad!.slug);
+      await expect(card.getByRole("button", { name: "Ver provas (1)" })).toBeVisible({
+        timeout: 2_000,
+      });
+    }).toPass({ timeout: 20_000 });
+    await expect(card.getByText(contact)).toHaveCount(0);
+    await card.getByRole("button", { name: "Ver provas (1)" }).click();
+    await expect(card.getByRole("link", { name: "Prova 1" })).toBeVisible();
+    await card.getByRole("button", { name: "Ver contato" }).click();
+    await expect(card.getByText(contact)).toBeVisible();
   });
 });
