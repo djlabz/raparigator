@@ -17,6 +17,7 @@ export {
 } from "./digest";
 export { computeImageHash } from "./image-hash";
 export {
+  REPORT_EVIDENCE_PROCESS_GRACE_HOURS,
   REPORT_EVIDENCE_PROCESS_JOB,
   REPORT_EVIDENCE_PURGE_MARGIN_HOURS,
   REPORT_EVIDENCE_RETENTION_CRON,

@@ -15,7 +15,8 @@ export { REPORT_EVIDENCE_RETENTION_DAYS, REPORT_EVIDENCE_UNCONFIRMED_HOURS };
 export const REPORT_EVIDENCE_PROCESS_JOB = "report.evidence-process";
 export const REPORT_EVIDENCE_RETENTION_JOB = "report.evidence-retention";
 export const REPORT_EVIDENCE_RETENTION_CRON = "30 4 * * *";
-export const REPORT_EVIDENCE_PURGE_MARGIN_HOURS = 1;
+export const REPORT_EVIDENCE_PROCESS_GRACE_HOURS = 1;
+export const REPORT_EVIDENCE_PURGE_MARGIN_HOURS = 2;
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -28,6 +29,13 @@ export type ReportEvidenceDeps = {
 
 export function isEvidenceUploadOpen(createdAt: Date, now = new Date()): boolean {
   return now.getTime() - createdAt.getTime() < REPORT_EVIDENCE_UNCONFIRMED_HOURS * HOUR_MS;
+}
+
+export function isEvidenceProcessable(createdAt: Date, now = new Date()): boolean {
+  return (
+    now.getTime() - createdAt.getTime() <
+    (REPORT_EVIDENCE_UNCONFIRMED_HOURS + REPORT_EVIDENCE_PROCESS_GRACE_HOURS) * HOUR_MS
+  );
 }
 
 const CLEAN_SUFFIX = ".clean";
@@ -67,7 +75,7 @@ export async function processReportEvidence(deps: ReportEvidenceDeps, evidenceId
     await storage.deleteObject(uploadEvidenceKey(row.storageKey));
     return;
   }
-  if (!isEvidenceUploadOpen(row.createdAt)) {
+  if (!isEvidenceProcessable(row.createdAt)) {
     return;
   }
   const head = await storage.head(row.storageKey);

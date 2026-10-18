@@ -5,6 +5,7 @@ import { accessLogs, reportEvidence, reports } from "../src/db/schema";
 import { DEV_ADMINS, upsertAdminWithPassword } from "../src/db/seed/users";
 import { registerAccessLogJobs } from "../src/modules/access-log";
 import {
+  REPORT_EVIDENCE_PROCESS_GRACE_HOURS,
   REPORT_EVIDENCE_PURGE_MARGIN_HOURS,
   REPORT_EVIDENCE_RETENTION_DAYS,
   REPORT_EVIDENCE_UNCONFIRMED_HOURS,
@@ -232,24 +233,30 @@ describe("provas da denúncia: limpeza, confirmação, retenção e contato", ()
     expect(await harness.storage.head(uploadKey)).toBeNull();
   });
 
-  it("o job não processa prova fora da janela de envio", async () => {
-    const { rows, bytes } = await publicReportWithEvidence("janela", 1);
-    await harness.storage.putObject(rows[0]!.storageKey, new Uint8Array(bytes), "image/jpeg");
-    await harness.db
-      .update(reportEvidence)
-      .set({
-        createdAt: new Date(Date.now() - (REPORT_EVIDENCE_UNCONFIRMED_HOURS + 0.5) * HOUR_MS),
-      })
-      .where(eq(reportEvidence.id, rows[0]!.id));
-    await processReportEvidence(
-      { db: harness.db, storage: harness.storage, logger: harness.deps.logger },
-      rows[0]!.id,
+  it("job atrasado na fila ainda processa dentro da folga, e não depois dela", async () => {
+    const deps = { db: harness.db, storage: harness.storage, logger: harness.deps.logger };
+    const ageAt = async (tag: string, hours: number) => {
+      const { rows, bytes } = await publicReportWithEvidence(tag, 1);
+      await harness.storage.putObject(rows[0]!.storageKey, new Uint8Array(bytes), "image/jpeg");
+      await harness.db
+        .update(reportEvidence)
+        .set({ createdAt: new Date(Date.now() - hours * HOUR_MS) })
+        .where(eq(reportEvidence.id, rows[0]!.id));
+      await processReportEvidence(deps, rows[0]!.id);
+      const [row] = await harness.db
+        .select()
+        .from(reportEvidence)
+        .where(eq(reportEvidence.id, rows[0]!.id));
+      return row!;
+    };
+    const delayed = await ageAt("atrasada", REPORT_EVIDENCE_UNCONFIRMED_HOURS + 0.5);
+    expect(delayed.confirmedAt).not.toBeNull();
+    const late = await ageAt(
+      "tarde",
+      REPORT_EVIDENCE_UNCONFIRMED_HOURS + REPORT_EVIDENCE_PROCESS_GRACE_HOURS + 0.5,
     );
-    const [row] = await harness.db
-      .select()
-      .from(reportEvidence)
-      .where(eq(reportEvidence.id, rows[0]!.id));
-    expect(row!.confirmedAt).toBeNull();
+    expect(late.confirmedAt).toBeNull();
+    expect(REPORT_EVIDENCE_PURGE_MARGIN_HOURS).toBeGreaterThan(REPORT_EVIDENCE_PROCESS_GRACE_HOURS);
   });
 
   it("falha ao apagar o arquivo na retenção mantém o registro para a próxima execução", async () => {
@@ -261,7 +268,10 @@ describe("provas da denúncia: limpeza, confirmação, retenção e contato", ()
         throw new Error("storage indisponível");
       },
     };
-    const later = new Date(rows[0]!.createdAt.getTime() + 26 * HOUR_MS);
+    const later = new Date(
+      rows[0]!.createdAt.getTime() +
+        (REPORT_EVIDENCE_UNCONFIRMED_HOURS + REPORT_EVIDENCE_PURGE_MARGIN_HOURS + 1) * HOUR_MS,
+    );
     const result = await purgeReportEvidence(
       { db: harness.db, storage, logger: harness.deps.logger },
       later,
