@@ -142,7 +142,7 @@ export const defaultServices: AnnouncementServiceOption[] = [
 ];
 
 export const defaultPricing: AnnouncementPricingItem[] = [
-  { label: "1 hora", price: "30000", disabled: false, billingType: "hourly" },
+  { label: "1 hora", price: "", disabled: false, billingType: "hourly" },
   { label: "30 min", price: "", disabled: true, billingType: "hourly" },
   { label: "15 min", price: "", disabled: true, billingType: "hourly" },
   { label: "Diária", price: "", disabled: true, billingType: "fixed" },
@@ -192,10 +192,6 @@ export function buildInitialState(ad: AnnouncementAdPreview): AnnouncementDraftS
       return false;
     });
 
-    if (defaultItem.label === "1 hora") {
-      return { ...defaultItem, price: "30000", disabled: false };
-    }
-
     if (defaultItem.label === "Pernoite") {
       return { ...defaultItem, price: "", disabled: true };
     }
@@ -214,9 +210,9 @@ export function buildInitialState(ad: AnnouncementAdPreview): AnnouncementDraftS
 
   const initialLocationAddress: AnnouncementLocationAddress = {
     id: createLocationId(),
-    label: ad.neighborhood?.trim()
-      ? `${ad.neighborhood.trim()}, ${ad.city}`
-      : `${ad.city}, ${ad.state}`,
+    label: (ad.neighborhood?.trim() ? [ad.neighborhood.trim(), ad.city] : [ad.city, ad.state])
+      .filter((part) => part?.trim())
+      .join(", "),
     addressLine: ad.neighborhood?.trim() ?? "",
     city: ad.city,
     state: ad.state,

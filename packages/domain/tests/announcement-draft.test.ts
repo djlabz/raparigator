@@ -51,13 +51,26 @@ function completeDraft() {
 describe("rascunho de anúncio", () => {
   it("estado inicial reflete a tabela de preço do anúncio", () => {
     const state = buildInitialState(preview);
-    expect(state.pricing.find((p) => p.label === "1 hora")?.price).toBe("30000");
+    expect(state.pricing.find((p) => p.label === "1 hora")?.price).toBe("45000");
     expect(state.pricing.find((p) => p.label === "30 min")).toMatchObject({
       price: "25000",
       disabled: false,
     });
     expect(state.locationAddresses).toHaveLength(1);
     expect(state.paymentMethods).toEqual(["dinheiro"]);
+  });
+
+  it("sem tabela de preço o estado inicial não sugere nenhum valor", () => {
+    const state = buildInitialState({ ...preview, pricingTable: [] });
+    expect(state.pricing.every((item) => item.price === "")).toBe(true);
+    expect(state.pricing.find((p) => p.label === "1 hora")?.disabled).toBe(false);
+    expect(state.characteristics.height).toBe("");
+    expect(state.characteristics.weight).toBe("");
+  });
+
+  it("sem cidade nem estado o endereço inicial fica em branco", () => {
+    const state = buildInitialState({ ...preview, city: "", state: "", neighborhood: "" });
+    expect(state.locationAddresses[0]?.label).toBe("");
   });
 
   it("cabelo só está completo com tipo e cor", () => {
@@ -111,7 +124,7 @@ describe("rascunho de anúncio", () => {
   it("deriva tabela e preço inicial da máscara de moeda", () => {
     const state = buildInitialState(preview);
     expect(draftToPricingTable(state)).toEqual([
-      { label: "1 hora", price: 300 },
+      { label: "1 hora", price: 450 },
       { label: "30 min", price: 250 },
     ]);
     expect(draftStartingPrice(state)).toBe(250);

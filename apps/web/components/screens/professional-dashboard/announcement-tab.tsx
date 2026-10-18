@@ -143,7 +143,7 @@ function formatIntegerGroup(value: string) {
 function formatCurrencyInput(value: string) {
   const digits = value.replace(/\D/g, "");
   if (digits.length === 0) {
-    return "0,00";
+    return "";
   }
 
   const normalizedDigits = digits.padStart(3, "0");
@@ -157,7 +157,7 @@ function formatWeightInput(value: string) {
   const digits = value.replace(/\D/g, "");
 
   if (digits.length === 0) {
-    return "0,0";
+    return "";
   }
 
   const clampedDigits = Number(digits) > 1000 ? "1000" : digits;
