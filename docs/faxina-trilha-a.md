@@ -22,12 +22,12 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 
 | Ordem | PR                                                 | Status                     |
 | ----- | -------------------------------------------------- | -------------------------- |
-| A1    | F-02 código morto e comentários                    | em andamento (#105, 25/10) |
+| A1    | F-02 código morto e comentários                    | [x] #105 25/10             |
 | A2    | F-03 bugs de regra sem decisão                     |                            |
 | A3    | F-06 regras puras para o domain                    |                            |
 | A4    | F-07 camadas da API                                |                            |
 | A5    | F-08 mensagens em português                        |                            |
-| A6    | F-09 seeds: CPF e pexels                           |                            |
+| A6    | F-09 seeds: CPF e pexels                           | em andamento (#106, 25/10) |
 | A7    | F-11 CSS                                           |                            |
 | A8    | F-12 nomes                                         |                            |
 | A9    | F-13 `moderationStatus`                            |                            |
@@ -192,3 +192,4 @@ Formato: data, PR de origem, arquivo:linha, achado e proposta. Consolidados no i
 
 - 25/10, F-02 (#105), `apps/web/components/screens/professional-dashboard/announcement-tab.tsx:4339`: a diretiva `eslint-disable-next-line react-hooks/exhaustive-deps` do `useEffect` de `DescriptionSection` não era morta. O oxlint respeita comentários `eslint-disable` e acusa a regra (o inventário, em F-029, dizia que as 6 diretivas eram mortas). Virou `oxlint-disable-next-line` naquela linha. Proposta: no passo `announcement-tab` do F-19, guardar a descrição inicial num `useRef` para o efeito não depender dela e apagar a diretiva.
 - 25/10, F-02 (#105), `announcement-tab.tsx:3248`, `ui/image-blur-modal.tsx:259,275`, `ui/image-cropper-modal.tsx:212`: quatro `eslint-disable-next-line @next/next/no-img-element` fora do inventário. O plugin `nextjs` do oxlint está ligado, então podem estar vivas. Proposta: conferir no F-11 (os `ui/*` são dele) e no passo `announcement-tab` do F-19; se estiverem vivas, trocar `<img>` por `next/image` onde couber ou renomear para `oxlint-disable-next-line`.
+- 25/10, F-09 (#106), `apps/api/src/db/seed/users.ts:72-75` e `dev-data.ts` (clientes, `onConflictDoNothing`): a seed não atualiza CPF, telefone, apelido nem cidade de usuário que já existe; banco de dev antigo continua com os CPFs inválidos depois do `db:seed`. Proposta: no F-10 (seed real e idempotente), decidir se a seed reescreve esses campos dos usuários de seed ou se o caminho é recriar o volume; anotar a escolha no README.
