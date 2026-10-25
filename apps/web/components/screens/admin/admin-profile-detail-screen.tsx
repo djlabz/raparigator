@@ -16,7 +16,9 @@ import {
   X,
   AlertTriangle,
   Crown,
+  FileText,
 } from "lucide-react";
+import { canReview } from "@sigillus/domain";
 import { AdminLayoutShell } from "./admin-layout-shell";
 import { useAdminSession } from "@/lib/admin-session";
 import { getProfileById, approveProfile, rejectProfile, grantPremium } from "@/lib/admin-service";
@@ -45,6 +47,13 @@ function StatusBadge({ status }: { status: VerificationStatus | undefined }) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-red-800/60 bg-red-900/30 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-red-400">
         <XCircle className="h-3 w-3" /> Recusado
+      </span>
+    );
+  }
+  if (status === "draft") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800/60 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+        <FileText className="h-3 w-3" /> Sem envio
       </span>
     );
   }
@@ -155,7 +164,8 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
     );
   }
 
-  const isPending = profile.verificationStatus === "pending_review";
+  const isPending =
+    profile.verificationStatus !== undefined && canReview(profile.verificationStatus);
 
   return (
     <AdminLayoutShell breadcrumb={profile.artisticName}>

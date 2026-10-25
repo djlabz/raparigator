@@ -15,7 +15,8 @@ import { createAdminService, type AdminNotification } from "../src/modules/admin
 import { createAppContext } from "../src/orpc/context";
 import type { AppDeps } from "../src/deps";
 import { createTestHarness } from "./helpers/app";
-import { signInAdmin, signUp } from "./helpers/auth";
+import { cookieHeader, signInAdmin, signUp } from "./helpers/auth";
+import { completeDraft } from "./helpers/drafts";
 
 const harness = createTestHarness();
 
@@ -398,5 +399,163 @@ describe("admin / backoffice", () => {
         (item) => item.userId === userId && item.notification.title.includes("Premium"),
       ),
     ).toBe(true);
+  });
+});
+
+async function signInUser(email: string, password = "Senha@12345") {
+  const response = await harness.fetch("/api/auth/sign-in/email", {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: harness.config.WEB_ORIGIN },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!response.ok) {
+    throw new Error(`sign-in falhou: ${response.status} ${await response.text()}`);
+  }
+  return cookieHeader(response);
+}
+
+async function draftProfessional(email: string, alias: string) {
+  const pro = await signUp(harness, { email, role: "profissional", name: alias, alias });
+  const owner = { id: pro.userId, name: alias, alias };
+  const mine = await harness.deps.services.announcements.getMine(owner);
+  return { ...pro, owner, profileId: mine.ad!.id };
+}
+
+describe("admin / moderação só decide perfil em análise (F-05)", () => {
+  it("perfil nunca enviado (rascunho) não pode ser aprovado nem recusado", async () => {
+    const { rpc } = setup();
+    const cookie = await adminCookie();
+    const pro = await draftProfessional("rascunho@teste.dev", "Rascunho");
+    const approved = await rpc<{ code: string }>(
+      "admin/approveProfile",
+      { id: pro.profileId },
+      cookie,
+    );
+    expect(approved.status).toBe(409);
+    const rejected = await rpc<{ code: string }>(
+      "admin/rejectProfile",
+      { id: pro.profileId, reason: "Nada enviado" },
+      cookie,
+    );
+    expect(rejected.status).toBe(409);
+    const profile = await harness.deps.services.profiles.findById(pro.profileId);
+    expect(profile?.verificationStatus).toBe("draft");
+    expect(profile?.submittedAt).toBeNull();
+  });
+
+  it("perfil publicado não é reaprovado nem recusado pela revisão", async () => {
+    const { rpc } = setup();
+    const cookie = await adminCookie();
+    const pro = await createProfessional("pub@teste.dev", "Publicada", "published");
+    const approved = await rpc<{ code: string }>(
+      "admin/approveProfile",
+      { id: pro.profile.id },
+      cookie,
+    );
+    expect(approved.status).toBe(409);
+    const rejected = await rpc<{ code: string }>(
+      "admin/rejectProfile",
+      { id: pro.profile.id, reason: "Mudei de ideia" },
+      cookie,
+    );
+    expect(rejected.status).toBe(409);
+    const profile = await harness.deps.services.profiles.findById(pro.profile.id);
+    expect(profile?.verificationStatus).toBe("published");
+  });
+
+  it("perfil rejeitado só volta a ser decidido depois de novo publish", async () => {
+    const { rpc } = setup();
+    const cookie = await adminCookie();
+    const pro = await createProfessional("rej3@teste.dev", "Rejeitada Tres", "rejected");
+    const early = await rpc<{ code: string }>(
+      "admin/approveProfile",
+      { id: pro.profile.id },
+      cookie,
+    );
+    expect(early.status).toBe(409);
+    const owner = { id: pro.userId, name: "Rejeitada Tres", alias: "Rejeitada Tres" };
+    const published = await harness.deps.services.announcements.publish(owner, completeDraft());
+    expect(published).toEqual({ ok: true });
+    const approved = await rpc<{ action: string }>(
+      "admin/approveProfile",
+      { id: pro.profile.id },
+      cookie,
+    );
+    expect(approved.status).toBe(200);
+    expect(approved.body.action).toBe("approved");
+  });
+
+  it("fila, contador do dashboard e listagem geral ignoram rascunho", async () => {
+    const { rpc } = setup();
+    const cookie = await adminCookie();
+    const draft = await draftProfessional("rascunho2@teste.dev", "Rascunho Dois");
+    const submitted = await createProfessional("enviada@teste.dev", "Enviada", "pending_review");
+    const queue = await rpc<Array<{ id: string }>>(
+      "admin/professionals",
+      { status: "pending_review" },
+      cookie,
+    );
+    expect(queue.body.map((item) => item.id)).toEqual([submitted.profile.id]);
+    const all = await rpc<Array<{ id: string }>>("admin/professionals", {}, cookie);
+    expect(all.body.map((item) => item.id)).not.toContain(draft.profileId);
+    const dashboard = await rpc<{ pendingReview: number }>("admin/dashboard", {}, cookie);
+    expect(dashboard.body.pendingReview).toBe(1);
+  });
+
+  it("aprovar perfil pausado não diz que já está publicado", async () => {
+    const { rpc, notified } = setup();
+    const cookie = await adminCookie();
+    const pro = await signUp(harness, { email: "pausada@teste.dev", role: "profissional" });
+    const profile = await harness.deps.services.profiles.insert({
+      id: "profile-pausada",
+      userId: pro.userId,
+      slug: "pausada",
+      artisticName: "Pausada",
+      displayName: "Pausada",
+      verificationStatus: "pending_review",
+      listingStatus: "Pausado",
+      submittedAt: new Date(),
+    });
+    const result = await rpc<{ action: string }>(
+      "admin/approveProfile",
+      { id: profile.id },
+      cookie,
+    );
+    expect(result.status).toBe(200);
+    expect(notified).toHaveLength(1);
+    expect(notified[0]?.notification.message).not.toContain("já está publicado");
+    expect(notified[0]?.notification.message).toContain("pausado");
+  });
+});
+
+describe("admin / suspensão de profissional bloqueia a conta (F-05)", () => {
+  it("suspensa não usa a API mesmo entrando de novo; reativar libera", async () => {
+    const { rpc } = setup();
+    const cookie = await adminCookie();
+    const pro = await createProfessional("bloqueada@teste.dev", "Bloqueada", "published");
+    await rpc("admin/suspendProfessional", { id: pro.profile.id, reason: "Denúncias" }, cookie);
+    const [suspended] = await harness.db.select().from(users).where(eq(users.id, pro.userId));
+    expect(suspended?.status).toBe("suspended");
+    expect(suspended?.suspensionReason).toBe("Denúncias");
+
+    const freshCookie = await signInUser(pro.email);
+    const blocked = await harness.rpc<{ message: string }>(
+      "chat/sendText",
+      { conversationId: "qualquer", content: "oi" },
+      { cookie: freshCookie },
+    );
+    expect(blocked.status).toBe(403);
+    expect(blocked.body.message).toBe("Conta suspensa.");
+
+    await rpc("admin/reinstateProfessional", { id: pro.profile.id }, cookie);
+    const [reinstated] = await harness.db.select().from(users).where(eq(users.id, pro.userId));
+    expect(reinstated?.status).toBe("active");
+    expect(reinstated?.suspensionReason).toBeNull();
+    const released = await harness.rpc<{ code: string }>(
+      "chat/sendText",
+      { conversationId: "qualquer", content: "oi" },
+      { cookie: await signInUser(pro.email) },
+    );
+    expect(released.status).not.toBe(403);
   });
 });

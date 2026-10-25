@@ -17,6 +17,8 @@ function ResultIcon({ type }: { type: GlobalSearchResult["type"] }) {
 
 function statusLabel(status?: string): string {
   switch (status) {
+    case "draft":
+      return "Sem envio";
     case "pending_review":
       return "Em análise";
     case "published":

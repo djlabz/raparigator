@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne, sql, type SQL } from "drizzle-orm";
 import type { FeedFiltersCriteria, FeedSort, PaginationInput } from "@sigillus/contracts";
 import {
   FEED_CATEGORY_BY_GENDER,
@@ -15,6 +15,8 @@ import type { ObjectStorage } from "../../lib/storage";
 import { resolveProfileImages, type ProfileImages, type ProfileRow } from "./mapper";
 
 export type ProfileRepository = ReturnType<typeof createProfileRepository>;
+
+const SUBMITTED_PROFILE = ne(professionalProfiles.verificationStatus, "draft");
 
 const VISIBLE_PROFILE = and(
   eq(professionalProfiles.verificationStatus, "published"),
@@ -196,10 +198,10 @@ export function createProfileRepository(db: Database, storage: ObjectStorage) {
     },
 
     async listByStatus(status?: ProfileRow["verificationStatus"]) {
-      const query = db.select().from(professionalProfiles);
-      const rows = status
-        ? await query.where(eq(professionalProfiles.verificationStatus, status))
-        : await query;
+      const where = status
+        ? and(SUBMITTED_PROFILE, eq(professionalProfiles.verificationStatus, status))
+        : SUBMITTED_PROFILE;
+      const rows = await db.select().from(professionalProfiles).where(where);
       return rows.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     },
 

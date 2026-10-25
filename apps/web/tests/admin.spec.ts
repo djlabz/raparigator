@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { credentials } from "./helpers/credentials";
+import { signInAdminViaApi, signUpDisposableProfessional } from "./helpers/api";
 import { seedAdminSession } from "./helpers/auth";
 
 test.describe("Admin", () => {
@@ -46,5 +47,25 @@ test.describe("Admin", () => {
     await page.goto("/admin");
     await page.waitForURL(/\/admin\/login/);
     await expect(page.getByRole("button", { name: "Acessar painel" })).toBeVisible();
+  });
+
+  test("perfil só criado pelo painel não aparece em Pendentes nem conta no dashboard", async ({
+    page,
+  }) => {
+    const professional = await signUpDisposableProfessional();
+    const mine = await professional.api.announcements.getMine();
+    const profileId = mine.ad!.id;
+    expect(mine.ad?.verificationStatus).toBe("draft");
+
+    const admin = await signInAdminViaApi(credentials.admin);
+    const queue = await admin.api.admin.professionals({ status: "pending_review" });
+    expect(queue.map((item) => item.id)).not.toContain(profileId);
+    const dashboard = await admin.api.admin.dashboard();
+    expect(dashboard.pendingReview).toBe(queue.length);
+
+    await seedAdminSession(page);
+    await page.goto("/admin/perfis");
+    await expect(page.getByRole("link", { name: "Analisar" }).first()).toBeVisible();
+    await expect(page.locator(`a[href="/admin/perfis/${profileId}"]`)).toHaveCount(0);
   });
 });

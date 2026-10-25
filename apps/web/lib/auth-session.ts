@@ -66,6 +66,7 @@ export function useAuthSession() {
     role,
     user,
     isLoggedIn: Boolean(sessionUser),
+    isPending: session.isPending,
     logout: async () => {
       await authClient.signOut();
       if (typeof window !== "undefined" && pathRequiresAuth(window.location.pathname)) {

@@ -129,4 +129,4 @@ Dois PRs: `fix/F-17a-cadastro-profissional-cpf` (pequeno, primeiro) e `refactor/
 
 Formato: data, PR de origem, arquivo:linha, achado e proposta. Consolidados no inventário pelo F-22.
 
-_Nenhum ainda._
+- 25/10/2026, prova de isolamento da sessão B (antes do B1), `apps/web/playwright.config.ts:5,66` e `apps/api/package.json:7` (`dev:api`): a porta do web vem só de `process.env.PORT`, e a API lê a sua porta da mesma variável `PORT`; o `--env-file-if-exists=.env` do Node não sobrescreve variável já presente no ambiente, então `PORT=3101 npm run test:e2e` faz a API spawnada pelo `webServer` tentar subir em 3101 (colide com o web). Contorno usado: subir a API antes, num shell sem `PORT`, e deixar o `reuseExistingServer` reaproveitá-la. Proposta (arquivo da trilha A, não editado aqui): o `webServer` da API fixar `PORT` no `env` a partir de `new URL(apiUrl).port`, ou o web ler uma variável própria (`WEB_PORT`). Baixa; prova: `PORT=3101 NEXT_PUBLIC_API_URL=http://localhost:4002 npm run test:e2e` sem API no ar sobe a API em 4002.

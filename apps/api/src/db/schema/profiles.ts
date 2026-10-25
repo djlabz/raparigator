@@ -73,9 +73,9 @@ export const professionalProfiles = pgTable(
     listingStatus: text({ enum: ["Ativo", "Pausado"] })
       .notNull()
       .default("Pausado"),
-    verificationStatus: text({ enum: ["pending_review", "published", "rejected"] })
+    verificationStatus: text({ enum: ["draft", "pending_review", "published", "rejected"] })
       .notNull()
-      .default("pending_review"),
+      .default("draft"),
     submittedAt: timestamp({ withTimezone: true }),
     reviewNotifiedAt: timestamp({ withTimezone: true }),
     reviewedAt: timestamp({ withTimezone: true }),
