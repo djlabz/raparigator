@@ -1708,7 +1708,7 @@ function ConversationThread({
                     "flex max-w-[85%] flex-col md:max-w-[68%]",
                     message.from === "me" ? "ml-auto items-end" : "mr-auto items-start",
                     message.from === "me" && message.id === lastSentMessageId
-                      ? "message-sent-pop"
+                      ? "animate-message-rise will-change-[transform,opacity]"
                       : "",
                   )}
                 >

@@ -2211,11 +2211,7 @@ function SectionCard({
       {showHighlightOverlay ? (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-0 bg-zinc-900/30"
-          style={{
-            animation: "section-focus-flash 1.6s ease-out 1",
-            willChange: "opacity, transform",
-          }}
+          className="pointer-events-none absolute inset-0 z-0 animate-section-focus-flash bg-zinc-900/30 will-change-[opacity,transform]"
         />
       ) : null}
       <div className="relative z-10">
@@ -2289,26 +2285,6 @@ function SectionCard({
           </div>
         )}
       </div>
-      <style jsx>{`
-        @keyframes section-focus-flash {
-          0% {
-            opacity: 0;
-            transform: scale(1);
-          }
-          10% {
-            opacity: 0.34;
-            transform: scale(1.004);
-          }
-          60% {
-            opacity: 0.34;
-            transform: scale(1.006);
-          }
-          100% {
-            opacity: 0;
-            transform: scale(1.01);
-          }
-        }
-      `}</style>
     </div>
   );
 }
@@ -2696,10 +2672,10 @@ function BentoPhotoGallery({
                 <button
                   type="button"
                   onClick={onUpgradeClick}
-                  className="relative w-full aspect-square rounded-2xl border-2 border-dashed border-[#DAA520]/40 bg-zinc-50/60 opacity-70 flex flex-col items-center justify-center gap-1.5 cursor-pointer text-zinc-400 transition-all hover:opacity-100 hover:border-[#DAA520]"
+                  className="relative w-full aspect-square rounded-2xl border-2 border-dashed border-gold/40 bg-zinc-50/60 opacity-70 flex flex-col items-center justify-center gap-1.5 cursor-pointer text-zinc-400 transition-all hover:opacity-100 hover:border-gold"
                 >
-                  <Lock className="w-6 h-6 text-[#DAA520]" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#DAA520]">
+                  <Lock className="w-6 h-6 text-gold" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-gold">
                     Premium
                   </span>
                 </button>
@@ -2708,9 +2684,9 @@ function BentoPhotoGallery({
           </div>
 
           {atStandardLimit && (
-            <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#DAA520]/40 bg-[#121212] p-5 text-center sm:flex-row sm:justify-between sm:text-left">
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-gold/40 bg-premium-surface p-5 text-center sm:flex-row sm:justify-between sm:text-left">
               <div>
-                <p className="text-sm font-bold text-[#FFDF00]">
+                <p className="text-sm font-bold text-gold-bright">
                   Seu portfólio está pronto para crescer
                 </p>
                 <p className="mt-1 text-xs text-zinc-300">
@@ -2877,10 +2853,10 @@ function BentoPhotoGallery({
                 key={`locked-${idx}`}
                 type="button"
                 onClick={onUpgradeClick}
-                className="relative aspect-square rounded-xl border border-dashed border-[#DAA520]/40 bg-zinc-50/60 opacity-70 flex flex-col items-center justify-center gap-1 cursor-pointer text-zinc-400 transition-all hover:opacity-100 hover:border-[#DAA520]"
+                className="relative aspect-square rounded-xl border border-dashed border-gold/40 bg-zinc-50/60 opacity-70 flex flex-col items-center justify-center gap-1 cursor-pointer text-zinc-400 transition-all hover:opacity-100 hover:border-gold"
               >
-                <Lock className="w-5 h-5 text-[#DAA520]" />
-                <span className="text-[9px] font-bold uppercase tracking-wider text-[#DAA520]">
+                <Lock className="w-5 h-5 text-gold" />
+                <span className="text-[9px] font-bold uppercase tracking-wider text-gold">
                   Premium
                 </span>
               </button>
@@ -2888,9 +2864,9 @@ function BentoPhotoGallery({
           </div>
 
           {atStandardLimit && (
-            <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#DAA520]/40 bg-[#121212] p-5 text-center sm:flex-row sm:justify-between sm:text-left">
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-gold/40 bg-premium-surface p-5 text-center sm:flex-row sm:justify-between sm:text-left">
               <div>
-                <p className="text-sm font-bold text-[#FFDF00]">
+                <p className="text-sm font-bold text-gold-bright">
                   Seu portfólio está pronto para crescer
                 </p>
                 <p className="mt-1 text-xs text-zinc-300">
@@ -3289,14 +3265,13 @@ function PhotoGalleryModal({
             <img
               src={images[activeIndex]}
               alt="Fullscreen"
-              className="block w-auto h-auto max-w-full max-h-full object-contain"
-              style={{ maxHeight: "calc(100dvh - 240px)" }}
+              className="block h-auto max-h-[calc(100dvh-240px)] w-auto max-w-full object-contain"
             />
           </div>
         </div>
 
-        <div className="w-full max-w-5xl px-4 shrink-0 pb-safe mb-6">
-          <div className="flex gap-3 overflow-x-auto px-1 py-2 pb-4 hide-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none snap-x scroll-smooth">
+        <div className="w-full max-w-5xl px-4 shrink-0 pb-[env(safe-area-inset-bottom)] mb-6">
+          <div className="flex gap-3 overflow-x-auto px-1 py-2 pb-4 snap-x scroll-smooth">
             {images.map((img, i) => (
               <div key={i} className="relative shrink-0 group snap-center">
                 <button
@@ -3555,8 +3530,8 @@ function CharacteristicsSection({
       className={cn(
         "space-y-4 rounded-xl border p-4",
         errorMessage ? "border-red-300 bg-red-50/30" : "border-zinc-200",
+        isShaking && "animate-section-shake",
       )}
-      style={isShaking ? { animation: "characteristics-shake 420ms ease-in-out" } : undefined}
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         <div>
@@ -3625,29 +3600,6 @@ function CharacteristicsSection({
       </div>
 
       {errorMessage && <p className="text-sm font-semibold text-red-700">{errorMessage}</p>}
-
-      <style jsx>{`
-        @keyframes characteristics-shake {
-          0% {
-            transform: translateX(0);
-          }
-          20% {
-            transform: translateX(-8px);
-          }
-          40% {
-            transform: translateX(8px);
-          }
-          60% {
-            transform: translateX(-6px);
-          }
-          80% {
-            transform: translateX(6px);
-          }
-          100% {
-            transform: translateX(0);
-          }
-        }
-      `}</style>
     </div>
   );
 }
@@ -3779,8 +3731,8 @@ function PricingSection({
           className={cn(
             "bg-zinc-50/50 rounded-2xl p-4 grid grid-cols-2 gap-3 border transition-all",
             errorMessage ? "border-red-300 bg-red-50/30" : "border-transparent",
+            isShaking && "animate-section-shake",
           )}
-          style={isShaking ? { animation: "pricing-shake 420ms ease-in-out" } : undefined}
         >
           {paymentOptions.map((option) => {
             const isSelected = paymentMethods.includes(option.id);
@@ -3813,29 +3765,6 @@ function PricingSection({
         </div>
         {errorMessage && <p className="text-sm font-semibold text-red-700 mt-2">{errorMessage}</p>}
       </div>
-
-      <style jsx>{`
-        @keyframes pricing-shake {
-          0% {
-            transform: translateX(0);
-          }
-          20% {
-            transform: translateX(-8px);
-          }
-          40% {
-            transform: translateX(8px);
-          }
-          60% {
-            transform: translateX(-6px);
-          }
-          80% {
-            transform: translateX(6px);
-          }
-          100% {
-            transform: translateX(0);
-          }
-        }
-      `}</style>
     </div>
   );
 }
@@ -4020,10 +3949,7 @@ function LocationSection({
         </button>
       </div>
 
-      <div
-        className="space-y-3"
-        style={isShaking ? { animation: "location-shake 420ms ease-in-out" } : undefined}
-      >
+      <div className={cn("space-y-3", isShaking && "animate-section-shake")}>
         {addresses.length > 0 ? (
           addresses.map((location) => {
             const isHighlighted = highlightedLocationId === location.id;
@@ -4114,29 +4040,6 @@ function LocationSection({
           ? "Cadastrar novo endereço"
           : `Limite de ${MAX_LOCATION_ADDRESSES} endereços atingido`}
       </button>
-
-      <style jsx>{`
-        @keyframes location-shake {
-          0% {
-            transform: translateX(0);
-          }
-          20% {
-            transform: translateX(-8px);
-          }
-          40% {
-            transform: translateX(8px);
-          }
-          60% {
-            transform: translateX(-6px);
-          }
-          80% {
-            transform: translateX(6px);
-          }
-          100% {
-            transform: translateX(0);
-          }
-        }
-      `}</style>
     </div>
   );
 }
@@ -4510,10 +4413,9 @@ function DescriptionSection({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={cn(
-            "w-full min-h-40 rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm outline-none transition-all prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_li]:my-0.5",
+            "w-full min-h-40 rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm outline-none transition-all prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_li]:my-0.5 wrap-break-word",
             isFocused && "border-wine-700 ring-2 ring-wine-700 bg-white",
           )}
-          style={{ wordBreak: "break-word" }}
           role="textbox"
           aria-multiline="true"
           aria-labelledby={narrativeId}

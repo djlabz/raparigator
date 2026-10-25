@@ -36,7 +36,7 @@ function formatCardCvv(value: string) {
 }
 
 const fieldClassName =
-  "h-11 w-full rounded-xl border border-white/15 bg-[#1a1a1a] px-3 text-sm text-white placeholder:text-zinc-500 outline-none transition focus:border-[#FFDF00]/55 focus:ring-2 focus:ring-[#FFDF00]/15";
+  "h-11 w-full rounded-xl border border-white/15 bg-[#1a1a1a] px-3 text-sm text-white placeholder:text-zinc-500 outline-none transition focus:border-gold-bright/55 focus:ring-2 focus:ring-gold-bright/15";
 
 export function PremiumSubscriptionCheckoutScreen() {
   const router = useRouter();
@@ -94,11 +94,11 @@ export function PremiumSubscriptionCheckoutScreen() {
     return (
       <AppShell>
         <div className="mx-auto max-w-lg">
-          <div className="space-y-5 rounded-3xl border border-[#DAA520]/40 bg-[#121212] p-8 text-center">
-            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FFDF00]/15 premium-glow-pulse">
-              <Crown className="h-7 w-7 text-[#FFDF00]" aria-hidden="true" />
+          <div className="space-y-5 rounded-3xl border border-gold/40 bg-premium-surface p-8 text-center">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gold-bright/15 animate-glow-pulse">
+              <Crown className="h-7 w-7 text-gold-bright" aria-hidden="true" />
             </span>
-            <h1 className="font-display text-3xl font-semibold text-[#FFDF00]">
+            <h1 className="font-display text-3xl font-semibold text-gold-bright">
               Você já é Premium
             </h1>
             <p className="text-sm leading-relaxed text-zinc-400">
@@ -121,14 +121,14 @@ export function PremiumSubscriptionCheckoutScreen() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="rounded-3xl border border-[#DAA520]/40 bg-[#121212]"
+            className="rounded-3xl border border-gold/40 bg-premium-surface"
           >
-            <div className="border-b border-[#DAA520]/25 px-5 py-6 sm:px-7">
-              <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#DAA520]">
+            <div className="border-b border-gold/25 px-5 py-6 sm:px-7">
+              <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-gold">
                 <Crown className="h-3.5 w-3.5" aria-hidden="true" />
                 Sigillus Premium
               </p>
-              <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-[#FFDF00] sm:text-4xl">
+              <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-gold-bright sm:text-4xl">
                 Assinatura Premium
               </h1>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-400">
@@ -138,9 +138,7 @@ export function PremiumSubscriptionCheckoutScreen() {
 
             <div className="space-y-6 p-5 pb-7 sm:p-7">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#DAA520]">
-                  Ciclo
-                </p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold">Ciclo</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {planOptions.map((option) => {
                     const selected = billingCycle === option.cycle;
@@ -152,8 +150,8 @@ export function PremiumSubscriptionCheckoutScreen() {
                         className={cn(
                           "relative rounded-2xl border p-4 pt-5 text-left transition",
                           selected
-                            ? "border-[#FFDF00]/70 bg-[#1a1a1a] shadow-[0_0_0_1px_rgba(255,223,0,0.2)]"
-                            : "border-white/10 bg-transparent hover:border-[#DAA520]/45",
+                            ? "border-gold-bright/70 bg-[#1a1a1a] shadow-[0_0_0_1px_rgba(255,223,0,0.2)]"
+                            : "border-white/10 bg-transparent hover:border-gold/45",
                         )}
                       >
                         {option.badge ? (
@@ -161,8 +159,8 @@ export function PremiumSubscriptionCheckoutScreen() {
                             className={cn(
                               "absolute -top-2.5 right-3 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
                               selected
-                                ? "bg-[#FFDF00] text-[#121212]"
-                                : "bg-zinc-800 text-[#FFDF00]",
+                                ? "bg-gold-bright text-premium-surface"
+                                : "bg-zinc-800 text-gold-bright",
                             )}
                           >
                             {option.badge}
@@ -171,7 +169,7 @@ export function PremiumSubscriptionCheckoutScreen() {
                         <p
                           className={cn(
                             "text-sm font-semibold",
-                            selected ? "text-[#FFDF00]" : "text-zinc-300",
+                            selected ? "text-gold-bright" : "text-zinc-300",
                           )}
                         >
                           {option.label}
@@ -179,7 +177,7 @@ export function PremiumSubscriptionCheckoutScreen() {
                         <p
                           className={cn(
                             "mt-2 font-sans text-3xl font-semibold tabular-nums tracking-tight",
-                            selected ? "text-[#FFDF00]" : "text-white",
+                            selected ? "text-gold-bright" : "text-white",
                           )}
                         >
                           {currency(option.price)}
@@ -198,7 +196,7 @@ export function PremiumSubscriptionCheckoutScreen() {
               </div>
 
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#DAA520]">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold">
                   Pagamento
                 </p>
                 <div className="mt-3 grid grid-cols-2 gap-2">
@@ -208,8 +206,8 @@ export function PremiumSubscriptionCheckoutScreen() {
                     className={cn(
                       "flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-semibold transition",
                       paymentMethod === "pix"
-                        ? "border-[#FFDF00]/60 bg-[#FFDF00]/10 text-[#FFDF00]"
-                        : "border-white/10 text-zinc-400 hover:border-[#DAA520]/40 hover:text-zinc-200",
+                        ? "border-gold-bright/60 bg-gold-bright/10 text-gold-bright"
+                        : "border-white/10 text-zinc-400 hover:border-gold/40 hover:text-zinc-200",
                     )}
                   >
                     <PixIcon className="h-4 w-4" aria-hidden="true" />
@@ -221,8 +219,8 @@ export function PremiumSubscriptionCheckoutScreen() {
                     className={cn(
                       "flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-semibold transition",
                       paymentMethod === "card"
-                        ? "border-[#FFDF00]/60 bg-[#FFDF00]/10 text-[#FFDF00]"
-                        : "border-white/10 text-zinc-400 hover:border-[#DAA520]/40 hover:text-zinc-200",
+                        ? "border-gold-bright/60 bg-gold-bright/10 text-gold-bright"
+                        : "border-white/10 text-zinc-400 hover:border-gold/40 hover:text-zinc-200",
                     )}
                   >
                     <CreditCard className="h-4 w-4" aria-hidden="true" />
@@ -241,7 +239,7 @@ export function PremiumSubscriptionCheckoutScreen() {
                       className="overflow-hidden"
                     >
                       <div className="mt-4 space-y-3 rounded-2xl border border-white/10 bg-[#1a1a1a]/80 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-[#DAA520]">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-gold">
                           Dados do cartão
                         </p>
                         <div className="space-y-1.5">
@@ -371,12 +369,12 @@ export function PremiumSubscriptionCheckoutScreen() {
             transition={{ duration: 0.4, delay: 0.08, ease: "easeOut" }}
             className="space-y-4"
           >
-            <div className="rounded-3xl border border-[#DAA520]/40 bg-[#121212] p-5 sm:p-6">
-              <h2 className="font-display text-xl font-semibold text-[#FFDF00]">Resumo</h2>
+            <div className="rounded-3xl border border-gold/40 bg-premium-surface p-5 sm:p-6">
+              <h2 className="font-display text-xl font-semibold text-gold-bright">Resumo</h2>
               <div className="mt-4 space-y-3 text-sm">
                 <div className="flex items-center justify-between gap-3 text-zinc-300">
                   <span>Plano {selectedPlan.label}</span>
-                  <strong className="shrink-0 font-sans tabular-nums tracking-tight text-[#FFDF00]">
+                  <strong className="shrink-0 font-sans tabular-nums tracking-tight text-gold-bright">
                     {currency(selectedPlan.price)}
                   </strong>
                 </div>
@@ -387,19 +385,24 @@ export function PremiumSubscriptionCheckoutScreen() {
                 ) : null}
                 <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-3 text-base text-white">
                   <span>Total</span>
-                  <strong className="font-sans text-2xl font-semibold tabular-nums tracking-tight text-[#FFDF00]">
+                  <strong className="font-sans text-2xl font-semibold tabular-nums tracking-tight text-gold-bright">
                     {currency(selectedPlan.price)}
                   </strong>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-3xl border border-[#DAA520]/35 bg-[#121212] p-5 pb-7 sm:p-6 sm:pb-8">
-              <h2 className="font-display text-xl font-semibold text-[#FFDF00]">Ganho imediato</h2>
+            <div className="rounded-3xl border border-gold/35 bg-premium-surface p-5 pb-7 sm:p-6 sm:pb-8">
+              <h2 className="font-display text-xl font-semibold text-gold-bright">
+                Ganho imediato
+              </h2>
               <ul className="mt-4 space-y-4">
                 {gains.map((gain) => (
                   <li key={gain.id} className="flex items-start gap-3 text-sm leading-snug">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#FFDF00]" aria-hidden="true" />
+                    <Check
+                      className="mt-0.5 h-4 w-4 shrink-0 text-gold-bright"
+                      aria-hidden="true"
+                    />
                     <span className="min-w-0 wrap-break-word">
                       <span className="block font-medium text-white">{gain.label}</span>
                       <span className="mt-1 block text-xs leading-relaxed text-[#E8C547]">

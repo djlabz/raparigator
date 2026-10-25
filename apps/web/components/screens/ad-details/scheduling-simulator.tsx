@@ -96,14 +96,14 @@ export function SchedulingSimulator({
     <Card
       id={ENCOUNTER_SIMULATOR_ANCHOR}
       className={cn(
-        "relative space-y-5 overflow-hidden rounded-2xl border-y-zinc-200/80 border-r-zinc-200/80 border-l-4 border-l-[#96001e] bg-linear-to-br from-white to-zinc-50/40 p-5 shadow-md sm:p-6",
+        "relative space-y-5 overflow-hidden rounded-2xl border-y-zinc-200/80 border-r-zinc-200/80 border-l-4 border-l-wine-800 bg-linear-to-br from-white to-zinc-50/40 p-5 shadow-md sm:p-6",
         ENCOUNTER_SIMULATOR_SCROLL_MARGIN,
       )}
     >
       <div className="flex flex-col gap-3">
         <div className="flex flex-nowrap items-center justify-between gap-2">
           <h3 className="flex min-w-0 shrink items-center gap-2.5 font-display text-lg font-bold tracking-tight whitespace-nowrap text-zinc-900 sm:text-xl">
-            <Zap className="h-5 w-5 shrink-0 text-[#96001e]" /> Simulador de Encontro
+            <Zap className="h-5 w-5 shrink-0 text-wine-800" /> Simulador de Encontro
           </h3>
           <div className="mt-0.5 shrink-0">
             <span className="flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-1.5 text-xs font-bold tracking-widest text-emerald-800 uppercase sm:text-xs">
@@ -113,7 +113,7 @@ export function SchedulingSimulator({
           </div>
         </div>
         {ad.paymentMethods && ad.paymentMethods.length > 0 && (
-          <div className="pointer-events-none -mx-1 flex flex-nowrap items-center gap-x-2.5 overflow-x-auto px-1 touch-none select-none scrollbar-none sm:gap-x-3 [&::-webkit-scrollbar]:hidden">
+          <div className="pointer-events-none -mx-1 flex flex-nowrap items-center gap-x-2.5 overflow-x-auto px-1 touch-none select-none sm:gap-x-3">
             <span className="shrink-0 text-[11px] font-black uppercase tracking-widest text-zinc-900">
               Aceita:
             </span>
@@ -172,7 +172,7 @@ export function SchedulingSimulator({
               className={cn(
                 "group relative flex min-h-15.5 cursor-pointer flex-nowrap items-center justify-between rounded-2xl border px-4 py-3 text-left transition-all sm:min-h-16.5 sm:px-5 sm:py-3.5",
                 isSelected
-                  ? "border-[#96001e] bg-red-50/40 ring-1 ring-[#96001e]/30 shadow-sm"
+                  ? "border-wine-800 bg-red-50/40 ring-1 ring-wine-800/30 shadow-sm"
                   : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50/50",
               )}
             >
@@ -183,7 +183,7 @@ export function SchedulingSimulator({
                 <span
                   className={cn(
                     "mt-0.5 truncate text-sm font-semibold whitespace-nowrap sm:text-base",
-                    isSelected ? "font-bold text-[#96001e]" : "text-zinc-700",
+                    isSelected ? "font-bold text-wine-800" : "text-zinc-700",
                   )}
                 >
                   {plan.label}
@@ -192,7 +192,7 @@ export function SchedulingSimulator({
 
               <div className="flex shrink-0 flex-nowrap items-center gap-3">
                 {isSelected && (
-                  <span className="mr-1 animate-fade-in text-sm font-bold whitespace-nowrap text-zinc-900 sm:text-base">
+                  <span className="mr-1 text-sm font-bold whitespace-nowrap text-zinc-900 sm:text-base">
                     {currency(plan.price)}
                   </span>
                 )}
@@ -200,7 +200,7 @@ export function SchedulingSimulator({
                   className={cn(
                     "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all",
                     isSelected
-                      ? "border-[#96001e] bg-[#96001e] text-white"
+                      ? "border-wine-800 bg-wine-800 text-white"
                       : "border-zinc-200 bg-zinc-50/50",
                   )}
                 >
@@ -233,7 +233,7 @@ export function SchedulingSimulator({
                 className={cn(
                   "flex min-h-11.5 cursor-pointer items-center justify-between rounded-2xl border px-3 py-2.5 text-left transition-all sm:min-h-12.5 sm:px-4",
                   hasExtra
-                    ? "border-[#96001e] bg-red-50/40 ring-1 ring-[#96001e]/30 shadow-xs"
+                    ? "border-wine-800 bg-red-50/40 ring-1 ring-wine-800/30 shadow-xs"
                     : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50/50",
                 )}
               >
@@ -248,15 +248,15 @@ export function SchedulingSimulator({
 
                 <div className="flex shrink-0 items-center gap-3">
                   {hasExtra && (
-                    <span className="flex animate-fade-in items-center text-sm font-medium text-zinc-900">
-                      <span className="mr-1 font-bold text-[#96001e]">+</span> {currency(150)}
+                    <span className="flex items-center text-sm font-medium text-zinc-900">
+                      <span className="mr-1 font-bold text-wine-800">+</span> {currency(150)}
                     </span>
                   )}
                   <div
                     className={cn(
                       "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all",
                       hasExtra
-                        ? "border-[#96001e] bg-[#96001e] text-white"
+                        ? "border-wine-800 bg-wine-800 text-white"
                         : "border-zinc-200 bg-zinc-50/50",
                     )}
                   >
@@ -279,7 +279,7 @@ export function SchedulingSimulator({
             <div className="animate-slide-in flex items-center justify-between text-xs text-zinc-400">
               <span>Adicionais Personalizados ({selectedExtras.length})</span>
               <span className="flex items-center font-mono">
-                <span className="mr-1.5 font-bold text-[#96001e]">+</span>{" "}
+                <span className="mr-1.5 font-bold text-wine-800">+</span>{" "}
                 {currency(calculatedExtrasCost)}
               </span>
             </div>
@@ -316,13 +316,13 @@ export function SchedulingSimulator({
           <div className="flex items-center gap-2.5 w-full">
             <button
               onClick={() => setRiskTarget("WhatsApp")}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-800 font-bold text-[#25D366] shadow-sm ring-1 ring-white/5 transition-all duration-300 hover:scale-[1.02] hover:bg-zinc-700 active:scale-[0.98] h-11 px-2 text-sm focus-visible:outline-none"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-800 font-bold text-whatsapp shadow-sm ring-1 ring-white/5 transition-all duration-300 hover:scale-[1.02] hover:bg-zinc-700 active:scale-[0.98] h-11 px-2 text-sm focus-visible:outline-none"
             >
               <WhatsAppIcon className="h-4.5 w-4.5" /> WhatsApp
             </button>
             <button
               onClick={() => setRiskTarget("Telegram")}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-800 font-bold text-[#229ED9] shadow-sm ring-1 ring-white/5 transition-all duration-300 hover:scale-[1.02] hover:bg-zinc-700 active:scale-[0.98] h-11 px-2 text-sm focus-visible:outline-none"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-800 font-bold text-telegram shadow-sm ring-1 ring-white/5 transition-all duration-300 hover:scale-[1.02] hover:bg-zinc-700 active:scale-[0.98] h-11 px-2 text-sm focus-visible:outline-none"
             >
               <TelegramIcon className="h-4.5 w-4.5" /> Telegram
             </button>

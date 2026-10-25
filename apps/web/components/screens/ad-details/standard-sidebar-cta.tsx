@@ -55,13 +55,13 @@ export function StandardSidebarCta({ role, setRiskTarget, brief }: StandardSideb
             <div className="flex items-center gap-2 w-full">
               <button
                 onClick={() => setRiskTarget("WhatsApp")}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white h-12 text-sm font-bold text-[#25D366] transition-all hover:bg-zinc-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white h-12 text-sm font-bold text-whatsapp transition-all hover:bg-zinc-50"
               >
                 <WhatsAppIcon className="h-5 w-5" /> WhatsApp
               </button>
               <button
                 onClick={() => setRiskTarget("Telegram")}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white h-12 text-sm font-bold text-[#229ED9] transition-all hover:bg-zinc-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white h-12 text-sm font-bold text-telegram transition-all hover:bg-zinc-50"
               >
                 <TelegramIcon className="h-5 w-5" /> Telegram
               </button>

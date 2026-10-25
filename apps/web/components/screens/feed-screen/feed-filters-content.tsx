@@ -195,11 +195,11 @@ export function FeedFiltersContent({
               />
               <span className="flex items-center gap-2 text-sm font-medium text-zinc-700">
                 {type === "Premium" ? (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] px-2.5 py-0.5 shadow-sm">
-                    <span className="text-[9px] text-[#FFDF00] drop-shadow-[0_0_3px_rgba(255,223,0,0.8)]">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-gold/70 bg-linear-to-br from-premium-border to-[#0a0a0a] px-2.5 py-0.5 shadow-sm">
+                    <span className="text-[9px] text-gold-bright drop-shadow-[0_0_3px_rgba(255,223,0,0.8)]">
                       ★
                     </span>
-                    <span className="bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-[9px] font-extrabold uppercase tracking-widest text-transparent drop-shadow-[0_0.5px_0.5px_rgba(0,0,0,0.8)]">
+                    <span className="bg-linear-to-r from-gold-gradient-start via-gold-gradient-mid to-gold-gradient-end bg-clip-text text-[9px] font-extrabold uppercase tracking-widest text-transparent drop-shadow-[0_0.5px_0.5px_rgba(0,0,0,0.8)]">
                       Premium
                     </span>
                   </span>

@@ -104,7 +104,7 @@ export function Modal({
       className={cn(
         "fixed inset-0 z-220 flex bg-zinc-900/50 px-3 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] touch-none sm:px-4 sm:items-center sm:justify-center",
         mobileCentered ? "items-center" : "items-end",
-        "animate-[modal-overlay-in_200ms_ease-out_forwards]",
+        "animate-modal-overlay-in",
       )}
       role="dialog"
       aria-modal="true"
@@ -114,7 +114,7 @@ export function Modal({
           "flex w-full flex-col overflow-hidden rounded-3xl bg-white p-4 shadow-xl sm:rounded-2xl sm:p-5",
           mobileCentered ? "max-h-[min(92dvh,48rem)]" : "max-h-[min(94dvh,48rem)]",
           size === "md" ? "sm:max-w-2xl" : "sm:max-w-md",
-          "animate-[modal-content-in_300ms_ease-out_forwards]",
+          "animate-modal-content-in",
         )}
         style={{
           maxHeight: mobileCentered
@@ -175,7 +175,7 @@ export function Modal({
           <div
             ref={scrollRef}
             data-testid="modal-scroll"
-            className="modal-scroll min-h-0 flex-1 overflow-y-auto px-0.5 pr-1 overscroll-contain touch-pan-y pb-4 sm:px-1"
+            className="min-h-0 flex-1 overflow-y-auto px-0.5 pr-1 overscroll-contain touch-pan-y pb-4 sm:px-1"
           >
             {children}
           </div>
@@ -208,37 +208,6 @@ export function Modal({
         ) : null}
       </div>
       <button aria-label="Fechar modal" className="absolute inset-0 -z-10" onClick={onClose} />
-      <style jsx>{`
-        @keyframes modal-overlay-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        @keyframes modal-content-in {
-          from {
-            opacity: 0;
-            transform: translateY(1rem);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .modal-scroll {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-
-        .modal-scroll::-webkit-scrollbar {
-          width: 0;
-          height: 0;
-          display: none;
-        }
-      `}</style>
     </div>,
     document.body,
   );

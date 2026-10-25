@@ -16,7 +16,6 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { ChromeScrim } from "@/components/layout/chrome-scrim";
 import { chromeControlsRow, chromePill, chromeSafeTop } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
-import styles from "./onboarding-screen.module.css";
 
 export function OnboardingScreen() {
   const { role, user, isLoggedIn, logout } = useAuthSession();
@@ -74,13 +73,13 @@ export function OnboardingScreen() {
 
   return (
     <div className="relative w-full overflow-x-clip bg-white">
-      <section className={`relative w-full flex flex-col ${styles.hero}`}>
+      <section className="relative w-full flex flex-col min-h-svh lg:min-h-[max(34rem,42vw)] xl:min-h-[max(41rem,42vw)]">
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/hero/homepage-main-photo-2.webp"
             alt="Sigillus Premium Background"
             fill
-            className={`object-cover ${styles.heroImage}`}
+            className="object-cover object-[50%_18%]"
             priority
             sizes="100vw"
             unoptimized
@@ -113,7 +112,7 @@ export function OnboardingScreen() {
                   href="/auth/cadastro"
                   className={cn(
                     chromePill,
-                    "border-white/40 bg-white px-5 text-sm font-extrabold tracking-tight text-[#800020] hover:bg-zinc-100",
+                    "border-white/40 bg-white px-5 text-sm font-extrabold tracking-tight text-wine-800 hover:bg-zinc-100",
                   )}
                 >
                   Cadastrar
@@ -123,9 +122,7 @@ export function OnboardingScreen() {
           </div>
         </header>
 
-        <div
-          className={`relative z-10 box-border max-w-384 mx-auto px-6 md:px-12 w-full flex-1 flex flex-col lg:flex-row lg:items-center lg:justify-between ${styles.heroContent}`}
-        >
+        <div className="relative z-10 box-border max-w-384 mx-auto px-6 md:px-12 w-full flex-1 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 pt-20 pb-14 lg:pt-18 lg:pb-7 xl:gap-12 xl:pb-12">
           <div className="mx-auto w-full max-w-xl text-white lg:mx-0 lg:min-w-0 lg:flex-1 xl:max-w-2xl">
             <h1 className="text-balance text-center text-[1.75rem] font-extrabold leading-tight tracking-tight drop-shadow-md sm:text-4xl lg:text-left lg:text-5xl xl:text-6xl">
               Nem todo luxo <br className="hidden lg:block" />
@@ -133,9 +130,7 @@ export function OnboardingScreen() {
             </h1>
           </div>
 
-          <div
-            className={`relative mx-auto mt-auto w-full lg:mt-0 lg:mr-0 lg:ml-auto lg:min-w-0 ${styles.cardWrapper}`}
-          >
+          <div className="relative mx-auto mt-auto w-full lg:mt-0 lg:mr-0 lg:ml-auto lg:min-w-0 max-w-[27.5rem] lg:max-w-[24.5rem] xl:max-w-[27.5rem]">
             {shouldShowScrollButton && (
               <button
                 type="button"
@@ -210,7 +205,7 @@ export function OnboardingScreen() {
                         setShowSuggestions(true);
                       }}
                       onFocus={() => setShowSuggestions(true)}
-                      className="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 pl-9 py-2 text-sm outline-none transition-all placeholder:text-zinc-400 focus:border-[#800020] focus:ring-1 focus:ring-[#800020]"
+                      className="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 pl-9 py-2 text-sm outline-none transition-all placeholder:text-zinc-400 focus:border-wine-800 focus:ring-1 focus:ring-wine-800"
                       autoComplete="off"
                     />
                   </div>
@@ -277,7 +272,7 @@ export function OnboardingScreen() {
                 <Button
                   fullWidth
                   size="lg"
-                  className="rounded-lg bg-[#800020] py-3 text-base text-white shadow-lg hover:bg-[#600018] md:py-6"
+                  className="rounded-lg py-3 text-base text-white shadow-lg md:py-6"
                 >
                   Entrar no feed
                 </Button>

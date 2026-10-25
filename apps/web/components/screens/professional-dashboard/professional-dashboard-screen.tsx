@@ -245,12 +245,7 @@ export function ProfessionalDashboardScreen() {
             </div>
           )}
 
-          <div
-            className={cn(
-              "mb-2 -mx-1 flex gap-2 overflow-x-auto overscroll-x-contain touch-pan-x px-1 py-2 lg:hidden",
-              "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
-            )}
-          >
+          <div className="mb-2 -mx-1 flex gap-2 overflow-x-auto overscroll-x-contain touch-pan-x px-1 py-2 lg:hidden">
             {TABS.map((tab) => (
               <button
                 key={tab.id}

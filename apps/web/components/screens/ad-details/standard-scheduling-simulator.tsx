@@ -113,7 +113,7 @@ export function StandardSchedulingSimulator({
           </div>
         </div>
         {ad.paymentMethods && ad.paymentMethods.length > 0 && (
-          <div className="flex flex-nowrap items-center gap-x-2.5 overflow-x-auto sm:gap-x-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex flex-nowrap items-center gap-x-2.5 overflow-x-auto sm:gap-x-3">
             <span className="shrink-0 text-[11px] font-black uppercase tracking-widest text-zinc-900">
               Aceita:
             </span>
@@ -190,7 +190,7 @@ export function StandardSchedulingSimulator({
 
               <div className="flex shrink-0 items-center gap-3">
                 {isSelected && (
-                  <span className="mr-1 animate-fade-in text-sm font-bold text-zinc-900 sm:text-base">
+                  <span className="mr-1 text-sm font-bold text-zinc-900 sm:text-base">
                     {currency(plan.price)}
                   </span>
                 )}
@@ -246,7 +246,7 @@ export function StandardSchedulingSimulator({
 
                 <div className="flex shrink-0 items-center gap-3">
                   {hasExtra && (
-                    <span className="flex animate-fade-in items-center text-sm font-medium text-zinc-900">
+                    <span className="flex items-center text-sm font-medium text-zinc-900">
                       <span className="mr-1 font-bold text-wine-700">+</span> {currency(150)}
                     </span>
                   )}
@@ -314,13 +314,13 @@ export function StandardSchedulingSimulator({
           <div className="flex items-center gap-2.5 w-full">
             <button
               onClick={() => setRiskTarget("WhatsApp")}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white font-bold text-[#25D366] shadow-sm transition-all duration-300 hover:scale-[1.02] hover:bg-zinc-50 active:scale-[0.98] h-11 px-2 text-sm focus-visible:outline-none"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white font-bold text-whatsapp shadow-sm transition-all duration-300 hover:scale-[1.02] hover:bg-zinc-50 active:scale-[0.98] h-11 px-2 text-sm focus-visible:outline-none"
             >
               <WhatsAppIcon className="h-4.5 w-4.5" /> WhatsApp
             </button>
             <button
               onClick={() => setRiskTarget("Telegram")}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white font-bold text-[#229ED9] shadow-sm transition-all duration-300 hover:scale-[1.02] hover:bg-zinc-50 active:scale-[0.98] h-11 px-2 text-sm focus-visible:outline-none"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white font-bold text-telegram shadow-sm transition-all duration-300 hover:scale-[1.02] hover:bg-zinc-50 active:scale-[0.98] h-11 px-2 text-sm focus-visible:outline-none"
             >
               <TelegramIcon className="h-4.5 w-4.5" /> Telegram
             </button>

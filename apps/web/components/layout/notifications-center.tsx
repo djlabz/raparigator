@@ -103,7 +103,7 @@ export function NotificationsCenter({
         onClick={onClose}
         aria-label="Fechar painel de notificações"
       />
-      <aside className="fixed right-0 top-0 z-[70] flex h-screen w-full max-w-sm flex-col overflow-hidden border-l border-zinc-200 bg-white shadow-2xl shadow-zinc-900/20 animate-in slide-in-from-right duration-300">
+      <aside className="fixed right-0 top-0 z-[70] flex h-screen w-full max-w-sm flex-col overflow-hidden border-l border-zinc-200 bg-white shadow-2xl shadow-zinc-900/20">
         <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
