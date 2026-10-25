@@ -20,15 +20,15 @@ Divisão mantida como o Daniel pediu. F-05 é o primeiro da trilha pelo peso jur
 
 ## Ordem da trilha B
 
-| Ordem | PR                                                                   | Status |
-| ----- | -------------------------------------------------------------------- | ------ |
-| B1    | F-05 moderação e suspensão (depois do F-02 da A)                     |        |
-| B2    | F-04 chamadas sem sessão                                             |        |
-| B3    | F-10 seed com mídia real no MinIO                                    |        |
-| B4    | F-15 anúncio premium × standard                                      |        |
-| B5    | F-19 quebras de arquivo grande (passos 19.1 a 19.10)                 |        |
-| B6    | F-21 exclusão de conta transacional                                  |        |
-| B7    | F-17 cadastro profissional: CPF (17a) e cadastro compartilhado (17b) |        |
+| Ordem | PR                                                                   | Status                     |
+| ----- | -------------------------------------------------------------------- | -------------------------- |
+| B1    | F-05 moderação e suspensão (depois do F-02 da A)                     | em andamento (#107, 25/10) |
+| B2    | F-04 chamadas sem sessão                                             |                            |
+| B3    | F-10 seed com mídia real no MinIO                                    |                            |
+| B4    | F-15 anúncio premium × standard                                      |                            |
+| B5    | F-19 quebras de arquivo grande (passos 19.1 a 19.10)                 |                            |
+| B6    | F-21 exclusão de conta transacional                                  |                            |
+| B7    | F-17 cadastro profissional: CPF (17a) e cadastro compartilhado (17b) |                            |
 
 A ordem dentro da trilha pode mudar pela regra 1 do protocolo (pular para o próximo liberado): F-21 só depende do F-07 (A) e F-17a de nada além do F-02, então os dois servem de "tampão" quando um PR da A bloqueia o próximo desta lista.
 
