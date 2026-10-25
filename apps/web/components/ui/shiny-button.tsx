@@ -40,7 +40,7 @@ export function ShinyButton({
     >
       <span
         className={cn(
-          "inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#121212] font-semibold text-[#FFDF00]",
+          "inline-flex w-full items-center justify-center gap-2 rounded-full bg-premium-surface font-semibold text-gold-bright",
           size === "sm" ? "px-4 py-2 text-xs" : "px-6 py-3 text-sm",
         )}
       >

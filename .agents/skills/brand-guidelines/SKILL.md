@@ -29,20 +29,20 @@ Use esta skill para acessar a identidade visual oficial do Sigillus (projeto Rap
 **Neutros:**
 
 - Foreground: `#121217` — texto principal
-- Background: `#ffffff` — fundo padrão
+- Background: `#fafafa` — fundo padrão (`--background` em `app/globals.css`)
 - Escala `zinc` do Tailwind — textos secundários, bordas e fundos neutros
 
 **Acentos premium (dourado — usados em anúncios/planos premium):**
 
-- Gold: `#DAA520` — bordas, selos e detalhes premium
-- Gold Bright: `#FFDF00` — títulos e ícones premium sobre fundo escuro
-- Gradiente ouro: `#BF953F` → `#FCF6BA` → `#B38728` — textos com `bg-clip-text` em selos premium
-- Fundo premium: `#121212` com bordas `#2a2a2a` — superfícies escuras de contexto premium
+- Gold: `#DAA520` (`gold`) — bordas, selos e detalhes premium
+- Gold Bright: `#FFDF00` (`gold-bright`) — títulos e ícones premium sobre fundo escuro
+- Gradiente ouro: `#BF953F` → `#FCF6BA` → `#B38728` (`gold-gradient-start`, `gold-gradient-mid`, `gold-gradient-end`) — textos com `bg-clip-text` em selos premium
+- Fundo premium: `#121212` (`premium-surface`) com bordas `#2a2a2a` (`premium-border`) — superfícies escuras de contexto premium
 
 **Cores de apoio:**
 
-- WhatsApp: `#25D366` · Telegram: `#229ED9` — exclusivas de botões de contato
-- Sucesso: `#10b981` — confirmações e feedback positivo
+- WhatsApp: `#25D366` (`whatsapp`) · Telegram: `#229ED9` (`telegram`) — exclusivas de botões de contato
+- Sucesso: `#10b981` (`success`) — confirmações e feedback positivo
 
 ### Tipografia
 

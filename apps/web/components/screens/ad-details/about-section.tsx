@@ -12,12 +12,12 @@ export function AboutSection({ ad }: AboutSectionProps) {
   return (
     <Card className="relative space-y-5 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm">
       <div className="pointer-events-none absolute top-0 right-0 p-5">
-        <Sparkles className="h-28 w-28 text-[#DAA520]/10" strokeWidth={2} />
+        <Sparkles className="h-28 w-28 text-gold/10" strokeWidth={2} />
       </div>
 
       <div className="space-y-3">
         <div className="flex items-center gap-1.5">
-          <span className="rounded-md border border-red-100/60 bg-red-50 px-2.5 py-1 text-xs font-bold tracking-[0.2em] text-[#96001e] uppercase">
+          <span className="rounded-md border border-red-100/60 bg-red-50 px-2.5 py-1 text-xs font-bold tracking-[0.2em] text-wine-800 uppercase">
             Sobre a Profissional
           </span>
           <div className="hidden h-1 rounded-full bg-zinc-100 sm:block lg:grow" />
@@ -27,7 +27,7 @@ export function AboutSection({ ad }: AboutSectionProps) {
           Perfil Premium com discrição absoluta
         </h3>
 
-        <blockquote className="border-l-4 border-[#96001e] py-1 pl-4 font-serif text-sm leading-relaxed text-zinc-600 italic sm:text-base">
+        <blockquote className="border-l-4 border-wine-800 py-1 pl-4 font-serif text-sm leading-relaxed text-zinc-600 italic sm:text-base">
           &ldquo;{ad.shortDescription}&rdquo;
         </blockquote>
       </div>

@@ -151,7 +151,7 @@ export function PhotoLightbox({
 
   return (
     <div
-      className="fixed inset-0 z-9999 flex flex-col items-center justify-center bg-zinc-950/98 p-4 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-9999 flex flex-col items-center justify-center bg-zinc-950/98 p-4 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
       aria-label="Galeria de fotos"
@@ -200,7 +200,7 @@ export function PhotoLightbox({
       </div>
 
       <div className="absolute bottom-6 left-0 right-0 flex w-full justify-center px-4">
-        <div className="flex max-w-full items-center justify-start gap-3 overflow-x-auto p-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:justify-center [&::-webkit-scrollbar]:hidden">
+        <div className="flex max-w-full items-center justify-start gap-3 overflow-x-auto p-2 sm:justify-center">
           {images.map((img, idx) => (
             <button
               key={img}

@@ -94,7 +94,7 @@ export function MobileContactFab({ ad, setRiskTarget, brief }: MobileContactFabP
                   type="button"
                   onClick={openChatWithBrief}
                   aria-label="Abrir chat direto"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#96001e] text-white shadow-lg ring-1 ring-white/20"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-wine-800 text-white shadow-lg ring-1 ring-white/20"
                 >
                   <MessageSquare className="h-4 w-4 fill-white text-white" />
                 </button>
@@ -151,7 +151,7 @@ export function MobileContactFab({ ad, setRiskTarget, brief }: MobileContactFabP
               referrerPolicy="no-referrer"
             />
           </div>
-          <div className="absolute right-[14.6%] bottom-[14.6%] z-20 flex h-6 w-6 translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full bg-[#96001e] ring-2 ring-white">
+          <div className="absolute right-[14.6%] bottom-[14.6%] z-20 flex h-6 w-6 translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full bg-wine-800 ring-2 ring-white">
             {isOpen ? (
               <X className="h-3.5 w-3.5 text-white" />
             ) : (

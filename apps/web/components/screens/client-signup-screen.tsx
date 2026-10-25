@@ -305,7 +305,7 @@ export function ClientSignupScreen() {
 
             <form className="space-y-6" onSubmit={(event) => event.preventDefault()}>
               {step === 1 && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="space-y-4">
                   <div className="mb-4 space-y-1">
                     <h2 className="text-xl font-bold tracking-tight text-zinc-900">
                       Dados Iniciais
@@ -323,7 +323,7 @@ export function ClientSignupScreen() {
                     onChange={handleCpfChange}
                     maxLength={14}
                     error={cpfError}
-                    className={shakeStep === 1 && cpfError ? "field-shake" : undefined}
+                    className={shakeStep === 1 && cpfError ? "animate-field-shake" : undefined}
                     premium
                     leadingIcon={
                       <svg
@@ -349,7 +349,7 @@ export function ClientSignupScreen() {
                     value={fullName}
                     onChange={(event) => setFullName(event.target.value)}
                     error={fullNameError}
-                    className={shakeStep === 1 && fullNameError ? "field-shake" : undefined}
+                    className={shakeStep === 1 && fullNameError ? "animate-field-shake" : undefined}
                     premium
                     leadingIcon={
                       <svg
@@ -418,7 +418,7 @@ export function ClientSignupScreen() {
               )}
 
               {step === 2 && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="space-y-4">
                   <div className="mb-4 space-y-1">
                     <h2 className="text-xl font-bold tracking-tight text-zinc-900">
                       Credenciais de Acesso
@@ -436,7 +436,7 @@ export function ClientSignupScreen() {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     error={emailError}
-                    className={shakeStep === 2 && emailError ? "field-shake" : undefined}
+                    className={shakeStep === 2 && emailError ? "animate-field-shake" : undefined}
                     premium
                     leadingIcon={
                       <svg
@@ -462,7 +462,9 @@ export function ClientSignupScreen() {
                     value={confirmEmail}
                     onChange={(event) => setConfirmEmail(event.target.value)}
                     error={confirmEmailError}
-                    className={shakeStep === 2 && confirmEmailError ? "field-shake" : undefined}
+                    className={
+                      shakeStep === 2 && confirmEmailError ? "animate-field-shake" : undefined
+                    }
                     premium
                     leadingIcon={
                       <svg
@@ -488,7 +490,7 @@ export function ClientSignupScreen() {
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     error={passwordError}
-                    className={shakeStep === 2 && passwordError ? "field-shake" : undefined}
+                    className={shakeStep === 2 && passwordError ? "animate-field-shake" : undefined}
                     premium
                     leadingIcon={
                       <svg
@@ -514,7 +516,9 @@ export function ClientSignupScreen() {
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}
                     error={confirmPasswordError}
-                    className={shakeStep === 2 && confirmPasswordError ? "field-shake" : undefined}
+                    className={
+                      shakeStep === 2 && confirmPasswordError ? "animate-field-shake" : undefined
+                    }
                     premium
                     leadingIcon={
                       <svg
@@ -570,7 +574,7 @@ export function ClientSignupScreen() {
               )}
 
               {step === 3 && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="space-y-4">
                   <div className="mb-4 space-y-1">
                     <h2 className="text-xl font-bold tracking-tight text-zinc-900">
                       Revisão Final

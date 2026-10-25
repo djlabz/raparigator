@@ -24,15 +24,15 @@ export function PremiumEntryBanner({ variant, onClick, className }: PremiumEntry
       type="button"
       onClick={onClick}
       className={cn(
-        "w-full rounded-xl border border-[#DAA520]/40 bg-[#121212] p-5 text-left transition hover:border-[#FFDF00]/60",
+        "w-full rounded-xl border border-gold/40 bg-premium-surface p-5 text-left transition hover:border-gold-bright/60",
         className,
       )}
     >
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#DAA520]/35 bg-[#FFDF00]/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#FFDF00]">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/35 bg-gold-bright/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-gold-bright">
         <Crown className="h-3 w-3" aria-hidden="true" />
         Sigillus Premium
       </span>
-      <p className="mt-3 font-display text-lg font-semibold text-[#FFDF00]">
+      <p className="mt-3 font-display text-lg font-semibold text-gold-bright">
         {isSidebar ? "Seu anúncio pode ir mais longe" : "Onde o destaque é privilégio."}
       </p>
       <p className="mt-1 text-sm leading-relaxed text-zinc-400">
@@ -47,7 +47,7 @@ export function PremiumEntryBanner({ variant, onClick, className }: PremiumEntry
           <li>Mídias de visualização única no chat</li>
         </ul>
       ) : null}
-      <span className="mt-4 inline-flex text-xs font-bold uppercase tracking-widest text-[#DAA520]">
+      <span className="mt-4 inline-flex text-xs font-bold uppercase tracking-widest text-gold">
         {isSidebar ? "Ver o que muda →" : "Ver benefícios →"}
       </span>
     </button>
