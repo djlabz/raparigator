@@ -2,6 +2,7 @@ import { and, count, desc, eq, gte, ilike, inArray, or, sql } from "drizzle-orm"
 import { ORPCError } from "@orpc/server";
 import {
   PROFILE_REVIEW_REQUIRED_MESSAGE,
+  PROFILE_REVIEWABLE_STATUS,
   canReview,
   isInformativeHash,
   transitionOnReview,
@@ -193,6 +194,17 @@ export function createAdminService(deps: AdminServiceDeps) {
       throw new ORPCError("CONFLICT", { message: PROFILE_REVIEW_REQUIRED_MESSAGE });
     }
     return row;
+  }
+
+  async function decideReview(
+    row: ProfileRow,
+    values: Partial<typeof professionalProfiles.$inferInsert>,
+  ): Promise<ProfileRow> {
+    const updated = await profiles.updateIfStatus(row.id, PROFILE_REVIEWABLE_STATUS, values);
+    if (!updated) {
+      throw new ORPCError("CONFLICT", { message: PROFILE_REVIEW_REQUIRED_MESSAGE });
+    }
+    return updated;
   }
 
   async function setUserStatus(
@@ -531,7 +543,7 @@ export function createAdminService(deps: AdminServiceDeps) {
     ): Promise<AdminReviewAction> {
       const row = await requireReviewableProfile(input.id);
       const now = new Date();
-      await profiles.update(row.id, {
+      const updated = await decideReview(row, {
         verificationStatus: transitionOnReview("approve"),
         rejectionReason: null,
         reviewedAt: now,
@@ -547,7 +559,7 @@ export function createAdminService(deps: AdminServiceDeps) {
         key: `profile-approved:${row.id}:${now.getTime()}`,
         title: "Anúncio aprovado",
         message:
-          row.listingStatus === "Ativo"
+          updated.listingStatus === "Ativo"
             ? "Seu anúncio foi aprovado e já está publicado."
             : "Seu anúncio foi aprovado, mas está pausado. Ative-o no painel para publicá-lo.",
         href: PROFESSIONAL_ADS_HREF,
@@ -568,7 +580,7 @@ export function createAdminService(deps: AdminServiceDeps) {
     ): Promise<AdminReviewAction> {
       const row = await requireReviewableProfile(input.id);
       const now = new Date();
-      await profiles.update(row.id, {
+      await decideReview(row, {
         verificationStatus: transitionOnReview("reject"),
         rejectionReason: input.reason,
         reviewedAt: now,

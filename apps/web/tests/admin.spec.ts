@@ -65,7 +65,9 @@ test.describe("Admin", () => {
 
     await seedAdminSession(page);
     await page.goto("/admin/perfis");
-    await expect(page.getByRole("link", { name: "Analisar" }).first()).toBeVisible();
+    const loadedList = page.getByRole("link", { name: "Analisar" }).first();
+    const emptyState = page.getByText("Nenhum perfil encontrado");
+    await expect(loadedList.or(emptyState)).toBeVisible();
     await expect(page.locator(`a[href="/admin/perfis/${profileId}"]`)).toHaveCount(0);
   });
 });

@@ -20,15 +20,15 @@ Divisão mantida como o Daniel pediu. F-05 é o primeiro da trilha pelo peso jur
 
 ## Ordem da trilha B
 
-| Ordem | PR                                                                   | Status                     |
-| ----- | -------------------------------------------------------------------- | -------------------------- |
-| B1    | F-05 moderação e suspensão (depois do F-02 da A)                     | em andamento (#107, 25/10) |
-| B2    | F-04 chamadas sem sessão                                             |                            |
-| B3    | F-10 seed com mídia real no MinIO                                    |                            |
-| B4    | F-15 anúncio premium × standard                                      |                            |
-| B5    | F-19 quebras de arquivo grande (passos 19.1 a 19.10)                 |                            |
-| B6    | F-21 exclusão de conta transacional                                  |                            |
-| B7    | F-17 cadastro profissional: CPF (17a) e cadastro compartilhado (17b) |                            |
+| Ordem | PR                                                                   | Status         |
+| ----- | -------------------------------------------------------------------- | -------------- |
+| B1    | F-05 moderação e suspensão (depois do F-02 da A)                     | [x] #107 25/10 |
+| B2    | F-04 chamadas sem sessão                                             |                |
+| B3    | F-10 seed com mídia real no MinIO                                    |                |
+| B4    | F-15 anúncio premium × standard                                      |                |
+| B5    | F-19 quebras de arquivo grande (passos 19.1 a 19.10)                 |                |
+| B6    | F-21 exclusão de conta transacional                                  |                |
+| B7    | F-17 cadastro profissional: CPF (17a) e cadastro compartilhado (17b) |                |
 
 A ordem dentro da trilha pode mudar pela regra 1 do protocolo (pular para o próximo liberado): F-21 só depende do F-07 (A) e F-17a de nada além do F-02, então os dois servem de "tampão" quando um PR da A bloqueia o próximo desta lista.
 
@@ -129,4 +129,4 @@ Dois PRs: `fix/F-17a-cadastro-profissional-cpf` (pequeno, primeiro) e `refactor/
 
 Formato: data, PR de origem, arquivo:linha, achado e proposta. Consolidados no inventário pelo F-22.
 
-- 25/10/2026, prova de isolamento da sessão B (antes do B1), `apps/web/playwright.config.ts:5,66` e `apps/api/package.json:7` (`dev:api`): a porta do web vem só de `process.env.PORT`, e a API lê a sua porta da mesma variável `PORT`; o `--env-file-if-exists=.env` do Node não sobrescreve variável já presente no ambiente, então `PORT=3101 npm run test:e2e` faz a API spawnada pelo `webServer` tentar subir em 3101 (colide com o web). Contorno usado: subir a API antes, num shell sem `PORT`, e deixar o `reuseExistingServer` reaproveitá-la. Proposta (arquivo da trilha A, não editado aqui): o `webServer` da API fixar `PORT` no `env` a partir de `new URL(apiUrl).port`, ou o web ler uma variável própria (`WEB_PORT`). Baixa; prova: `PORT=3101 NEXT_PUBLIC_API_URL=http://localhost:4002 npm run test:e2e` sem API no ar sobe a API em 4002.
+- 25/10/2026, prova de isolamento da sessão B (antes do B1), `apps/web/playwright.config.ts:5,66` e `apps/api/package.json:7` (`dev:api`): a porta do web vem só de `process.env.PORT`, e a API lê a sua porta da mesma variável `PORT`; o `--env-file-if-exists=.env` do Node não sobrescreve variável já presente no ambiente, então `PORT=3101 npm run test:e2e` faz a API spawnada pelo `webServer` tentar subir em 3101 (colide com o web). Contorno usado: subir a API antes, num shell sem `PORT` e com `apps/api/.env` definindo `PORT=4002` (sem esse `.env` ela sobe em 4000, e aí a prova usa `NEXT_PUBLIC_API_URL=http://localhost:4000`), e deixar o `reuseExistingServer` reaproveitá-la. Proposta (arquivo da trilha A, não editado aqui): o `webServer` da API fixar `PORT` no `env` a partir de `new URL(apiUrl).port`, ou o web ler uma variável própria (`WEB_PORT`). Baixa; prova: `PORT=3101 NEXT_PUBLIC_API_URL=http://localhost:4002 npm run test:e2e` sem API no ar sobe a API em 4002.

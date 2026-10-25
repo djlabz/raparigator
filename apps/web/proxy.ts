@@ -6,10 +6,15 @@ const ADMIN_LOGIN_PATH = "/admin/login";
 const USER_LOGIN_PATH = "/auth/login";
 const PROFESSIONAL_AREA_PATH = "/profissional";
 const PROFESSIONAL_ROLE = "profissional";
+const SUSPENDED_STATUS = "suspended";
 const NON_PROFESSIONAL_HOME = "/feed";
 const EARNINGS_SIMULATOR_PATH = "/profissional/simulador";
 
-type ApiSession = { user?: { role?: unknown } };
+type ApiSession = { user?: { role?: unknown; status?: unknown } };
+
+function canUseProfessionalArea(session: ApiSession): boolean {
+  return session.user?.role === PROFESSIONAL_ROLE && session.user.status !== SUSPENDED_STATUS;
+}
 
 async function getApiSession(request: NextRequest, path: string): Promise<ApiSession | null> {
   const cookie = request.headers.get("cookie");
@@ -65,7 +70,7 @@ export async function proxy(request: NextRequest) {
   if (!session) {
     return redirectToLogin(request, USER_LOGIN_PATH);
   }
-  if (pathname.startsWith(PROFESSIONAL_AREA_PATH) && session.user?.role !== PROFESSIONAL_ROLE) {
+  if (pathname.startsWith(PROFESSIONAL_AREA_PATH) && !canUseProfessionalArea(session)) {
     return redirectTo(request, NON_PROFESSIONAL_HOME);
   }
   return NextResponse.next();

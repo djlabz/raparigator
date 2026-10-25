@@ -9,11 +9,13 @@ export type ProfilePublishTransition = {
 
 export const PROFILE_INITIAL_STATUS: VerificationStatus = "draft";
 
+export const PROFILE_REVIEWABLE_STATUS: VerificationStatus = "pending_review";
+
 export const PROFILE_REVIEW_REQUIRED_MESSAGE =
   "Só é possível decidir um anúncio que está em análise.";
 
 export function canReview(status: VerificationStatus): boolean {
-  return status === "pending_review";
+  return status === PROFILE_REVIEWABLE_STATUS;
 }
 
 export function transitionOnPublish(status: VerificationStatus): ProfilePublishTransition {

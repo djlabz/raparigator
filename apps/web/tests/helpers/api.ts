@@ -3,7 +3,7 @@ import { createApiClient, type ApiClient } from "@/lib/api/client";
 
 export const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001";
 
-const disposablePassword = "Descartavel@123";
+export const disposablePassword = "Descartavel@123";
 
 type SessionCookie = { name: string; value: string };
 

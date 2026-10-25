@@ -221,6 +221,21 @@ export function createProfileRepository(db: Database, storage: ObjectStorage) {
       return row ?? null;
     },
 
+    async updateIfStatus(
+      id: string,
+      status: ProfileRow["verificationStatus"],
+      values: Partial<typeof professionalProfiles.$inferInsert>,
+    ) {
+      const [row] = await db
+        .update(professionalProfiles)
+        .set({ ...values, updatedAt: new Date() })
+        .where(
+          and(eq(professionalProfiles.id, id), eq(professionalProfiles.verificationStatus, status)),
+        )
+        .returning();
+      return row ?? null;
+    },
+
     async insert(values: typeof professionalProfiles.$inferInsert) {
       const [row] = await db.insert(professionalProfiles).values(values).returning();
       return row!;
