@@ -44,6 +44,16 @@ import type { PremiumService } from "../premium/service";
 
 export type AdminActor = { id: string; name: string; email: string };
 
+function approvalMessage(profile: ProfileRow): string {
+  if (profile.isSuspended) {
+    return "Seu anúncio foi aprovado, mas a conta está suspensa e ele não aparece no feed.";
+  }
+  if (profile.listingStatus !== "Ativo") {
+    return "Seu anúncio foi aprovado, mas está pausado. Ative-o no painel para publicá-lo.";
+  }
+  return "Seu anúncio foi aprovado e já está publicado.";
+}
+
 export type AdminNotification = { key: string; title: string; message: string; href: string };
 
 type AdminNotify = (userId: string, notification: AdminNotification) => Promise<void>;
@@ -216,6 +226,26 @@ export function createAdminService(deps: AdminServiceDeps) {
       .update(users)
       .set({ status, suspensionReason, updatedAt: new Date() })
       .where(eq(users.id, userId));
+  }
+
+  async function setProfessionalSuspension(row: ProfileRow, suspensionReason: string | null) {
+    const isSuspended = suspensionReason !== null;
+    const now = new Date();
+    await db.transaction(async (tx) => {
+      await tx
+        .select({ id: professionalProfiles.id })
+        .from(professionalProfiles)
+        .where(eq(professionalProfiles.id, row.id))
+        .for("update");
+      await tx
+        .update(professionalProfiles)
+        .set({ isSuspended, suspensionReason, updatedAt: now })
+        .where(eq(professionalProfiles.id, row.id));
+      await tx
+        .update(users)
+        .set({ status: isSuspended ? "suspended" : "active", suspensionReason, updatedAt: now })
+        .where(eq(users.id, row.userId));
+    });
   }
 
   async function requireProfile(id: string): Promise<ProfileRow> {
@@ -558,10 +588,7 @@ export function createAdminService(deps: AdminServiceDeps) {
       await notifyProfileOwner(row.userId, {
         key: `profile-approved:${row.id}:${now.getTime()}`,
         title: "Anúncio aprovado",
-        message:
-          updated.listingStatus === "Ativo"
-            ? "Seu anúncio foi aprovado e já está publicado."
-            : "Seu anúncio foi aprovado, mas está pausado. Ative-o no painel para publicá-lo.",
+        message: approvalMessage(updated),
         href: PROFESSIONAL_ADS_HREF,
       });
       logger.info({ adminId: admin.id, profileId: row.id }, "perfil aprovado");
@@ -610,8 +637,7 @@ export function createAdminService(deps: AdminServiceDeps) {
 
     async suspendProfessional(admin: AdminActor, input: { id: string; reason: string }) {
       const row = await requireProfile(input.id);
-      await profiles.update(row.id, { isSuspended: true, suspensionReason: input.reason });
-      await setUserStatus(row.userId, "suspended", input.reason);
+      await setProfessionalSuspension(row, input.reason);
       await invalidateUserSessions(row.userId);
       await logActivity({
         action: "account_suspended",
@@ -626,8 +652,7 @@ export function createAdminService(deps: AdminServiceDeps) {
 
     async reinstateProfessional(admin: AdminActor, input: { id: string }) {
       const row = await requireProfile(input.id);
-      await profiles.update(row.id, { isSuspended: false, suspensionReason: null });
-      await setUserStatus(row.userId, "active", null);
+      await setProfessionalSuspension(row, null);
       await logActivity({
         action: "account_reinstated",
         targetName: profileLabel(row),

@@ -529,6 +529,21 @@ describe("admin / moderação só decide perfil em análise (F-05)", () => {
 });
 
 describe("admin / suspensão de profissional bloqueia a conta (F-05)", () => {
+  it("aprovar perfil de conta suspensa não diz que está publicado", async () => {
+    const { rpc, notified } = setup();
+    const cookie = await adminCookie();
+    const pro = await createProfessional("suspensa-pend@teste.dev", "Suspensa Pendente");
+    await rpc("admin/suspendProfessional", { id: pro.profile.id, reason: "Denúncias" }, cookie);
+    const result = await rpc<{ action: string }>(
+      "admin/approveProfile",
+      { id: pro.profile.id },
+      cookie,
+    );
+    expect(result.status).toBe(200);
+    expect(notified[0]?.notification.message).not.toContain("publicado");
+    expect(notified[0]?.notification.message).toContain("suspensa");
+  });
+
   it("suspensa não usa a API mesmo entrando de novo; reativar libera", async () => {
     const { rpc } = setup();
     const cookie = await adminCookie();
