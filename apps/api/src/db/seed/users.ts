@@ -24,7 +24,7 @@ export const DEV_USERS: SeedUser[] = [
     email: "cliente@sigillus.dev",
     password: "Cliente@123",
     phone: "(11) 99999-8888",
-    cpf: "123.456.789-00",
+    cpf: "123.456.789-09",
     alias: "Cliente",
     city: "São Paulo, SP",
   },
