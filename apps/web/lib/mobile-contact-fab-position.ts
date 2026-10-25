@@ -4,7 +4,7 @@ const SIDE_STORAGE_KEY = "sigillus-mobile-contact-fab-side-v2";
 const Y_STORAGE_KEY = "sigillus-mobile-contact-fab-y-v2";
 
 export const MOBILE_CONTACT_FAB_SIZE = 56;
-export const MOBILE_CONTACT_FAB_BOTTOM_OFFSET = 69;
+const MOBILE_CONTACT_FAB_BOTTOM_OFFSET = 69;
 export const MOBILE_CONTACT_FAB_EDGE_INSET = 16;
 export const MOBILE_CONTACT_FAB_DRAG_THRESHOLD = 8;
 export const MOBILE_CONTACT_FAB_SCROLL_THRESHOLD = 450;

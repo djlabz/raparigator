@@ -6,9 +6,9 @@ import { ProjectionSection } from "./projection-section";
 import { ScenariosSection } from "./scenarios-section";
 import { useEarningsSimulator } from "./use-earnings-simulator";
 
-export const EARNINGS_NO_PAYMENT_TEXT =
+const EARNINGS_NO_PAYMENT_TEXT =
   "100% do valor do seu atendimento é seu. A plataforma não participa de nenhum pagamento.";
-export const EARNINGS_DISCLAIMER_TEXT = "Simulação. Não representa garantia de renda.";
+const EARNINGS_DISCLAIMER_TEXT = "Simulação. Não representa garantia de renda.";
 
 export function EarningsSimulator({ initialGoal }: { initialGoal?: EarningsGoal }) {
   const state = useEarningsSimulator(initialGoal);

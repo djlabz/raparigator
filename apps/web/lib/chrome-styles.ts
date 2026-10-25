@@ -1,6 +1,4 @@
-export const chromeGlassDarkSurface = "bg-zinc-950/50 backdrop-blur-xl backdrop-saturate-150";
-
-export const chromeGlass = "sticky top-0 z-30 bg-white/45 backdrop-blur-xl backdrop-saturate-150";
+const chromeGlassDarkSurface = "bg-zinc-950/50 backdrop-blur-xl backdrop-saturate-150";
 
 export const chromeGlassDark = `sticky top-0 z-30 ${chromeGlassDarkSurface}`;
 
@@ -20,7 +18,7 @@ export const chromeScrimBlurDark =
 
 export const chromeControlsRow = "pointer-events-auto relative z-20 overflow-visible";
 
-export const chromePillBase =
+const chromePillBase =
   "inline-flex h-10 shrink-0 items-center rounded-full border border-transparent shadow-[0_2px_10px_rgba(15,23,42,0.08)] transition";
 
 export const chromePill = `${chromePillBase} border-zinc-200/80 bg-white hover:bg-white`;

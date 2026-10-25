@@ -40,7 +40,7 @@ export type AdminActor = { id: string; name: string; email: string };
 
 export type AdminNotification = { key: string; title: string; message: string; href: string };
 
-export type AdminNotify = (userId: string, notification: AdminNotification) => Promise<void>;
+type AdminNotify = (userId: string, notification: AdminNotification) => Promise<void>;
 
 export type AdminServiceDeps = {
   db: Database;
@@ -50,8 +50,6 @@ export type AdminServiceDeps = {
   notify?: AdminNotify;
   premium?: PremiumService;
 };
-
-export type AdminService = ReturnType<typeof createAdminService>;
 
 type ActivityRow = typeof adminActivityLogs.$inferSelect;
 type UserRow = typeof users.$inferSelect;
@@ -63,7 +61,7 @@ const RECENT_ACTIVITY_LIMIT = 8;
 const PROFESSIONAL_ADS_HREF = "/profissional/anuncios";
 const REMOVED_MEDIA_MESSAGE = "Mídia retirada após análise de denúncia.";
 
-export function splitCityState(value: string | null): { city: string; state: string } {
+function splitCityState(value: string | null): { city: string; state: string } {
   if (!value) {
     return { city: "", state: "" };
   }
@@ -77,7 +75,7 @@ export function splitCityState(value: string | null): { city: string; state: str
   };
 }
 
-export function maskEmail(email: string): string {
+function maskEmail(email: string): string {
   return `${email.slice(0, 8)}***`;
 }
 

@@ -9,8 +9,6 @@ export type IdentityVerificationListRow = IdentityVerificationRow & {
   profileSlug: string | null;
 };
 
-export type IdentityRepository = ReturnType<typeof createIdentityRepository>;
-
 export function createIdentityRepository(db: Database) {
   return {
     async insert(values: IdentityVerificationInsert): Promise<IdentityVerificationRow> {

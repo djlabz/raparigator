@@ -15,7 +15,7 @@ import type {
   AnnouncementMediaSourceOffset,
 } from "@/lib/announcement-media-types";
 
-export function hasOperationInHistory(
+function hasOperationInHistory(
   currentSrc: string,
   historyMap: AnnouncementMediaHistoryMap,
   operation: AnnouncementMediaOperationKind,
@@ -25,7 +25,7 @@ export function hasOperationInHistory(
   );
 }
 
-export function getMediaHistoryChain(currentSrc: string, historyMap: AnnouncementMediaHistoryMap) {
+function getMediaHistoryChain(currentSrc: string, historyMap: AnnouncementMediaHistoryMap) {
   const chain: AnnouncementMediaHistoryItem[] = [];
   let cursor = currentSrc;
 
@@ -41,7 +41,7 @@ export function getMediaHistoryChain(currentSrc: string, historyMap: Announcemen
   return chain.reverse();
 }
 
-export function getCurrentMediaOffset(
+function getCurrentMediaOffset(
   currentSrc: string,
   historyMap: AnnouncementMediaHistoryMap,
 ): AnnouncementMediaSourceOffset {
@@ -60,7 +60,7 @@ export function getCurrentMediaOffset(
   };
 }
 
-export function translateAreaToSource(
+function translateAreaToSource(
   area: AnnouncementMediaArea,
   sourceOffset: AnnouncementMediaSourceOffset,
 ) {
@@ -72,7 +72,7 @@ export function translateAreaToSource(
   };
 }
 
-export function loadImageElement(src: string) {
+function loadImageElement(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new window.Image();
     image.crossOrigin = "anonymous";
@@ -82,7 +82,7 @@ export function loadImageElement(src: string) {
   });
 }
 
-export function canvasToObjectUrl(canvas: HTMLCanvasElement) {
+function canvasToObjectUrl(canvas: HTMLCanvasElement) {
   return new Promise<string>((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
@@ -99,7 +99,7 @@ export function canvasToObjectUrl(canvas: HTMLCanvasElement) {
   });
 }
 
-export async function applyBlurEntry(
+async function applyBlurEntry(
   sourceSrc: string,
   entry: AnnouncementMediaHistoryEntry,
   sourceOffset: AnnouncementMediaSourceOffset,
@@ -173,7 +173,7 @@ export async function applyBlurEntry(
   return canvasToObjectUrl(canvas);
 }
 
-export async function rebuildMediaChainAfterUndo(
+async function rebuildMediaChainAfterUndo(
   currentSrc: string,
   historyMap: AnnouncementMediaHistoryMap,
   operation: AnnouncementMediaOperationKind,
@@ -331,7 +331,7 @@ export function isPlanLimitError(error: unknown): boolean {
   return (error as { code?: string }).code === "PLAN_LIMIT";
 }
 
-export async function pollMediaUntilReady(
+async function pollMediaUntilReady(
   assetId: string,
   maxAttempts = 30,
   pollIntervalMs = 400,

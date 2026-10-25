@@ -1,6 +1,6 @@
 import type { PremiumBillingCycle } from "@sigillus/contracts";
 
-export type CheckoutRequest = {
+type CheckoutRequest = {
   subscriptionId: string;
   userId: string;
   email: string;
@@ -9,7 +9,7 @@ export type CheckoutRequest = {
   currency: "BRL";
 };
 
-export type CheckoutResult = {
+type CheckoutResult = {
   providerRef: string;
   checkoutUrl: string | null;
 };

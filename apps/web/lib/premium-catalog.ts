@@ -6,12 +6,12 @@ import { PREMIUM_PLAN_OPTIONS, getBillingSavingsPercent, getPlanOption } from "@
 import { getApiClient } from "@/lib/api/client";
 
 export type { PremiumPlanOption };
-export { PREMIUM_PLAN_OPTIONS, getBillingSavingsPercent, getPlanOption };
+export { getBillingSavingsPercent, getPlanOption };
 
 let cachedApiPlans: PremiumPlanOption[] | null = null;
 let apiPlansPromise: Promise<PremiumPlanOption[]> | null = null;
 
-export async function fetchPremiumPlans(): Promise<PremiumPlanOption[]> {
+async function fetchPremiumPlans(): Promise<PremiumPlanOption[]> {
   if (cachedApiPlans) {
     return cachedApiPlans;
   }
@@ -33,7 +33,7 @@ export async function fetchPremiumPlans(): Promise<PremiumPlanOption[]> {
   return apiPlansPromise;
 }
 
-export function getCachedPremiumPlans(): PremiumPlanOption[] {
+function getCachedPremiumPlans(): PremiumPlanOption[] {
   if (cachedApiPlans) {
     return cachedApiPlans;
   }

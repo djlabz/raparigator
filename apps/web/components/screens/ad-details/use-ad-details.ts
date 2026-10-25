@@ -9,7 +9,7 @@ import {
 } from "@/lib/encounter-brief";
 import type { EncounterBrief, ProfessionalAd, SimulationSelection } from "@/lib/types";
 
-export interface BentoItem {
+interface BentoItem {
   type: "image" | "info";
   src: string;
   originalIndex: number;

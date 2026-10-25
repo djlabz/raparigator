@@ -9,7 +9,7 @@ function baseUrl() {
 
 const cookieCache = new Map<string, Array<{ name: string; value: string; url: string }>>();
 
-export async function loginViaApi(
+async function loginViaApi(
   page: Page,
   user: { email: string; password: string },
   apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001",
@@ -52,7 +52,7 @@ export async function loginViaApi(
   await page.context().addCookies(cookiesToStore);
 }
 
-export async function loginAdminViaApi(
+async function loginAdminViaApi(
   page: Page,
   admin = credentials.admin,
   apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001",

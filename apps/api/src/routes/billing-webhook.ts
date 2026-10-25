@@ -14,7 +14,7 @@ export type BillingWebhookRouteDeps = {
   logger: Logger;
 };
 
-export const BILLING_WEBHOOK_PATH = "/api/billing/webhook";
+const BILLING_WEBHOOK_PATH = "/api/billing/webhook";
 
 function parseBody(rawBody: string): unknown {
   try {

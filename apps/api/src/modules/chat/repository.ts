@@ -11,12 +11,12 @@ import {
 } from "../../db/schema";
 import { newId } from "../../lib/ids";
 
-export type ConversationRow = typeof conversations.$inferSelect;
+type ConversationRow = typeof conversations.$inferSelect;
 export type ParticipantRow = typeof conversationParticipants.$inferSelect;
 export type MessageRow = typeof messages.$inferSelect;
 export type MessageInsert = typeof messages.$inferInsert;
 
-export type ConversationProfile = {
+type ConversationProfile = {
   id: string;
   slug: string;
   artisticName: string;
@@ -26,7 +26,7 @@ export type ConversationProfile = {
   services: string[];
 };
 
-export type ConversationUser = { id: string; alias: string | null; deleted: boolean };
+type ConversationUser = { id: string; alias: string | null; deleted: boolean };
 
 export type ConversationContext = {
   conversation: ConversationRow;
@@ -71,8 +71,6 @@ const mediaColumns = {
   fileName: mediaAssets.fileName,
   storageKey: mediaAssets.storageKey,
 };
-
-export type ChatRepository = ReturnType<typeof createChatRepository>;
 
 export function createChatRepository(db: Database) {
   function contextQuery() {

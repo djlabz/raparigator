@@ -100,9 +100,3 @@ export async function fetchUpdateParticipantAlias(
 export async function fetchMarkConversationRead(conversationId: string): Promise<void> {
   await getApiClient().chat.markRead({ conversationId });
 }
-
-export async function fetchOpenViewOnce(
-  messageId: string,
-): Promise<{ openedAt: string; url: string | null }> {
-  return getApiClient().chat.openViewOnce({ messageId });
-}

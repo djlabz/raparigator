@@ -46,9 +46,7 @@ export type ChatServiceDeps = {
   heartbeatMs?: number;
 };
 
-export type ChatService = ReturnType<typeof createChatService>;
-
-export const CHAT_HEARTBEAT_MS = 25_000;
+const CHAT_HEARTBEAT_MS = 25_000;
 
 type SendPreparation = {
   ctx: ConversationContext;

@@ -86,7 +86,6 @@ export function ShareProfileModal({
         aria-modal="true"
       >
         <div className="share-modal-premium-open relative w-full max-w-sm overflow-hidden rounded-3xl border border-[#DAA520]/50 bg-[#121212] p-1 shadow-2xl transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)]">
-          {/* Background effects */}
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,223,0,0.05)_0%,transparent_40%,rgba(218,165,32,0.05)_100%)]" />
 
           <div className="flex items-center justify-between p-5 pb-3">
@@ -101,7 +100,6 @@ export function ShareProfileModal({
             </button>
           </div>
 
-          {/* Premium Preview */}
           <div className="relative mx-5 mb-5 overflow-hidden rounded-2xl">
             <Image
               src={adCover}
@@ -136,7 +134,6 @@ export function ShareProfileModal({
             </div>
           </div>
 
-          {/* Premium Actions */}
           <div className="mt-2 flex justify-center gap-6 px-5 pb-6">
             <div className="flex flex-col items-center gap-2">
               <button
@@ -179,7 +176,6 @@ export function ShareProfileModal({
             </div>
           </div>
 
-          {/* Inline Toast Premium */}
           <div
             className={cn(
               "absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-[#10b981]/20 px-4 py-2 text-sm font-medium text-[#10b981] backdrop-blur-md transition-all duration-300",
@@ -196,13 +192,12 @@ export function ShareProfileModal({
     );
   }
 
-  // Standard Variante
   return (
     <Modal
       open={open}
       onClose={onClose}
       title="Compartilhar Perfil"
-      actions={null} // Sem ações padrão na base
+      actions={null}
       mobileCentered={true}
     >
       <div className="relative mb-6 overflow-hidden rounded-2xl">
@@ -275,7 +270,6 @@ export function ShareProfileModal({
         </div>
       </div>
 
-      {/* Inline Toast Standard */}
       <div
         className={cn(
           "absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-300",

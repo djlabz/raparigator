@@ -6,8 +6,6 @@ export type ReportRow = typeof reports.$inferSelect;
 export type ReportInsert = typeof reports.$inferInsert;
 export type ReportEvidenceRow = typeof reportEvidence.$inferSelect;
 
-export type ReportsRepository = ReturnType<typeof createReportsRepository>;
-
 export function createReportsRepository(db: Database) {
   return {
     async insert(values: ReportInsert): Promise<ReportRow> {

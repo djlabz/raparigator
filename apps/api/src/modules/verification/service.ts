@@ -14,8 +14,8 @@ import { newId } from "../../lib/ids";
 import type { Logger } from "../../lib/logger";
 import type { Mailer } from "../../lib/mail";
 
-export const VERIFICATION_CODE_TTL_MS = 10 * 60 * 1000;
-export const VERIFICATION_MAX_ATTEMPTS = 5;
+const VERIFICATION_CODE_TTL_MS = 10 * 60 * 1000;
+const VERIFICATION_MAX_ATTEMPTS = 5;
 
 export interface VerificationNotifier {
   sendCode(channel: VerificationChannel, target: string, code: string): Promise<void>;
@@ -28,8 +28,6 @@ export type VerificationServiceDeps = {
   notifier?: VerificationNotifier;
   mailer?: Mailer;
 };
-
-export type VerificationService = ReturnType<typeof createVerificationService>;
 
 export type VerificationUser = { id: string; email: string; phone: string | null };
 
@@ -86,7 +84,7 @@ function toPublicChannelState(
   };
 }
 
-export function createLoggingVerificationNotifier(logger: Logger): VerificationNotifier {
+function createLoggingVerificationNotifier(logger: Logger): VerificationNotifier {
   return {
     async sendCode(channel) {
       logger.info({ channel }, "código de verificação enviado");
@@ -94,10 +92,7 @@ export function createLoggingVerificationNotifier(logger: Logger): VerificationN
   };
 }
 
-export function createEmailVerificationNotifier(
-  mailer: Mailer,
-  logger: Logger,
-): VerificationNotifier {
+function createEmailVerificationNotifier(mailer: Mailer, logger: Logger): VerificationNotifier {
   return {
     async sendCode(channel, target, code) {
       if (channel === "email") {

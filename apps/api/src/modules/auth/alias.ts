@@ -4,7 +4,7 @@ import { and, ne, sql } from "drizzle-orm";
 import type { Database } from "../../db/client";
 import { users } from "../../db/schema";
 
-export const CLIENT_ALIAS_MAX_ATTEMPTS = 20;
+const CLIENT_ALIAS_MAX_ATTEMPTS = 20;
 
 export function normalizeAlias(value: unknown): string | null {
   if (typeof value !== "string") {

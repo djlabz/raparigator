@@ -26,12 +26,12 @@ import {
 } from "./repository";
 
 export const IDENTITY_FILES_RETENTION_DAYS = 30;
-export const IDENTITY_FILE_URL_TTL_SECONDS = 120;
+const IDENTITY_FILE_URL_TTL_SECONDS = 120;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const FILE_NAME = /^[0-9a-f-]{36}\.(jpg|png|webp)$/;
 
-export const IDENTITY_REQUIRED_MESSAGES = {
+const IDENTITY_REQUIRED_MESSAGES = {
   missing:
     "Para publicar o anúncio, envie um documento com foto e uma selfie na verificação de identidade.",
   pending:
@@ -52,13 +52,11 @@ export type IdentityServiceDeps = {
 
 export type IdentityReviewer = { id: string; email: string };
 
-export type IdentityService = ReturnType<typeof createIdentityService>;
-
 export function identityUserPrefix(userId: string): string {
   return `${PRIVATE_STORAGE_PREFIX}identity/${userId}/`;
 }
 
-export function identityFileKey(userId: string, contentType: string): string {
+function identityFileKey(userId: string, contentType: string): string {
   return `${identityUserPrefix(userId)}${newId()}.${extensionFor(contentType)}`;
 }
 

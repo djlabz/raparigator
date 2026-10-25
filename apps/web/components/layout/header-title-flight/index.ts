@@ -29,11 +29,7 @@ export {
   publishDashboardTitleFlightFlags,
   publishFeedTitleFlightFlags,
 } from "./registry";
-export {
-  isDashboardTitleFlightPath,
-  isFeedTitleFlightPath,
-  resolveTitleFlightSurfaceId,
-} from "./resolve-surface";
+export { isFeedTitleFlightPath, resolveTitleFlightSurfaceId } from "./resolve-surface";
 export {
   DEFAULT_DASHBOARD_TITLE_FLIGHT_FLAGS,
   DEFAULT_FEED_TITLE_FLIGHT_FLAGS,
@@ -52,7 +48,6 @@ export {
   useDashboardTitleFlightMotion,
   useFeedTitleFlightFlags,
   useFeedTitleFlightMotion,
-  useTitleFlightSurfaceId,
   type ActiveTitleFlightSurface,
 } from "./use-title-flight-surface";
 export { writeFlightFromReveal, type TitleFlightMotionChannels } from "./write-flight";

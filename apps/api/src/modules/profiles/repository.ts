@@ -16,7 +16,7 @@ import { resolveProfileImages, type ProfileImages, type ProfileRow } from "./map
 
 export type ProfileRepository = ReturnType<typeof createProfileRepository>;
 
-export const VISIBLE_PROFILE = and(
+const VISIBLE_PROFILE = and(
   eq(professionalProfiles.verificationStatus, "published"),
   eq(professionalProfiles.listingStatus, "Ativo"),
   eq(professionalProfiles.isSuspended, false),
@@ -33,7 +33,7 @@ function anyServiceCondition(terms: string[]): SQL {
   return sql`exists (select 1 from unnest(${professionalProfiles.services}) as s where ${anyTermCondition(sql`s`, terms)})`;
 }
 
-export function buildFeedConditions(criteria: FeedFiltersCriteria): SQL[] {
+function buildFeedConditions(criteria: FeedFiltersCriteria): SQL[] {
   const conditions: SQL[] = [];
   if (criteria.selectedCity !== "all") {
     conditions.push(eq(professionalProfiles.city, criteria.selectedCity));

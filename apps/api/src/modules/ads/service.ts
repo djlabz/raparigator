@@ -5,8 +5,6 @@ import { mediaHighlights } from "../../db/schema";
 import { toFeedAdSummary, toProfessionalAd } from "../profiles/mapper";
 import type { ProfileRepository } from "../profiles/repository";
 
-export type AdsService = ReturnType<typeof createAdsService>;
-
 export function createAdsService(db: Database, profiles: ProfileRepository) {
   return {
     async getBySlug(slug: string): Promise<ProfessionalAd | null> {

@@ -18,7 +18,7 @@ export type ReducedSubscriptionState = {
   cancelAtPeriodEnd: boolean;
 };
 
-export const INITIAL_SUBSCRIPTION_STATE: ReducedSubscriptionState = {
+const INITIAL_SUBSCRIPTION_STATE: ReducedSubscriptionState = {
   status: "none",
   currentPeriodStart: null,
   currentPeriodEnd: null,

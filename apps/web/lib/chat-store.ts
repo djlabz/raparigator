@@ -125,7 +125,7 @@ function handleChatEvent(event: ChatEvent) {
   }
 }
 
-export function startChatEventStream() {
+function startChatEventStream() {
   if (typeof window === "undefined" || sseActive) {
     return;
   }

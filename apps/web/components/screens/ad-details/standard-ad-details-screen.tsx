@@ -86,8 +86,6 @@ export function StandardAdDetailsScreen({ slug }: StandardAdDetailsScreenProps) 
         ? getTelegramChatUrl(ad.artisticName, ad.slug, ad.telegramUsername, brief)
         : null,
     );
-    // O Telegram descarta o `?text=` de links diretos, então a mensagem vai pela
-    // área de transferência e o aviso do modal explica que basta colar.
     const copied = await copyToClipboard(getExternalContactText(ad.artisticName, ad.slug, brief));
     setExternalTextCopied(copied);
   };

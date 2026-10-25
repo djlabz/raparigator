@@ -14,7 +14,6 @@ import {
   type DashboardTitleFlightMotion,
   type FeedTitleFlightFlags,
   type FeedTitleFlightMotion,
-  type TitleFlightSurfaceId,
 } from "./surface-types";
 
 export function useFeedTitleFlightFlags(): FeedTitleFlightFlags {
@@ -77,8 +76,4 @@ export function useActiveTitleFlightSurface(pathname: string): ActiveTitleFlight
   }
 
   return null;
-}
-
-export function useTitleFlightSurfaceId(pathname: string): TitleFlightSurfaceId | null {
-  return resolveTitleFlightSurfaceId(pathname);
 }

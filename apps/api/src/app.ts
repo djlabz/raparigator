@@ -144,5 +144,3 @@ export function createApp(deps: AppDeps) {
 
   return app;
 }
-
-export type App = ReturnType<typeof createApp>;

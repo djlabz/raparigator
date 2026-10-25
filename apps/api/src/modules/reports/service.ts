@@ -47,11 +47,11 @@ export type ChatReportInput = {
 
 export type ReportsService = ReturnType<typeof createReportsService>;
 
-export function reportEvidenceKey(reportId: string, evidenceId: string, contentType: string) {
+function reportEvidenceKey(reportId: string, evidenceId: string, contentType: string) {
   return `${PRIVATE_STORAGE_PREFIX}reports/${reportId}/${evidenceId}.${extensionFor(contentType)}`;
 }
 
-export function slugFromAdUrl(targetUrl: string): string | null {
+function slugFromAdUrl(targetUrl: string): string | null {
   try {
     const { pathname } = new URL(targetUrl);
     return AD_PATH.exec(pathname)?.[1] ?? null;

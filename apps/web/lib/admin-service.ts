@@ -2,13 +2,13 @@ import type {
   AdminReviewAction,
   DashboardStats,
   GlobalSearchResult,
-  MockClient,
   ProfessionalAd,
   Report,
   ReportStatus,
   VerificationStatus,
 } from "@/lib/types";
 import type {
+  ClientAccount,
   ReportAction,
   ReportContact,
   ReportEvidence,
@@ -20,11 +20,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   return getApiClient().admin.dashboard();
 }
 
-export async function getActivityLog() {
-  return getApiClient().admin.activity({ page: 1, pageSize: 50 });
-}
-
-export async function getClients(status?: "active" | "suspended"): Promise<MockClient[]> {
+export async function getClients(status?: "active" | "suspended"): Promise<ClientAccount[]> {
   return getApiClient().admin.clients({ status });
 }
 

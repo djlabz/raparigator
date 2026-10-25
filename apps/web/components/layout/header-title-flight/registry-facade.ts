@@ -13,7 +13,6 @@ export {
   useDashboardTitleFlightMotion,
   useFeedTitleFlightFlags,
   useFeedTitleFlightMotion,
-  useTitleFlightSurfaceId,
   type ActiveTitleFlightSurface,
 } from "./use-title-flight-surface";
 export {
@@ -26,9 +25,5 @@ export {
   type TitleFlightMode,
   type TitleFlightSurfaceId,
 } from "./surface-types";
-export {
-  isDashboardTitleFlightPath,
-  isFeedTitleFlightPath,
-  resolveTitleFlightSurfaceId,
-} from "./resolve-surface";
+export { isFeedTitleFlightPath, resolveTitleFlightSurfaceId } from "./resolve-surface";
 export { HeaderTitleFlightRoot } from "./header-title-flight-root";

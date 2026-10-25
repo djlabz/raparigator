@@ -36,16 +36,9 @@ import { getApiClient } from "@/lib/api/client";
 export {
   OPTIMIZE_SECTION_ORDER,
   SECTION_LABELS,
-  buildInitialState,
-  buildSectionSnapshots,
-  calculateProfileScore,
-  generateSmartTips,
   getPublishValidationErrors,
   isHairSelectionComplete,
-  isSectionReadyForOptimization,
   isSelectUnselected,
-  sanitizeNumericInput,
-  serializeAnnouncementDraft,
 } from "@sigillus/domain";
 
 const SAVED_STATUS_RESET_MS = 2000;
@@ -309,15 +302,15 @@ export function useAnnouncementDraft(
           return;
         }
         case "pricing": {
-          const parsed = JSON.parse(savedSectionSnapshots.pricing) as
-            | AnnouncementPricingItem[]
-            | { pricing: AnnouncementPricingItem[]; paymentMethods?: string[] };
-          const isLegacy = Array.isArray(parsed);
+          const parsed = JSON.parse(savedSectionSnapshots.pricing) as {
+            pricing: AnnouncementPricingItem[];
+            paymentMethods?: string[];
+          };
           updateForm((current) => ({
             ...current,
-            pricing: isLegacy ? parsed : parsed.pricing,
+            pricing: parsed.pricing,
             paymentMethods:
-              isLegacy || !parsed.paymentMethods || parsed.paymentMethods.length === 0
+              !parsed.paymentMethods || parsed.paymentMethods.length === 0
                 ? ["dinheiro"]
                 : parsed.paymentMethods,
           }));
@@ -460,5 +453,3 @@ export function useAnnouncementDraft(
       isSectionReadyForOptimization(form, section),
   };
 }
-
-export type UseAnnouncementDraftReturn = ReturnType<typeof useAnnouncementDraft>;

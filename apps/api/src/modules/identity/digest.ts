@@ -6,7 +6,7 @@ import type { Mailer } from "../../lib/mail";
 import { createIdentityRepository } from "./repository";
 
 export const ADMIN_IDENTITY_DIGEST_JOB = "admin.identity-digest";
-export const ADMIN_IDENTITY_DIGEST_WINDOW_SECONDS = 3600;
+const ADMIN_IDENTITY_DIGEST_WINDOW_SECONDS = 3600;
 
 export type AdminIdentityDigestDeps = {
   db: Database;
@@ -24,7 +24,7 @@ export async function enqueueAdminIdentityDigest(jobs: JobQueue, now: Date = new
   );
 }
 
-export function buildAdminIdentityDigestEmail(count: number, webOrigin: string) {
+function buildAdminIdentityDigestEmail(count: number, webOrigin: string) {
   const subject =
     count === 1
       ? "1 verificação de identidade nova para analisar"

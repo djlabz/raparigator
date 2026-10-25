@@ -15,7 +15,7 @@ function isPublicKey(key: string): boolean {
   return key.startsWith(PUBLIC_STORAGE_PREFIX);
 }
 
-export type PresignedUpload = {
+type PresignedUpload = {
   url: string;
   method: "PUT";
   headers: Record<string, string>;

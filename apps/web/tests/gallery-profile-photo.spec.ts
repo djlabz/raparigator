@@ -21,11 +21,14 @@ test.describe("Galeria — foto de perfil", () => {
     await page.getByTestId("set-role-profile").click();
 
     const saveCrop = page.getByRole("button", { name: "Salvar" });
-    try {
-      await saveCrop.waitFor({ state: "visible", timeout: 3000 });
+    const cropOpenedForNon34Image = await saveCrop
+      .waitFor({ state: "visible", timeout: 3000 })
+      .then(
+        () => true,
+        () => false,
+      );
+    if (cropOpenedForNon34Image) {
       await saveCrop.click();
-    } catch {
-      // imagem já próxima de 3:4 — define o papel sem abrir o crop
     }
 
     await expect(page.getByText("Foto de Perfil").first()).toBeVisible({ timeout: 10000 });

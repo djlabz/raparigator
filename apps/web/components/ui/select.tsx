@@ -94,7 +94,6 @@ export function Select({
       0,
       visibleOptions.findIndex((option) => option.value === currentValue),
     );
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveIndex(selectedIndex);
   }, [currentValue, isOpen, visibleOptions]);
 
@@ -135,7 +134,6 @@ export function Select({
 
   useLayoutEffect(() => {
     if (!isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFloatingStyle(null);
       return;
     }

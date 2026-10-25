@@ -17,15 +17,6 @@ export function getConversationAd(conversation: Conversation | null): Profession
   return null;
 }
 
-export async function fetchConversationAd(
-  conversation: Conversation | null,
-): Promise<ProfessionalAd | null> {
-  if (!conversation || !conversation.adSlug) {
-    return null;
-  }
-  return fetchAdBySlug(conversation.adSlug);
-}
-
 export function useConversationAd(conversation: Conversation | null): ProfessionalAd | null {
   const [ad, setAd] = useState<ProfessionalAd | null>(() => getConversationAd(conversation));
 

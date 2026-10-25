@@ -365,9 +365,6 @@ export function ChatScreen() {
   );
   const [briefSending, setBriefSending] = useState(false);
   const briefSendingRef = useRef(false);
-  // O chat costuma montar já com um interesse pendente (o clique em "Chat Direto" cria
-  // o handoff antes de navegar), então a saudação precisa nascer preenchida — não só ser
-  // sincronizada depois, quando "anterior" e "atual" já seriam a mesma referência.
   const [briefGreeting, setBriefGreeting] = useState(() =>
     briefHandoff ? buildBriefGreeting(briefHandoff.brief) : "",
   );
@@ -378,8 +375,6 @@ export function ChatScreen() {
     setGlobalAlias(aliasFromUser);
   }
 
-  // Sugestão de saudação repõe apenas quando um novo interesse chega (identidade do
-  // handoff muda) — assim o texto editado pelo usuário sobrevive a re-renders.
   if (briefHandoff !== previousBriefHandoff) {
     setPreviousBriefHandoff(briefHandoff);
     if (briefHandoff) {
@@ -542,8 +537,6 @@ export function ChatScreen() {
     };
   }, [isMobileViewport, mobileConversationOpen]);
 
-  // O briefing chega por um store, não pela URL: `TabsKeepAlive` mantém esta tela
-  // montada entre as abas, então um efeito de montagem só rodaria na primeira visita.
   useEffect(() => {
     if (!briefHandoff) {
       return;
@@ -612,8 +605,6 @@ export function ChatScreen() {
         currentDisplayName,
       );
       if (result.messageId) {
-        // A bolha já está no thread (confirmada ou marcada como falha), então a prévia sai
-        // de cena para não permitir um segundo envio do mesmo interesse.
         setLastSentMessageId(result.messageId);
         clearBriefHandoff();
       }
@@ -637,9 +628,6 @@ export function ChatScreen() {
     if (!briefHandoff) {
       return;
     }
-    // Mantém o interesse pendente: se o usuário voltar sem mexer em nada, a prévia
-    // continua aqui do jeito que estava. A âncora leva direto ao simulador, e não ao
-    // topo do anúncio.
     router.push(getAdEditHref(briefHandoff.brief.adSlug));
   };
 

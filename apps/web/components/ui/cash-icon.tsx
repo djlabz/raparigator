@@ -1,14 +1,7 @@
 import type { HTMLAttributes } from "react";
 
-/**
- * Ícone de Dinheiro (cash) como componente React.
- * Usa CSS mask-image referenciando o SVG em /icons/brand/cash.svg
- * para herdar `currentColor` do pai — compatível com o padrão de
- * ícones lucide-react usado no projeto.
- *
- * Aceita className (w-5 h-5, etc.) para manter compatibilidade
- * com a interface de ícones do grid de pagamento.
- */
+const CASH_ICON_VISUAL_SCALE = 1.8;
+
 export function CashIcon({ className = "", style, ...props }: HTMLAttributes<HTMLSpanElement>) {
   return (
     <span
@@ -27,7 +20,7 @@ export function CashIcon({ className = "", style, ...props }: HTMLAttributes<HTM
         WebkitMaskSize: "contain",
         WebkitMaskRepeat: "no-repeat",
         WebkitMaskPosition: "center",
-        transform: "scale(1.8)", // Aumenta visualmente o tamanho do ícone (pois o SVG tem muito espaço em branco)
+        transform: `scale(${CASH_ICON_VISUAL_SCALE})`,
         ...style,
       }}
       {...props}

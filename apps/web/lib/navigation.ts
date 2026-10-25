@@ -5,7 +5,7 @@ export interface NavigationItem {
   href: string;
 }
 
-export const navigationByRole: Record<AuthRole, NavigationItem[]> = {
+const navigationByRole: Record<AuthRole, NavigationItem[]> = {
   visitor: [],
   cliente: [
     { label: "Feed", href: "/feed" },

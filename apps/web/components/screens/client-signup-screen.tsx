@@ -13,7 +13,7 @@ import { InfoBanner } from "@/components/ui/info-banner";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import { Stepper, StepItem } from "@/components/ui/stepper";
-import { readRedirectTarget } from "@/lib/auth-return";
+import { readRedirectTargetInHandler } from "@/lib/auth-return";
 import {
   formatCpf,
   validateCpf,
@@ -23,6 +23,8 @@ import {
 } from "@/lib/identity";
 import { authClient } from "@/lib/api/auth-client";
 import { translateAuthError } from "@/lib/auth-errors";
+
+const HERO_IMAGE_INTERVAL_MS = 4500;
 
 const clientImages = [
   "/images/personas/persona2/persona2-client-signup-1.webp",
@@ -111,7 +113,7 @@ export function ClientSignupScreen() {
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setActiveImageIndex((current) => (current + 1) % clientImages.length);
-    }, 4500); // 4.5s per image
+    }, HERO_IMAGE_INTERVAL_MS);
     return () => window.clearInterval(intervalId);
   }, []);
 
@@ -226,7 +228,7 @@ export function ClientSignupScreen() {
         message: "Bem-vindo ao Sigillus.",
         type: "success",
       });
-      const destination = readRedirectTarget();
+      const destination = readRedirectTargetInHandler();
       setTimeout(() => {
         router.push(destination);
       }, 1000);
@@ -707,10 +709,8 @@ export function ClientSignupScreen() {
                   Acesse sua conta
                 </Link>
               </p>
-              {/* Aumentamos a margem, a fonte para text-sm e o contraste */}
               <p className="mt-4 border-t border-dashed border-zinc-200 pt-4 text-sm text-zinc-600">
                 Voce e profissional e quer se cadastrar?{" "}
-                {/* Link agora usa a cor da marca (wine-700) e font-bold */}
                 <Link
                   href="/auth/cadastro/profissional"
                   className="font-bold text-wine-700 hover:underline"

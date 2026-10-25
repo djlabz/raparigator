@@ -13,8 +13,8 @@ import { createReportsRepository, type ReportEvidenceRow } from "./repository";
 export { REPORT_EVIDENCE_RETENTION_DAYS, REPORT_EVIDENCE_UNCONFIRMED_HOURS };
 
 export const REPORT_EVIDENCE_PROCESS_JOB = "report.evidence-process";
-export const REPORT_EVIDENCE_RETENTION_JOB = "report.evidence-retention";
-export const REPORT_EVIDENCE_RETENTION_CRON = "30 4 * * *";
+const REPORT_EVIDENCE_RETENTION_JOB = "report.evidence-retention";
+const REPORT_EVIDENCE_RETENTION_CRON = "30 4 * * *";
 export const REPORT_EVIDENCE_PROCESS_GRACE_HOURS = 1;
 export const REPORT_EVIDENCE_PURGE_MARGIN_HOURS = 2;
 
@@ -31,7 +31,7 @@ export function isEvidenceUploadOpen(createdAt: Date, now = new Date()): boolean
   return now.getTime() - createdAt.getTime() < REPORT_EVIDENCE_UNCONFIRMED_HOURS * HOUR_MS;
 }
 
-export function isEvidenceProcessable(createdAt: Date, now = new Date()): boolean {
+function isEvidenceProcessable(createdAt: Date, now = new Date()): boolean {
   return (
     now.getTime() - createdAt.getTime() <
     (REPORT_EVIDENCE_UNCONFIRMED_HOURS + REPORT_EVIDENCE_PROCESS_GRACE_HOURS) * HOUR_MS
@@ -40,11 +40,11 @@ export function isEvidenceProcessable(createdAt: Date, now = new Date()): boolea
 
 const CLEAN_SUFFIX = ".clean";
 
-export function cleanEvidenceKey(uploadKey: string): string {
+function cleanEvidenceKey(uploadKey: string): string {
   return uploadKey.replace(/(\.[a-z0-9]+)$/, `${CLEAN_SUFFIX}$1`);
 }
 
-export function uploadEvidenceKey(storageKey: string): string {
+function uploadEvidenceKey(storageKey: string): string {
   return storageKey.replace(`${CLEAN_SUFFIX}.`, ".");
 }
 

@@ -9,7 +9,7 @@ import { BrandWordmark } from "@/components/ui/brand-wordmark";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { readRedirectTarget } from "../../lib/auth-return";
+import { readRedirectTargetInHandler } from "../../lib/auth-return";
 import { authClient } from "@/lib/api/auth-client";
 import { translateAuthError } from "@/lib/auth-errors";
 
@@ -42,7 +42,7 @@ export function LoginScreen() {
         return;
       }
 
-      router.push(readRedirectTarget());
+      router.push(readRedirectTargetInHandler());
     } catch (err: unknown) {
       setError(translateAuthError(err));
       setSubmitting(false);

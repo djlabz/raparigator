@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "sigillus-age-verified";
-export const UNDERAGE_REDIRECT_URL = "https://www.google.com";
+const UNDERAGE_REDIRECT_URL = "https://www.google.com";
 
 export type AgeGateStatus = "pending" | "verified" | "unverified";
 
