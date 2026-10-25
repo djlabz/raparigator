@@ -15,10 +15,10 @@ export type MediaJobsDeps = {
   logger: Logger;
 };
 
-export const MEDIA_THUMBNAIL_WIDTH = 480;
-export const BLOCKED_MEDIA_MESSAGE = "Esta imagem não pode ser publicada.";
+const MEDIA_THUMBNAIL_WIDTH = 480;
+const BLOCKED_MEDIA_MESSAGE = "Esta imagem não pode ser publicada.";
 
-export function thumbnailKeyFor(storageKey: string): string {
+function thumbnailKeyFor(storageKey: string): string {
   return `${storageKey}.thumb.webp`;
 }
 

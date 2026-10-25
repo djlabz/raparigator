@@ -12,7 +12,7 @@ function adminUrl(databaseUrl: string) {
   return url.toString();
 }
 
-export function testDatabaseUrl() {
+function testDatabaseUrl() {
   const base = process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL;
   if (!base) {
     throw new Error("Defina DATABASE_URL ou TEST_DATABASE_URL para os testes de integração.");

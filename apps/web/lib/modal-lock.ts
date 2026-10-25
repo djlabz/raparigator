@@ -7,7 +7,7 @@ function getAppShell() {
   return document.querySelector<HTMLElement>("[data-app-shell]");
 }
 
-export function acquireModalLock() {
+function acquireModalLock() {
   if (typeof document === "undefined") {
     return () => {};
   }

@@ -1,9 +1,9 @@
 import type { AppConfig } from "../config";
 import type { Logger } from "./logger";
 
-export type EmailKind = "reset" | "admin-notify" | "verification-code";
+type EmailKind = "reset" | "admin-notify" | "verification-code";
 
-export type EmailMessage = {
+type EmailMessage = {
   kind: EmailKind;
   to: string;
   subject: string;
@@ -11,7 +11,7 @@ export type EmailMessage = {
   html?: string;
 };
 
-export type SendEmailResult = {
+type SendEmailResult = {
   id?: string;
   ok: boolean;
 };

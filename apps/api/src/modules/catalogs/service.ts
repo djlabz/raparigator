@@ -4,8 +4,6 @@ import { CATALOG_CITIES } from "@sigillus/domain";
 import type { Database } from "../../db/client";
 import { catalogCities, catalogItems } from "../../db/schema";
 
-export type CatalogsService = ReturnType<typeof createCatalogsService>;
-
 export function createCatalogsService(db: Database) {
   return {
     async get(): Promise<Catalogs> {

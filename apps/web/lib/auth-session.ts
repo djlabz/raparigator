@@ -5,7 +5,7 @@ import type { AuthRole, User } from "@/lib/types";
 import { authClient } from "@/lib/api/auth-client";
 import { getApiClient } from "@/lib/api/client";
 
-export function pathRequiresAuth(pathname: string) {
+function pathRequiresAuth(pathname: string) {
   return (
     pathname.startsWith("/conta") ||
     pathname.startsWith("/chat") ||

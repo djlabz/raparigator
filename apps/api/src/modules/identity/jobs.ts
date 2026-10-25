@@ -5,7 +5,7 @@ import type { ObjectStorage } from "../../lib/storage";
 import { deleteIdentityFiles, identityUserPrefix, purgeExpiredIdentityFiles } from "./service";
 
 export const IDENTITY_RETENTION_JOB = "identity.retention";
-export const IDENTITY_DELETE_FILES_JOB = "identity.delete-files";
+const IDENTITY_DELETE_FILES_JOB = "identity.delete-files";
 export const IDENTITY_RETENTION_CRON = "0 4 * * *";
 
 export type IdentityJobsDeps = {

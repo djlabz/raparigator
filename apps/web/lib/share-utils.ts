@@ -1,7 +1,7 @@
 import { buildBriefMessageText } from "@/lib/encounter-brief";
 import type { EncounterBrief } from "@/lib/types";
 
-export function getShareProfileUrl(slug: string): string {
+function getShareProfileUrl(slug: string): string {
   return `https://sigillus.app/p/${slug}`;
 }
 
@@ -60,10 +60,6 @@ export function getWhatsAppChatUrl(
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
 }
 
-/**
- * O Telegram ignora `?text=` em links diretos de usuário — a mensagem precisa ser
- * copiada para a área de transferência pelo chamador (ver `getExternalContactText`).
- */
 export function getTelegramChatUrl(
   name: string,
   slug: string,
@@ -80,7 +76,7 @@ export function vibrate(ms: number = 50): void {
     try {
       navigator.vibrate(ms);
     } catch {
-      // Ignore
+      return;
     }
   }
 }

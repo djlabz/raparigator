@@ -11,7 +11,7 @@ import {
   type FeedTitleFlightMotion,
 } from "./surface-types";
 
-export type TitleFlightSurfaceSlot<Flags, Motion> = {
+type TitleFlightSurfaceSlot<Flags, Motion> = {
   flagsStore: FlagsStore<Flags>;
   motion: Motion;
 };

@@ -1,10 +1,5 @@
 import type { SVGProps } from "react";
 
-/**
- * Ícone do Pix como componente React inline.
- * Aceita as mesmas props de um <svg> (className, width, height, etc.)
- * para manter compatibilidade com o padrão lucide-react usado no projeto.
- */
 export function PixIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg

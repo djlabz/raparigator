@@ -6,7 +6,7 @@ import { Search, UserCheck, UserX, MapPin, Calendar, ShoppingBag, X, Users } fro
 import { AdminLayoutShell } from "./admin-layout-shell";
 import { useAdminSession } from "@/lib/admin-session";
 import { getClients, suspendClient, reinstateClient } from "@/lib/admin-service";
-import type { MockClient } from "@/lib/types";
+import type { ClientAccount } from "@sigillus/contracts";
 
 function maskEmail(email: string): string {
   const [local, domain] = email.split("@");
@@ -42,13 +42,13 @@ function avatarColor(name: string): string {
 type FilterStatus = "all" | "active" | "suspended";
 
 interface SuspendModal {
-  client: MockClient;
+  client: ClientAccount;
   reason: string;
 }
 
 export function AdminClientsScreen() {
   const { admin } = useAdminSession();
-  const [clients, setClients] = useState<MockClient[]>([]);
+  const [clients, setClients] = useState<ClientAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterStatus>("all");
@@ -84,7 +84,7 @@ export function AdminClientsScreen() {
     showToast(`${suspendModal.client.fullName} foi suspenso(a).`);
   };
 
-  const handleReinstate = async (client: MockClient) => {
+  const handleReinstate = async (client: ClientAccount) => {
     if (!admin) return;
     setActionLoading(client.id);
     await reinstateClient(client.id, admin.id);

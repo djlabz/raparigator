@@ -51,7 +51,6 @@
       // proprio - trocar reescreve o sistema de modais.
       "files": [
         "apps/web/components/ui/modal.tsx",
-        "apps/web/components/ui/info-hint.tsx",
         "apps/web/components/ui/share-profile-modal.tsx",
         "apps/web/components/screens/ad-details/photo-lightbox.tsx",
         "apps/web/components/screens/chat-screen.tsx"

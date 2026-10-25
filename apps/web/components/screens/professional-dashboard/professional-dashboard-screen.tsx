@@ -124,7 +124,6 @@ export function ProfessionalDashboardScreen() {
 
     const isValidTab = TABS.some((tab) => tab.id === requestedTab);
     if (isValidTab) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(requestedTab);
     }
   }, []);

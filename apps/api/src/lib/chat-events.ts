@@ -2,7 +2,7 @@ import { Client } from "pg";
 import type { ChatEvent } from "@sigillus/contracts";
 import type { Logger } from "./logger";
 
-export type ChatEventListener = (event: ChatEvent) => void;
+type ChatEventListener = (event: ChatEvent) => void;
 
 export interface ChatEventBus {
   publish(userIds: string[], event: ChatEvent): Promise<void>;

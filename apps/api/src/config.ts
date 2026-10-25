@@ -97,7 +97,7 @@ const EnvSchema = z
     }
   });
 
-export type Env = z.infer<typeof EnvSchema>;
+type Env = z.infer<typeof EnvSchema>;
 
 export type AppConfig = Env & {
   isProduction: boolean;
@@ -134,8 +134,4 @@ export function getConfig(): AppConfig {
     cached = loadConfig();
   }
   return cached;
-}
-
-export function resetConfigForTests() {
-  cached = null;
 }

@@ -34,8 +34,6 @@ export type ReviewsServiceDeps = {
   logger: Logger;
 };
 
-export type ReviewsService = ReturnType<typeof createReviewsService>;
-
 type InviteRow = typeof reviewInvites.$inferSelect;
 
 type ConversationScope = {
@@ -47,7 +45,7 @@ type ConversationScope = {
   artisticName: string;
 };
 
-export function reviewInviteNotificationKey(conversationId: string) {
+function reviewInviteNotificationKey(conversationId: string) {
   return `review-invite-${conversationId}`;
 }
 

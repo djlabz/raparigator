@@ -54,7 +54,7 @@ function reviewUrl(webOrigin: string, profileId: string): string {
   return new URL(`/admin/perfis/${encodeURIComponent(profileId)}`, webOrigin).toString();
 }
 
-export function buildAdminReviewDigestEmail(profiles: PendingProfile[], webOrigin: string) {
+function buildAdminReviewDigestEmail(profiles: PendingProfile[], webOrigin: string) {
   const subject =
     profiles.length === 1
       ? "1 perfil novo aguardando revisão"

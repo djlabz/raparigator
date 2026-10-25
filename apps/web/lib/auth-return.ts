@@ -3,7 +3,7 @@ const RETURN_TARGET_KEY = "sigillus-return-target";
 const REDIRECT_PARAM = "redirect";
 const DEFAULT_REDIRECT = "/feed";
 
-export function sanitizeRedirect(value: string | null | undefined): string | null {
+function sanitizeRedirect(value: string | null | undefined): string | null {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
     return null;
   }
@@ -18,10 +18,6 @@ export function getCurrentReturnTo(): string {
   return `${pathname}${search}${hash}`;
 }
 
-/**
- * Guarda o destino de retorno fora da URL. O cadastro passa por mais de uma tela
- * (`/auth/cadastro` → `/auth/cadastro/cliente`) e o parâmetro se perderia no caminho.
- */
 export function saveReturnTarget(returnTo: string) {
   if (typeof window === "undefined") {
     return;
@@ -39,12 +35,7 @@ export function saveReturnTarget(returnTo: string) {
   }
 }
 
-/**
- * Lê o destino de retorno — parâmetro da URL primeiro, sessão como reserva. Deve ser
- * chamado dentro de handlers, não durante o render: evita divergência de hidratação
- * e dispensa boundary de Suspense.
- */
-export function readRedirectTarget(fallback: string = DEFAULT_REDIRECT): string {
+export function readRedirectTargetInHandler(fallback: string = DEFAULT_REDIRECT): string {
   if (typeof window === "undefined") {
     return fallback;
   }

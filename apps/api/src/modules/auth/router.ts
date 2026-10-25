@@ -13,7 +13,7 @@ const DELETE_ACCOUNT_ERRORS: Record<string, string> = {
   CREDENTIAL_ACCOUNT_NOT_FOUND: "Esta conta não tem senha cadastrada.",
 };
 
-export async function resolveSessionUser(context: AppContext): Promise<User | null> {
+async function resolveSessionUser(context: AppContext): Promise<User | null> {
   const session = await getUserSession(context);
   if (!session) {
     return null;

@@ -104,7 +104,6 @@ export function FeedScreen() {
   );
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisibleCount(6);
   }, [criteria]);
 

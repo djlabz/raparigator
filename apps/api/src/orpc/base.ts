@@ -5,7 +5,7 @@ import { getAdminSession, getUserSession, type AppContext } from "./context";
 
 export const os = implement(contract).$context<AppContext>();
 
-export type AuthenticatedUser = {
+type AuthenticatedUser = {
   id: string;
   role: UserRole;
   name: string;
@@ -55,7 +55,7 @@ export function requireRole(role: UserRole) {
   });
 }
 
-export const withAdmin = os.middleware(async ({ context, next }) => {
+const withAdmin = os.middleware(async ({ context, next }) => {
   const session = await getAdminSession(context);
   if (!session) {
     throw new ORPCError("UNAUTHORIZED", { message: "Sessão de administrador necessária." });
@@ -88,5 +88,4 @@ export function rateLimited(name: string, rule: RateLimitRule) {
 
 export const authed = os.use(withUser);
 export const professional = os.use(withUser).use(requireRole("profissional"));
-export const client = os.use(withUser).use(requireRole("cliente"));
 export const admin = os.use(withAdmin);

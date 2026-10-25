@@ -70,9 +70,12 @@ test.describe("Briefing de encontro", () => {
     await page.waitForURL("**/chat**");
 
     const greeting = page.getByLabel("Sua mensagem").first();
-    // A sugestão já vem preenchida — a prévia costuma montar junto com o interesse.
-    const suggestion = await greeting.inputValue();
-    expect(suggestion.length).toBeGreaterThan(0);
+    const suggestion =
+      await test.step("a sugestão já vem preenchida ao montar com o interesse", async () => {
+        const value = await greeting.inputValue();
+        expect(value.length).toBeGreaterThan(0);
+        return value;
+      });
 
     const custom = "Oi! Montei essa simulação, topa conversar sobre?";
     await greeting.fill(custom);
@@ -103,17 +106,17 @@ test.describe("Briefing de encontro", () => {
     await page.goto("/chat");
     await expect(page.getByRole("heading", { name: "Conversas" })).toBeVisible();
 
-    // Navegação client-side o caminho todo: o briefing não pode depender de a tela
-    // do chat ser montada do zero nem de parâmetro na URL.
-    await page.getByRole("link", { name: "Feed" }).first().click();
-    await page.waitForURL("**/feed**");
-    const adCard = page
-      .locator("[data-feed-premium-section]")
-      .locator(`a[href*="/anuncio/${ads.premiumSlug}"]`)
-      .first();
-    await expect(adCard).toBeVisible();
-    await adCard.click();
-    await page.waitForURL(`**/anuncio/${ads.premiumSlug}`);
+    await test.step("navega client-side até o anúncio, sem remontar o chat nem usar parâmetro na URL", async () => {
+      await page.getByRole("link", { name: "Feed" }).first().click();
+      await page.waitForURL("**/feed**");
+      const adCard = page
+        .locator("[data-feed-premium-section]")
+        .locator(`a[href*="/anuncio/${ads.premiumSlug}"]`)
+        .first();
+      await expect(adCard).toBeVisible();
+      await adCard.click();
+      await page.waitForURL(`**/anuncio/${ads.premiumSlug}`);
+    });
 
     await buildSimulation(page);
     await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
@@ -135,14 +138,15 @@ test.describe("Briefing de encontro", () => {
     await page.getByRole("button", { name: "Toque para ajustar a simulação" }).first().click();
     await page.waitForURL(`**/anuncio/${ads.premiumSlug}#simulador-de-encontro`);
 
-    // Precisa cair no simulador, não no topo do anúncio — e sem ficar sob o cabeçalho fixo.
-    await expect(async () => {
-      const top = await page
-        .locator("#simulador-de-encontro")
-        .evaluate((el) => el.getBoundingClientRect().top);
-      expect(top).toBeGreaterThan(0);
-      expect(top).toBeLessThan(200);
-    }).toPass();
+    await test.step("cai no simulador, não no topo do anúncio, e fora do cabeçalho fixo", async () => {
+      await expect(async () => {
+        const top = await page
+          .locator("#simulador-de-encontro")
+          .evaluate((el) => el.getBoundingClientRect().top);
+        expect(top).toBeGreaterThan(0);
+        expect(top).toBeLessThan(200);
+      }).toPass();
+    });
 
     await page.getByRole("link", { name: "Chat" }).first().click();
     await page.waitForURL("**/chat**");
@@ -175,9 +179,10 @@ test.describe("Briefing de encontro", () => {
       .filter({ hasText: new RegExp(`^Duração${SIMULATOR_DURATION}`) })
       .first();
 
-    // Só a opção escolhida mostra o preço; as demais ficam sem valor no rótulo.
-    await expect(duration).toContainText("R$");
-    await expect(page.getByText("Servico Inexistente")).toHaveCount(0);
+    await test.step("só a opção escolhida mostra o preço no rótulo", async () => {
+      await expect(duration).toContainText("R$");
+      await expect(page.getByText("Servico Inexistente")).toHaveCount(0);
+    });
   });
 
   test("login preserva as seleções e devolve o visitante ao anúncio", async ({ page }) => {

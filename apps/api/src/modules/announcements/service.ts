@@ -29,7 +29,7 @@ import { toProfessionalAd } from "../profiles/mapper";
 import type { ProfileRepository } from "../profiles/repository";
 import { enqueueAdminReviewDigest } from "./review-digest";
 
-export type AnnouncementIdentityGate = (
+type AnnouncementIdentityGate = (
   userId: string,
 ) => Promise<{ ok: true } | { ok: false; message: string }>;
 
@@ -40,8 +40,6 @@ export type AnnouncementsServiceDeps = {
   logger: Logger;
   identityGate?: AnnouncementIdentityGate;
 };
-
-export type AnnouncementsService = ReturnType<typeof createAnnouncementsService>;
 
 export type AnnouncementOwner = { id: string; name: string; alias?: string | null };
 
@@ -79,7 +77,7 @@ function splitHair(value: string): { hairType: string | null; hairColor: string 
   return { hairType: optionalSelect(type), hairColor: optionalSelect(color) };
 }
 
-export function draftSectionToProfileValues(
+function draftSectionToProfileValues(
   section: AnnouncementSectionKey,
   draft: AnnouncementDraftState,
 ): ProfileValues {
@@ -155,7 +153,7 @@ export function draftSectionToProfileValues(
   }
 }
 
-export function draftToProfileValues(draft: AnnouncementDraftState): ProfileValues {
+function draftToProfileValues(draft: AnnouncementDraftState): ProfileValues {
   return ALL_SECTIONS.reduce<ProfileValues>(
     (values, section) => ({ ...values, ...draftSectionToProfileValues(section, draft) }),
     {},

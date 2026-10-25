@@ -29,8 +29,6 @@ export type MediaServiceDeps = {
   logger: Logger;
 };
 
-export type MediaService = ReturnType<typeof createMediaService>;
-
 const EXTENSION_BY_CONTENT_TYPE: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/jpg": "jpg",

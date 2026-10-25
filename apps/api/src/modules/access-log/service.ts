@@ -8,9 +8,9 @@ import { deleteAccessLogsBefore, deleteSessionsExpiredBefore, insertAccessLog } 
 
 export const ACCESS_LOG_RETENTION_DAYS = 180;
 export const SESSION_PURGE_GRACE_DAYS = 30;
-export const ACCESS_LOG_USER_AGENT_MAX_LENGTH = 256;
-export const ACCESS_LOG_PURGE_CRON = "0 3 * * *";
-export const SESSION_PURGE_CRON = "30 3 * * *";
+const ACCESS_LOG_USER_AGENT_MAX_LENGTH = 256;
+const ACCESS_LOG_PURGE_CRON = "0 3 * * *";
+const SESSION_PURGE_CRON = "30 3 * * *";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

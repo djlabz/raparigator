@@ -7,7 +7,7 @@ import type { Mailer } from "../../lib/mail";
 import { createReportsRepository, type ReportRow } from "./repository";
 
 export const ADMIN_REPORT_DIGEST_JOB = "admin.report-digest";
-export const ADMIN_REPORT_DIGEST_WINDOW_SECONDS = 3600;
+const ADMIN_REPORT_DIGEST_WINDOW_SECONDS = 3600;
 
 const DIGEST_TIME_ZONE = "America/Sao_Paulo";
 const HOUR_MS = 60 * 60 * 1000;
@@ -54,7 +54,7 @@ function reasonLabel(report: ReportRow): string {
   return "Denúncia de conversa";
 }
 
-export function buildAdminReportDigestEmail(rows: ReportRow[], webOrigin: string) {
+function buildAdminReportDigestEmail(rows: ReportRow[], webOrigin: string) {
   const subject =
     rows.length === 1
       ? "1 denúncia nova para analisar"

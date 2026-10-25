@@ -30,5 +30,3 @@ export const router = os.router({
   identity: identityRouter,
   admin: { ...adminRouter, ...identityAdminRouter },
 });
-
-export type AppRouter = typeof router;

@@ -2,7 +2,6 @@ import {
   ENCOUNTER_FALLBACK_ORIGIN,
   ENCOUNTER_SIMULATOR_ANCHOR,
   buildBriefMessageText as buildBriefMessageTextWithOrigin,
-  getSimulationUrl as getSimulationUrlWithOrigin,
 } from "@sigillus/domain";
 import type { EncounterBrief, SimulationSelection } from "@sigillus/contracts";
 
@@ -11,7 +10,6 @@ export {
   buildBriefGreeting,
   buildEncounterBrief,
   decodeBriefSelection,
-  encodeBriefParams,
 } from "@sigillus/domain";
 
 const SIMULATION_DRAFT_KEY = "sigillus-sim-draft";
@@ -26,10 +24,6 @@ export function getAdEditHref(adSlug: string): string {
 
 function currentOrigin(): string {
   return typeof window === "undefined" ? ENCOUNTER_FALLBACK_ORIGIN : window.location.origin;
-}
-
-export function getSimulationUrl(brief: EncounterBrief): string {
-  return getSimulationUrlWithOrigin(brief, currentOrigin());
 }
 
 export function buildBriefMessageText(brief: EncounterBrief): string {

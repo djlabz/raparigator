@@ -2,7 +2,7 @@ import { PgBoss, type QueuePolicy } from "pg-boss";
 import type { AccessLogEvent } from "@sigillus/contracts";
 import type { Logger } from "./logger";
 
-export type JobPayloads = {
+type JobPayloads = {
   "media.process": { assetId: string };
   "media.moderate": { assetId: string };
   "review-invite.expire": { inviteId: string };
@@ -28,13 +28,13 @@ export type JobPayloads = {
 
 export type JobName = keyof JobPayloads;
 
-export const JOB_QUEUE_POLICIES: Partial<Record<JobName, QueuePolicy>> = {
+const JOB_QUEUE_POLICIES: Partial<Record<JobName, QueuePolicy>> = {
   "admin.review-digest": "short",
   "admin.report-digest": "short",
   "admin.identity-digest": "short",
 };
 
-export type JobHandler<TName extends JobName> = (payload: JobPayloads[TName]) => Promise<void>;
+type JobHandler<TName extends JobName> = (payload: JobPayloads[TName]) => Promise<void>;
 
 export interface JobQueue {
   schedule(name: JobName, cron: string): Promise<void>;

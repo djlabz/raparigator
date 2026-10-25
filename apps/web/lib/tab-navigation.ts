@@ -60,11 +60,11 @@ export function getTabHrefForPathname(pathname: string, items: NavigationItem[])
   return items[index]?.href ?? null;
 }
 
-export function saveTabScroll(href: string, y: number) {
+function saveTabScroll(href: string, y: number) {
   scrollByTab.set(href, Math.max(0, y));
 }
 
-export function getTabScroll(href: string): number {
+function getTabScroll(href: string): number {
   return scrollByTab.get(href) ?? 0;
 }
 
@@ -121,7 +121,7 @@ export function unregisterShell() {
   });
 }
 
-export function getTabIndex(pathname: string, items: NavigationItem[]): number {
+function getTabIndex(pathname: string, items: NavigationItem[]): number {
   const direct = items.findIndex(
     (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
   );

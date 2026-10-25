@@ -7,8 +7,6 @@ import type {
 import { toFeedAdSummary } from "../profiles/mapper";
 import type { ProfileRepository } from "../profiles/repository";
 
-export type FeedService = ReturnType<typeof createFeedService>;
-
 export function createFeedService(profiles: ProfileRepository) {
   return {
     async list(criteria: FeedFiltersCriteria, sort: FeedSort, pagination: PaginationInput) {

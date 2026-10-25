@@ -30,15 +30,15 @@ type DevData = {
   ads: SeedAd[];
   reviews: Review[];
   mediaHighlights: MediaHighlight[];
-  mockClients: ClientAccount[];
-  mockReports: Report[];
+  seedClients: ClientAccount[];
+  seedReports: Report[];
   adminActivityLog: AdminActivityLog[];
 };
 
 const fixtures = devData as unknown as DevData;
 
-export const DEV_PROFESSIONAL_PASSWORD = "Profissional@123";
-export const SEED_IDENTITY_REVIEWER = "seed";
+const DEV_PROFESSIONAL_PASSWORD = "Profissional@123";
+const SEED_IDENTITY_REVIEWER = "seed";
 
 function professionalEmailFor(ad: ProfessionalAd, index: number) {
   return index === 0 ? DEV_USERS[1]!.email : `${ad.slug}@sigillus.dev`;
@@ -158,7 +158,7 @@ export async function seedDevData(db: Database) {
       .onConflictDoUpdate({ target: mediaHighlights.id, set: { ...highlight, position } });
   }
 
-  for (const client of fixtures.mockClients) {
+  for (const client of fixtures.seedClients) {
     await db
       .insert(users)
       .values({
@@ -176,7 +176,7 @@ export async function seedDevData(db: Database) {
       .onConflictDoNothing();
   }
 
-  for (const report of fixtures.mockReports) {
+  for (const report of fixtures.seedReports) {
     await db
       .insert(reports)
       .values({

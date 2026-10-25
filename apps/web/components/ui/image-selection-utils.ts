@@ -3,7 +3,7 @@ import type { Crop } from "react-image-crop";
 const PRESET_LANDSCAPE = { width: 56, height: 40 };
 const PRESET_PORTRAIT = { width: 56, height: 52 };
 const PRESET_SQUARE = { width: 52, height: 52 };
-export const ASPECT_MATCH_TOLERANCE = 0.04;
+const ASPECT_MATCH_TOLERANCE = 0.04;
 
 export function aspectsMatch(
   imageAspect: number,
@@ -62,7 +62,7 @@ export function resolveMinSelectionSize(displaySize: Size): Size {
   };
 }
 
-export function buildMaxAspectCrop(mediaWidth: number, mediaHeight: number, aspect: number): Crop {
+function buildMaxAspectCrop(mediaWidth: number, mediaHeight: number, aspect: number): Crop {
   if (!mediaWidth || !mediaHeight || !Number.isFinite(aspect) || aspect <= 0) {
     return {
       unit: "%",

@@ -3,7 +3,7 @@ import { admin, os } from "../../orpc/base";
 import { getAdminSession, type AppContext } from "../../orpc/context";
 import { listAccessLogs, recordAccess } from "../access-log";
 
-export async function resolveAdminSession(context: AppContext): Promise<AdminSession> {
+async function resolveAdminSession(context: AppContext): Promise<AdminSession> {
   const session = await getAdminSession(context);
   if (!session) {
     return { admin: null };

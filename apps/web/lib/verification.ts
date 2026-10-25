@@ -1,17 +1,10 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
-import type {
-  VerificationChannel,
-  VerificationPublicChannelState,
-  VerificationPublicState,
-} from "@sigillus/contracts";
+import type { VerificationChannel, VerificationPublicState } from "@sigillus/contracts";
 import { getApiClient } from "@/lib/api/client";
 
-export type { VerificationChannel, VerificationPublicChannelState, VerificationPublicState };
-
-export type VerificationState = VerificationPublicState;
-export type VerificationChannelState = VerificationPublicChannelState;
+export type { VerificationChannel, VerificationPublicState };
 
 export const HAS_VERIFICATION_PROVIDER = false;
 
@@ -50,15 +43,15 @@ function emitChange() {
   listeners.forEach((listener) => listener());
 }
 
-export function getVerificationSnapshot(): VerificationPublicState {
+function getVerificationSnapshot(): VerificationPublicState {
   return cachedState;
 }
 
-export function getServerSnapshot(): VerificationPublicState {
+function getServerSnapshot(): VerificationPublicState {
   return DEFAULT_INITIAL_STATE;
 }
 
-export async function fetchVerificationState(): Promise<VerificationPublicState> {
+async function fetchVerificationState(): Promise<VerificationPublicState> {
   if (inFlightPromise) {
     return inFlightPromise;
   }
@@ -97,11 +90,4 @@ export async function confirmVerificationCode(channel: VerificationChannel, code
   const result = await getApiClient().verification.confirmCode({ channel, code });
   await fetchVerificationState();
   return result;
-}
-
-export function getVerificationState(
-  _userId?: string,
-  _targets?: { email?: string; phone?: string | null } | null,
-): VerificationPublicState {
-  return cachedState;
 }

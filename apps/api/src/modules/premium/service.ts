@@ -42,7 +42,7 @@ type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
 const OPEN_STATUSES = ["active", "pending_payment"] as const;
 
-export function toSubscription(row: SubscriptionRow): Subscription {
+function toSubscription(row: SubscriptionRow): Subscription {
   return {
     id: row.id,
     cycle: row.cycle,

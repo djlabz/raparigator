@@ -45,7 +45,6 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
               </span>
             </div>
 
-            {/* Linha conectiva entre os passos */}
             {index < steps.length - 1 && (
               <div className="flex-1 mx-2 sm:mx-4 mt-[-18px] h-[1px] bg-zinc-200 overflow-hidden relative">
                 <div

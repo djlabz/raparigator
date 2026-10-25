@@ -4,7 +4,7 @@ export function isFeedTitleFlightPath(pathname: string) {
   return pathname === "/feed" || pathname.startsWith("/feed/");
 }
 
-export function isDashboardTitleFlightPath(pathname: string) {
+function isDashboardTitleFlightPath(pathname: string) {
   return pathname === "/profissional/dashboard" || pathname.startsWith("/profissional/dashboard/");
 }
 

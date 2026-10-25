@@ -5,7 +5,7 @@ import { getApiClient } from "@/lib/api/client";
 import type { InviteStatus, ReviewInvite, SubmittedReview } from "@sigillus/contracts";
 import { REVIEW_INVITE_TTL_MS } from "@sigillus/domain";
 
-export type { InviteStatus, ReviewInvite, SubmittedReview };
+export type { InviteStatus, ReviewInvite };
 export { getInviteDaysLeft, getInviteStatus, hasTwoWayConversation } from "@sigillus/domain";
 
 interface ReviewInvitesState {
@@ -69,7 +69,7 @@ function findInvite(state: ReviewInvitesState, conversationId: string) {
   return state.invites.find((invite) => invite.conversationId === conversationId);
 }
 
-export function inviteToReview(conversationId: string, adSlug: string): boolean {
+function inviteToReview(conversationId: string, adSlug: string): boolean {
   const existing = findInvite(apiState, conversationId);
   if (existing?.usedAt) {
     return false;
@@ -122,7 +122,7 @@ export function inviteToReview(conversationId: string, adSlug: string): boolean 
   return true;
 }
 
-export function cancelInvite(conversationId: string): boolean {
+function cancelInvite(conversationId: string): boolean {
   const existing = findInvite(apiState, conversationId);
   if (!existing || existing.usedAt) {
     return false;

@@ -2373,7 +2373,6 @@ function BentoPhotoGallery({
     let isMounted = true;
 
     if (mediaSources.length === 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMediaAspectRatios({});
       return () => {
         isMounted = false;
@@ -4338,8 +4337,8 @@ function DescriptionSection({
         editorRef.current.innerHTML = html;
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only on mount to avoid cursor issues
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleInput = () => {
     if (editorRef.current) {

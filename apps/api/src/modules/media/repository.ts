@@ -4,8 +4,6 @@ import type { Database } from "../../db/client";
 import { mediaAssets } from "../../db/schema";
 import type { MediaAssetRow } from "./mapper";
 
-export type MediaRepository = ReturnType<typeof createMediaRepository>;
-
 const COUNTED_STATUSES: MediaAssetRow["status"][] = ["failed", "rejected", "blocked"];
 
 export function createMediaRepository(db: Database) {

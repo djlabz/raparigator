@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { BillingProvider, BillingWebhookEvent } from "./provider";
 
-export const FAKE_SIGNATURE_HEADER = "x-sigillus-signature";
+const FAKE_SIGNATURE_HEADER = "x-sigillus-signature";
 
 export function signFakeWebhook(secret: string, rawBody: string): string {
   return createHmac("sha256", secret).update(rawBody).digest("hex");

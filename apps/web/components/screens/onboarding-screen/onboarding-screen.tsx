@@ -24,13 +24,11 @@ export function OnboardingScreen() {
   const [showLocationToast, setShowLocationToast] = useState(false);
   const [isPopularVisible, setIsPopularVisible] = useState(false);
 
-  // Estados para controlar o novo campo de busca de localização
   const [locationQuery, setLocationQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const lowerSectionRef = useRef<HTMLDivElement>(null);
 
-  // Fecha o menu de sugestões ao clicar fora do componente
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
@@ -41,7 +39,6 @@ export function OnboardingScreen() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Observa quando a seção inferior entra em tela para ocultar o botão automaticamente
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -56,12 +53,10 @@ export function OnboardingScreen() {
     return () => observer.disconnect();
   }, []);
 
-  // Função auxiliar para remover acentos
   const removeAccents = (str: string) => {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   };
 
-  // Filtra as localidades ignorando maiúsculas/minúsculas e acentos
   const filteredLocations = locationsData.filter((loc) => {
     const searchStr = removeAccents(`${loc.city}, ${loc.state}`.toLowerCase());
     const queryStr = removeAccents(locationQuery.toLowerCase());
@@ -79,9 +74,7 @@ export function OnboardingScreen() {
 
   return (
     <div className="relative w-full overflow-x-clip bg-white">
-      {/* Hero Section */}
       <section className={`relative w-full flex flex-col ${styles.hero}`}>
-        {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/hero/homepage-main-photo-2.webp"
@@ -130,11 +123,9 @@ export function OnboardingScreen() {
           </div>
         </header>
 
-        {/* Conteúdo Principal do Hero */}
         <div
           className={`relative z-10 box-border max-w-384 mx-auto px-6 md:px-12 w-full flex-1 flex flex-col lg:flex-row lg:items-center lg:justify-between ${styles.heroContent}`}
         >
-          {/* Texto (Esquerda) */}
           <div className="mx-auto w-full max-w-xl text-white lg:mx-0 lg:min-w-0 lg:flex-1 xl:max-w-2xl">
             <h1 className="text-balance text-center text-[1.75rem] font-extrabold leading-tight tracking-tight drop-shadow-md sm:text-4xl lg:text-left lg:text-5xl xl:text-6xl">
               Nem todo luxo <br className="hidden lg:block" />
@@ -142,7 +133,6 @@ export function OnboardingScreen() {
             </h1>
           </div>
 
-          {/* Card de Formulário (Direita) */}
           <div
             className={`relative mx-auto mt-auto w-full lg:mt-0 lg:mr-0 lg:ml-auto lg:min-w-0 ${styles.cardWrapper}`}
           >
@@ -176,7 +166,6 @@ export function OnboardingScreen() {
               </h2>
 
               <div className="space-y-4">
-                {/* Novo Campo de Localização Unificado */}
                 <div className="relative space-y-1.5" ref={wrapperRef}>
                   <div className="flex items-baseline justify-between gap-2">
                     <label htmlFor="location" className="text-sm font-semibold text-zinc-900">
@@ -226,7 +215,6 @@ export function OnboardingScreen() {
                     />
                   </div>
 
-                  {/* Dropdown de Sugestões */}
                   {showSuggestions && locationQuery.length > 0 && (
                     <ul className="absolute z-50 w-full mt-1 bg-white border border-zinc-200 rounded-md shadow-lg max-h-60 overflow-auto py-1 text-sm">
                       {filteredLocations.length > 0 ? (
@@ -269,7 +257,6 @@ export function OnboardingScreen() {
                   )}
                 </div>
 
-                {/* Categoria com defaultValue corrigido para "Feminina" */}
                 <Select
                   id="category"
                   label="Categoria"
@@ -303,7 +290,6 @@ export function OnboardingScreen() {
         </div>
       </section>
 
-      {/* Seção Inferior */}
       <div id="popular-links-section" ref={lowerSectionRef} className="bg-white relative z-20">
         <div className="box-border max-w-384 mx-auto px-6 md:px-12 py-10 md:py-12">
           <PopularLinksSection />
