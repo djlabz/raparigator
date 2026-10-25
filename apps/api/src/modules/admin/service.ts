@@ -1,6 +1,12 @@
 import { and, count, desc, eq, gte, ilike, inArray, or, sql } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
-import { isInformativeHash } from "@sigillus/domain";
+import {
+  PROFILE_REVIEW_REQUIRED_MESSAGE,
+  PROFILE_REVIEWABLE_STATUS,
+  canReview,
+  isInformativeHash,
+  transitionOnReview,
+} from "@sigillus/domain";
 import type {
   ActOnReportInput,
   AdminActivityLog,
@@ -37,6 +43,16 @@ import type { ProfileRepository } from "../profiles/repository";
 import type { PremiumService } from "../premium/service";
 
 export type AdminActor = { id: string; name: string; email: string };
+
+function approvalMessage(profile: ProfileRow): string {
+  if (profile.isSuspended) {
+    return "Seu anúncio foi aprovado, mas a conta está suspensa e ele não aparece no feed.";
+  }
+  if (profile.listingStatus !== "Ativo") {
+    return "Seu anúncio foi aprovado, mas está pausado. Ative-o no painel para publicá-lo.";
+  }
+  return "Seu anúncio foi aprovado e já está publicado.";
+}
 
 export type AdminNotification = { key: string; title: string; message: string; href: string };
 
@@ -182,6 +198,56 @@ export function createAdminService(deps: AdminServiceDeps) {
     return row;
   }
 
+  async function requireReviewableProfile(id: string): Promise<ProfileRow> {
+    const row = await requireProfile(id);
+    if (!canReview(row.verificationStatus)) {
+      throw new ORPCError("CONFLICT", { message: PROFILE_REVIEW_REQUIRED_MESSAGE });
+    }
+    return row;
+  }
+
+  async function decideReview(
+    row: ProfileRow,
+    values: Partial<typeof professionalProfiles.$inferInsert>,
+  ): Promise<ProfileRow> {
+    const updated = await profiles.updateIfStatus(row.id, PROFILE_REVIEWABLE_STATUS, values);
+    if (!updated) {
+      throw new ORPCError("CONFLICT", { message: PROFILE_REVIEW_REQUIRED_MESSAGE });
+    }
+    return updated;
+  }
+
+  async function setUserStatus(
+    userId: string,
+    status: "active" | "suspended",
+    suspensionReason: string | null,
+  ) {
+    await db
+      .update(users)
+      .set({ status, suspensionReason, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  }
+
+  async function setProfessionalSuspension(row: ProfileRow, suspensionReason: string | null) {
+    const isSuspended = suspensionReason !== null;
+    const now = new Date();
+    await db.transaction(async (tx) => {
+      await tx
+        .select({ id: professionalProfiles.id })
+        .from(professionalProfiles)
+        .where(eq(professionalProfiles.id, row.id))
+        .for("update");
+      await tx
+        .update(professionalProfiles)
+        .set({ isSuspended, suspensionReason, updatedAt: now })
+        .where(eq(professionalProfiles.id, row.id));
+      await tx
+        .update(users)
+        .set({ status: isSuspended ? "suspended" : "active", suspensionReason, updatedAt: now })
+        .where(eq(users.id, row.userId));
+    });
+  }
+
   async function requireProfile(id: string): Promise<ProfileRow> {
     const row = await profiles.findById(id);
     if (!row) {
@@ -305,7 +371,7 @@ export function createAdminService(deps: AdminServiceDeps) {
     const reason = reportReason(row.id, input.note);
     const now = new Date();
     await profiles.update(profile.id, {
-      verificationStatus: "rejected",
+      verificationStatus: transitionOnReview("reject"),
       rejectionReason: reason,
       reviewedAt: now,
     });
@@ -461,10 +527,7 @@ export function createAdminService(deps: AdminServiceDeps) {
 
     async suspendClient(admin: AdminActor, input: { id: string; reason: string }) {
       const user = await findClient(input.id);
-      await db
-        .update(users)
-        .set({ status: "suspended", suspensionReason: input.reason, updatedAt: new Date() })
-        .where(eq(users.id, user.id));
+      await setUserStatus(user.id, "suspended", input.reason);
       await invalidateUserSessions(user.id);
       await logActivity({
         action: "account_suspended",
@@ -479,10 +542,7 @@ export function createAdminService(deps: AdminServiceDeps) {
 
     async reinstateClient(admin: AdminActor, input: { id: string }) {
       const user = await findClient(input.id);
-      await db
-        .update(users)
-        .set({ status: "active", suspensionReason: null, updatedAt: new Date() })
-        .where(eq(users.id, user.id));
+      await setUserStatus(user.id, "active", null);
       await logActivity({
         action: "account_reinstated",
         targetName: user.name,
@@ -511,10 +571,10 @@ export function createAdminService(deps: AdminServiceDeps) {
       admin: AdminActor,
       input: { id: string; note?: string },
     ): Promise<AdminReviewAction> {
-      const row = await requireProfile(input.id);
+      const row = await requireReviewableProfile(input.id);
       const now = new Date();
-      await profiles.update(row.id, {
-        verificationStatus: "published",
+      const updated = await decideReview(row, {
+        verificationStatus: transitionOnReview("approve"),
         rejectionReason: null,
         reviewedAt: now,
       });
@@ -528,7 +588,7 @@ export function createAdminService(deps: AdminServiceDeps) {
       await notifyProfileOwner(row.userId, {
         key: `profile-approved:${row.id}:${now.getTime()}`,
         title: "Anúncio aprovado",
-        message: "Seu anúncio foi aprovado e já está publicado.",
+        message: approvalMessage(updated),
         href: PROFESSIONAL_ADS_HREF,
       });
       logger.info({ adminId: admin.id, profileId: row.id }, "perfil aprovado");
@@ -545,10 +605,10 @@ export function createAdminService(deps: AdminServiceDeps) {
       admin: AdminActor,
       input: { id: string; reason: string },
     ): Promise<AdminReviewAction> {
-      const row = await requireProfile(input.id);
+      const row = await requireReviewableProfile(input.id);
       const now = new Date();
-      await profiles.update(row.id, {
-        verificationStatus: "rejected",
+      await decideReview(row, {
+        verificationStatus: transitionOnReview("reject"),
         rejectionReason: input.reason,
         reviewedAt: now,
       });
@@ -577,7 +637,7 @@ export function createAdminService(deps: AdminServiceDeps) {
 
     async suspendProfessional(admin: AdminActor, input: { id: string; reason: string }) {
       const row = await requireProfile(input.id);
-      await profiles.update(row.id, { isSuspended: true, suspensionReason: input.reason });
+      await setProfessionalSuspension(row, input.reason);
       await invalidateUserSessions(row.userId);
       await logActivity({
         action: "account_suspended",
@@ -592,7 +652,7 @@ export function createAdminService(deps: AdminServiceDeps) {
 
     async reinstateProfessional(admin: AdminActor, input: { id: string }) {
       const row = await requireProfile(input.id);
-      await profiles.update(row.id, { isSuspended: false, suspensionReason: null });
+      await setProfessionalSuspension(row, null);
       await logActivity({
         action: "account_reinstated",
         targetName: profileLabel(row),

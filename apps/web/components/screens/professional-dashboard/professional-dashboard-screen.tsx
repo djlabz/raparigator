@@ -29,6 +29,22 @@ function DashboardTabSkeleton() {
   return <div className="min-h-80 rounded-2xl border border-zinc-100 bg-zinc-50/80" aria-hidden />;
 }
 
+function ProfessionalOnlyNotice() {
+  return (
+    <Card className="border-zinc-200 bg-white shadow-sm shadow-zinc-200/70">
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
+          Área profissional
+        </p>
+        <h2 className="text-2xl font-semibold text-zinc-900">Painel só para anunciantes</h2>
+        <p className="text-sm text-zinc-600">
+          Entre com uma conta profissional para gerenciar seu anúncio.
+        </p>
+      </div>
+    </Card>
+  );
+}
+
 const AnnouncementTab = dynamic(
   () => import("./announcement-tab").then((mod) => mod.AnnouncementTab),
   { loading: () => <DashboardTabSkeleton /> },
@@ -96,7 +112,7 @@ const TABS = [
 ] as const;
 
 export function ProfessionalDashboardScreen() {
-  const { role } = useAuthSession();
+  const { role, isPending } = useAuthSession();
   const safeRole = role === "visitor" ? "profissional" : (role as Exclude<AuthRole, "visitor">);
   const { bannerClosed, setBannerClosed } = useAccountNotifications(safeRole);
   const headingRef = useRef<HTMLDivElement>(null);
@@ -161,8 +177,7 @@ export function ProfessionalDashboardScreen() {
     paymentMethods: [],
     status: "livre",
     adTier: "normal",
-    verificationStatus: "published",
-    submittedAt: new Date().toISOString(),
+    verificationStatus: "draft",
     images: [],
     rating: 0,
     reviewsCount: 0,
@@ -170,6 +185,13 @@ export function ProfessionalDashboardScreen() {
   };
   const currentAd = myAnnouncement.ad ?? fallbackAd;
   const adSlug = currentAd.slug;
+
+  if (isPending) {
+    return <DashboardTabSkeleton />;
+  }
+  if (role !== "profissional") {
+    return <ProfessionalOnlyNotice />;
+  }
 
   return (
     <>

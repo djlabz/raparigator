@@ -31,12 +31,13 @@ async function profileOf(userId: string) {
 }
 
 describe("announcements", () => {
-  it("getMine cria perfil vazio pausado em análise com slug único", async () => {
+  it("getMine cria perfil vazio em rascunho, pausado, com slug único", async () => {
     const owner = await professional("pro-a@test.dev", "Ana Clara");
     const svc = service();
     const result = await svc.getMine(owner);
     expect(result.ad?.slug).toMatch(/^ana-clara-[0-9a-f]{6}$/);
-    expect(result.ad?.verificationStatus).toBe("pending_review");
+    expect(result.ad?.verificationStatus).toBe("draft");
+    expect(result.ad?.submittedAt).toBeUndefined();
     expect(result.listingStatus).toBe("Pausado");
     expect(result.draft).toBeNull();
     expect(result.score).toBeNull();
@@ -205,6 +206,29 @@ describe("announcements", () => {
     expect(profile.submittedAt).toBeNull();
     const logs = await harness.db.select().from(adminActivityLogs);
     expect(logs).toHaveLength(0);
+  });
+
+  it("publish de perfil rejeitado volta para a fila de revisão sem o motivo antigo", async () => {
+    const owner = await professional("pro-a@test.dev", "Rejeitada");
+    const svc = service();
+    await svc.getMine(owner);
+    const before = await profileOf(owner.id);
+    await harness.db
+      .update(professionalProfiles)
+      .set({
+        verificationStatus: "rejected",
+        rejectionReason: "Fotos ilegíveis",
+        submittedAt: new Date("2026-01-01T00:00:00.000Z"),
+      })
+      .where(eq(professionalProfiles.id, before.id));
+    const result = await svc.publish(owner, completeDraft());
+    expect(result).toEqual({ ok: true });
+    const profile = await profileOf(owner.id);
+    expect(profile.verificationStatus).toBe("pending_review");
+    expect(profile.rejectionReason).toBeNull();
+    expect(profile.submittedAt?.getTime()).toBeGreaterThan(Date.parse("2026-01-01T00:00:00.000Z"));
+    const logs = await harness.db.select().from(adminActivityLogs);
+    expect(logs.map((log) => log.action)).toEqual(["profile_submitted"]);
   });
 
   it("setListingStatus alterna Ativo/Pausado", async () => {

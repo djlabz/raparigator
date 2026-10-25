@@ -10,3 +10,4 @@ export * from "./announcement-draft";
 export * from "./client-alias";
 export * from "./image-hash";
 export * from "./earnings-simulator";
+export * from "./profile-moderation";

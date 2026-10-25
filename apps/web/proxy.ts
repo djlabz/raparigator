@@ -4,12 +4,22 @@ import { isEarningsSimulatorEnabled } from "@/lib/earnings-simulator-flag";
 
 const ADMIN_LOGIN_PATH = "/admin/login";
 const USER_LOGIN_PATH = "/auth/login";
+const PROFESSIONAL_AREA_PATH = "/profissional";
+const PROFESSIONAL_ROLE = "profissional";
+const SUSPENDED_STATUS = "suspended";
+const NON_PROFESSIONAL_HOME = "/feed";
 const EARNINGS_SIMULATOR_PATH = "/profissional/simulador";
 
-async function hasApiSession(request: NextRequest, path: string): Promise<boolean> {
+type ApiSession = { user?: { role?: unknown; status?: unknown } };
+
+function canUseProfessionalArea(session: ApiSession): boolean {
+  return session.user?.role === PROFESSIONAL_ROLE && session.user.status !== SUSPENDED_STATUS;
+}
+
+async function getApiSession(request: NextRequest, path: string): Promise<ApiSession | null> {
   const cookie = request.headers.get("cookie");
   if (!cookie) {
-    return false;
+    return null;
   }
   try {
     const response = await fetch(`${getApiUrl()}${path}`, {
@@ -17,12 +27,12 @@ async function hasApiSession(request: NextRequest, path: string): Promise<boolea
       cache: "no-store",
     });
     if (!response.ok) {
-      return false;
+      return null;
     }
     const body = (await response.json()) as unknown;
-    return body !== null && typeof body === "object";
+    return body !== null && typeof body === "object" ? (body as ApiSession) : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -31,6 +41,13 @@ function redirectToLogin(request: NextRequest, loginPath: string) {
   url.pathname = loginPath;
   url.search = "";
   url.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`);
+  return NextResponse.redirect(url);
+}
+
+function redirectTo(request: NextRequest, pathname: string) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  url.search = "";
   return NextResponse.redirect(url);
 }
 
@@ -45,20 +62,20 @@ export async function proxy(request: NextRequest) {
     if (pathname === ADMIN_LOGIN_PATH) {
       return NextResponse.next();
     }
-    const authorized = await hasApiSession(request, "/api/admin-auth/get-session");
-    return authorized ? NextResponse.next() : redirectToLogin(request, ADMIN_LOGIN_PATH);
+    const session = await getApiSession(request, "/api/admin-auth/get-session");
+    return session ? NextResponse.next() : redirectToLogin(request, ADMIN_LOGIN_PATH);
   }
 
-  const authorized = await hasApiSession(request, "/api/auth/get-session");
-  return authorized ? NextResponse.next() : redirectToLogin(request, USER_LOGIN_PATH);
+  const session = await getApiSession(request, "/api/auth/get-session");
+  if (!session) {
+    return redirectToLogin(request, USER_LOGIN_PATH);
+  }
+  if (pathname.startsWith(PROFESSIONAL_AREA_PATH) && !canUseProfessionalArea(session)) {
+    return redirectTo(request, NON_PROFESSIONAL_HOME);
+  }
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    "/conta/:path*",
-    "/profissional/anuncios/:path*",
-    "/profissional/assinatura-premium/:path*",
-    "/profissional/simulador/:path*",
-    "/admin/:path*",
-  ],
+  matcher: ["/conta/:path*", "/profissional/:path*", "/admin/:path*"],
 };

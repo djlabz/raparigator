@@ -17,7 +17,9 @@ import {
   getPublishBlockingItems,
   isSelectUnselected,
   normalizeText,
+  PROFILE_INITIAL_STATUS,
   sanitizeNumericInput,
+  transitionOnPublish,
   validateSectionForSave,
 } from "@sigillus/domain";
 import type { Database } from "../../db/client";
@@ -185,7 +187,7 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
       userId: owner.id,
       slug: await uniqueSlug(artisticName),
       displayName: artisticName,
-      verificationStatus: "pending_review",
+      verificationStatus: PROFILE_INITIAL_STATUS,
       listingStatus: "Pausado",
     });
     logger.info({ profileId: created.id }, "perfil profissional criado");
@@ -249,7 +251,8 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
           items,
         };
       }
-      const needsReview = profile.verificationStatus !== "published";
+      const transition = transitionOnPublish(profile.verificationStatus);
+      const needsReview = transition.needsReview;
       if (needsReview && identityGate) {
         const gate = await identityGate(owner.id);
         if (!gate.ok) {
@@ -264,7 +267,7 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
         listingStatus: "Ativo",
       };
       if (needsReview) {
-        values.verificationStatus = "pending_review";
+        values.verificationStatus = transition.status;
         values.submittedAt = now;
         values.rejectionReason = null;
       }

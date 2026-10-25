@@ -3,7 +3,7 @@ import { createApiClient, type ApiClient } from "@/lib/api/client";
 
 export const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001";
 
-const disposablePassword = "Descartavel@123";
+export const disposablePassword = "Descartavel@123";
 
 type SessionCookie = { name: string; value: string };
 
@@ -62,6 +62,26 @@ export async function signUpDisposableClient(prefix = "cliente") {
     alias,
   });
   return { ...session, alias };
+}
+
+export async function signUpDisposableProfessional(prefix = "anunciante") {
+  const suffix = uniqueSuffix();
+  const alias = `Anunciante ${suffix}`;
+  const session = await authenticate("/api/auth/sign-up/email", {
+    email: `${prefix}-${suffix}@sigillus.dev`,
+    password: disposablePassword,
+    name: "Anunciante Descartável",
+    role: "profissional",
+    alias,
+  });
+  return { ...session, alias };
+}
+
+export function signInAdminViaApi(admin: { email: string; password: string }) {
+  return authenticate("/api/admin-auth/sign-in/email", {
+    email: admin.email,
+    password: admin.password,
+  });
 }
 
 export function signInViaApi(user: { email: string; password: string }) {

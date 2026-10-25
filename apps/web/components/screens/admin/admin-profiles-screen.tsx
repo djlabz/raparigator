@@ -15,6 +15,7 @@ import {
   Users,
   Sparkles,
   Eye,
+  FileText,
 } from "lucide-react";
 import { AdminLayoutShell } from "./admin-layout-shell";
 import { useAdminSession } from "@/lib/admin-session";
@@ -51,6 +52,14 @@ function StatusBadge({ status }: { status: VerificationStatus | undefined }) {
       <span className="inline-flex items-center gap-1 rounded-full border border-red-500/40 bg-red-950/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-red-300 backdrop-blur-md shadow-sm">
         <XCircle className="h-3 w-3" />
         Recusado
+      </span>
+    );
+  }
+  if (status === "draft") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-zinc-500/40 bg-zinc-900/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-300 backdrop-blur-md shadow-sm">
+        <FileText className="h-3 w-3" />
+        Sem envio
       </span>
     );
   }
