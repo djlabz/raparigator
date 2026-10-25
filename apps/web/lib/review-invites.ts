@@ -20,6 +20,7 @@ const listeners = new Set<() => void>();
 
 let apiState: ReviewInvitesState = { invites: [], reviews: [] };
 let apiInitialLoaded = false;
+let resetGeneration = 0;
 const inFlightInvites = new Set<string>();
 const inviteGenerations = new Map<string, number>();
 const pendingInviteRequests = new Map<string, Promise<unknown>>();
@@ -67,6 +68,7 @@ function writeApiState(next: ReviewInvitesState) {
 }
 
 export function resetReviewInvites() {
+  resetGeneration += 1;
   apiInitialLoaded = false;
   inFlightInvites.clear();
   inviteGenerations.clear();
@@ -230,10 +232,11 @@ export function useReviewInvites(options: { enabled?: boolean } = {}) {
       return;
     }
     let cancelled = false;
+    const generation = resetGeneration;
     getApiClient()
       .reviews.listMyInvites()
       .then((invites) => {
-        if (!cancelled) {
+        if (!cancelled && generation === resetGeneration) {
           apiInitialLoaded = true;
           const merged = new Map<string, ReviewInvite>();
           for (const item of invites) {

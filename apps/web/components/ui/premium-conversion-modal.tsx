@@ -96,7 +96,7 @@ export function PremiumConversionModal({
   const [canScrollDown, setCanScrollDown] = useState(true);
   const [reachedEnd, setReachedEnd] = useState(false);
   const sharedGains = getSharedGains();
-  const { plans: planOptions, stale: plansStale } = usePremiumPlans();
+  const { plans: planOptions, stale: plansStale, loading: plansLoading } = usePremiumPlans();
   const selectedPlan =
     planOptions.find((option) => option.cycle === billingCycle) ?? getPlanOption(billingCycle);
   const savingsPercent = getBillingSavingsPercent();
@@ -177,7 +177,7 @@ export function PremiumConversionModal({
             ) : null}
             <ShinyButton
               fullWidth
-              disabled={step2CtaDisabled || plansStale}
+              disabled={step2CtaDisabled || plansStale || plansLoading}
               onClick={handleGoCheckout}
             >
               Continuar para assinatura

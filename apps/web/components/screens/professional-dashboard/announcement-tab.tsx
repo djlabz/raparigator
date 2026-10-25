@@ -541,10 +541,10 @@ export function AnnouncementTab({
     }));
   };
 
-  const persistProfileImage = (assetId: string | null, previous: typeof form) => {
+  const persistProfileImage = (assetId: string | null, previousProfileIndex: number | null) => {
     void setProfileImageMedia(assetId).then((ok) => {
       if (!ok) {
-        restoreMediaState(previous);
+        updateForm((current) => ({ ...current, profileIndex: previousProfileIndex }));
         showUploadError("Não foi possível definir a foto de perfil.");
       }
     });
@@ -606,7 +606,7 @@ export function AnnouncementTab({
           if (isVid) currentVideos++;
           else currentPhotos++;
           if (isFirstImage && !isVid) {
-            persistProfileImage(asset.id, form);
+            persistProfileImage(asset.id, form.profileIndex);
           }
 
           const displayUrl = asset.thumbnailUrl || asset.url || "";
@@ -846,7 +846,7 @@ export function AnnouncementTab({
     const targetUrl = form.images[index];
     const assetId = targetUrl ? findAssetIdForUrl(targetUrl) : null;
     if (assetId) {
-      persistProfileImage(assetId, form);
+      persistProfileImage(assetId, form.profileIndex);
     }
 
     updateForm((current) => {
@@ -909,7 +909,7 @@ export function AnnouncementTab({
   const setProfileIndex = (index: number) => {
     const targetUrl = form.images[index];
     const assetId = targetUrl ? findAssetIdForUrl(targetUrl) : null;
-    persistProfileImage(assetId, form);
+    persistProfileImage(assetId, form.profileIndex);
 
     updateForm((current) => {
       if (current.images.length === 0) {

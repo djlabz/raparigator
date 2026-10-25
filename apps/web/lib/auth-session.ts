@@ -4,10 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import type { AuthRole, User } from "@/lib/types";
 import { authClient } from "@/lib/api/auth-client";
 import { getApiClient } from "@/lib/api/client";
+import { resetAccountNotifications } from "@/lib/account-notifications";
 import { resetChatStore } from "@/lib/chat-store";
 import { resetPremiumPlan } from "@/lib/premium-plan";
 import { reportStoreError } from "@/lib/report-store-error";
 import { resetReviewInvites } from "@/lib/review-invites";
+import { resetVerification } from "@/lib/verification";
 
 function pathRequiresAuth(pathname: string) {
   return (
@@ -78,6 +80,8 @@ export function useAuthSession() {
       resetChatStore();
       resetReviewInvites();
       resetPremiumPlan();
+      resetVerification();
+      resetAccountNotifications();
       await authClient.signOut();
       if (typeof window !== "undefined" && pathRequiresAuth(window.location.pathname)) {
         window.location.href = "/feed";

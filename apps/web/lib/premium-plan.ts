@@ -17,7 +17,8 @@ const listeners = new Set<() => void>();
 let cachedApiState: PremiumState | null = null;
 let lastError: StoreErrorKind | null = null;
 let fetchedForUserId: string | null = null;
-let apiFetchPromise: Promise<PremiumState | null> | null = null;
+let pendingUserId: string | null = null;
+let generation = 0;
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
@@ -38,24 +39,38 @@ function readViewOnceCount(): number {
 }
 
 async function fetchPremiumState(userId: string | null): Promise<PremiumState | null> {
+  generation += 1;
+  const started = generation;
+  pendingUserId = userId;
   try {
     const state = await getApiClient().premium.getState();
+    if (started !== generation) {
+      return cachedApiState;
+    }
     cachedApiState = state;
     lastError = null;
     return state;
   } catch (error) {
+    if (started !== generation) {
+      return cachedApiState;
+    }
     lastError = reportStoreError("premium.getState", error);
     return cachedApiState;
   } finally {
-    fetchedForUserId = userId;
-    emitChange();
+    if (started === generation) {
+      fetchedForUserId = userId;
+      pendingUserId = null;
+      emitChange();
+    }
   }
 }
 
 export function resetPremiumPlan() {
+  generation += 1;
   cachedApiState = null;
   lastError = null;
   fetchedForUserId = null;
+  pendingUserId = null;
   emitChange();
 }
 
@@ -135,12 +150,10 @@ export function usePremiumPlan() {
       }
       return;
     }
-    if (fetchedForUserId === userId || apiFetchPromise) {
+    if (fetchedForUserId === userId || pendingUserId === userId) {
       return;
     }
-    apiFetchPromise = fetchPremiumState(userId).finally(() => {
-      apiFetchPromise = null;
-    });
+    void fetchPremiumState(userId);
   }, [isProfessional, userId]);
 
   const isPremium = plan === "premium";

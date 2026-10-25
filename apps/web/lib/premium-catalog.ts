@@ -9,9 +9,17 @@ import { reportStoreError } from "@/lib/report-store-error";
 export type { PremiumPlanOption };
 export { getBillingSavingsPercent, getPlanOption };
 
-export type PremiumPlansResult = { plans: PremiumPlanOption[]; stale: boolean };
+export type PremiumPlansResult = {
+  plans: PremiumPlanOption[];
+  stale: boolean;
+  loading: boolean;
+};
 
-const LOCAL_PLANS: PremiumPlansResult = { plans: PREMIUM_PLAN_OPTIONS, stale: false };
+const LOCAL_PLANS: PremiumPlansResult = {
+  plans: PREMIUM_PLAN_OPTIONS,
+  stale: false,
+  loading: true,
+};
 
 let cachedApiPlans: PremiumPlansResult | null = null;
 let apiPlansPromise: Promise<PremiumPlansResult> | null = null;
@@ -26,10 +34,10 @@ async function fetchPremiumPlans(): Promise<PremiumPlansResult> {
   apiPlansPromise = (async () => {
     try {
       const plans = await getApiClient().premium.plans();
-      cachedApiPlans = { plans, stale: false };
+      cachedApiPlans = { plans, stale: false, loading: false };
     } catch (error) {
       reportStoreError("premium.plans", error);
-      cachedApiPlans = { plans: PREMIUM_PLAN_OPTIONS, stale: true };
+      cachedApiPlans = { plans: PREMIUM_PLAN_OPTIONS, stale: true, loading: false };
     } finally {
       apiPlansPromise = null;
     }

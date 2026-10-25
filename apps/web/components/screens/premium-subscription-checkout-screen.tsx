@@ -42,7 +42,7 @@ export function PremiumSubscriptionCheckoutScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isPremium, activatePremium, checkoutEnabled } = usePremiumPlan();
-  const { plans: planOptions, stale: plansStale } = usePremiumPlans();
+  const { plans: planOptions, stale: plansStale, loading: plansLoading } = usePremiumPlans();
 
   useEffect(() => {
     if (!checkoutEnabled) {
@@ -348,7 +348,7 @@ export function PremiumSubscriptionCheckoutScreen() {
               ) : null}
               <ShinyButton
                 fullWidth
-                disabled={plansStale}
+                disabled={plansStale || plansLoading}
                 onClick={handleConfirm}
                 className="tabular-nums tracking-tight"
               >

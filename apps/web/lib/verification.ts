@@ -37,7 +37,15 @@ const SERVER_SNAPSHOT: VerificationViewState = { ...DEFAULT_INITIAL_STATE, error
 
 let cachedState: VerificationViewState = SERVER_SNAPSHOT;
 let inFlightPromise: Promise<VerificationPublicState> | null = null;
+let generation = 0;
 const listeners = new Set<() => void>();
+
+export function resetVerification() {
+  generation += 1;
+  inFlightPromise = null;
+  cachedState = SERVER_SNAPSHOT;
+  emitChange();
+}
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
@@ -62,19 +70,28 @@ async function fetchVerificationState(): Promise<VerificationPublicState> {
   if (inFlightPromise) {
     return inFlightPromise;
   }
+  const started = generation;
   inFlightPromise = (async () => {
     try {
       const state = await getApiClient().verification.getState();
+      if (started !== generation) {
+        return cachedState;
+      }
       cachedState = { ...state, error: null };
       emitChange();
       return state;
     } catch (error) {
+      if (started !== generation) {
+        return cachedState;
+      }
       reportStoreError("verification.getState", error);
       cachedState = { ...cachedState, error: VERIFICATION_LOAD_ERROR };
       emitChange();
       return cachedState;
     } finally {
-      inFlightPromise = null;
+      if (started === generation) {
+        inFlightPromise = null;
+      }
     }
   })();
   return inFlightPromise;

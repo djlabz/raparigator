@@ -28,6 +28,15 @@ const roleServerSnapshotCache = new Map<Exclude<AuthRole, "visitor">, AccountNot
 
 let apiItems: AccountNotificationItem[] = [];
 let apiInFlight = false;
+let generation = 0;
+
+export function resetAccountNotifications() {
+  generation += 1;
+  apiItems = [];
+  apiInFlight = false;
+  roleStateCache.clear();
+  emitChange();
+}
 
 const bannerKey = (role: Exclude<AuthRole, "visitor">) =>
   `sigillus-account-banner-dismissed-${role}`;
@@ -132,9 +141,13 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
       return;
     }
     apiInFlight = true;
+    const started = generation;
     getApiClient()
       .notifications.list()
       .then((items) => {
+        if (started !== generation) {
+          return;
+        }
         apiItems = items;
         const current = getSnapshot(role);
         roleStateCache.set(role, { ...current, items });
@@ -160,8 +173,12 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
 
   const refresh = useMemo(() => {
     return async () => {
+      const started = generation;
       try {
         const items = await getApiClient().notifications.list();
+        if (started !== generation) {
+          return;
+        }
         apiItems = items;
         const current = getSnapshot(role);
         roleStateCache.set(role, { ...current, items });

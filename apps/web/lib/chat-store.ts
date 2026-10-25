@@ -35,6 +35,7 @@ const EMPTY_SNAPSHOT: ChatStoreState = { conversations: [], messages: [], lastEr
 
 let snapshot: ChatStoreState = EMPTY_SNAPSHOT;
 let apiInitialized = false;
+let epoch = 0;
 const listeners = new Set<() => void>();
 
 let sseController: AbortController | null = null;
@@ -73,8 +74,12 @@ async function refreshConversations(): Promise<void> {
   if (typeof window === "undefined") {
     return;
   }
+  const started = epoch;
   try {
     const remoteConversations = await fetchConversations();
+    if (started !== epoch) {
+      return;
+    }
     const current = snapshot;
     replaceSnapshot({
       ...current,
@@ -90,8 +95,12 @@ export async function loadConversationMessages(conversationId: string): Promise<
   if (typeof window === "undefined" || !conversationId) {
     return;
   }
+  const started = epoch;
   try {
     const { items } = await fetchMessages(conversationId, { limit: 50 });
+    if (started !== epoch) {
+      return;
+    }
     const current = snapshot;
     const pendingOptimistic = current.messages.filter(
       (m) => m.conversationId === conversationId && m.status === "sending",
@@ -196,6 +205,7 @@ export function stopChatEventStream() {
 }
 
 export function resetChatStore() {
+  epoch += 1;
   stopChatEventStream();
   apiInitialized = false;
   replaceSnapshot(EMPTY_SNAPSHOT);
@@ -208,9 +218,10 @@ export function ensureChatStore(options: { enabled?: boolean } = {}): ChatStoreS
 
   if (!apiInitialized) {
     apiInitialized = true;
+    const started = epoch;
     void refreshConversations().then(() => {
       const current = snapshot;
-      if (current.conversations.length > 0) {
+      if (started === epoch && current.conversations.length > 0) {
         void loadConversationMessages(current.conversations[0].id);
       }
     });
