@@ -8,20 +8,30 @@ import { StarRatingInput } from "@/components/ui/star-rating-input";
 import { Toast } from "@/components/ui/toast";
 import { useAuthSession } from "@/lib/auth-session";
 import {
+  ensureChatStore,
   getChatStoreSnapshot,
   getServerChatStoreSnapshot,
   subscribeChatStore,
 } from "@/lib/chat-store";
 import { getConversationAd } from "@/lib/conversation-ad";
 import { getInviteStatus, submitReview, useReviewInvites } from "@/lib/review-invites";
-import type { ProfessionalAd } from "@/lib/types";
+import type { ProfessionalAd, User } from "@/lib/types";
 
 interface ReviewCtaProps {
   ad: ProfessionalAd;
 }
 
 export function ReviewCta({ ad }: ReviewCtaProps) {
-  const { role, user } = useAuthSession();
+  const { role, user, isPending } = useAuthSession();
+
+  if (isPending || role !== "cliente" || !user) {
+    return null;
+  }
+
+  return <ReviewCtaForClient ad={ad} user={user} />;
+}
+
+function ReviewCtaForClient({ ad, user }: { ad: ProfessionalAd; user: User }) {
   const chat = useSyncExternalStore(
     subscribeChatStore,
     getChatStoreSnapshot,
@@ -34,6 +44,10 @@ export function ReviewCta({ ad }: ReviewCtaProps) {
   const [sent, setSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    ensureChatStore();
+  }, []);
+
   const conversation =
     chat.conversations.find(
       (item) =>
@@ -43,10 +57,9 @@ export function ReviewCta({ ad }: ReviewCtaProps) {
 
   const invite = conversation ? getInvite(conversation.id) : undefined;
   const status = getInviteStatus(invite);
-  const isClient = role === "cliente";
 
   useEffect(() => {
-    if (!isClient || typeof window === "undefined" || status !== "open") {
+    if (typeof window === "undefined" || status !== "open") {
       return;
     }
 
@@ -54,13 +67,13 @@ export function ReviewCta({ ad }: ReviewCtaProps) {
     if (requested && conversation && requested === conversation.id) {
       setModalOpen(true);
     }
-  }, [conversation, isClient, status]);
+  }, [conversation, status]);
 
-  if (!isClient || !conversation) {
+  if (!conversation) {
     return null;
   }
 
-  const alias = conversation.currentUserAlias || user?.alias || "Cliente reservado";
+  const alias = conversation.currentUserAlias || user.alias || "Cliente reservado";
 
   if (status === "used") {
     return (

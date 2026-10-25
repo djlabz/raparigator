@@ -4,14 +4,19 @@ import { useEffect, useSyncExternalStore } from "react";
 import type { PlanLimits, PlanTier, PremiumState } from "@sigillus/contracts";
 import { getPlanLimits } from "@sigillus/domain";
 import { getApiClient } from "@/lib/api/client";
+import { authClient } from "@/lib/api/auth-client";
+import { reportStoreError, type StoreErrorKind } from "@/lib/report-store-error";
 
 const VIEW_ONCE_COUNT_KEY = "sigillus-view-once-count";
+const PROFESSIONAL_ROLE = "profissional";
 
 export const PREMIUM_UPLOAD_ERROR_MESSAGE = "Houve um erro ao fazer o upload";
 
 const listeners = new Set<() => void>();
 
 let cachedApiState: PremiumState | null = null;
+let lastError: StoreErrorKind | null = null;
+let fetchedForUserId: string | null = null;
 let apiFetchPromise: Promise<PremiumState | null> | null = null;
 
 function subscribe(listener: () => void) {
@@ -32,18 +37,26 @@ function readViewOnceCount(): number {
   return Number.isFinite(stored) && stored > 0 ? Math.floor(stored) : 0;
 }
 
-async function fetchPremiumState(): Promise<PremiumState | null> {
+async function fetchPremiumState(userId: string | null): Promise<PremiumState | null> {
   try {
-    const client = getApiClient();
-    const state = await client.premium.getState();
+    const state = await getApiClient().premium.getState();
     cachedApiState = state;
-    emitChange();
+    lastError = null;
     return state;
-  } catch {
-    cachedApiState = null;
+  } catch (error) {
+    lastError = reportStoreError("premium.getState", error);
+    return cachedApiState;
+  } finally {
+    fetchedForUserId = userId;
     emitChange();
-    return null;
   }
+}
+
+export function resetPremiumPlan() {
+  cachedApiState = null;
+  lastError = null;
+  fetchedForUserId = null;
+  emitChange();
 }
 
 const STANDARD_LIMITS = getPlanLimits("standard");
@@ -59,6 +72,10 @@ function getCachedPremiumLimits(): PlanLimits {
 
 function getCachedCheckoutEnabled(): boolean {
   return cachedApiState ? cachedApiState.checkoutEnabled : false;
+}
+
+function getLastError(): StoreErrorKind | null {
+  return lastError;
 }
 
 function activatePremium() {
@@ -92,6 +109,11 @@ function registerViewOnceSend() {
 }
 
 export function usePremiumPlan() {
+  const session = authClient.useSession();
+  const sessionUser = session.data?.user as { id: string; role?: unknown } | undefined;
+  const userId = sessionUser?.id ?? null;
+  const isProfessional = sessionUser?.role === PROFESSIONAL_ROLE;
+
   const plan = useSyncExternalStore<PlanTier>(subscribe, getCachedPlanTier, () => "standard");
   const limits = useSyncExternalStore<PlanLimits>(
     subscribe,
@@ -103,15 +125,23 @@ export function usePremiumPlan() {
     getCachedCheckoutEnabled,
     () => false,
   );
+  const error = useSyncExternalStore<StoreErrorKind | null>(subscribe, getLastError, () => null);
   const viewOnceUsed = useSyncExternalStore<number>(subscribe, readViewOnceCount, () => 0);
 
   useEffect(() => {
-    if (!cachedApiState && !apiFetchPromise) {
-      apiFetchPromise = fetchPremiumState().finally(() => {
-        apiFetchPromise = null;
-      });
+    if (!userId || !isProfessional) {
+      if (cachedApiState || lastError || fetchedForUserId) {
+        resetPremiumPlan();
+      }
+      return;
     }
-  }, []);
+    if (fetchedForUserId === userId || apiFetchPromise) {
+      return;
+    }
+    apiFetchPromise = fetchPremiumState(userId).finally(() => {
+      apiFetchPromise = null;
+    });
+  }, [isProfessional, userId]);
 
   const isPremium = plan === "premium";
 
@@ -119,6 +149,7 @@ export function usePremiumPlan() {
     plan,
     isPremium,
     checkoutEnabled,
+    lastError: error,
     subscription: cachedApiState?.subscription ?? null,
     activatePremium,
     deactivatePremium,
@@ -130,6 +161,6 @@ export function usePremiumPlan() {
     visibilityMultiplier: limits.visibilityMultiplier,
     canUseAlias: limits.canUseAlias,
     limits,
-    refetch: fetchPremiumState,
+    refetch: () => fetchPremiumState(userId),
   };
 }

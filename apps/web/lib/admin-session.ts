@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { AdminUser } from "@/lib/types";
 import { adminAuthClient } from "@/lib/api/admin-auth-client";
 import { getApiClient } from "@/lib/api/client";
+import { reportStoreError } from "@/lib/report-store-error";
 
 export function useAdminSession() {
   const session = adminAuthClient.useSession();
@@ -23,7 +24,9 @@ export function useAdminSession() {
           setApiAdmin(res.admin);
         }
       })
-      .catch(() => {});
+      .catch((error: unknown) => {
+        reportStoreError("admin.me", error);
+      });
     return () => {
       cancelled = true;
     };

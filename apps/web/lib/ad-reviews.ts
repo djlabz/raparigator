@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getApiClient } from "@/lib/api/client";
+import { reportStoreError } from "@/lib/report-store-error";
 import { useReviewInvites } from "@/lib/review-invites";
 import type { AdReviewsSummary, ProfessionalAd, Review } from "@sigillus/contracts";
 import { mergeRating } from "@sigillus/domain";
@@ -11,7 +12,7 @@ export type { AdReviewsSummary };
 const adReviewsCache = new Map<string, AdReviewsSummary>();
 
 export function useAdReviews(ad: ProfessionalAd | undefined): AdReviewsSummary {
-  const { getReviewsForAd } = useReviewInvites();
+  const { getReviewsForAd } = useReviewInvites({ enabled: false });
   const slug = ad?.slug ?? "";
   const [apiSummary, setApiSummary] = useState<AdReviewsSummary | null>(() =>
     slug ? (adReviewsCache.get(slug) ?? null) : null,
@@ -30,7 +31,9 @@ export function useAdReviews(ad: ProfessionalAd | undefined): AdReviewsSummary {
           setApiSummary(summary);
         }
       })
-      .catch(() => {});
+      .catch((error: unknown) => {
+        reportStoreError("reviews.listForAd", error);
+      });
     return () => {
       cancelled = true;
     };

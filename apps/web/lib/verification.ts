@@ -3,10 +3,15 @@
 import { useEffect, useSyncExternalStore } from "react";
 import type { VerificationChannel, VerificationPublicState } from "@sigillus/contracts";
 import { getApiClient } from "@/lib/api/client";
+import { reportStoreError } from "@/lib/report-store-error";
 
 export type { VerificationChannel, VerificationPublicState };
 
 export const HAS_VERIFICATION_PROVIDER = false;
+
+export const VERIFICATION_LOAD_ERROR = "Não foi possível carregar o estado da verificação.";
+
+export type VerificationViewState = VerificationPublicState & { error: string | null };
 
 const DEFAULT_INITIAL_STATE: VerificationPublicState = {
   email: {
@@ -28,7 +33,9 @@ const DEFAULT_INITIAL_STATE: VerificationPublicState = {
   required: false,
 };
 
-let cachedState: VerificationPublicState = DEFAULT_INITIAL_STATE;
+const SERVER_SNAPSHOT: VerificationViewState = { ...DEFAULT_INITIAL_STATE, error: null };
+
+let cachedState: VerificationViewState = SERVER_SNAPSHOT;
 let inFlightPromise: Promise<VerificationPublicState> | null = null;
 const listeners = new Set<() => void>();
 
@@ -43,12 +50,12 @@ function emitChange() {
   listeners.forEach((listener) => listener());
 }
 
-function getVerificationSnapshot(): VerificationPublicState {
+function getVerificationSnapshot(): VerificationViewState {
   return cachedState;
 }
 
-function getServerSnapshot(): VerificationPublicState {
-  return DEFAULT_INITIAL_STATE;
+function getServerSnapshot(): VerificationViewState {
+  return SERVER_SNAPSHOT;
 }
 
 async function fetchVerificationState(): Promise<VerificationPublicState> {
@@ -58,10 +65,13 @@ async function fetchVerificationState(): Promise<VerificationPublicState> {
   inFlightPromise = (async () => {
     try {
       const state = await getApiClient().verification.getState();
-      cachedState = state;
+      cachedState = { ...state, error: null };
       emitChange();
       return state;
-    } catch {
+    } catch (error) {
+      reportStoreError("verification.getState", error);
+      cachedState = { ...cachedState, error: VERIFICATION_LOAD_ERROR };
+      emitChange();
       return cachedState;
     } finally {
       inFlightPromise = null;
@@ -70,12 +80,18 @@ async function fetchVerificationState(): Promise<VerificationPublicState> {
   return inFlightPromise;
 }
 
-export function useVerification(_user?: { email?: string; phone?: string | null } | null) {
+export function useVerification(
+  user?: { id?: string; email?: string; phone?: string | null } | null,
+) {
   const state = useSyncExternalStore(subscribe, getVerificationSnapshot, getServerSnapshot);
+  const enabled = Boolean(user);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
     void fetchVerificationState();
-  }, []);
+  }, [enabled, user?.id]);
 
   return state;
 }

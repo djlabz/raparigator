@@ -4,15 +4,20 @@ import { useEffect, useState } from "react";
 import type { PremiumPlanOption } from "@sigillus/contracts";
 import { PREMIUM_PLAN_OPTIONS, getBillingSavingsPercent, getPlanOption } from "@sigillus/domain";
 import { getApiClient } from "@/lib/api/client";
+import { reportStoreError } from "@/lib/report-store-error";
 
 export type { PremiumPlanOption };
 export { getBillingSavingsPercent, getPlanOption };
 
-let cachedApiPlans: PremiumPlanOption[] | null = null;
-let apiPlansPromise: Promise<PremiumPlanOption[]> | null = null;
+export type PremiumPlansResult = { plans: PremiumPlanOption[]; stale: boolean };
 
-async function fetchPremiumPlans(): Promise<PremiumPlanOption[]> {
-  if (cachedApiPlans) {
+const LOCAL_PLANS: PremiumPlansResult = { plans: PREMIUM_PLAN_OPTIONS, stale: false };
+
+let cachedApiPlans: PremiumPlansResult | null = null;
+let apiPlansPromise: Promise<PremiumPlansResult> | null = null;
+
+async function fetchPremiumPlans(): Promise<PremiumPlansResult> {
+  if (cachedApiPlans && !cachedApiPlans.stale) {
     return cachedApiPlans;
   }
   if (apiPlansPromise) {
@@ -20,34 +25,31 @@ async function fetchPremiumPlans(): Promise<PremiumPlanOption[]> {
   }
   apiPlansPromise = (async () => {
     try {
-      const client = getApiClient();
-      const plans = await client.premium.plans();
-      cachedApiPlans = plans;
-      return plans;
-    } catch {
-      return PREMIUM_PLAN_OPTIONS;
+      const plans = await getApiClient().premium.plans();
+      cachedApiPlans = { plans, stale: false };
+    } catch (error) {
+      reportStoreError("premium.plans", error);
+      cachedApiPlans = { plans: PREMIUM_PLAN_OPTIONS, stale: true };
     } finally {
       apiPlansPromise = null;
     }
+    return cachedApiPlans;
   })();
   return apiPlansPromise;
 }
 
-function getCachedPremiumPlans(): PremiumPlanOption[] {
-  if (cachedApiPlans) {
-    return cachedApiPlans;
-  }
-  return PREMIUM_PLAN_OPTIONS;
+function getCachedPremiumPlans(): PremiumPlansResult {
+  return cachedApiPlans ?? LOCAL_PLANS;
 }
 
-export function usePremiumPlans(): PremiumPlanOption[] {
-  const [plans, setPlans] = useState<PremiumPlanOption[]>(getCachedPremiumPlans);
+export function usePremiumPlans(): PremiumPlansResult {
+  const [result, setResult] = useState<PremiumPlansResult>(getCachedPremiumPlans);
 
   useEffect(() => {
     let active = true;
     void fetchPremiumPlans().then((fetched) => {
       if (active) {
-        setPlans(fetched);
+        setResult(fetched);
       }
     });
     return () => {
@@ -55,7 +57,7 @@ export function usePremiumPlans(): PremiumPlanOption[] {
     };
   }, []);
 
-  return plans;
+  return result;
 }
 
 export interface PremiumImmediateGain {

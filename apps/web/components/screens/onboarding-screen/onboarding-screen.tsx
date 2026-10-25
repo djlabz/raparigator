@@ -20,7 +20,7 @@ import styles from "./onboarding-screen.module.css";
 
 export function OnboardingScreen() {
   const { role, user, isLoggedIn, logout } = useAuthSession();
-  const { categories, locations: locationsData } = useCatalogs();
+  const { categories, locations: locationsData, source: catalogsSource } = useCatalogs();
   const [showLocationToast, setShowLocationToast] = useState(false);
   const [isPopularVisible, setIsPopularVisible] = useState(false);
 
@@ -263,6 +263,11 @@ export function OnboardingScreen() {
                   options={categories.map((value) => ({ value, label: value }))}
                   defaultValue="Feminina"
                 />
+                {catalogsSource === "local" ? (
+                  <p className="text-xs text-zinc-500">
+                    Listas carregadas da versão local; algumas opções podem estar desatualizadas.
+                  </p>
+                ) : null}
               </div>
 
               <Link

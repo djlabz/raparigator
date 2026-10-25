@@ -18,11 +18,22 @@ import type {
   ChatSendResult,
   ChatSnapshot,
 } from "@/lib/chat-store-types";
+import {
+  isUnauthenticatedError,
+  reportStoreError,
+  type StoreErrorKind,
+} from "@/lib/report-store-error";
 import type { Conversation, EncounterBrief, Message } from "@/lib/types";
 
-const EMPTY_SNAPSHOT: ChatSnapshot = { conversations: [], messages: [] };
+export type ChatStoreState = ChatSnapshot & { lastError: StoreErrorKind | null };
 
-let snapshot: ChatSnapshot = EMPTY_SNAPSHOT;
+export type ChatEnsureConversationResult =
+  | { ok: true; conversationId: string }
+  | { ok: false; reason: StoreErrorKind };
+
+const EMPTY_SNAPSHOT: ChatStoreState = { conversations: [], messages: [], lastError: null };
+
+let snapshot: ChatStoreState = EMPTY_SNAPSHOT;
 let apiInitialized = false;
 const listeners = new Set<() => void>();
 
@@ -37,17 +48,24 @@ function emit() {
   });
 }
 
-function replaceSnapshot(next: ChatSnapshot) {
+function replaceSnapshot(next: ChatStoreState) {
   snapshot = next;
   emit();
 }
 
-export function getServerChatStoreSnapshot(): ChatSnapshot {
+function failWith(scope: string, error: unknown): StoreErrorKind {
+  const kind = reportStoreError(scope, error);
+  if (snapshot.lastError !== kind) {
+    replaceSnapshot({ ...snapshot, lastError: kind });
+  }
+  return kind;
+}
+
+export function getServerChatStoreSnapshot(): ChatStoreState {
   return EMPTY_SNAPSHOT;
 }
 
-export function getChatStoreSnapshot(): ChatSnapshot {
-  ensureChatStore();
+export function getChatStoreSnapshot(): ChatStoreState {
   return snapshot;
 }
 
@@ -61,9 +79,10 @@ async function refreshConversations(): Promise<void> {
     replaceSnapshot({
       ...current,
       conversations: remoteConversations.filter((c) => !c.deletedFromInboxAt),
+      lastError: null,
     });
-  } catch {
-    return;
+  } catch (error) {
+    failWith("chat.conversations", error);
   }
 }
 
@@ -91,8 +110,8 @@ export async function loadConversationMessages(conversationId: string): Promise<
       ...current,
       messages: [...otherMessages, ...Array.from(map.values())],
     });
-  } catch {
-    return;
+  } catch (error) {
+    failWith("chat.messages", error);
   }
 }
 
@@ -132,6 +151,7 @@ function startChatEventStream() {
   sseActive = true;
   sseController = new AbortController();
   const signal = sseController.signal;
+  let shouldReconnect = true;
 
   (async () => {
     try {
@@ -141,11 +161,18 @@ function startChatEventStream() {
         if (signal.aborted) break;
         handleChatEvent(event);
       }
-    } catch {
-      return;
+    } catch (error) {
+      if (signal.aborted) {
+        return;
+      }
+      failWith("chat.subscribe", error);
+      if (isUnauthenticatedError(error)) {
+        shouldReconnect = false;
+        apiInitialized = false;
+      }
     } finally {
       sseActive = false;
-      if (!signal.aborted) {
+      if (!signal.aborted && shouldReconnect) {
         const backoffMs = Math.min(1000 * Math.pow(2, reconnectAttempts), 15000);
         reconnectAttempts += 1;
         if (reconnectTimeout) clearTimeout(reconnectTimeout);
@@ -168,9 +195,15 @@ export function stopChatEventStream() {
   reconnectAttempts = 0;
 }
 
-export function ensureChatStore(): ChatSnapshot {
-  if (typeof window === "undefined") {
-    return EMPTY_SNAPSHOT;
+export function resetChatStore() {
+  stopChatEventStream();
+  apiInitialized = false;
+  replaceSnapshot(EMPTY_SNAPSHOT);
+}
+
+export function ensureChatStore(options: { enabled?: boolean } = {}): ChatStoreState {
+  if (typeof window === "undefined" || options.enabled === false) {
+    return snapshot;
   }
 
   if (!apiInitialized) {
@@ -186,11 +219,15 @@ export function ensureChatStore(): ChatSnapshot {
   return snapshot;
 }
 
-export function reseedChatStore(): ChatSnapshot {
+export function reseedChatStore(): ChatStoreState {
   if (typeof window === "undefined") {
-    return EMPTY_SNAPSHOT;
+    return snapshot;
   }
   void refreshConversations();
+  if (!sseActive) {
+    reconnectAttempts = 0;
+    startChatEventStream();
+  }
   return snapshot;
 }
 
@@ -215,13 +252,25 @@ export function markConversationAsRead(conversationId: string) {
   if (!target || target.unread === 0) {
     return;
   }
+  const previousUnread = target.unread;
   replaceSnapshot({
     ...current,
     conversations: current.conversations.map((conversation) =>
       conversation.id === conversationId ? { ...conversation, unread: 0 } : conversation,
     ),
   });
-  void fetchMarkConversationRead(conversationId);
+  fetchMarkConversationRead(conversationId).catch((error: unknown) => {
+    reportStoreError("chat.markRead", error);
+    const latest = snapshot;
+    replaceSnapshot({
+      ...latest,
+      conversations: latest.conversations.map((conversation) =>
+        conversation.id === conversationId
+          ? { ...conversation, unread: previousUnread }
+          : conversation,
+      ),
+    });
+  });
 }
 
 function syncPreview(
@@ -236,23 +285,25 @@ function syncPreview(
   );
 }
 
-export async function ensureConversationForAd(adSlug: string): Promise<string | null> {
+export async function ensureConversationForAd(
+  adSlug: string,
+): Promise<ChatEnsureConversationResult> {
   if (typeof window === "undefined") {
-    return null;
+    return { ok: false, reason: "unknown" };
   }
 
   const current = ensureChatStore();
   const existing = current.conversations.find((conversation) => conversation.adSlug === adSlug);
   if (existing) {
-    return existing.id;
+    return { ok: true, conversationId: existing.id };
   }
 
   try {
     const conversationId = await fetchEnsureConversationForAd(adSlug);
     await refreshConversations();
-    return conversationId;
-  } catch {
-    return null;
+    return { ok: true, conversationId };
+  } catch (error) {
+    return { ok: false, reason: reportStoreError("chat.ensureConversation", error) };
   }
 }
 
@@ -291,6 +342,7 @@ export async function sendChatBrief(
   };
 
   replaceSnapshot({
+    ...current,
     conversations: syncPreview(current, conversationId, `Interesse enviado · ${brief.duration}`),
     messages: [...current.messages, optimisticMessage],
   });
@@ -361,6 +413,7 @@ export async function sendChatText(
   };
 
   replaceSnapshot({
+    ...current,
     conversations: syncPreview(current, conversationId, trimmed),
     messages: [...current.messages, optimisticMessage],
   });
@@ -431,6 +484,7 @@ export async function sendChatViewOnceMedia(
   };
 
   replaceSnapshot({
+    ...current,
     conversations: syncPreview(current, conversationId, "Mídia temporária"),
     messages: [...current.messages, optimisticMessage],
   });

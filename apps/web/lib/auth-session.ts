@@ -4,6 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import type { AuthRole, User } from "@/lib/types";
 import { authClient } from "@/lib/api/auth-client";
 import { getApiClient } from "@/lib/api/client";
+import { resetChatStore } from "@/lib/chat-store";
+import { resetPremiumPlan } from "@/lib/premium-plan";
+import { reportStoreError } from "@/lib/report-store-error";
+import { resetReviewInvites } from "@/lib/review-invites";
 
 function pathRequiresAuth(pathname: string) {
   return (
@@ -18,9 +22,10 @@ export function useAuthSession() {
   const session = authClient.useSession();
   const [apiUser, setApiUser] = useState<User | null>(null);
   const sessionUser = session.data?.user;
+  const sessionUserId = sessionUser?.id;
 
   useEffect(() => {
-    if (!sessionUser) {
+    if (!sessionUserId) {
       setApiUser(null);
       return;
     }
@@ -32,11 +37,13 @@ export function useAuthSession() {
           setApiUser(res.user);
         }
       })
-      .catch(() => {});
+      .catch((error: unknown) => {
+        reportStoreError("auth.me", error);
+      });
     return () => {
       cancelled = true;
     };
-  }, [sessionUser]);
+  }, [sessionUserId]);
 
   const user: User | null = useMemo(() => {
     if (!sessionUser) {
@@ -68,6 +75,9 @@ export function useAuthSession() {
     isLoggedIn: Boolean(sessionUser),
     isPending: session.isPending,
     logout: async () => {
+      resetChatStore();
+      resetReviewInvites();
+      resetPremiumPlan();
       await authClient.signOut();
       if (typeof window !== "undefined" && pathRequiresAuth(window.location.pathname)) {
         window.location.href = "/feed";

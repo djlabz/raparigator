@@ -530,6 +530,44 @@ export function AnnouncementTab({
     window.setTimeout(() => setUploadToast(null), 3200);
   };
 
+  const restoreMediaState = (previous: typeof form) => {
+    updateForm((current) => ({
+      ...current,
+      images: previous.images,
+      coverPreviews: previous.coverPreviews,
+      profilePreviews: previous.profilePreviews,
+      coverIndex: previous.coverIndex,
+      profileIndex: previous.profileIndex,
+    }));
+  };
+
+  const persistProfileImage = (assetId: string | null, previous: typeof form) => {
+    void setProfileImageMedia(assetId).then((ok) => {
+      if (!ok) {
+        restoreMediaState(previous);
+        showUploadError("Não foi possível definir a foto de perfil.");
+      }
+    });
+  };
+
+  const persistOrder = (assetIds: string[], previous: typeof form) => {
+    void reorderMedia(assetIds).then((ok) => {
+      if (!ok) {
+        restoreMediaState(previous);
+        showUploadError("Não foi possível salvar a ordem das fotos.");
+      }
+    });
+  };
+
+  const persistRemoval = (assetId: string, previous: typeof form) => {
+    void removeMedia(assetId).then((ok) => {
+      if (!ok) {
+        restoreMediaState(previous);
+        showUploadError("Não foi possível remover a mídia.");
+      }
+    });
+  };
+
   const handleAddPhoto = () => {
     const input = document.createElement("input");
     input.type = "file";
@@ -563,24 +601,23 @@ export function AnnouncementTab({
         }
 
         try {
+          const isFirstImage = currentPhotos + currentVideos === 0;
           const asset = await uploadMediaFile(file, "gallery");
           if (isVid) currentVideos++;
           else currentPhotos++;
+          if (isFirstImage && !isVid) {
+            persistProfileImage(asset.id, form);
+          }
 
           const displayUrl = asset.thumbnailUrl || asset.url || "";
           if (asset.url) assetMapRef.current.set(asset.url, asset.id);
           if (asset.thumbnailUrl) assetMapRef.current.set(asset.thumbnailUrl, asset.id);
 
           updateForm((current) => {
-            const isFirstImage = current.images.length === 0;
             const nextImages = [...current.images, displayUrl];
             const nextCoverPreviews = [...current.coverPreviews, ""];
             const nextProfilePreviews = [...current.profilePreviews, ""];
-            const nextProfileIndex = isFirstImage ? 0 : current.profileIndex;
-
-            if (isFirstImage && !isVid) {
-              void setProfileImageMedia(asset.id);
-            }
+            const nextProfileIndex = current.images.length === 0 ? 0 : current.profileIndex;
 
             return {
               ...current,
@@ -765,6 +802,16 @@ export function AnnouncementTab({
   };
 
   const updateCoverPreview = (index: number, previewSrc: string, mode: PhotoCropMode) => {
+    if (mode === "cover" && form.images.length > 0) {
+      const safeIndex = resolveCoverIndex(index, form.images.length);
+      const assetIds = moveItemToFront(form.images, safeIndex)
+        .map((img) => findAssetIdForUrl(img))
+        .filter((id): id is string => Boolean(id));
+      if (assetIds.length === form.images.length) {
+        persistOrder(assetIds, form);
+      }
+    }
+
     updateForm((current) => {
       const nextPreviews = padPreviews(current.coverPreviews, current.images.length);
       const nextProfilePreviews = padPreviews(current.profilePreviews, current.images.length);
@@ -774,13 +821,6 @@ export function AnnouncementTab({
       if (mode === "cover") {
         const safeIndex = resolveCoverIndex(index, current.images.length);
         const nextImages = moveItemToFront(current.images, safeIndex);
-
-        const assetIds = nextImages
-          .map((img) => findAssetIdForUrl(img))
-          .filter((id): id is string => Boolean(id));
-        if (assetIds.length === nextImages.length) {
-          void reorderMedia(assetIds);
-        }
 
         const next = {
           ...current,
@@ -806,7 +846,7 @@ export function AnnouncementTab({
     const targetUrl = form.images[index];
     const assetId = targetUrl ? findAssetIdForUrl(targetUrl) : null;
     if (assetId) {
-      void setProfileImageMedia(assetId);
+      persistProfileImage(assetId, form);
     }
 
     updateForm((current) => {
@@ -837,7 +877,7 @@ export function AnnouncementTab({
         .map((img) => findAssetIdForUrl(img))
         .filter((id): id is string => Boolean(id));
       if (assetIds.length === nextImages.length) {
-        void reorderMedia(assetIds);
+        persistOrder(assetIds, form);
       }
     }
 
@@ -869,7 +909,7 @@ export function AnnouncementTab({
   const setProfileIndex = (index: number) => {
     const targetUrl = form.images[index];
     const assetId = targetUrl ? findAssetIdForUrl(targetUrl) : null;
-    void setProfileImageMedia(assetId);
+    persistProfileImage(assetId, form);
 
     updateForm((current) => {
       if (current.images.length === 0) {
@@ -889,7 +929,7 @@ export function AnnouncementTab({
     if (targetUrl) {
       const assetId = findAssetIdForUrl(targetUrl);
       if (assetId) {
-        void removeMedia(assetId);
+        persistRemoval(assetId, form);
       }
     }
 

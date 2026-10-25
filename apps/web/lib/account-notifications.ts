@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { getApiClient } from "@/lib/api/client";
+import { reportStoreError } from "@/lib/report-store-error";
 import type { AccountNotificationItem, AuthRole } from "@sigillus/contracts";
 import { formatRelativeTime } from "@sigillus/domain";
 
@@ -139,7 +140,9 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
         roleStateCache.set(role, { ...current, items });
         emitChange();
       })
-      .catch(() => {})
+      .catch((error: unknown) => {
+        reportStoreError("notifications.list", error);
+      })
       .finally(() => {
         apiInFlight = false;
       });
@@ -163,7 +166,9 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
         const current = getSnapshot(role);
         roleStateCache.set(role, { ...current, items });
         emitChange();
-      } catch {}
+      } catch (error) {
+        reportStoreError("notifications.refresh", error);
+      }
     };
   }, [role]);
 
@@ -178,7 +183,9 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
       });
       getApiClient()
         .notifications.markAllRead()
-        .catch(() => {});
+        .catch((error: unknown) => {
+          reportStoreError("notifications.markAllRead", error);
+        });
     };
   }, [role]);
 
@@ -196,7 +203,9 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
       });
       getApiClient()
         .notifications.markRead({ id })
-        .catch(() => {});
+        .catch((error: unknown) => {
+          reportStoreError("notifications.markRead", error);
+        });
     };
   }, [role]);
 

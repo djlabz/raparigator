@@ -96,7 +96,7 @@ export function PremiumConversionModal({
   const [canScrollDown, setCanScrollDown] = useState(true);
   const [reachedEnd, setReachedEnd] = useState(false);
   const sharedGains = getSharedGains();
-  const planOptions = usePremiumPlans();
+  const { plans: planOptions, stale: plansStale } = usePremiumPlans();
   const selectedPlan =
     planOptions.find((option) => option.cycle === billingCycle) ?? getPlanOption(billingCycle);
   const savingsPercent = getBillingSavingsPercent();
@@ -170,7 +170,16 @@ export function PremiumConversionModal({
           </ShinyButton>
         ) : (
           <div className="flex w-full flex-col gap-2">
-            <ShinyButton fullWidth disabled={step2CtaDisabled} onClick={handleGoCheckout}>
+            {plansStale ? (
+              <p className="text-center text-xs font-medium text-wine-700">
+                Não foi possível confirmar os valores dos planos. Recarregue a página para assinar.
+              </p>
+            ) : null}
+            <ShinyButton
+              fullWidth
+              disabled={step2CtaDisabled || plansStale}
+              onClick={handleGoCheckout}
+            >
               Continuar para assinatura
             </ShinyButton>
             <button

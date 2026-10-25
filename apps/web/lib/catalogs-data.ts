@@ -15,6 +15,13 @@ import {
   CATALOG_STATES,
 } from "@sigillus/domain";
 import { getApiClient } from "@/lib/api/client";
+import { reportStoreError, storeErrorMessage } from "@/lib/report-store-error";
+
+export type CatalogsSource = "api" | "local";
+
+export type CatalogsResult = Catalogs & { source: CatalogsSource; error: string | null };
+
+const CATALOGS_LOAD_ERROR = "Não foi possível carregar as listas da plataforma.";
 
 const LOCAL_CATALOGS: Catalogs = {
   states: CATALOG_STATES,
@@ -29,7 +36,10 @@ const LOCAL_CATALOGS: Catalogs = {
   paymentMethods: CATALOG_PAYMENT_METHODS,
 };
 
+const LOCAL_RESULT: CatalogsResult = { ...LOCAL_CATALOGS, source: "local", error: null };
+
 let cachedCatalogs: Catalogs | null = null;
+let cachedResult: CatalogsResult | null = null;
 let pendingCatalogs: Promise<Catalogs> | null = null;
 
 function loadCatalogs(): Promise<Catalogs> {
@@ -48,8 +58,8 @@ function loadCatalogs(): Promise<Catalogs> {
   return pendingCatalogs;
 }
 
-export function useCatalogs(): Catalogs {
-  const [catalogs, setCatalogs] = useState<Catalogs | null>(cachedCatalogs);
+export function useCatalogs(): CatalogsResult {
+  const [result, setResult] = useState<CatalogsResult | null>(cachedResult);
 
   useEffect(() => {
     if (cachedCatalogs) {
@@ -58,15 +68,25 @@ export function useCatalogs(): Catalogs {
     let cancelled = false;
     loadCatalogs()
       .then((loaded) => {
+        cachedResult = { ...loaded, source: "api", error: null };
         if (!cancelled) {
-          setCatalogs(loaded);
+          setResult(cachedResult);
         }
       })
-      .catch(() => undefined);
+      .catch((error: unknown) => {
+        reportStoreError("catalogs.get", error);
+        if (!cancelled) {
+          setResult({
+            ...LOCAL_CATALOGS,
+            source: "local",
+            error: storeErrorMessage(error, CATALOGS_LOAD_ERROR),
+          });
+        }
+      });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  return catalogs ?? cachedCatalogs ?? LOCAL_CATALOGS;
+  return result ?? cachedResult ?? LOCAL_RESULT;
 }

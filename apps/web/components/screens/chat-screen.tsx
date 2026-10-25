@@ -65,6 +65,7 @@ import {
 } from "@/lib/chat-store";
 import { updateAvailability } from "@/lib/announcement-draft";
 import { getConversationAd, useConversationAd } from "@/lib/conversation-ad";
+import { reportStoreError } from "@/lib/report-store-error";
 import {
   buildBriefGreeting,
   clearBriefHandoff,
@@ -152,12 +153,21 @@ function readProfessionalAvailability(): AvailabilityStatus {
   return "livre";
 }
 
-function saveProfessionalAvailability(status: AvailabilityStatus) {
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(PROFESSIONAL_AVAILABILITY_STORAGE_KEY, status);
+async function saveProfessionalAvailability(status: AvailabilityStatus): Promise<boolean> {
+  try {
+    await updateAvailability(status);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(PROFESSIONAL_AVAILABILITY_STORAGE_KEY, status);
+    }
+    return true;
+  } catch (error) {
+    reportStoreError("announcements.setAvailability", error);
+    return false;
   }
-  updateAvailability(status).catch(() => {});
 }
+
+const CHAT_LOAD_ERROR_MESSAGE = "Não foi possível carregar suas conversas agora.";
+const AVAILABILITY_ERROR_MESSAGE = "Não foi possível atualizar sua disponibilidade. Tente de novo.";
 
 function getProfessionalAvailabilityOption(status: AvailabilityStatus) {
   return (
@@ -314,10 +324,52 @@ const getMessageStatus = (message: Message) => {
 type ToastState = { title: string; message: string; type?: "success" | "error" | "info" } | null;
 
 export function ChatScreen() {
+  const { isLoggedIn, isPending } = useAuthSession();
+
+  if (isPending) {
+    return (
+      <div className="min-h-120 rounded-3xl border border-zinc-100 bg-zinc-50/80" aria-hidden />
+    );
+  }
+
+  if (!isLoggedIn) {
+    return <ChatLoggedOut />;
+  }
+
+  return <ChatScreenInner />;
+}
+
+function ChatLoggedOut() {
+  return (
+    <div className="flex min-h-120 items-center justify-center rounded-3xl border border-zinc-200 bg-white p-6 text-center shadow-sm">
+      <div className="max-w-md">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-wine-50 text-wine-700">
+          <Shield size={22} />
+        </div>
+        <h1 className="mt-4 text-2xl font-semibold text-zinc-900">Chat privado</h1>
+        <p className="mt-2 text-sm leading-relaxed text-zinc-600">
+          Entre na sua conta para acessar conversas, apelidos e recursos de segurança da plataforma.
+        </p>
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <Link href="/auth/login">
+            <Button>Entrar</Button>
+          </Link>
+          <Link href="/auth/cadastro">
+            <Button variant="secondary">Criar conta</Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChatScreenInner() {
   const { isLoggedIn, user, role } = useAuthSession();
   const { canSendViewOnce, canUseAlias, checkoutEnabled } = usePremiumPlan();
   const { getInvite } = useReviewInvites();
-  ensureChatStore();
+  useEffect(() => {
+    ensureChatStore();
+  }, []);
   const snapshot = useSyncExternalStore(
     subscribeChatStore,
     getChatStoreSnapshot,
@@ -412,7 +464,11 @@ export function ChatScreen() {
   const participantAlias = activeConversation?.currentUserAlias ?? "";
   const currentDisplayName = participantAlias || globalAlias || "Cliente reservado";
 
-  const activeAd = useConversationAd(activeConversation);
+  const {
+    ad: activeAd,
+    error: activeAdError,
+    retry: retryActiveAd,
+  } = useConversationAd(activeConversation);
 
   useEffect(() => {
     if (activeConversation?.id) {
@@ -498,10 +554,31 @@ export function ChatScreen() {
     try {
       reseedChatStore();
       setLoadError(null);
-    } catch {
-      setLoadError("Não foi possível carregar suas conversas agora.");
+    } catch (error) {
+      reportStoreError("chat.reseed", error);
+      setLoadError(CHAT_LOAD_ERROR_MESSAGE);
     }
   };
+  const inboxError = loadError ?? (snapshot.lastError ? CHAT_LOAD_ERROR_MESSAGE : null);
+
+  const changeAvailability = useCallback(
+    (status: AvailabilityStatus) => {
+      const previous = professionalAvailability;
+      setProfessionalAvailability(status);
+      void saveProfessionalAvailability(status).then((ok) => {
+        if (!ok) {
+          setProfessionalAvailability(previous);
+          setToast({
+            title: "Disponibilidade",
+            message: AVAILABILITY_ERROR_MESSAGE,
+            type: "error",
+          });
+          window.setTimeout(() => setToast(null), 3600);
+        }
+      });
+    },
+    [professionalAvailability],
+  );
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 767px)");
@@ -840,8 +917,7 @@ export function ChatScreen() {
                 key={option.value}
                 type="button"
                 onClick={() => {
-                  setProfessionalAvailability(option.value);
-                  saveProfessionalAvailability(option.value);
+                  changeAvailability(option.value);
                 }}
                 className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-bold uppercase tracking-wider transition-colors ${
                   professionalAvailability === option.value
@@ -881,7 +957,7 @@ export function ChatScreen() {
         </div>
       </div>
     ),
-    [professionalAvailability, role, unreadOnly],
+    [changeAvailability, professionalAvailability, role, unreadOnly],
   );
 
   useSetShellChrome({
@@ -890,31 +966,6 @@ export function ChatScreen() {
     mainClassName: conversationOpenMobile ? "px-0 pb-0 pt-0 sm:px-0" : undefined,
     desktopNavRight: isLoggedIn ? desktopNavRight : undefined,
   });
-
-  if (!isLoggedIn) {
-    return (
-      <div className="flex min-h-120 items-center justify-center rounded-3xl border border-zinc-200 bg-white p-6 text-center shadow-sm">
-        <div className="max-w-md">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-wine-50 text-wine-700">
-            <Shield size={22} />
-          </div>
-          <h1 className="mt-4 text-2xl font-semibold text-zinc-900">Chat privado</h1>
-          <p className="mt-2 text-sm leading-relaxed text-zinc-600">
-            Entre na sua conta para acessar conversas, apelidos e recursos de segurança da
-            plataforma.
-          </p>
-          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
-            <Link href="/auth/login">
-              <Button>Entrar</Button>
-            </Link>
-            <Link href="/auth/cadastro">
-              <Button variant="secondary">Criar conta</Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -1007,11 +1058,11 @@ export function ChatScreen() {
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            {loadError ? (
+            {inboxError ? (
               <div className="flex min-h-full items-center justify-center p-6 text-center">
                 <div>
                   <WifiOff className="mx-auto text-zinc-400" size={28} />
-                  <p className="mt-3 text-sm font-semibold text-zinc-800">{loadError}</p>
+                  <p className="mt-3 text-sm font-semibold text-zinc-800">{inboxError}</p>
                   <Button className="mt-4" variant="secondary" size="sm" onClick={loadChat}>
                     <RefreshCcw size={15} />
                     Tentar novamente
@@ -1084,8 +1135,7 @@ export function ChatScreen() {
           value={professionalAvailability}
           onClose={() => setAvailabilitySheetOpen(false)}
           onSelect={(status) => {
-            setProfessionalAvailability(status);
-            saveProfessionalAvailability(status);
+            changeAvailability(status);
             setAvailabilitySheetOpen(false);
           }}
         />
@@ -1103,6 +1153,8 @@ export function ChatScreen() {
               activeConversation={activeConversation}
               activeConversationId={activeConversationId}
               activeAd={activeAd}
+              activeAdError={activeAdError}
+              onRetryActiveAd={retryActiveAd}
               attachmentMenuOpen={attachmentMenuOpen}
               conversationAvatar={conversationAvatars[activeConversationId] || "/placeholder.png"}
               currentMessages={currentMessages}
@@ -1149,6 +1201,8 @@ export function ChatScreen() {
                 activeConversation={activeConversation}
                 activeConversationId={activeConversationId}
                 activeAd={activeAd}
+                activeAdError={activeAdError}
+                onRetryActiveAd={retryActiveAd}
                 attachmentMenuOpen={attachmentMenuOpen}
                 conversationAvatar={conversationAvatars[activeConversationId] || "/placeholder.png"}
                 currentMessages={currentMessages}
@@ -1381,6 +1435,8 @@ export function ChatScreen() {
 function ConversationThread({
   activeConversation,
   activeAd,
+  activeAdError,
+  onRetryActiveAd,
   attachmentMenuOpen,
   conversationAvatar,
   currentMessages,
@@ -1416,6 +1472,8 @@ function ConversationThread({
   activeConversation: Conversation;
   activeConversationId: string;
   activeAd: ProfessionalAd | null;
+  activeAdError: string | null;
+  onRetryActiveAd: () => void;
   attachmentMenuOpen: boolean;
   conversationAvatar: string;
   currentMessages: Message[];
@@ -1550,6 +1608,14 @@ function ConversationThread({
                 >
                   Ver anúncio público
                 </Link>
+              ) : activeAdError ? (
+                <button
+                  type="button"
+                  onClick={onRetryActiveAd}
+                  className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-wine-700 transition hover:bg-wine-50"
+                >
+                  Anúncio não carregou. Tentar de novo
+                </button>
               ) : (
                 <button
                   type="button"
