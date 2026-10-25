@@ -397,6 +397,9 @@ function VerificationTab() {
               ? "A verificação de contato é opcional para publicar anúncios. O envio de códigos estará disponível em breve."
               : "Conclua as etapas de e-mail e telefone para elevar a segurança da conta."}
           </p>
+          {verificationState.error ? (
+            <p className="mt-1 text-sm font-medium text-wine-700">{verificationState.error}</p>
+          ) : null}
         </div>
         <span className="self-start rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
           {verifiedItems}/2 concluídas

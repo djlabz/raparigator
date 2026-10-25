@@ -23,7 +23,7 @@ Divisão mantida como o Daniel pediu. F-05 é o primeiro da trilha pelo peso jur
 | Ordem | PR                                                                   | Status         |
 | ----- | -------------------------------------------------------------------- | -------------- |
 | B1    | F-05 moderação e suspensão (depois do F-02 da A)                     | [x] #107 25/10 |
-| B2    | F-04 chamadas sem sessão                                             |                |
+| B2    | F-04 chamadas sem sessão                                             | [x] #108 25/10 |
 | B3    | F-10 seed com mídia real no MinIO                                    |                |
 | B4    | F-15 anúncio premium × standard                                      |                |
 | B5    | F-19 quebras de arquivo grande (passos 19.1 a 19.10)                 |                |
@@ -129,4 +129,5 @@ Dois PRs: `fix/F-17a-cadastro-profissional-cpf` (pequeno, primeiro) e `refactor/
 
 Formato: data, PR de origem, arquivo:linha, achado e proposta. Consolidados no inventário pelo F-22.
 
+- 25/10/2026, #108 (F-04), `apps/web/components/screens/ad-details/use-contact-cta.ts:24-32`: `openChatWithBrief` recebe o resultado tipado de `ensureConversationForAd`, mas, em caso de falha, ainda navega para `/chat` sem o briefing e sem aviso (apontado pelo CodeRabbit). Proposta: expor `contactError` no hook e mostrar mensagem com "Tentar de novo" nos CTAs do anúncio; fica para o F-15, que unifica `mobile-contact-fab`/`sidebar-cta` nos dois tiers (mesmos arquivos). Baixa.
 - 25/10/2026, prova de isolamento da sessão B (antes do B1), `apps/web/playwright.config.ts:5,66` e `apps/api/package.json:7` (`dev:api`): a porta do web vem só de `process.env.PORT`, e a API lê a sua porta da mesma variável `PORT`; o `--env-file-if-exists=.env` do Node não sobrescreve variável já presente no ambiente, então `PORT=3101 npm run test:e2e` faz a API spawnada pelo `webServer` tentar subir em 3101 (colide com o web). Contorno usado: subir a API antes, num shell sem `PORT` e com `apps/api/.env` definindo `PORT=4002` (sem esse `.env` ela sobe em 4000, e aí a prova usa `NEXT_PUBLIC_API_URL=http://localhost:4000`), e deixar o `reuseExistingServer` reaproveitá-la. Proposta (arquivo da trilha A, não editado aqui): o `webServer` da API fixar `PORT` no `env` a partir de `new URL(apiUrl).port`, ou o web ler uma variável própria (`WEB_PORT`). Baixa; prova: `PORT=3101 NEXT_PUBLIC_API_URL=http://localhost:4002 npm run test:e2e` sem API no ar sobe a API em 4002.

@@ -23,9 +23,11 @@ export function useContactCta(brief: EncounterBrief | null): ContactCta {
   };
 
   const openChatWithBrief = async () => {
-    const conversationId = brief ? await ensureConversationForAd(brief.adSlug) : null;
-    if (brief && conversationId) {
-      requestBriefHandoff(brief, conversationId);
+    if (brief) {
+      const result = await ensureConversationForAd(brief.adSlug);
+      if (result.ok) {
+        requestBriefHandoff(brief, result.conversationId);
+      }
     }
     router.push("/chat");
   };

@@ -21,6 +21,7 @@ import {
 } from "@/lib/identity";
 import { useVerification } from "@/lib/verification";
 import { updateContact } from "@/lib/announcement-draft";
+import { reportStoreError } from "@/lib/report-store-error";
 import { getApiClient } from "@/lib/api/client";
 import { authClient } from "@/lib/api/auth-client";
 import type { AuthRole, User } from "../../lib/types";
@@ -78,7 +79,15 @@ function readStoredForm(key: string, user: User | null): ProfileFormState {
 }
 
 export function AccountScreen() {
-  const { role, user } = useAuthSession();
+  const { role, user, isPending } = useAuthSession();
+
+  if (isPending) {
+    return (
+      <AppShell>
+        <div className="min-h-80 rounded-2xl border border-zinc-100 bg-zinc-50/80" aria-hidden />
+      </AppShell>
+    );
+  }
 
   if (!user || role === "visitor") {
     return (
@@ -281,7 +290,11 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
 
     const digits = form.phone.replace(/\D/g, "");
     if (role === "profissional" && digits.length >= 10 && digits.length <= 15) {
-      updateContact({ whatsappNumber: digits, telegramUsername: null }).catch(() => {});
+      updateContact({ whatsappNumber: digits, telegramUsername: null }).catch((error: unknown) => {
+        reportStoreError("announcements.setContact", error);
+        setSaveMessage(null);
+        setFormError("Dados salvos, mas o contato do anúncio não foi atualizado. Tente de novo.");
+      });
     }
   };
 
@@ -590,6 +603,11 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
                     ? "A verificação de contato é opcional para publicar anúncios. Seus dados de validação não são compartilhados publicamente."
                     : "Aumente a confiança do seu perfil em poucos minutos. Seus dados de validação não são compartilhados publicamente."}
                 </p>
+                {verificationState.error ? (
+                  <p className="mt-1 text-sm font-medium text-wine-700">
+                    {verificationState.error}
+                  </p>
+                ) : null}
               </div>
               <Button type="button" variant="secondary" onClick={openVerificationSettings}>
                 Verificar agora

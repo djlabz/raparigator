@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { MediaAsset, MediaPurpose } from "@sigillus/contracts";
 import { getApiClient } from "@/lib/api/client";
+import { reportStoreError } from "@/lib/report-store-error";
 import { getCroppedImg } from "@/lib/cropImage";
 import type {
   AnnouncementMediaArea,
@@ -389,19 +390,34 @@ export async function uploadMediaFile(
   return readyAsset;
 }
 
-export async function removeMedia(assetId: string): Promise<void> {
-  const client = getApiClient();
-  await client.media.remove({ assetId });
+export async function removeMedia(assetId: string): Promise<boolean> {
+  try {
+    await getApiClient().media.remove({ assetId });
+    return true;
+  } catch (error) {
+    reportStoreError("media.remove", error);
+    return false;
+  }
 }
 
-export async function reorderMedia(assetIds: string[]): Promise<void> {
-  const client = getApiClient();
-  await client.media.reorder({ assetIds });
+export async function reorderMedia(assetIds: string[]): Promise<boolean> {
+  try {
+    await getApiClient().media.reorder({ assetIds });
+    return true;
+  } catch (error) {
+    reportStoreError("media.reorder", error);
+    return false;
+  }
 }
 
-export async function setProfileImageMedia(assetId: string | null): Promise<void> {
-  const client = getApiClient();
-  await client.media.setProfileImage({ assetId });
+export async function setProfileImageMedia(assetId: string | null): Promise<boolean> {
+  try {
+    await getApiClient().media.setProfileImage({ assetId });
+    return true;
+  } catch (error) {
+    reportStoreError("media.setProfileImage", error);
+    return false;
+  }
 }
 
 export async function listMyMedia(purpose?: MediaPurpose): Promise<MediaAsset[]> {

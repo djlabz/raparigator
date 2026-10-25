@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { getApiClient } from "@/lib/api/client";
+import { reportStoreError } from "@/lib/report-store-error";
 import type { AccountNotificationItem, AuthRole } from "@sigillus/contracts";
 import { formatRelativeTime } from "@sigillus/domain";
 
@@ -27,6 +28,15 @@ const roleServerSnapshotCache = new Map<Exclude<AuthRole, "visitor">, AccountNot
 
 let apiItems: AccountNotificationItem[] = [];
 let apiInFlight = false;
+let generation = 0;
+
+export function resetAccountNotifications() {
+  generation += 1;
+  apiItems = [];
+  apiInFlight = false;
+  roleStateCache.clear();
+  emitChange();
+}
 
 const bannerKey = (role: Exclude<AuthRole, "visitor">) =>
   `sigillus-account-banner-dismissed-${role}`;
@@ -131,17 +141,25 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
       return;
     }
     apiInFlight = true;
+    const started = generation;
     getApiClient()
       .notifications.list()
       .then((items) => {
+        if (started !== generation) {
+          return;
+        }
         apiItems = items;
         const current = getSnapshot(role);
         roleStateCache.set(role, { ...current, items });
         emitChange();
       })
-      .catch(() => {})
+      .catch((error: unknown) => {
+        reportStoreError("notifications.list", error);
+      })
       .finally(() => {
-        apiInFlight = false;
+        if (started === generation) {
+          apiInFlight = false;
+        }
       });
   }, [role]);
 
@@ -157,13 +175,19 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
 
   const refresh = useMemo(() => {
     return async () => {
+      const started = generation;
       try {
         const items = await getApiClient().notifications.list();
+        if (started !== generation) {
+          return;
+        }
         apiItems = items;
         const current = getSnapshot(role);
         roleStateCache.set(role, { ...current, items });
         emitChange();
-      } catch {}
+      } catch (error) {
+        reportStoreError("notifications.refresh", error);
+      }
     };
   }, [role]);
 
@@ -178,7 +202,9 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
       });
       getApiClient()
         .notifications.markAllRead()
-        .catch(() => {});
+        .catch((error: unknown) => {
+          reportStoreError("notifications.markAllRead", error);
+        });
     };
   }, [role]);
 
@@ -196,7 +222,9 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
       });
       getApiClient()
         .notifications.markRead({ id })
-        .catch(() => {});
+        .catch((error: unknown) => {
+          reportStoreError("notifications.markRead", error);
+        });
     };
   }, [role]);
 

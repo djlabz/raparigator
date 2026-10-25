@@ -42,7 +42,7 @@ export function PremiumSubscriptionCheckoutScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isPremium, activatePremium, checkoutEnabled } = usePremiumPlan();
-  const planOptions = usePremiumPlans();
+  const { plans: planOptions, stale: plansStale, loading: plansLoading } = usePremiumPlans();
 
   useEffect(() => {
     if (!checkoutEnabled) {
@@ -338,8 +338,15 @@ export function PremiumSubscriptionCheckoutScreen() {
                 </AnimatePresence>
               </div>
 
+              {plansStale ? (
+                <p className="text-sm font-medium text-wine-700">
+                  Não foi possível confirmar os valores dos planos. Recarregue a página antes de
+                  assinar.
+                </p>
+              ) : null}
               <ShinyButton
                 fullWidth
+                disabled={plansStale || plansLoading}
                 onClick={handleConfirm}
                 className="tabular-nums tracking-tight"
               >

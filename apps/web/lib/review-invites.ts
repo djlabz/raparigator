@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { getApiClient } from "@/lib/api/client";
+import { reportStoreError } from "@/lib/report-store-error";
 import type { InviteStatus, ReviewInvite, SubmittedReview } from "@sigillus/contracts";
 import { REVIEW_INVITE_TTL_MS } from "@sigillus/domain";
 
@@ -19,6 +20,7 @@ const listeners = new Set<() => void>();
 
 let apiState: ReviewInvitesState = { invites: [], reviews: [] };
 let apiInitialLoaded = false;
+let resetGeneration = 0;
 const inFlightInvites = new Set<string>();
 const inviteGenerations = new Map<string, number>();
 const pendingInviteRequests = new Map<string, Promise<unknown>>();
@@ -65,6 +67,15 @@ function writeApiState(next: ReviewInvitesState) {
   emitChange();
 }
 
+export function resetReviewInvites() {
+  resetGeneration += 1;
+  apiInitialLoaded = false;
+  inFlightInvites.clear();
+  inviteGenerations.clear();
+  pendingInviteRequests.clear();
+  writeApiState(EMPTY_STATE);
+}
+
 function findInvite(state: ReviewInvitesState, conversationId: string) {
   return state.invites.find((invite) => invite.conversationId === conversationId);
 }
@@ -108,7 +119,8 @@ function inviteToReview(conversationId: string, adSlug: string): boolean {
         ],
       });
     })
-    .catch(() => {
+    .catch((error: unknown) => {
+      reportStoreError("reviews.invite", error);
       if (!isCurrentInviteGeneration(conversationId, generation)) {
         return;
       }
@@ -137,7 +149,8 @@ function cancelInvite(conversationId: string): boolean {
   const previous = pendingInviteRequests.get(conversationId) ?? Promise.resolve();
   const request = previous
     .then(() => getApiClient().reviews.withdrawInvite({ conversationId }))
-    .catch(() => {
+    .catch((error: unknown) => {
+      reportStoreError("reviews.withdrawInvite", error);
       if (!isCurrentInviteGeneration(conversationId, generation)) {
         return;
       }
@@ -184,7 +197,8 @@ export async function submitReview(input: {
     });
 
     return true;
-  } catch {
+  } catch (error) {
+    reportStoreError("reviews.submit", error);
     return false;
   }
 }
@@ -209,18 +223,20 @@ export function withdrawReviewInvite(conversationId: string): boolean {
   return true;
 }
 
-export function useReviewInvites() {
+export function useReviewInvites(options: { enabled?: boolean } = {}) {
+  const enabled = options.enabled ?? true;
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   useEffect(() => {
-    if (apiInitialLoaded) {
+    if (!enabled || apiInitialLoaded) {
       return;
     }
     let cancelled = false;
+    const generation = resetGeneration;
     getApiClient()
       .reviews.listMyInvites()
       .then((invites) => {
-        if (!cancelled) {
+        if (!cancelled && generation === resetGeneration) {
           apiInitialLoaded = true;
           const merged = new Map<string, ReviewInvite>();
           for (const item of invites) {
@@ -237,11 +253,13 @@ export function useReviewInvites() {
           });
         }
       })
-      .catch(() => {});
+      .catch((error: unknown) => {
+        reportStoreError("reviews.listMyInvites", error);
+      });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [enabled]);
 
   const getInvite = useMemo(() => {
     return (conversationId: string) => {
@@ -250,6 +268,7 @@ export function useReviewInvites() {
         return found;
       }
       if (
+        enabled &&
         conversationId &&
         !inFlightInvites.has(conversationId) &&
         !pendingInviteRequests.has(conversationId)
@@ -272,14 +291,16 @@ export function useReviewInvites() {
               });
             }
           })
-          .catch(() => {})
+          .catch((error: unknown) => {
+            reportStoreError("reviews.getInvite", error);
+          })
           .finally(() => {
             inFlightInvites.delete(conversationId);
           });
       }
       return undefined;
     };
-  }, [state]);
+  }, [enabled, state]);
 
   return useMemo(
     () => ({

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { FeedAdSummary, MediaHighlight, ProfessionalAd } from "@sigillus/contracts";
 import { getApiClient } from "@/lib/api/client";
+import { reportStoreError } from "@/lib/report-store-error";
 
 export type PopularAdsKind = "most_viewed" | "top_rated";
 
@@ -37,16 +38,19 @@ export function getCachedAd(slug: string): ProfessionalAd | null {
   return adCache.get(slug) ?? null;
 }
 
-export async function fetchAdBySlug(slug: string): Promise<ProfessionalAd | null> {
+export type FetchAdResult = { ad: ProfessionalAd | null; error: string | null };
+
+export async function fetchAdBySlug(slug: string): Promise<FetchAdResult> {
   if (adCache.has(slug)) {
-    return adCache.get(slug) ?? null;
+    return { ad: adCache.get(slug) ?? null, error: null };
   }
   try {
     const ad = await getApiClient().ads.getBySlug({ slug });
     adCache.set(slug, ad);
-    return ad;
-  } catch {
-    return null;
+    return { ad, error: null };
+  } catch (error) {
+    reportStoreError("ads.getBySlug", error);
+    return { ad: null, error: errorMessage(error, "Não foi possível carregar o anúncio.") };
   }
 }
 

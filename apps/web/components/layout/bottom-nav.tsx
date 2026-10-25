@@ -203,8 +203,8 @@ export function BottomNav({ items }: BottomNavProps) {
     if (!hasChat) {
       return;
     }
-    ensureChatStore();
-  }, [hasChat, pathname]);
+    ensureChatStore({ enabled: role !== "visitor" });
+  }, [hasChat, pathname, role]);
 
   if (items.length === 0) {
     return null;
