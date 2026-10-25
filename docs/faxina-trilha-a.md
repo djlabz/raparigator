@@ -8,7 +8,7 @@ Sessão A da execução da Fase F. Autossuficiente para quem leu `AGENTS.md`, `C
 2. **Nunca dois PRs abertos da mesma sessão ao mesmo tempo.** Um PR por vez, do início ao merge.
 3. **Nunca abrir um PR que esteja na lista "não rodar em paralelo com" de um PR aberto da outra trilha.** Conferir com `gh pr list --state open` e com a tabela de status das duas trilhas.
 4. **Ao abrir o PR:** marcar `em andamento (#nn, dd/mm)` na coluna Status da linha dele neste arquivo (commit de docs dentro do próprio PR).
-5. **Ao mergear:** marcar `[x] #nn dd/mm` na coluna Status; achados novos vão para a seção 6 de `docs/faxina-inventario.md` ("Achados novos", criar se não existir) com data, PR de origem, arquivo:linha e proposta; descoberta que muda um PR seguinte edita a linha desse PR aqui.
+5. **Ao mergear:** marcar `[x] #nn dd/mm` na coluna Status; achados novos vão para a seção "Achados novos desta trilha" no fim deste arquivo, com data, PR de origem, arquivo:linha e proposta. Durante a execução nenhuma das duas sessões escreve em `docs/faxina-inventario.md` (as duas editando a mesma seção geram conflito); o F-22 consolida os achados das duas trilhas no inventário. Descoberta que muda um PR seguinte edita a linha desse PR aqui.
 6. **Prova:** o critério de pronto é o de D-42: `npm run check` + `npm run test` + `npm run test:e2e` verdes localmente, CI verde no PR e na `main`, `--retries=0` no spec do fluxo mexido. Mais a prova específica da linha do PR.
 7. **Merge:** `gh pr merge --auto --squash` só com a CI verde e as conversas do CodeRabbit resolvidas (regras do `AGENTS.md`). O repositório não tem auto-merge habilitado: o comando só merge quando os checks já terminaram.
 8. **Migrations do Drizzle nunca em paralelo** (duas branches gerando `drizzle/meta/_journal.json` conflitam): F-05 (B), F-13 (A) e F-10 (B) são sequenciais entre si, nessa ordem.
@@ -31,7 +31,8 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 | A7    | F-11 CSS                                           |        |
 | A8    | F-12 nomes                                         |        |
 | A9    | F-13 `moderationStatus`                            |        |
-| A10   | F-14 consolidação da documentação                  |        |
+| A10a  | F-14a consolidação da documentação                 |        |
+| A10b  | F-14b ADRs 017 e 020 (rascunho, revisão do Daniel) |        |
 | A11   | F-16 duplicação do web                             |        |
 | A12   | F-18 pastas por funcionalidade (um PR por feature) |        |
 | A13   | F-20 API por caso de uso                           |        |
@@ -55,7 +56,7 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 - **Arquivos:** `apps/api/src/modules/{ads/{service,router}.ts, media/{service,jobs}.ts, admin/service.ts (removeMediaByReport, grantPremium), identity/{service,repository}.ts, announcements/service.ts (publish em transação; ensureProfile/uniqueSlug), reports/service.ts (ordem presign/insert), reviews/service.ts (setWhere), premium/service.ts (grantManual)}`, `apps/api/src/orpc/{context.ts (log em getSession),base.ts (rateLimited em ads.view)}`, `apps/api/src/lib/{jobs,storage,chat-events}.ts`; testes novos em `apps/api/tests/{admin,media,reports,identity,announcements,reviews,premium,feed,storage}.test.ts`.
 - **Prova:** um teste de integração novo por bug, vermelho antes (cenários na seção "Cenários do tema 7" do inventário); `feed.test.ts:79` continua esperando o incremento na 1ª view; suíte completa.
 - **Exige mergeado antes:** F-02.
-- **Não rodar em paralelo com:** F-05 (B: `admin/service.ts`, `announcements/service.ts`, `profiles/repository.ts`), F-10 (B: `media/jobs.ts`, `media/service.ts`), F-21 (B: nada em comum, pode).
+- **Não rodar em paralelo com:** F-05 (B: `admin/service.ts`, `announcements/service.ts`, `profiles/repository.ts`), F-10 (B: `media/jobs.ts`, `media/service.ts`). F-21 (B) não tem arquivo em comum e pode correr junto.
 
 ### A3 — F-06 `refactor/F-06-regras-puras-para-domain`
 
@@ -118,13 +119,13 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 - **Arquivos:** `apps/api/src/db/schema/profiles.ts` + migration gerada (`npm run db:generate -w apps/api`, só `ALTER TABLE … RENAME COLUMN`); `packages/contracts/src/schemas/{common.ts, ad.ts}`, `router.ts:444`; os 14 arquivos de src com `verificationStatus` (`admin/service.ts`, `profiles/repository.ts`, `announcements/service.ts`, `ads/service.ts`, `chat/service.ts`, `reviews/service.ts`, `announcements/review-digest.ts`, `profiles/mapper.ts`, `db/seed/dev-data.ts`, web `lib/types.ts`, `lib/admin-service.ts`, `admin-profiles-screen.tsx`, `admin-profile-detail-screen.tsx`, `professional-dashboard-screen.tsx`), `packages/domain/src/profile-moderation.ts` (criado pelo F-05), 6 testes da API, 1 E2E.
 - **Prova:** diff do `db:generate` só com o rename; `npm run test` (admin, announcements, reports, identity); `identity-verification.spec.ts`, telas admin.
 - **Exige mergeado antes:** F-05 (B), F-06, F-07 (ambos tocam `admin/service.ts`).
-- **Não rodar em paralelo com:** F-10 (B: migration + `schema/profiles.ts`), F-19 (B: `professional-dashboard-screen.tsx`), F-21 (B: nada em comum, pode).
+- **Não rodar em paralelo com:** F-10 (B: migration + `schema/profiles.ts`), F-19 (B: `professional-dashboard-screen.tsx`). F-21 (B) não tem arquivo em comum e pode correr junto.
 
 ### A10 — F-14 `docs/F-14-consolidacao-docs`
 
 - **Achados:** F-167, F-168, F-169, F-170, F-171, F-172, F-173, F-174, F-175, F-176, e o ADR curto de F-020 (D-05).
 - **Decisões aplicadas:** D-39 "mover ADR 009/012/013/015, relatórios e plano superpowers para `docs/historico/`; fundir decisões perenes de 008/010/011/014 em 016; 008-015 viram stubs `fundido em 016`"; D-40 "(a) reescrever a frase do ADR-003: forma é Zod no contrato; validação cruzada e de negócio é função pura do domain chamada pelo service"; D-41 "próxima fase do roteiro = Fase F (faxina) apontando para `docs/faxina-inventario.md` e seus 22 PRs; GEMINI aponta para o roteiro"; D-42 "critério de pronto único no AGENTS: check + test + E2E local, CI verde no PR e na main, `--retries=0` no spec do fluxo mexido; os outros arquivos referenciam"; D-43 "os cinco ADRs novos (017 a 021); Claude redige rascunhos, Daniel revisa 017 e 020 antes do merge"; D-05 "ADR curto (pode entrar na subseção do chat do ADR consolidado 016) antes de apagar os 9 comentários" — depois deste PR entrar, apagar os comentários de F-020 (pode ser um commit no PR seguinte desta trilha).
-- **Arquivos:** `docs/adr/{README,003,005,007,008..016}.md`, `docs/adr/{017..021}-*.md` (novos), `docs/historico/**` (novo), `docs/operacao/{deploy,smoke}.md` (mover), `docs/roteiro.md`, `docs/correcoes-pre-deploy.md` (links), `AGENTS.md` (critério de pronto, bloco Merge/CodeRabbit único, porta 3100), `CLAUDE.md`, `GEMINI.md`, `README.md`. **Dois PRs:** 14a com tudo menos 017 e 020; 14b com 017 e 020 em rascunho para o Daniel revisar (não mergear sem a revisão dele).
+- **Arquivos:** `docs/adr/{README,003,005,007,008..016}.md`, `docs/adr/{017..021}-*.md` (novos), `docs/historico/**` (novo), `docs/operacao/{deploy,smoke}.md` (mover), `docs/roteiro.md`, `docs/correcoes-pre-deploy.md` (links), `AGENTS.md` (critério de pronto, bloco Merge/CodeRabbit único, porta 3100), `CLAUDE.md`, `GEMINI.md`, `README.md`. **Dois PRs, cada um com linha própria na tabela de ordem:** 14a (A10a) com tudo menos 017 e 020; 14b (A10b) com 017 e 020 em rascunho para o Daniel revisar. O 14b fica `aguardando revisão do Daniel` na coluna Status até ele aprovar e só então é mergeado; o 14a não espera o 14b.
 - **Prova:** CI verde; `grep -rn "isApiDataSource\|NEXT_PUBLIC_DATA_SOURCE\|middleware.ts" docs README.md AGENTS.md GEMINI.md` vazio fora de `docs/historico/`; links relativos conferidos (`grep -rn "file://" docs` vazio).
 - **Exige mergeado antes:** F-07 e F-12 (os dois escrevem no `AGENTS.md`; fazer este depois evita conflito de texto).
 - **Não rodar em paralelo com:** nenhum PR de código; só com o F-22 (A, `AGENTS.md`/`README.md`), que vem depois.
@@ -136,7 +137,7 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 - **Arquivos:** `components/layout/{bottom-nav,desktop-nav,account-menu,guest-auth-controls,notification-bell-button}.tsx` + hooks novos `use-nav-indicator.ts`, `use-nav-badges.ts`, `use-anchored-popover.ts`; `header-title-flight/{use-header-title-scroll.ts, use-title-flight-values.ts}` (novos) + `feed-screen/use-feed-section-title-scroll.ts`, `professional-dashboard/use-dashboard-title-scroll.ts`, `feed-mobile-title-flight.tsx`, `dashboard-mobile-title-flight.tsx`, `feed-mobile-heading-row.tsx`, `dashboard-heading.tsx`; `components/screens/admin/ui/{filter-tabs,suspend-modal,admin-dialog,admin-toast,admin-search-input,admin-empty-state}.tsx` (novos) e as 4 telas admin que os usam; `ui/{eyebrow,spinner,media-hover-overlay,field-error,floating-label}.tsx` (novos), `ui/{input,select,premium-conversion-modal}.tsx`; `ad-details/photo-gallery-section.tsx`; `feed-screen/{feed-location-modal,feed-filters-content,feed-ad-card}.tsx` (só os blocos repetidos); `account-screen.tsx` (só o card repetido); `app/(public)/{termos,privacidade}/page.tsx` + `layout/legal-page-layout.tsx`; `screens/{forgot-password,reset-password,login}-screen.tsx` + `lib/auth/use-auth-action.ts`, `ui/password-field.tsx`; `lib/chat-store.ts` (+ `lib/chat-store.test.ts`, `sendOptimistic`/`mutateOptimistic`); `lib/{age-gate,verification (já `contact-verification`),account-notifications (já `notifications`),premium-state,encounter-brief,auth-return}.ts` com `createExternalStore`/`safeStorage` (`lib/external-store.ts`, `lib/safe-storage.ts` novos); remoção dos re-exports `lib/{types,*-types,identity (já `signup-validation`),feed-filters,ad-profile-image}.ts` e sed nos importadores; fixtures de teste (`apps/web/tests/{helpers/auth.ts,identity-verification.spec.ts}`, `apps/api/tests/{helpers/drafts.ts,media.test.ts}`).
 - **Prova:** `chat-store.test.ts`; `refine-motion` para F-060 e F-063 (indicador dos navs e title flight nas duas abas, mobile e desktop); `admin.spec.ts`, `admin-reports.spec.ts`, E2E de auth, `feed-filters-layout.spec.ts`.
 - **Exige mergeado antes:** F-02, F-11, F-12 (nomes dos `lib/`), F-04 (B: `chat-store.ts`, stores), F-05 (B: telas admin).
-- **Não rodar em paralelo com:** F-19 (B: `account-screen.tsx`, `feed-ad-card.tsx`, `admin-reports-screen.tsx`, `chat-screen.tsx`/`chat-store.ts`), F-17 (B: `login-screen.tsx` e cadastros usam `AuthHeroMobile`), F-15 (B: `photo-gallery-section.tsx` está na mesma pasta; arquivos diferentes, pode). Dividir em 3 PRs se a B estiver ocupada: 16a layout/nav/popover/title-flight; 16b admin ui + legal + auth; 16c chat-store + stores + re-exports.
+- **Não rodar em paralelo com:** F-19 (B: `account-screen.tsx`, `feed-ad-card.tsx`, `admin-reports-screen.tsx`, `chat-screen.tsx`/`chat-store.ts`), F-17 (B: `login-screen.tsx` e cadastros usam `AuthHeroMobile`). F-15 (B) pode correr junto: `photo-gallery-section.tsx` está na mesma pasta, mas os arquivos são diferentes (cuidado no rebase). Dividir em 3 PRs se a B estiver ocupada: 16a layout/nav/popover/title-flight; 16b admin ui + legal + auth; 16c chat-store + stores + re-exports.
 
 ### A12 — F-18 `refactor/F-18-pastas-<feature>` (um PR por feature)
 
@@ -160,7 +161,7 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 
 - **Achados:** F-001, F-002, F-012, F-013, F-015, F-200, `knip.json` mínimo.
 - **Decisões aplicadas:** D-01 "(B) abolir barrels: apagar os 11 `index.ts` e deep-importar sempre"; D-03 "(A) apagar `header-title-flight/index.ts`; `registry-facade.ts` fica com os 6 nomes usados"; D-04 "manter `test:e2e:ui`, `test:e2e:report`, `db:studio`, `lint:fix` com uma linha no README; apagar `check:prod-env` e os três `start`"; D-49 "`dependency-cruiser` e `knip` como devDependencies pinadas na raiz, com `lint:deps` e `knip` no job de lint da CI"; D-34 (regra do kernel `profiles` no depcruise).
-- **Arquivos:** apaga `apps/api/src/modules/*/index.ts` (11) e `apps/web/components/layout/header-title-flight/index.ts`; imports em `apps/api/src/server.ts`, `apps/api/tests/**`, nos 2 hooks de scroll (já em `header-title-flight/` após F-16) e `registry-facade.ts`; `package.json` (raiz: scripts, devDependencies pinadas), `apps/web/package.json`, `apps/api/package.json` (`start`), `package-lock.json`; `.dependency-cruiser.cjs` (novo, 10 regras API + 6 web da seção "Regras de camada"; as que ainda têm violação entram como `warn`), `knip.json` (novo: `ignore: [".agents/**"]`, `ignoreDependencies: ["pino-pretty"]` em `apps/api`), `.github/workflows/ci.yml` (passo `lint:deps` e `knip` no job "Lint, format e typecheck" — **não** renomear o job, o ruleset depende do nome), `README.md` (scripts de dev), `AGENTS.md` (`lint:deps` na verificação típica).
+- **Arquivos:** apaga `apps/api/src/modules/*/index.ts` (11) e `apps/web/components/layout/header-title-flight/index.ts`; imports em `apps/api/src/server.ts`, `apps/api/tests/**`, nos 2 hooks de scroll (já em `header-title-flight/` após F-16) e `registry-facade.ts`; `package.json` (raiz: scripts, devDependencies pinadas), `apps/web/package.json`, `apps/api/package.json` (`start`), `package-lock.json`; `.dependency-cruiser.cjs` (novo, 10 regras API + 6 web da seção "Regras de camada"; as que ainda têm violação entram como `warn`), `knip.json` (novo: `ignore: [".agents/**"]`, `ignoreDependencies: ["pino-pretty"]` em `apps/api`), `.github/workflows/ci.yml` (passo `lint:deps` e `knip` no job "Lint, format e typecheck" — **não** renomear o job, o ruleset depende do nome), `README.md` (scripts de dev), `AGENTS.md` (`lint:deps` na verificação típica); `docs/faxina-inventario.md` (nova seção "Achados novos" consolidando as seções "Achados novos desta trilha" de `docs/faxina-trilha-a.md` e `docs/faxina-trilha-b.md`).
 - **Prova:** `npm run lint:deps` e `npx knip` verdes localmente e na CI; `npm run typecheck`; nenhum comportamento muda. Rodar o depcruise com `--output-type err-long` e colar o resultado no PR.
 - **Exige mergeado antes:** **todos os outros PRs das duas trilhas** (é o último: as regras `error` só passam com F-07, F-18, F-21 e F-19 fechados; se algum atrasar, entrar com a regra correspondente em `warn` e anotar).
 - **Não rodar em paralelo com:** F-21 (B: imports de `modules/auth/*` e `services.ts`), F-14 (A, já mergeado nessa altura).
@@ -178,8 +179,15 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 | F-11    | F-15, F-19, F-17        | enquanto a B está no F-05, F-04, F-10, F-21                 |
 | F-12    | F-04, F-19, F-15, F-21  | enquanto a B está no F-10                                   |
 | F-13    | F-10, F-19              | depois do F-05, enquanto a B está no F-04, F-15, F-21, F-17 |
-| F-14    | nenhum                  | qualquer momento depois de F-07 e F-12                      |
+| F-14a   | nenhum                  | qualquer momento depois de F-07 e F-12                      |
+| F-14b   | nenhum                  | depois do F-14a, merge só com a revisão do Daniel           |
 | F-16    | F-19, F-17              | enquanto a B está no F-10, F-15, F-21                       |
 | F-18    | por feature (ver linha) | janelas por feature                                         |
 | F-20    | F-21, F-10, F-19 (geo)  | enquanto a B está no F-15 ou F-17                           |
 | F-22    | F-21                    | último de todos                                             |
+
+## Achados novos desta trilha
+
+Formato: data, PR de origem, arquivo:linha, achado e proposta. Consolidados no inventário pelo F-22.
+
+_Nenhum ainda._
