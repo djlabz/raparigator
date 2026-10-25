@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildRemotePatterns } from "../next.config";
 
-const devHosts = ["localhost", "127.0.0.1", "images.unsplash.com", "images.pexels.com"];
+const devHosts = ["localhost", "127.0.0.1", "images.unsplash.com"];
 
 describe("buildRemotePatterns", () => {
   it("em produção aceita só o host de NEXT_PUBLIC_MEDIA_URL", () => {
@@ -22,13 +22,14 @@ describe("buildRemotePatterns", () => {
     }
   });
 
-  it("fora de produção mantém localhost, unsplash e pexels", () => {
+  it("fora de produção mantém localhost e unsplash, sem pexels", () => {
     const patterns = buildRemotePatterns({ NODE_ENV: "development" });
     const hostnames = patterns.map((pattern) => pattern.hostname);
 
     for (const host of devHosts) {
       expect(hostnames).toContain(host);
     }
+    expect(hostnames).not.toContain("images.pexels.com");
     expect(patterns).toContainEqual({
       protocol: "http",
       hostname: "localhost",
