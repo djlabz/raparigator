@@ -192,7 +192,7 @@ export function PhotoGallerySection({
       </div>
 
       {galleryMode === "grid" && (
-        <div className="grid animate-fade-in grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {ad.images.map((img, idx) => (
             <button
               key={img}
@@ -232,7 +232,7 @@ export function PhotoGallerySection({
       )}
 
       {galleryMode === "alternative" && (
-        <div className="grid grid-flow-dense grid-cols-2 auto-rows-43.75 gap-3 animate-fade-in sm:grid-cols-3 sm:auto-rows-53.75 lg:grid-cols-5 lg:auto-rows-58.75">
+        <div className="grid grid-flow-dense grid-cols-2 auto-rows-43.75 gap-3 sm:grid-cols-3 sm:auto-rows-53.75 lg:grid-cols-5 lg:auto-rows-58.75">
           {bentoItems.map((item, idx) => {
             const isImage = item.type === "image";
 
@@ -280,7 +280,7 @@ export function PhotoGallerySection({
                     </div>
 
                     <div className="space-y-1.5">
-                      <h4 className="whitespace-nowrap text-left font-display text-sm font-bold tracking-widest text-[#96001e] uppercase lg:text-base">
+                      <h4 className="whitespace-nowrap text-left font-display text-sm font-bold tracking-widest text-wine-800 uppercase lg:text-base">
                         Selo Anti-Edição
                       </h4>
                       <p className="text-left text-xs leading-relaxed text-zinc-600">
@@ -296,8 +296,8 @@ export function PhotoGallerySection({
                         <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
                         Biotipo Confirmado
                       </span>
-                      <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-bold tracking-wide text-[#96001e] uppercase">
-                        <Award className="h-3.5 w-3.5 shrink-0 text-[#96001e]" />
+                      <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-bold tracking-wide text-wine-800 uppercase">
+                        <Award className="h-3.5 w-3.5 shrink-0 text-wine-800" />
                         Fotos Sem Filtros
                       </span>
                       {isPremium && (
@@ -402,7 +402,7 @@ export function PhotoGallerySection({
       )}
 
       {galleryMode === "alternative" && (
-        <div className="mt-3 animate-fade-in lg:hidden">
+        <div className="mt-3 lg:hidden">
           <div className="flex flex-col justify-between rounded-2xl border border-zinc-200 bg-linear-to-b from-zinc-50 to-white p-6 shadow-xs sm:p-7">
             <div className="space-y-5 sm:space-y-6">
               <div className="flex -space-x-2.5 overflow-hidden">
@@ -430,7 +430,7 @@ export function PhotoGallerySection({
               </div>
 
               <div className="space-y-2">
-                <h4 className="whitespace-nowrap text-left font-display text-base font-bold tracking-[0.12em] text-[#96001e] uppercase sm:text-lg">
+                <h4 className="whitespace-nowrap text-left font-display text-base font-bold tracking-[0.12em] text-wine-800 uppercase sm:text-lg">
                   Selo Anti-Edição
                 </h4>
                 <p className="text-left text-base leading-relaxed text-zinc-600">
@@ -447,8 +447,8 @@ export function PhotoGallerySection({
                     <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
                     Biotipo Confirmado
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-bold tracking-wide text-[#96001e] uppercase">
-                    <Award className="h-4 w-4 shrink-0 text-[#96001e]" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-bold tracking-wide text-wine-800 uppercase">
+                    <Award className="h-4 w-4 shrink-0 text-wine-800" />
                     Fotos Sem Filtros
                   </span>
                   {isPremium && (

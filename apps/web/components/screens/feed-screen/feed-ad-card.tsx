@@ -370,12 +370,9 @@ function PremiumFeedCard({ ad, priority = false }: { ad: FeedAdSummary; priority
       >
         <div className="absolute inset-0 overflow-hidden rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)]">
           <div className="absolute inset-0 bg-[#120d03]" />
-          <div
-            className="pointer-events-none absolute inset-[-150%] animate-spin bg-[conic-gradient(from_90deg,transparent_0%,transparent_75%,rgba(255,215,0,0.1)_80%,#FFD700_95%,#ffffff_98%,transparent_100%)]"
-            style={{ animationDuration: "6.5s", animationTimingFunction: "linear" }}
-          />
+          <div className="pointer-events-none absolute inset-[-150%] animate-[spin_6.5s_linear_infinite] bg-[conic-gradient(from_90deg,transparent_0%,transparent_75%,rgba(255,215,0,0.1)_80%,#FFD700_95%,#ffffff_98%,transparent_100%)]" />
 
-          <div className="absolute inset-[2.5px] z-10 overflow-hidden rounded-2xl border border-[#a88222]/30 bg-[#121212] shadow-sm transition-shadow duration-300 group-hover:shadow-[0_12px_36px_rgba(218,165,32,0.28)]">
+          <div className="absolute inset-[2.5px] z-10 overflow-hidden rounded-2xl border border-[#a88222]/30 bg-premium-surface shadow-sm transition-shadow duration-300 group-hover:shadow-[0_12px_36px_rgba(218,165,32,0.28)]">
             <Image
               src={premiumImage}
               alt={`${ad.artisticName} premium`}
@@ -389,16 +386,16 @@ function PremiumFeedCard({ ad, priority = false }: { ad: FeedAdSummary; priority
             <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/20 to-transparent" />
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,223,0,0.06)_0%,transparent_40%,rgba(218,165,32,0.1)_100%)]" />
 
-            <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full border border-[#DAA520]/70 bg-linear-to-br from-[#2a2a2a] to-[#0a0a0a] px-3 py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md">
-              <span className="text-[10px] text-[#FFDF00] drop-shadow-[0_0_4px_rgba(255,223,0,0.9)]">
+            <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full border border-gold/70 bg-linear-to-br from-premium-border to-[#0a0a0a] px-3 py-1.5 shadow-[0_4px_6px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md">
+              <span className="text-[10px] text-gold-bright drop-shadow-[0_0_4px_rgba(255,223,0,0.9)]">
                 ★
               </span>
-              <span className="bg-linear-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-[10px] font-extrabold uppercase tracking-[0.2em] text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
+              <span className="bg-linear-to-r from-gold-gradient-start via-gold-gradient-mid to-gold-gradient-end bg-clip-text text-[10px] font-extrabold uppercase tracking-[0.2em] text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
                 Premium
               </span>
             </div>
 
-            <div className="absolute right-4 top-4 z-20 rounded-full bg-black/70 px-2.5 py-1 text-xs font-semibold text-[#FFDF00] shadow-sm ring-1 ring-[#DAA520]/60 backdrop-blur-sm">
+            <div className="absolute right-4 top-4 z-20 rounded-full bg-black/70 px-2.5 py-1 text-xs font-semibold text-gold-bright shadow-sm ring-1 ring-gold/60 backdrop-blur-sm">
               ★ {ad.rating.toFixed(1)}
             </div>
 
@@ -421,12 +418,12 @@ function PremiumFeedCard({ ad, priority = false }: { ad: FeedAdSummary; priority
                       : "Indisponivel"}
                 </span>
               </div>
-              <h3 className="font-display text-2xl font-semibold leading-tight text-[#FFDF00] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+              <h3 className="font-display text-2xl font-semibold leading-tight text-gold-bright drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
                 {ad.artisticName}
               </h3>
               <p className="mt-1 text-[11px] font-medium uppercase tracking-widest text-zinc-300 drop-shadow-md">
                 A partir de{" "}
-                <span className="text-sm font-bold tracking-normal text-[#FFDF00]">
+                <span className="text-sm font-bold tracking-normal text-gold-bright">
                   {currency(ad.startingPrice)}
                 </span>
               </p>
@@ -546,7 +543,7 @@ export function FeedAdCard({ ad, priority = false }: { ad: FeedAdSummary; priori
     >
       <article
         className={cn(
-          "isolate relative overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#121212] shadow-md transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#4a4a4a] hover:shadow-xl active:scale-[0.98]",
+          "isolate relative overflow-hidden rounded-2xl border border-premium-border bg-premium-surface shadow-md transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#4a4a4a] hover:shadow-xl active:scale-[0.98]",
           FEED_CARD_SIZE_CLASS,
         )}
       >

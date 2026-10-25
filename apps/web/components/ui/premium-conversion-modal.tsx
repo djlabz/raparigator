@@ -149,7 +149,7 @@ export function PremiumConversionModal({
       open={open}
       onClose={handleClose}
       title="Sigillus Premium"
-      titleClassName="premium-modal-title"
+      titleClassName="font-display text-3xl leading-[1.2] font-semibold tracking-[-0.02em] text-gold-bright sm:text-4xl sm:leading-[1.2]"
       size="md"
       mobileCentered
       scrollResetKey={step}
@@ -185,9 +185,9 @@ export function PremiumConversionModal({
       }
     >
       <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-        <span className={cn(step === 1 && "text-[#DAA520]")}>1 · Benefícios</span>
+        <span className={cn(step === 1 && "text-gold")}>1 · Benefícios</span>
         <span aria-hidden="true">/</span>
-        <span className={cn(step === 2 && "text-[#DAA520]")}>2 · Comparar</span>
+        <span className={cn(step === 2 && "text-gold")}>2 · Comparar</span>
       </div>
 
       <AnimatePresence mode="wait">
@@ -197,7 +197,7 @@ export function PremiumConversionModal({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="rounded-2xl border border-[#DAA520]/35 bg-[#121212] p-3 sm:p-4"
+            className="rounded-2xl border border-gold/35 bg-premium-surface p-3 sm:p-4"
           >
             <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {BENEFIT_CELLS.map((cell, index) => {
@@ -217,22 +217,19 @@ export function PremiumConversionModal({
                       delay: index * 0.05,
                     }}
                     className={cn(
-                      "flex gap-3 rounded-xl border border-[#2a2a2a] bg-black/35 p-3.5",
+                      "flex gap-3 rounded-xl border border-premium-border bg-black/35 p-3.5",
                       isLastOdd && "sm:col-span-2",
-                      highlighted && "border-[#FFDF00]/70 bg-[#FFDF00]/5 premium-glow-pulse",
+                      highlighted && "border-gold-bright/70 bg-gold-bright/5 animate-glow-pulse",
                     )}
                   >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#FFDF00]/12">
-                      <Icon className="h-4 w-4 text-[#FFDF00]" aria-hidden="true" />
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gold-bright/12">
+                      <Icon className="h-4 w-4 text-gold-bright" aria-hidden="true" />
                     </span>
                     <div className="min-w-0 space-y-0.5">
-                      <p className="flex items-center gap-1.5 text-sm font-semibold text-[#FFDF00]">
+                      <p className="flex items-center gap-1.5 text-sm font-semibold text-gold-bright">
                         {cell.title}
                         {highlighted ? (
-                          <Sparkles
-                            className="h-3.5 w-3.5 shrink-0 text-[#DAA520]"
-                            aria-hidden="true"
-                          />
+                          <Sparkles className="h-3.5 w-3.5 shrink-0 text-gold" aria-hidden="true" />
                         ) : null}
                       </p>
                       <p className="text-xs leading-relaxed text-zinc-400">{cell.description}</p>
@@ -274,11 +271,8 @@ export function PremiumConversionModal({
                 </ul>
               </div>
 
-              <div className="rounded-2xl border border-[#DAA520]/40 bg-[#121212] p-4 text-white">
-                <p
-                  className="font-display text-xl font-semibold leading-none text-[#FFDF00]"
-                  style={{ WebkitTextStroke: "0.6px #DAA520" }}
-                >
+              <div className="rounded-2xl border border-gold/40 bg-premium-surface p-4 text-white">
+                <p className="font-display text-xl font-semibold leading-none text-gold-bright [-webkit-text-stroke:0.6px_var(--color-gold)]">
                   Premium
                 </p>
                 <ul className="mt-4 space-y-3.5">
@@ -290,7 +284,7 @@ export function PremiumConversionModal({
                         index === 0 && "pb-3.5 border-b border-white/10",
                       )}
                     >
-                      <p className="text-[13px] font-semibold leading-snug text-[#FFDF00]">
+                      <p className="text-[13px] font-semibold leading-snug text-gold-bright">
                         {gain.label}
                       </p>
                       <p className="text-sm leading-snug text-zinc-200">{gain.to}</p>
@@ -298,7 +292,7 @@ export function PremiumConversionModal({
                   ))}
                 </ul>
                 <div className="mt-4 border-t border-white/10 pt-3">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#DAA520]">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-gold">
                     Exclusivo Premium
                   </p>
                   <ul className="mt-2 space-y-1.5">
@@ -327,15 +321,17 @@ export function PremiumConversionModal({
                       className={cn(
                         "relative rounded-xl border px-3 py-3 text-left transition",
                         selected
-                          ? "border-[#DAA520] bg-[#121212] shadow-[0_0_0_1px_rgba(218,165,32,0.35)]"
-                          : "border-zinc-200 bg-white hover:border-[#DAA520]/50",
+                          ? "border-gold bg-premium-surface shadow-[0_0_0_1px_rgba(218,165,32,0.35)]"
+                          : "border-zinc-200 bg-white hover:border-gold/50",
                       )}
                     >
                       {option.badge ? (
                         <span
                           className={cn(
                             "absolute -top-2 right-2 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                            selected ? "bg-[#FFDF00] text-[#121212]" : "bg-zinc-900 text-[#FFDF00]",
+                            selected
+                              ? "bg-gold-bright text-premium-surface"
+                              : "bg-zinc-900 text-gold-bright",
                           )}
                         >
                           {option.badge}
@@ -344,7 +340,7 @@ export function PremiumConversionModal({
                       <p
                         className={cn(
                           "text-sm font-semibold",
-                          selected ? "text-[#FFDF00]" : "text-zinc-900",
+                          selected ? "text-gold-bright" : "text-zinc-900",
                         )}
                       >
                         {option.label}

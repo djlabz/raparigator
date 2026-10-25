@@ -69,7 +69,7 @@ export function StandardReviewsSection({ ad }: StandardReviewsSectionProps) {
                 &ldquo;{review.comment}&rdquo;
               </p>
 
-              <div className="animate-fade-in flex items-center gap-1 pl-10 pt-1 text-xs font-bold tracking-wider text-emerald-700 uppercase">
+              <div className="flex items-center gap-1 pl-10 pt-1 text-xs font-bold tracking-wider text-emerald-700 uppercase">
                 <ThumbsUp className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
                 Perfil Recomendado
               </div>

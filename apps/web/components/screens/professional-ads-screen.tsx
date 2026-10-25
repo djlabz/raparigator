@@ -82,24 +82,21 @@ function ProfessionalAdListCard({ ad }: { ad: ProfessionalAd }) {
     return (
       <Link
         href={`/anuncio/${ad.slug}`}
-        className="group block perspective-1000 h-100 w-full cursor-pointer"
+        className="group block perspective-[1000px] h-100 w-full cursor-pointer"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
         <article
           ref={cardRef}
-          className="preserve-3d relative h-full w-full transition-transform duration-200 ease-out active:scale-[0.97]"
+          className="transform-3d relative h-full w-full transition-transform duration-200 ease-out active:scale-[0.97]"
           style={{
             transform: "rotateX(var(--rot-x, 0deg)) rotateY(var(--rot-y, 0deg))",
           }}
         >
           <div className="absolute inset-0 rounded-2xl overflow-hidden p-[1.5px] bg-linear-to-b from-[#3a3018] to-[#1a150a] shadow-2xl">
-            <div
-              className="absolute inset-[-150%] animate-spin bg-[conic-gradient(from_90deg,transparent_0%,transparent_75%,rgba(255,215,0,0.1)_80%,#FFD700_95%,#ffffff_98%,transparent_100%)] pointer-events-none"
-              style={{ animationDuration: "4.5s", animationTimingFunction: "linear" }}
-            />
+            <div className="absolute inset-[-150%] animate-[spin_4.5s_linear_infinite] bg-[conic-gradient(from_90deg,transparent_0%,transparent_75%,rgba(255,215,0,0.1)_80%,#FFD700_95%,#ffffff_98%,transparent_100%)] pointer-events-none" />
 
-            <div className="absolute inset-[1.5px] rounded-2xl overflow-hidden bg-[#121212] z-10 border border-[#DAA520]/20 shadow-sm transition-shadow duration-300 group-hover:shadow-[0_8px_30px_rgba(218,165,32,0.22)]">
+            <div className="absolute inset-[1.5px] rounded-2xl overflow-hidden bg-premium-surface z-10 border border-gold/20 shadow-sm transition-shadow duration-300 group-hover:shadow-[0_8px_30px_rgba(218,165,32,0.22)]">
               <Image
                 src={ad.images[0] ?? ""}
                 alt={`${ad.artisticName} premium`}
@@ -110,12 +107,12 @@ function ProfessionalAdListCard({ ad }: { ad: ProfessionalAd }) {
               <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/10 to-transparent" />
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,223,0,0.06)_0%,transparent_40%,rgba(218,165,32,0.1)_100%)]" />
 
-              <div className="absolute left-4 top-4 rounded-full border border-[#FFDF00]/35 bg-black/35 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FFDF00] backdrop-blur-md">
+              <div className="absolute left-4 top-4 rounded-full border border-gold-bright/35 bg-black/35 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-gold-bright backdrop-blur-md">
                 Premium
               </div>
 
               <div className="absolute bottom-0 left-0 w-full px-5 pb-5 pt-16">
-                <h3 className="font-display text-3xl font-semibold leading-tight text-[#FFDF00] drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
+                <h3 className="font-display text-3xl font-semibold leading-tight text-gold-bright drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
                   {ad.artisticName}
                 </h3>
                 <p className="mt-1 text-xs uppercase tracking-[0.2em] text-white/75">

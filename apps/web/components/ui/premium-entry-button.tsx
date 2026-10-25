@@ -21,7 +21,7 @@ export function PremiumEntryButton({ onClick, className }: PremiumEntryButtonPro
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full items-center justify-center gap-2 rounded-xl border border-[#DAA520]/40 bg-[#121212] px-4 py-4 text-sm font-bold text-[#FFDF00] transition hover:border-[#FFDF00]/60",
+        "flex w-full items-center justify-center gap-2 rounded-xl border border-gold/40 bg-premium-surface px-4 py-4 text-sm font-bold text-gold-bright transition hover:border-gold-bright/60",
         className,
       )}
     >

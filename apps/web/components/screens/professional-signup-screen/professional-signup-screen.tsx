@@ -345,7 +345,7 @@ export function ProfessionalSignupScreen() {
             <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
               {/* PASSO 1 */}
               {step === 1 && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="space-y-4">
                   <div className="space-y-1 mb-4">
                     <h2 className="text-xl font-bold tracking-tight text-zinc-900">
                       Dados Iniciais
@@ -366,7 +366,9 @@ export function ProfessionalSignupScreen() {
                     value={cpf}
                     onChange={(event) => setCpf(formatCpf(event.target.value))}
                     error={stepOneErrors.cpf}
-                    className={shakeStep === 1 && stepOneErrors.cpf ? "field-shake" : undefined}
+                    className={
+                      shakeStep === 1 && stepOneErrors.cpf ? "animate-field-shake" : undefined
+                    }
                     leadingIcon={
                       <svg
                         viewBox="0 0 24 24"
@@ -391,7 +393,7 @@ export function ProfessionalSignupScreen() {
                     onChange={(event) => setCivilName(event.target.value)}
                     error={stepOneErrors.civilName}
                     className={
-                      shakeStep === 1 && stepOneErrors.civilName ? "field-shake" : undefined
+                      shakeStep === 1 && stepOneErrors.civilName ? "animate-field-shake" : undefined
                     }
                     premium
                     leadingIcon={
@@ -462,7 +464,7 @@ export function ProfessionalSignupScreen() {
 
               {/* PASSO 2 */}
               {step === 2 && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="space-y-4">
                   <div className="space-y-1 mb-4">
                     <h2 className="text-xl font-bold tracking-tight text-zinc-900">
                       Credenciais de Acesso
@@ -480,7 +482,9 @@ export function ProfessionalSignupScreen() {
                     value={phone}
                     onChange={(event) => setPhone(event.target.value)}
                     error={stepTwoErrors.phone}
-                    className={shakeStep === 2 && stepTwoErrors.phone ? "field-shake" : undefined}
+                    className={
+                      shakeStep === 2 && stepTwoErrors.phone ? "animate-field-shake" : undefined
+                    }
                     premium
                     leadingIcon={
                       <svg
@@ -505,7 +509,9 @@ export function ProfessionalSignupScreen() {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     error={stepTwoErrors.email}
-                    className={shakeStep === 2 && stepTwoErrors.email ? "field-shake" : undefined}
+                    className={
+                      shakeStep === 2 && stepTwoErrors.email ? "animate-field-shake" : undefined
+                    }
                     premium
                     leadingIcon={
                       <svg
@@ -548,7 +554,9 @@ export function ProfessionalSignupScreen() {
                     }
                     error={stepTwoErrors.confirmEmail}
                     className={
-                      shakeStep === 2 && stepTwoErrors.confirmEmail ? "field-shake" : undefined
+                      shakeStep === 2 && stepTwoErrors.confirmEmail
+                        ? "animate-field-shake"
+                        : undefined
                     }
                   />
 
@@ -561,7 +569,7 @@ export function ProfessionalSignupScreen() {
                     onChange={(event) => setPassword(event.target.value)}
                     error={stepTwoErrors.password}
                     className={
-                      shakeStep === 2 && stepTwoErrors.password ? "field-shake" : undefined
+                      shakeStep === 2 && stepTwoErrors.password ? "animate-field-shake" : undefined
                     }
                     premium
                     leadingIcon={
@@ -589,7 +597,9 @@ export function ProfessionalSignupScreen() {
                     onChange={(event) => setConfirmPassword(event.target.value)}
                     error={stepTwoErrors.confirmPassword}
                     className={
-                      shakeStep === 2 && stepTwoErrors.confirmPassword ? "field-shake" : undefined
+                      shakeStep === 2 && stepTwoErrors.confirmPassword
+                        ? "animate-field-shake"
+                        : undefined
                     }
                     premium
                     leadingIcon={
@@ -646,7 +656,7 @@ export function ProfessionalSignupScreen() {
               )}
 
               {step === 3 && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="space-y-4">
                   <div className="space-y-1 mb-2">
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-wine-700">
                       Quase lá

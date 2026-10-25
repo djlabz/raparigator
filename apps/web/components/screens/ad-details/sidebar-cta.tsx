@@ -17,7 +17,7 @@ export function SidebarCta({ role, setRiskTarget, brief }: SidebarCtaProps) {
   const { onLoginClick, openChatWithBrief } = useContactCta(brief);
 
   return (
-    <Card className="order-last lg:order-first p-5 sm:p-6 border-0 bg-linear-to-br from-[#121212] via-[#1a1a1a] to-[#0a0a0a] shadow-xl rounded-2xl text-center space-y-6 relative overflow-hidden">
+    <Card className="order-last lg:order-first p-5 sm:p-6 border-0 bg-linear-to-br from-premium-surface via-[#1a1a1a] to-[#0a0a0a] shadow-xl rounded-2xl text-center space-y-6 relative overflow-hidden">
       <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none rotate-12">
         <Sparkles className="h-32 w-32 text-amber-300" strokeWidth={2.5} />
       </div>
@@ -64,7 +64,7 @@ export function SidebarCta({ role, setRiskTarget, brief }: SidebarCtaProps) {
             className="group relative block w-full outline-[none]"
           >
             <div className="absolute -inset-0.5 rounded-xl bg-linear-to-r from-amber-500/30 to-amber-600/30 opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100" />
-            <span className="relative flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#121212] px-5 py-2 font-bold text-amber-400 shadow-sm transition-all duration-300 hover:bg-[#1a1a1a]">
+            <span className="relative flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-premium-surface px-5 py-2 font-bold text-amber-400 shadow-sm transition-all duration-300 hover:bg-[#1a1a1a]">
               <MessageSquare className="h-5 w-5" /> Entrar para Interagir
             </span>
           </Link>
@@ -75,7 +75,7 @@ export function SidebarCta({ role, setRiskTarget, brief }: SidebarCtaProps) {
             className="group relative block w-full outline-[none]"
           >
             <div className="absolute -inset-0.5 rounded-xl bg-linear-to-r from-amber-500/30 to-amber-600/30 opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100" />
-            <span className="relative flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#121212] px-5 py-2 font-bold text-amber-400 shadow-sm transition-all duration-300 hover:bg-[#1a1a1a]">
+            <span className="relative flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-premium-surface px-5 py-2 font-bold text-amber-400 shadow-sm transition-all duration-300 hover:bg-[#1a1a1a]">
               <MessageSquare className="h-5 w-5" /> Iniciar Chat
             </span>
           </button>
@@ -84,13 +84,13 @@ export function SidebarCta({ role, setRiskTarget, brief }: SidebarCtaProps) {
         <div className="flex items-center gap-3 w-full">
           <button
             onClick={() => setRiskTarget("WhatsApp")}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#121212] font-bold text-[#25D366] shadow-sm transition-all duration-300 hover:scale-[1.02] hover:bg-[#18181b] active:scale-[0.98] h-12 px-2 text-sm focus-visible:outline-none"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-premium-surface font-bold text-whatsapp shadow-sm transition-all duration-300 hover:scale-[1.02] hover:bg-[#18181b] active:scale-[0.98] h-12 px-2 text-sm focus-visible:outline-none"
           >
             <WhatsAppIcon className="h-4.5 w-4.5" /> WhatsApp
           </button>
           <button
             onClick={() => setRiskTarget("Telegram")}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#121212] font-bold text-[#229ED9] shadow-sm transition-all duration-300 hover:scale-[1.02] hover:bg-[#18181b] active:scale-[0.98] h-12 px-2 text-sm focus-visible:outline-none"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-premium-surface font-bold text-telegram shadow-sm transition-all duration-300 hover:scale-[1.02] hover:bg-[#18181b] active:scale-[0.98] h-12 px-2 text-sm focus-visible:outline-none"
           >
             <TelegramIcon className="h-4.5 w-4.5" /> Telegram
           </button>
