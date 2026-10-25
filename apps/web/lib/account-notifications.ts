@@ -157,7 +157,9 @@ export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
         reportStoreError("notifications.list", error);
       })
       .finally(() => {
-        apiInFlight = false;
+        if (started === generation) {
+          apiInFlight = false;
+        }
       });
   }, [role]);
 
