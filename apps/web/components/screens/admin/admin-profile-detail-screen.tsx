@@ -22,6 +22,7 @@ import { canReview } from "@sigillus/domain";
 import { AdminLayoutShell } from "./admin-layout-shell";
 import { useAdminSession } from "@/lib/admin-session";
 import { getProfileById, approveProfile, rejectProfile, grantPremium } from "@/lib/admin-service";
+import { storeErrorMessage } from "@/lib/report-store-error";
 import type { ProfessionalAd, VerificationStatus } from "@/lib/types";
 
 interface AdminProfileDetailScreenProps {
@@ -130,8 +131,14 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
       await loadProfile();
       setShowGrantModal(false);
       showToast("Plano Premium concedido com sucesso!", "success");
-    } catch {
-      showToast("Erro ao conceder premium.", "error");
+    } catch (error) {
+      const conflict = (error as { code?: unknown } | null)?.code === "CONFLICT";
+      showToast(
+        conflict
+          ? storeErrorMessage(error, "Erro ao conceder premium.")
+          : "Erro ao conceder premium.",
+        "error",
+      );
     } finally {
       setActionLoading(null);
     }
