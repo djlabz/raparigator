@@ -271,11 +271,13 @@ export function createPremiumService(deps: PremiumServiceDeps) {
       const baseDate = isCurrentlyActive ? (latest.currentPeriodEnd as Date) : now;
       const until = addMonths(baseDate, months);
 
-      const reusable =
-        latest &&
-        (latest.status === "active" ||
-          (latest.status === "pending_payment" && latest.provider === "manual"));
-      if (reusable) {
+      if (latest?.status === "pending_payment" && latest.provider !== "manual") {
+        throw new ORPCError("CONFLICT", {
+          message:
+            "Há uma assinatura aguardando pagamento; resolva antes de conceder o Premium manualmente.",
+        });
+      }
+      if (latest && (latest.status === "active" || latest.status === "pending_payment")) {
         return applyEvent(latest.id, {
           type: isCurrentlyActive ? "renewed" : "payment_confirmed",
           idempotencyKey: `manual:${latest.id}:${now.getTime()}`,

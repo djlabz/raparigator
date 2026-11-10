@@ -7,6 +7,7 @@ import {
   professionalProfiles,
   reports,
   sessions,
+  subscriptions,
   users,
 } from "../src/db/schema";
 import { DEV_ADMINS, upsertAdminWithPassword } from "../src/db/seed/users";
@@ -405,6 +406,39 @@ describe("admin / backoffice", () => {
         (item) => item.userId === userId && item.notification.title.includes("Premium"),
       ),
     ).toBe(true);
+  });
+
+  it("recusa conceder premium com assinatura do provedor aguardando pagamento", async () => {
+    const { rpc, notified } = setup();
+    const cookie = await adminCookie();
+    const { profile, userId } = await createProfessional(
+      "pro-pendente@teste.dev",
+      "Bia Pendente",
+      "published",
+    );
+    await harness.db.insert(subscriptions).values({
+      id: "sub-pendente",
+      userId,
+      provider: "fake",
+      cycle: "monthly",
+      status: "pending_payment",
+    });
+
+    const response = await rpc<{ message: string }>(
+      "admin/grantPremium",
+      { id: profile.id, months: 1 },
+      cookie,
+    );
+    expect(response.status).toBe(409);
+    expect(response.body.message).toBe(
+      "Há uma assinatura aguardando pagamento; resolva antes de conceder o Premium manualmente.",
+    );
+    const logs = await harness.db
+      .select()
+      .from(adminActivityLogs)
+      .where(eq(adminActivityLogs.action, "premium_granted"));
+    expect(logs).toEqual([]);
+    expect(notified.some((item) => item.userId === userId)).toBe(false);
   });
 });
 

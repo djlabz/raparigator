@@ -328,7 +328,7 @@ describe("premium / billing", () => {
     expect(new Date(state.subscription!.currentPeriodEnd!)).toBeInstanceOf(Date);
   });
 
-  it("grantManual não confirma a assinatura pendente do provedor; cria a própria", async () => {
+  it("grantManual recusa com assinatura do provedor aguardando pagamento e não mexe nela", async () => {
     const { premium, userId, email } = await setup();
     const { subscription: pending } = await premium.startSubscription(
       { id: userId, email },
@@ -336,16 +336,18 @@ describe("premium / billing", () => {
     );
     expect(pending.provider).toBe("fake");
 
-    const granted = await premium.grantManual(userId, 2);
-    expect(granted.provider).toBe("manual");
-    expect(granted.id).not.toBe(pending.id);
-    expect(granted.status).toBe("active");
+    await expect(premium.grantManual(userId, 2)).rejects.toMatchObject({
+      code: "CONFLICT",
+      message:
+        "Há uma assinatura aguardando pagamento; resolva antes de conceder o Premium manualmente.",
+    });
 
-    const [providerRow] = await harness.db
+    const rows = await harness.db
       .select()
       .from(subscriptions)
-      .where(eq(subscriptions.id, pending.id));
-    expect(providerRow?.status).toBe("pending_payment");
+      .where(eq(subscriptions.userId, userId));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ id: pending.id, status: "pending_payment" });
     expect(await eventCount(pending.id)).toBe(1);
   });
 });

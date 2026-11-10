@@ -127,6 +127,7 @@ Reabrir quando o Daniel decidir cobrar. Nada aqui bloqueia o ar.
 
 - [ ] **T-30 Escolher PSP** que aceite o vertical, com Pix e recorrência (ADR-006 lista o risco). Registrar em ADR.
 - [ ] **T-31 Implementar `BillingProvider` real** em `apps/api/src/lib/billing/<psp>-provider.ts` (`createCheckout`, `cancelSubscription`, `verifyWebhook` com a assinatura do PSP). Adicionar o nome ao enum `BILLING_PROVIDER` em `config.ts` e escolher o provedor em `server.ts`. Testes de integração com webhook assinado, como os do fake.
+- [ ] **Concessão manual com assinatura pendente do PSP.** Hoje (decisão de 10/11, PR complementar do F-03) `admin.grantPremium` recusa com `CONFLICT` quando há assinatura do provedor em `pending_payment` e não cancela nada localmente. Quando o PSP real existir (T-31), rever se a concessão manual deve cancelar a assinatura pendente no provedor.
 - [ ] **T-32 Ligar checkout na UI** (`PREMIUM_CHECKOUT_ENABLED=true`): `premium-subscription-checkout-screen.tsx` redireciona para `checkoutUrl`; tela de retorno; estado `pending_payment` e `past_due` visíveis. Preços continuam vindo de `PREMIUM_PLAN_OPTIONS`.
 - [ ] **T-33 SMS para verificação de telefone** (provedor a definir) e `VERIFICATION_REQUIRED=true` se fizer sentido.
 - [ ] **T-34 Moderação de mídia** em `media.moderate` (API externa ou fila de revisão humana no admin).
