@@ -135,8 +135,12 @@ export function createReviewsService(deps: ReviewsServiceDeps) {
         .onConflictDoUpdate({
           target: reviewInvites.conversationId,
           set: { invitedAt, expiresAt, usedAt: null },
+          setWhere: isNull(reviewInvites.usedAt),
         })
         .returning();
+      if (!row) {
+        throw new ORPCError("CONFLICT", { message: "Esta conversa já foi avaliada." });
+      }
       await jobs.enqueue(
         "review-invite.expire",
         { inviteId: row!.id },

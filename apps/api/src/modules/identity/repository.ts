@@ -91,14 +91,19 @@ export function createIdentityRepository(db: Database) {
         .where(eq(identityVerifications.id, id));
     },
 
-    async listExpiredApproved(reviewedBefore: Date): Promise<IdentityVerificationRow[]> {
+    async listFilesToPurge(approvedReviewedBefore: Date): Promise<IdentityVerificationRow[]> {
       return db
         .select()
         .from(identityVerifications)
         .where(
           and(
-            eq(identityVerifications.status, "approved"),
-            lte(identityVerifications.reviewedAt, reviewedBefore),
+            or(
+              and(
+                eq(identityVerifications.status, "approved"),
+                lte(identityVerifications.reviewedAt, approvedReviewedBefore),
+              ),
+              eq(identityVerifications.status, "rejected"),
+            ),
             isNull(identityVerifications.filesDeletedAt),
             or(
               isNotNull(identityVerifications.documentKey),

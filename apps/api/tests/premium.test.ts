@@ -1,7 +1,12 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { addBillingCycle } from "@sigillus/domain";
-import { professionalProfiles, subscriptionEvents, webhookDeliveries } from "../src/db/schema";
+import {
+  professionalProfiles,
+  subscriptionEvents,
+  subscriptions,
+  webhookDeliveries,
+} from "../src/db/schema";
 import { createFakeBillingProvider, signFakeWebhook } from "../src/lib/billing/fake-provider";
 import { registerBillingJobs } from "../src/modules/premium/jobs";
 import { createPremiumService, type PremiumService } from "../src/modules/premium/service";
@@ -321,5 +326,26 @@ describe("premium / billing", () => {
     expect(state.subscription?.status).toBe("active");
     expect(state.subscription?.provider).toBe("manual");
     expect(new Date(state.subscription!.currentPeriodEnd!)).toBeInstanceOf(Date);
+  });
+
+  it("grantManual não confirma a assinatura pendente do provedor; cria a própria", async () => {
+    const { premium, userId, email } = await setup();
+    const { subscription: pending } = await premium.startSubscription(
+      { id: userId, email },
+      { cycle: "monthly" },
+    );
+    expect(pending.provider).toBe("fake");
+
+    const granted = await premium.grantManual(userId, 2);
+    expect(granted.provider).toBe("manual");
+    expect(granted.id).not.toBe(pending.id);
+    expect(granted.status).toBe("active");
+
+    const [providerRow] = await harness.db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.id, pending.id));
+    expect(providerRow?.status).toBe("pending_payment");
+    expect(await eventCount(pending.id)).toBe(1);
   });
 });

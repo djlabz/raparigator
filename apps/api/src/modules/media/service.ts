@@ -8,13 +8,16 @@ import {
   type MediaPurpose,
 } from "@sigillus/contracts";
 import { canUploadMedia } from "@sigillus/domain";
+import { and, eq } from "drizzle-orm";
 import type { Database } from "../../db/client";
+import { mediaAssets, professionalProfiles } from "../../db/schema";
 import { newId } from "../../lib/ids";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
 import {
   PRIVATE_STORAGE_PREFIX,
   PUBLIC_STORAGE_PREFIX,
+  deleteObjectsBestEffort,
   type ObjectStorage,
 } from "../../lib/storage";
 import type { ProfileRepository } from "../profiles/repository";
@@ -183,17 +186,21 @@ export function createMediaService(deps: MediaServiceDeps) {
 
     async remove(ownerUserId: string, assetId: string) {
       const row = await requireOwned(ownerUserId, assetId);
-      await storage.deleteObject(row.storageKey).catch(() => undefined);
-      if (row.thumbnailKey) {
-        await storage.deleteObject(row.thumbnailKey).catch(() => undefined);
-      }
-      if (row.profileId) {
-        const profile = await profiles.findById(row.profileId);
-        if (profile?.profileImageAssetId === row.id) {
-          await profiles.update(profile.id, { profileImageAssetId: null });
+      await db.transaction(async (tx) => {
+        if (row.profileId) {
+          await tx
+            .update(professionalProfiles)
+            .set({ profileImageAssetId: null, updatedAt: new Date() })
+            .where(
+              and(
+                eq(professionalProfiles.id, row.profileId),
+                eq(professionalProfiles.profileImageAssetId, row.id),
+              ),
+            );
         }
-      }
-      await repo.remove(row.id);
+        await tx.delete(mediaAssets).where(eq(mediaAssets.id, row.id));
+      });
+      await deleteObjectsBestEffort(storage, [row.storageKey, row.thumbnailKey], logger);
       return { ok: true as const };
     },
 

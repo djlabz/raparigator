@@ -7,6 +7,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { AppConfig } from "../config";
+import type { Logger } from "./logger";
 
 export const PUBLIC_STORAGE_PREFIX = "public/";
 export const PRIVATE_STORAGE_PREFIX = "private/";
@@ -30,6 +31,31 @@ export interface ObjectStorage {
   getObject(key: string): Promise<Uint8Array>;
   putObject(key: string, body: Uint8Array, contentType: string): Promise<void>;
   deleteObject(key: string): Promise<void>;
+}
+
+export async function deleteObjectsBestEffort(
+  storage: ObjectStorage,
+  keys: Array<string | null | undefined>,
+  logger: Logger,
+) {
+  for (const key of keys) {
+    if (!key) {
+      continue;
+    }
+    try {
+      await storage.deleteObject(key);
+    } catch (err) {
+      logger.warn({ err, key }, "storage.delete falhou");
+    }
+  }
+}
+
+function isNotFound(err: unknown) {
+  if (!(err instanceof Error)) {
+    return false;
+  }
+  const status = (err as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+  return err.name === "NotFound" || err.name === "NoSuchKey" || status === 404;
 }
 
 function createS3Client(config: AppConfig, endpoint: string): S3Client {
@@ -84,8 +110,11 @@ export function createS3Storage(config: AppConfig): ObjectStorage {
       try {
         const result = await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
         return { sizeBytes: result.ContentLength ?? 0, contentType: result.ContentType ?? null };
-      } catch {
-        return null;
+      } catch (err) {
+        if (isNotFound(err)) {
+          return null;
+        }
+        throw err;
       }
     },
     async getObject(key) {

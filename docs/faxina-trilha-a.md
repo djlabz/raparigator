@@ -23,12 +23,12 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 | Ordem | PR                                                 | Status                     |
 | ----- | -------------------------------------------------- | -------------------------- |
 | A1    | F-02 código morto e comentários                    | [x] #105 25/10             |
-| A2    | F-03 bugs de regra sem decisão                     |                            |
+| A2    | F-03 bugs de regra sem decisão                     | em andamento (#111, 10/11) |
 | A3    | F-06 regras puras para o domain                    |                            |
 | A4    | F-07 camadas da API                                |                            |
 | A5    | F-08 mensagens em português                        |                            |
 | A6    | F-09 seeds: CPF e pexels                           | [x] #106 25/10             |
-| A7    | F-11 CSS                                           | em andamento (#109, 25/10) |
+| A7    | F-11 CSS                                           | [x] #109 25/10             |
 | A8    | F-12 nomes                                         |                            |
 | A9    | F-13 `moderationStatus`                            |                            |
 | A10a  | F-14a consolidação da documentação                 |                            |
@@ -195,3 +195,5 @@ Formato: data, PR de origem, arquivo:linha, achado e proposta. Consolidados no i
 - 25/10, F-09 (#106), `apps/api/src/db/seed/users.ts:72-75` e `dev-data.ts` (clientes, `onConflictDoNothing`): a seed não atualiza CPF, telefone, apelido nem cidade de usuário que já existe; banco de dev antigo continua com os CPFs inválidos depois do `db:seed`. Proposta: no F-10 (seed real e idempotente), decidir se a seed reescreve esses campos dos usuários de seed ou se o caminho é recriar o volume; anotar a escolha no README.
 - 25/10, F-11 (#109), `apps/web/lib/utils.ts:1` (`cn` só concatena, sem `tailwind-merge`): classe passada por `className` que disputa a mesma propriedade com o padrão do componente (`Button`, `Card`…) ganha ou perde pela ordem do CSS gerado, não pela ordem no JSX. Caso real: `bg-[#800020]` do CTA do onboarding nunca teve efeito. Proposta: no F-16 (duplicação do web), decidir entre adotar `tailwind-merge` no `cn` (dependência nova) ou proibir override de cor por `className` e expor `variant`; enquanto isso, conferir visualmente qualquer override de cor em componente com padrão.
 - 25/10, F-11 (#109), verificação de motion: o MCP do Playwright está sem navegador (`chrome-for-testing` não instalado) e o fallback Python da `refine-motion` não tem o módulo `playwright`. Proposta: o Daniel decide se instala um dos dois ou se a skill passa a aceitar o `@playwright/test` do repo como caminho de verificação.
+- 10/11, F-03 (#111), `apps/api/src/modules/media/jobs.ts:111-121`: o `media.process` marca `failed` qualquer erro, inclusive falha transitória do storage (agora o `head` propaga o erro em vez de devolver `null`). Proposta: no F-07 (camadas), relançar erros transitórios para o retry do pg-boss e marcar `failed` só depois da última tentativa.
+- 10/11, F-03 (#111), `apps/api/src/modules/premium/service.ts` (`grantManual`): com assinatura `pending_payment` do provedor aberta, a concessão manual agora cria uma assinatura própria e as duas coexistem; se o pagamento do provedor confirmar depois, a profissional fica com dois períodos ativos em paralelo (não somados). Proposta: o Daniel decide se o admin deve cancelar a pendente do provedor ao conceder manualmente.

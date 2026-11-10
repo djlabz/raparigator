@@ -54,7 +54,13 @@ export function createPgBossQueue(databaseUrl: string, logger: Logger): JobQueue
   let started = false;
   const ensureQueue = (name: JobName) => {
     const policy = JOB_QUEUE_POLICIES[name];
-    return boss.createQueue(name, policy ? { policy } : undefined).catch(() => undefined);
+    return boss.createQueue(name, policy ? { policy } : undefined).catch((err: unknown) => {
+      if (err instanceof Error && err.message.includes("already exists")) {
+        return;
+      }
+      logger.error({ err, queue: name }, "falha ao criar a fila do pg-boss");
+      throw err;
+    });
   };
 
   return {

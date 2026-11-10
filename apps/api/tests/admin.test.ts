@@ -340,6 +340,12 @@ describe("admin / backoffice", () => {
     );
     expect(resolved.body[0]).toMatchObject({ status: "resolved", resolution: "Perfil suspenso" });
     expect(resolved.body[0]?.updatedAt).toBeDefined();
+    const resolvedAgain = await rpc<{ code: string }>(
+      "admin/resolveReport",
+      { id: "rep-1", resolution: "dismissed", note: "Outra decisão" },
+      cookie,
+    );
+    expect(resolvedAgain.status).toBe(409);
   });
 
   it("busca mascara e-mail e devolve profissionais publicadas/pendentes", async () => {
