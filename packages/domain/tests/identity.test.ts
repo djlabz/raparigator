@@ -34,7 +34,11 @@ describe("identidade", () => {
   it("formata telefone internacional e aceita DDI 55", () => {
     expect(formatPhone("5511999998888")).toBe("+55 (11) 99999-8888");
     expect(validatePhone("+55 (11) 99999-8888")).toBeNull();
+    expect(validatePhone("5511999998888")).toBeNull();
+    expect(validatePhone("11999998888")).toBeNull();
+    expect(validatePhone("5511999999")).toBeNull();
     expect(validatePhone("11 9999")).toBe("Informe um telefone válido com DDD.");
+    expect(validatePhone("55119999988889")).toBe("Informe um telefone válido com DDD.");
   });
 
   it("pares de e-mail e senha precisam bater", () => {

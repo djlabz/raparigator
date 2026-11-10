@@ -144,7 +144,7 @@ export function validatePhone(value: string): string | null {
   const digits = value.replace(/\D/g, "");
   const national = digits.startsWith("55") && digits.length >= 12 ? digits.slice(2) : digits;
 
-  if (national.length < MIN_PHONE_DIGITS) {
+  if (national.length < MIN_PHONE_DIGITS || national.length > MAX_PHONE_DIGITS - 2) {
     return "Informe um telefone válido com DDD.";
   }
   return null;
