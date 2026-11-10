@@ -121,7 +121,7 @@ export async function purgeExpiredIdentityFiles(
   now: Date = new Date(),
 ): Promise<number> {
   const repo = createIdentityRepository(deps.db);
-  const expired = await repo.listExpiredApproved(
+  const expired = await repo.listFilesToPurge(
     new Date(now.getTime() - IDENTITY_FILES_RETENTION_DAYS * DAY_MS),
   );
   let purged = 0;
@@ -244,7 +244,12 @@ export function createIdentityService(deps: IdentityServiceDeps) {
           await cleanUploadedFile(key);
         }
       } catch (err) {
-        await deleteIdentityFiles(storage, keys).catch(() => undefined);
+        await deleteIdentityFiles(storage, keys).catch((deleteErr: unknown) =>
+          logger.warn(
+            { err: deleteErr, userId },
+            "falha ao apagar arquivos de identidade enviados",
+          ),
+        );
         if (err instanceof ORPCError) {
           throw err;
         }

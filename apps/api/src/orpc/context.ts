@@ -35,7 +35,10 @@ export async function getUserSession(context: AppContext): Promise<UserSession |
     context.sessions.user = context.deps.auth.api
       .getSession({ headers: context.request.headers })
       .then((session) => session ?? null)
-      .catch(() => null);
+      .catch((err: unknown) => {
+        context.deps.logger.warn({ err }, "getSession falhou");
+        return null;
+      });
   }
   return context.sessions.user;
 }
@@ -45,7 +48,10 @@ export async function getAdminSession(context: AppContext): Promise<AdminSession
     context.sessions.admin = context.deps.adminAuth.api
       .getSession({ headers: context.request.headers })
       .then((session) => session ?? null)
-      .catch(() => null);
+      .catch((err: unknown) => {
+        context.deps.logger.warn({ err }, "getSession de admin falhou");
+        return null;
+      });
   }
   return context.sessions.admin;
 }

@@ -15,6 +15,11 @@ const baseEnv = {
 };
 
 describe("storage S3", () => {
+  it("head propaga erro de rede em vez de responder que o objeto não existe", async () => {
+    const storage = createS3Storage(loadConfig({ ...baseEnv, S3_ENDPOINT: "http://127.0.0.1:9" }));
+    await expect(storage.head("u/1/a.mp4")).rejects.toThrow();
+  });
+
   it("assina upload e view com o endpoint público quando S3_PUBLIC_ENDPOINT está definido", async () => {
     const storage = createS3Storage(
       loadConfig({ ...baseEnv, S3_PUBLIC_ENDPOINT: "https://media.example.com" }),

@@ -22,6 +22,8 @@ import {
   transitionOnPublish,
   validateSectionForSave,
 } from "@sigillus/domain";
+import { ORPCError } from "@orpc/server";
+import { eq } from "drizzle-orm";
 import type { Database } from "../../db/client";
 import { adminActivityLogs, professionalProfiles } from "../../db/schema";
 import { newId } from "../../lib/ids";
@@ -155,6 +157,16 @@ function draftSectionToProfileValues(
   }
 }
 
+function isSlugConflict(error: unknown): boolean {
+  const candidate = error as {
+    code?: string;
+    constraint?: string;
+    cause?: { code?: string; constraint?: string };
+  } | null;
+  const detail = candidate?.cause ?? candidate;
+  return detail?.code === "23505" && detail.constraint === "professional_profile_slug_key";
+}
+
 function draftToProfileValues(draft: AnnouncementDraftState): ProfileValues {
   return ALL_SECTIONS.reduce<ProfileValues>(
     (values, section) => ({ ...values, ...draftSectionToProfileValues(section, draft) }),
@@ -182,16 +194,34 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
       return existing;
     }
     const artisticName = owner.alias?.trim() ?? "";
-    const created = await profiles.insert({
-      id: newId(),
-      userId: owner.id,
-      slug: await uniqueSlug(artisticName),
-      displayName: artisticName,
-      verificationStatus: PROFILE_INITIAL_STATUS,
-      listingStatus: "Pausado",
-    });
-    logger.info({ profileId: created.id }, "perfil profissional criado");
-    return created;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const created = await profiles.insertForNewOwner({
+          id: newId(),
+          userId: owner.id,
+          slug: await uniqueSlug(artisticName),
+          displayName: artisticName,
+          verificationStatus: PROFILE_INITIAL_STATUS,
+          listingStatus: "Pausado",
+        });
+        if (created) {
+          logger.info({ profileId: created.id }, "perfil profissional criado");
+          return created;
+        }
+        break;
+      } catch (err) {
+        if (!isSlugConflict(err)) {
+          throw err;
+        }
+      }
+    }
+    const concurrent = await profiles.findByUserId(owner.id);
+    if (!concurrent) {
+      throw new ORPCError("CONFLICT", {
+        message: "Não foi possível criar o perfil. Tente de novo.",
+      });
+    }
+    return concurrent;
   }
 
   return {
@@ -271,14 +301,23 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
         values.submittedAt = now;
         values.rejectionReason = null;
       }
-      const updated = await profiles.update(profile.id, values);
+      const updated = await db.transaction(async (tx) => {
+        const [row] = await tx
+          .update(professionalProfiles)
+          .set({ ...values, updatedAt: now })
+          .where(eq(professionalProfiles.id, profile.id))
+          .returning();
+        if (needsReview && row) {
+          await tx.insert(adminActivityLogs).values({
+            id: newId(),
+            action: "profile_submitted",
+            targetName: row.artisticName || owner.name,
+            targetId: row.id,
+          });
+        }
+        return row ?? null;
+      });
       if (needsReview && updated) {
-        await db.insert(adminActivityLogs).values({
-          id: newId(),
-          action: "profile_submitted",
-          targetName: updated.artisticName || owner.name,
-          targetId: updated.id,
-        });
         await enqueueAdminReviewDigest(jobs, now);
       }
       return { ok: true };

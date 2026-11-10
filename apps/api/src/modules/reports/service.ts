@@ -9,6 +9,7 @@ import {
 } from "@sigillus/contracts";
 import { ORPCError } from "@orpc/server";
 import type { Database } from "../../db/client";
+import { reportEvidence, reports } from "../../db/schema";
 import { newId } from "../../lib/ids";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
@@ -89,22 +90,6 @@ export function createReportsService(deps: ReportsServiceDeps) {
       const slug = input.profileSlug ?? (input.targetUrl ? slugFromAdUrl(input.targetUrl) : null);
       const profile = slug ? await profiles.findBySlug(slug) : null;
       const reportId = newId();
-      await repo.insert({
-        id: reportId,
-        source: "public",
-        type: "other",
-        reason: input.reason,
-        reportedUserId: profile?.userId ?? null,
-        reportedName: profile ? profile.artisticName || profile.slug : null,
-        reportedRole: profile ? "profissional" : null,
-        targetProfileId: profile?.id ?? null,
-        targetUrl: input.targetUrl ?? null,
-        profileSlug: slug,
-        contactEmail: input.contactEmail ?? null,
-        description: input.details,
-        status: "pending",
-      });
-
       const evidence = input.evidence.map((file) => {
         const id = newId();
         return {
@@ -115,7 +100,6 @@ export function createReportsService(deps: ReportsServiceDeps) {
           sizeBytes: file.sizeBytes,
         };
       });
-      await repo.insertEvidence(evidence);
       const evidenceUploads = await Promise.all(
         evidence.map(async (file) => {
           const upload = await storage.presignUpload(
@@ -131,6 +115,27 @@ export function createReportsService(deps: ReportsServiceDeps) {
           };
         }),
       );
+      const report: typeof reports.$inferInsert = {
+        id: reportId,
+        source: "public",
+        type: "other",
+        reason: input.reason,
+        reportedUserId: profile?.userId ?? null,
+        reportedName: profile ? profile.artisticName || profile.slug : null,
+        reportedRole: profile ? "profissional" : null,
+        targetProfileId: profile?.id ?? null,
+        targetUrl: input.targetUrl ?? null,
+        profileSlug: slug,
+        contactEmail: input.contactEmail ?? null,
+        description: input.details,
+        status: "pending",
+      };
+      await db.transaction(async (tx) => {
+        await tx.insert(reports).values(report);
+        if (evidence.length > 0) {
+          await tx.insert(reportEvidence).values(evidence);
+        }
+      });
 
       await enqueueAdminReportDigest(jobs);
       logger.info(

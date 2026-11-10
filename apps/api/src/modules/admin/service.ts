@@ -28,13 +28,14 @@ import type { Database } from "../../db/client";
 import {
   adminActivityLogs,
   conversations,
+  mediaAssets,
   professionalProfiles,
   sessions,
   users,
 } from "../../db/schema";
 import { newId } from "../../lib/ids";
 import type { Logger } from "../../lib/logger";
-import type { ObjectStorage } from "../../lib/storage";
+import { deleteObjectsBestEffort, type ObjectStorage } from "../../lib/storage";
 import { createMediaRepository } from "../media/repository";
 import { computeImageHash } from "../reports/image-hash";
 import { createReportsRepository, type ReportRow } from "../reports/repository";
@@ -334,20 +335,30 @@ export function createAdminService(deps: AdminServiceDeps) {
     if (asset.kind === "image") {
       await blockImageHash(row, asset);
     }
-    await storage.deleteObject(asset.storageKey).catch(() => undefined);
-    if (asset.thumbnailKey) {
-      await storage.deleteObject(asset.thumbnailKey).catch(() => undefined);
-    }
-    if (profile.profileImageAssetId === asset.id) {
-      await profiles.update(profile.id, { profileImageAssetId: null });
-    }
-    await media.update(asset.id, {
-      status: "rejected",
-      thumbnailKey: null,
-      moderationReason: REMOVED_MEDIA_MESSAGE,
-      blockReason: reportReason(row.id, input.note),
-      blockedByReportId: row.id,
+    const now = new Date();
+    await db.transaction(async (tx) => {
+      await tx
+        .update(professionalProfiles)
+        .set({ profileImageAssetId: null, updatedAt: now })
+        .where(
+          and(
+            eq(professionalProfiles.id, profile.id),
+            eq(professionalProfiles.profileImageAssetId, asset.id),
+          ),
+        );
+      await tx
+        .update(mediaAssets)
+        .set({
+          status: "rejected",
+          thumbnailKey: null,
+          moderationReason: REMOVED_MEDIA_MESSAGE,
+          blockReason: reportReason(row.id, input.note),
+          blockedByReportId: row.id,
+          updatedAt: now,
+        })
+        .where(eq(mediaAssets.id, asset.id));
     });
+    await deleteObjectsBestEffort(storage, [asset.storageKey, asset.thumbnailKey], logger);
     await closeReport(row, admin, {
       status: "resolved",
       resolution: input.note || null,

@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import sharp from "sharp";
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   blockedImageHashes,
   mediaAssets,
@@ -278,6 +278,31 @@ describe("canal de denúncia e retirada", () => {
     expect(row.respondedAt).toBeInstanceOf(Date);
   });
 
+  it("(c2) remover mídia por denúncia marca rejected antes de apagar os arquivos", async () => {
+    const pro = await professionalWithProfile("c2");
+    const asset = await uploadImage(pro.userId, await smoothNoiseJpeg(3));
+    const created = await createPublicReport({ profileSlug: pro.slug });
+    const cookie = await adminCookie();
+    const statuses: string[] = [];
+    const original = harness.storage.deleteObject.bind(harness.storage);
+    const spy = vi.spyOn(harness.storage, "deleteObject").mockImplementation(async (key) => {
+      statuses.push((await assetRow(asset.id)).status);
+      await original(key);
+    });
+    try {
+      const acted = await harness.rpc(
+        "admin/actOnReport",
+        { id: created.body.reportId, action: "remove_media", assetId: asset.id },
+        { cookie },
+      );
+      expect(acted.status).toBe(200);
+    } finally {
+      spy.mockRestore();
+    }
+    expect(statuses.length).toBeGreaterThan(0);
+    expect(statuses.every((status) => status === "rejected")).toBe(true);
+  });
+
   it("(d) a mesma imagem redimensionada e recomprimida é bloqueada; outra imagem passa", async () => {
     const pro = await professionalWithProfile("d");
     const original = await smoothNoiseJpeg(7);
@@ -382,6 +407,24 @@ describe("canal de denúncia e retirada", () => {
       evidence: [...evidence, { contentType: "image/png", sizeBytes: 2048 }],
     });
     expect(tooMany.status).toBe(400);
+  });
+
+  it("(e2) falha ao assinar o upload das provas não grava denúncia nem provas", async () => {
+    const pro = await professionalWithProfile("e2");
+    const spy = vi
+      .spyOn(harness.storage, "presignUpload")
+      .mockRejectedValue(new Error("storage fora do ar"));
+    try {
+      const failed = await createPublicReport({
+        profileSlug: pro.slug,
+        evidence: [{ contentType: "image/jpeg", sizeBytes: 2048 }],
+      });
+      expect(failed.status).toBe(500);
+    } finally {
+      spy.mockRestore();
+    }
+    expect(await harness.db.select().from(reports)).toEqual([]);
+    expect(await harness.db.select().from(reportEvidence)).toEqual([]);
   });
 
   it("(f) imagem lisa removida por denúncia não grava hash e outra imagem lisa passa", async () => {

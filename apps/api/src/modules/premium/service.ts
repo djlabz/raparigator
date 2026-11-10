@@ -271,7 +271,11 @@ export function createPremiumService(deps: PremiumServiceDeps) {
       const baseDate = isCurrentlyActive ? (latest.currentPeriodEnd as Date) : now;
       const until = addMonths(baseDate, months);
 
-      if (latest && (latest.status === "active" || latest.status === "pending_payment")) {
+      const reusable =
+        latest &&
+        (latest.status === "active" ||
+          (latest.status === "pending_payment" && latest.provider === "manual"));
+      if (reusable) {
         return applyEvent(latest.id, {
           type: isCurrentlyActive ? "renewed" : "payment_confirmed",
           idempotencyKey: `manual:${latest.id}:${now.getTime()}`,
