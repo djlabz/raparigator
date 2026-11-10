@@ -64,4 +64,5 @@ export const RATE_LIMITS = {
   verificationSend: { windowMs: 10 * 60_000, max: 3 },
   verificationConfirm: { windowMs: 10 * 60_000, max: 6 },
   review: { windowMs: 60 * 60_000, max: 10 },
+  adView: { windowMs: 24 * 60 * 60_000, max: 1 },
 } satisfies Record<string, RateLimitRule>;

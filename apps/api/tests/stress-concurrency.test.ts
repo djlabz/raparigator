@@ -1,3 +1,4 @@
+import pg from "pg";
 import { describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import type { ChatEvent } from "@sigillus/contracts";
@@ -5,7 +6,7 @@ import { createFeedFiltersCriteria } from "@sigillus/domain";
 import { createMemoryChatEventBus } from "../src/lib/chat-events";
 import { createTestHarness } from "./helpers/app";
 import { createChatFixture, nextChatEvent } from "./helpers/conversations";
-import { reviews, subscriptionEvents, subscriptions } from "../src/db/schema";
+import { reviewInvites, reviews, subscriptionEvents, subscriptions } from "../src/db/schema";
 import { newId } from "../src/lib/ids";
 import { signUp } from "./helpers/auth";
 import { seedDevData } from "../src/db/seed/dev-data";
@@ -93,6 +94,43 @@ describe("estresse e concorrência na API", () => {
     for (let subIndex = 0; subIndex < subscriberCount; subIndex += 1) {
       expect(receivedBySubscriber[subIndex]).toEqual(expected);
     }
+  });
+
+  it("corrida crítica: convidar de novo enquanto a avaliação é gravada não reabre o convite usado", async () => {
+    const fx = await createChatFixture(harness);
+    await fx.chat.sendText(fx.client, { conversationId: fx.conversationId, content: "Olá!" });
+    await fx.chat.sendText(fx.professional, {
+      conversationId: fx.conversationId,
+      content: "Tudo bem?",
+    });
+    await fx.reviews.invite(fx.professional, fx.conversationId);
+
+    const concurrent = new pg.Client({ connectionString: harness.config.DATABASE_URL });
+    await concurrent.connect();
+    try {
+      await concurrent.query("BEGIN");
+      await concurrent.query(
+        "UPDATE review_invite SET used_at = now() WHERE conversation_id = $1",
+        [fx.conversationId],
+      );
+      const reinvite = fx.reviews.invite(fx.professional, fx.conversationId);
+      const outcome = Promise.allSettled([reinvite]);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await concurrent.query("COMMIT");
+      const [settled] = await outcome;
+      expect(settled.status).toBe("rejected");
+      if (settled.status === "rejected") {
+        expect(settled.reason).toMatchObject({ code: "CONFLICT" });
+      }
+    } finally {
+      await concurrent.end();
+    }
+
+    const [row] = await harness.db
+      .select()
+      .from(reviewInvites)
+      .where(eq(reviewInvites.conversationId, fx.conversationId));
+    expect(row?.usedAt).toBeInstanceOf(Date);
   });
 
   it("corrida crítica: submissões concorrentes no mesmo convite de avaliação resultam em apenas 1 aprovada", async () => {

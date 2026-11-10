@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import sharp from "sharp";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { MEDIA_MAX_IMAGE_BYTES } from "@sigillus/contracts";
-import { professionalProfiles } from "../src/db/schema";
+import { mediaAssets, professionalProfiles } from "../src/db/schema";
 import { createAnnouncementsService } from "../src/modules/announcements";
 import { createMediaService, registerMediaJobs } from "../src/modules/media";
 import { stripImageMetadata } from "../src/modules/media/jobs";
@@ -488,6 +488,58 @@ describe("media", () => {
       .from(professionalProfiles)
       .where(eq(professionalProfiles.id, a.profileId));
     expect(profile?.profileImageAssetId).toBeNull();
+  });
+
+  it("remover apaga a linha e a foto de perfil antes dos arquivos", async () => {
+    await registerMediaJobs({
+      db: harness.db,
+      storage: harness.storage,
+      jobs: harness.jobs,
+      logger: harness.deps.logger,
+    });
+    const { userId, profileId } = await professionalWithProfile("pro-ordem@test.dev");
+    const svc = mediaService();
+    const asset = await uploadReadyImage(userId, "gallery");
+    await svc.setProfileImage(userId, asset.id);
+    const seen: Array<{ rows: number; profileImage: string | null }> = [];
+    const original = harness.storage.deleteObject.bind(harness.storage);
+    const spy = vi.spyOn(harness.storage, "deleteObject").mockImplementation(async (key) => {
+      const rows = await harness.db.select().from(mediaAssets).where(eq(mediaAssets.id, asset.id));
+      const [profile] = await harness.db
+        .select()
+        .from(professionalProfiles)
+        .where(eq(professionalProfiles.id, profileId));
+      seen.push({ rows: rows.length, profileImage: profile?.profileImageAssetId ?? null });
+      await original(key);
+    });
+    try {
+      await svc.remove(userId, asset.id);
+    } finally {
+      spy.mockRestore();
+    }
+    expect(seen.length).toBeGreaterThan(0);
+    expect(seen.every((entry) => entry.rows === 0 && entry.profileImage === null)).toBe(true);
+  });
+
+  it("falha do storage ao remover não impede a remoção da linha", async () => {
+    await registerMediaJobs({
+      db: harness.db,
+      storage: harness.storage,
+      jobs: harness.jobs,
+      logger: harness.deps.logger,
+    });
+    const { userId } = await professionalWithProfile("pro-falha@test.dev");
+    const svc = mediaService();
+    const asset = await uploadReadyImage(userId, "gallery");
+    const spy = vi
+      .spyOn(harness.storage, "deleteObject")
+      .mockRejectedValue(new Error("storage fora do ar"));
+    try {
+      await svc.remove(userId, asset.id);
+    } finally {
+      spy.mockRestore();
+    }
+    expect(await svc.listMine(userId, "gallery")).toHaveLength(0);
   });
 
   it("setProfileImage recusa asset que não é imagem pronta do próprio perfil", async () => {

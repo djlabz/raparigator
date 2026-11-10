@@ -76,8 +76,12 @@ export function createPgNotifyChatEventBus(databaseUrl: string, logger: Logger):
       await listenerClient.query(`LISTEN ${CHANNEL}`);
     },
     async stop() {
-      await listenerClient?.end().catch(() => undefined);
-      await publisherClient?.end().catch(() => undefined);
+      await listenerClient
+        ?.end()
+        .catch((err: unknown) => logger.warn({ err }, "falha ao fechar o listener LISTEN/NOTIFY"));
+      await publisherClient
+        ?.end()
+        .catch((err: unknown) => logger.warn({ err }, "falha ao fechar o publisher do chat"));
       listenerClient = null;
       publisherClient = null;
     },

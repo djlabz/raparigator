@@ -31,6 +31,43 @@ async function profileOf(userId: string) {
 }
 
 describe("announcements", () => {
+  it("getMine simultâneo de conta nova cria um perfil só, sem erro", async () => {
+    const owner = await professional("pro-duas-abas@test.dev", "Duas Abas");
+    const base = harness.deps.services.profiles;
+    const pending: Array<() => void> = [];
+    let firstLookups = 0;
+    const profiles = {
+      ...base,
+      async findByUserId(userId: string) {
+        const row = await base.findByUserId(userId);
+        if (firstLookups < 3) {
+          firstLookups += 1;
+          await new Promise<void>((resolve) => {
+            pending.push(resolve);
+            if (pending.length === 3) {
+              pending.forEach((release) => release());
+            }
+          });
+        }
+        return row;
+      },
+    };
+    const svc = createAnnouncementsService({
+      db: harness.db,
+      profiles,
+      jobs: harness.jobs,
+      logger: harness.deps.logger,
+    });
+    const results = await Promise.all([svc.getMine(owner), svc.getMine(owner), svc.getMine(owner)]);
+    const ids = new Set(results.map((result) => result.ad?.id));
+    expect(ids.size).toBe(1);
+    const rows = await harness.db
+      .select()
+      .from(professionalProfiles)
+      .where(eq(professionalProfiles.userId, owner.id));
+    expect(rows).toHaveLength(1);
+  });
+
   it("getMine cria perfil vazio em rascunho, pausado, com slug único", async () => {
     const owner = await professional("pro-a@test.dev", "Ana Clara");
     const svc = service();

@@ -35,6 +35,10 @@ describe("storage S3 contra o MinIO do compose.yaml", () => {
     await Promise.all(createdKeys.map((key) => storage.deleteObject(key).catch(() => undefined)));
   });
 
+  it("head devolve null para objeto que não existe", async () => {
+    expect(await storage.head(`public/media/${ownerUserId}/nao-existe.mp4`)).toBeNull();
+  });
+
   it("imagem de galeria é lida anonimamente pela publicUrl", async () => {
     const key = storageKeyFor(ownerUserId, newId(), "image/jpeg", "gallery");
     await putTestObject(key);

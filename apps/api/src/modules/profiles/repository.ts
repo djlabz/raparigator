@@ -240,5 +240,14 @@ export function createProfileRepository(db: Database, storage: ObjectStorage) {
       const [row] = await db.insert(professionalProfiles).values(values).returning();
       return row!;
     },
+
+    async insertForNewOwner(values: typeof professionalProfiles.$inferInsert) {
+      const [row] = await db
+        .insert(professionalProfiles)
+        .values(values)
+        .onConflictDoNothing({ target: professionalProfiles.userId })
+        .returning();
+      return row ?? null;
+    },
   };
 }

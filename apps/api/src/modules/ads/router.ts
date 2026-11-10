@@ -1,3 +1,4 @@
+import { RATE_LIMITS } from "../../lib/rate-limit";
 import { os } from "../../orpc/base";
 
 export const adsRouter = {
@@ -10,7 +11,14 @@ export const adsRouter = {
   mediaHighlights: os.ads.mediaHighlights.handler(({ context }) =>
     context.deps.services.ads.mediaHighlights(),
   ),
-  registerView: os.ads.registerView.handler(({ context, input }) =>
-    context.deps.services.ads.registerView(input.slug),
-  ),
+  registerView: os.ads.registerView.handler(({ context, input }) => {
+    const decision = context.deps.rateLimiter.hit(
+      `ads.view:${context.request.ip}:${input.slug}`,
+      RATE_LIMITS.adView,
+    );
+    if (!decision.allowed) {
+      return { ok: true as const };
+    }
+    return context.deps.services.ads.registerView(input.slug);
+  }),
 };

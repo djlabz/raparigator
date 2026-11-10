@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import sharp from "sharp";
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   IdentityVerificationFiles,
   IdentityVerificationMine,
@@ -346,6 +346,37 @@ describe("verificação de identidade da anunciante", () => {
       selfieKey: null,
       reviewedBy: DEV_ADMINS[0]!.email,
     });
+    expect(row!.filesDeletedAt).toBeInstanceOf(Date);
+  });
+
+  it("(g2) se o storage falhar na reprovação, a retenção apaga os arquivos depois", async () => {
+    const pro = await professional("g2");
+    const admin = await adminCookie();
+    const { documentKey, selfieKey } = await submitVerification(pro.cookie);
+    const spy = vi
+      .spyOn(harness.storage, "deleteObject")
+      .mockRejectedValue(new Error("storage fora do ar"));
+    try {
+      const rejected = await harness.rpc(
+        "admin/rejectIdentity",
+        { id: await pendingIdOf(pro.userId), reason: "Documento ilegível" },
+        { cookie: admin },
+      );
+      expect(rejected.status).toBe(200);
+    } finally {
+      spy.mockRestore();
+    }
+    expect(harness.storage.objects.has(documentKey)).toBe(true);
+
+    await purgeExpiredIdentityFiles({
+      db: harness.db,
+      storage: harness.storage,
+      logger: harness.deps.logger,
+    });
+    expect(harness.storage.objects.has(documentKey)).toBe(false);
+    expect(harness.storage.objects.has(selfieKey)).toBe(false);
+    const [row] = await rowsOf(pro.userId);
+    expect(row).toMatchObject({ status: "rejected", documentKey: null, selfieKey: null });
     expect(row!.filesDeletedAt).toBeInstanceOf(Date);
   });
 

@@ -3,7 +3,7 @@ import { isBlockedHash } from "@sigillus/domain";
 import type { Database } from "../../db/client";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
-import type { ObjectStorage } from "../../lib/storage";
+import { deleteObjectsBestEffort, type ObjectStorage } from "../../lib/storage";
 import { computeImageHash } from "../reports/image-hash";
 import { createReportsRepository } from "../reports/repository";
 import { createMediaRepository } from "./repository";
@@ -81,7 +81,7 @@ export async function registerMediaJobs(deps: MediaJobsDeps): Promise<void> {
         const hash = await computeImageHash(clean.data);
         const blockingReportId = await findBlockingReport(hash);
         if (blockingReportId) {
-          await storage.deleteObject(row.storageKey).catch(() => undefined);
+          await deleteObjectsBestEffort(storage, [row.storageKey], logger);
           await repo.update(row.id, {
             status: "blocked",
             moderationReason: BLOCKED_MEDIA_MESSAGE,

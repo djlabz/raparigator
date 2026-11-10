@@ -91,4 +91,20 @@ describe("feed, catálogos e anúncio público", () => {
     const missing = await harness.rpc<null>("ads/getBySlug", { slug: "nao-existe" });
     expect(missing.body).toBeNull();
   });
+
+  it("views repetidas do mesmo IP no mesmo anúncio contam uma vez", async () => {
+    await seedDevUsers(harness.db);
+    await seedDevData(harness.db);
+    const slug = "luna-velvet-sao-paulo";
+    const read = async () =>
+      (await harness.rpc<{ profileViews: number }>("ads/getBySlug", { slug })).body.profileViews;
+    const before = await read();
+    for (let index = 0; index < 20; index += 1) {
+      const response = await harness.rpc("ads/registerView", { slug }, { "x-real-ip": "10.0.0.7" });
+      expect(response.status).toBe(200);
+    }
+    expect(await read()).toBe(before + 1);
+    await harness.rpc("ads/registerView", { slug }, { "x-real-ip": "10.0.0.8" });
+    expect(await read()).toBe(before + 2);
+  });
 });
