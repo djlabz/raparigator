@@ -15,6 +15,14 @@ import { Toast } from "@/components/ui/toast";
 import { Stepper, StepItem } from "@/components/ui/stepper";
 import { authClient } from "@/lib/api/auth-client";
 import { translateAuthError } from "@/lib/auth-errors";
+import {
+  formatCpf,
+  validateCpf,
+  validateEmailPair,
+  validatePasswordPair,
+  validatePhone,
+  validateRequiredName,
+} from "@/lib/identity";
 
 const professionalImages = [
   "/images/professional-signup/stacked-cards-1.webp",
@@ -143,13 +151,15 @@ export function ProfessionalSignupScreen() {
 
   const validateStepOne = () => {
     const errors: { cpf?: string; civilName?: string } = {};
+    const cpfError = validateCpf(cpf);
+    const civilNameError = validateRequiredName(civilName, "civil");
 
-    if (cpf.replace(/\D/g, "").length !== 11) {
-      errors.cpf = "Informe um CPF válido.";
+    if (cpfError) {
+      errors.cpf = cpfError;
     }
 
-    if (!civilName.trim()) {
-      errors.civilName = "Informe seu nome civil.";
+    if (civilNameError) {
+      errors.civilName = civilNameError;
     }
 
     setStepOneErrors(errors);
@@ -163,43 +173,18 @@ export function ProfessionalSignupScreen() {
   };
 
   const validateStepTwo = () => {
+    const phoneError = validatePhone(phone);
     const errors: {
       phone?: string;
       email?: string;
       confirmEmail?: string;
       password?: string;
       confirmPassword?: string;
-    } = {};
-
-    if (!phone.trim()) {
-      errors.phone = "Informe seu telefone.";
-    }
-
-    if (!email.trim()) {
-      errors.email = "Informe seu e-mail.";
-    }
-
-    if (!confirmEmail.trim()) {
-      errors.confirmEmail = "Confirme seu e-mail.";
-    }
-
-    if (email.trim() && confirmEmail.trim() && email.trim() !== confirmEmail.trim()) {
-      errors.email = "Os e-mails devem ser iguais.";
-      errors.confirmEmail = "Os e-mails devem ser iguais.";
-    }
-
-    if (!password.trim()) {
-      errors.password = "Informe sua senha.";
-    }
-
-    if (!confirmPassword.trim()) {
-      errors.confirmPassword = "Confirme sua senha.";
-    }
-
-    if (password && confirmPassword && password !== confirmPassword) {
-      errors.password = "As senhas devem ser iguais.";
-      errors.confirmPassword = "As senhas devem ser iguais.";
-    }
+    } = {
+      ...(phoneError ? { phone: phoneError } : {}),
+      ...validateEmailPair(email, confirmEmail),
+      ...validatePasswordPair(password, confirmPassword),
+    };
 
     setStepTwoErrors(errors);
 
@@ -229,28 +214,6 @@ export function ProfessionalSignupScreen() {
 
   const prevStep = () => {
     setStep((currentStep) => (currentStep === 3 ? 2 : 1));
-  };
-
-  const formatCpf = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    const firstPart = digits.slice(0, 3);
-    const secondPart = digits.slice(3, 6);
-    const thirdPart = digits.slice(6, 9);
-    const lastPart = digits.slice(9, 11);
-
-    if (digits.length <= 3) {
-      return firstPart;
-    }
-
-    if (digits.length <= 6) {
-      return `${firstPart}.${secondPart}`;
-    }
-
-    if (digits.length <= 9) {
-      return `${firstPart}.${secondPart}.${thirdPart}`;
-    }
-
-    return `${firstPart}.${secondPart}.${thirdPart}-${lastPart}`;
   };
 
   useEffect(() => {

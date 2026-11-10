@@ -81,6 +81,32 @@ test.describe("Identity signup", () => {
     expect(me.user?.cpf).toBe("529.982.247-25");
   });
 
+  test("anunciante com CPF de dígito verificador inválido não passa do passo 1", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto("/auth/cadastro/profissional");
+
+    await page.getByLabel("CPF", { exact: true }).fill("529.982.247-24");
+    await page.getByLabel("Nome Civil").fill("Nome Civil Teste");
+    await page.getByRole("button", { name: "Continuar" }).click();
+
+    await expect(page.getByText("Informe um CPF válido.")).toBeVisible();
+    await expect(page.getByLabel("Telefone")).toHaveCount(0);
+  });
+
+  test("cliente com CPF de dígito verificador inválido não passa do passo 1", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto("/auth/cadastro/cliente");
+
+    await page.getByLabel("Seu CPF").fill("529.982.247-24");
+    await page.getByLabel("Nome completo civil").fill("Cliente Teste");
+    await page.getByRole("button", { name: "Continuar" }).click();
+
+    await expect(page.getByText("Informe um CPF válido.")).toBeVisible();
+    await expect(page.getByLabel("E-mail principal")).toHaveCount(0);
+  });
+
   test("anunciante conclui o cadastro e a conta guarda papel, CPF e telefone", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto("/auth/cadastro/profissional");

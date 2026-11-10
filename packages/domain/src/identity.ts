@@ -57,10 +57,7 @@ export function formatPhone(value: string): string {
 }
 
 export function validateCpf(value: string): string | null {
-  if (sanitizeCpfDigits(value).length !== CPF_LENGTH) {
-    return INVALID_CPF_MESSAGE;
-  }
-  return null;
+  return isValidCpf(value) ? null : INVALID_CPF_MESSAGE;
 }
 
 function cpfCheckDigit(digits: string, length: number): number {
@@ -147,7 +144,7 @@ export function validatePhone(value: string): string | null {
   const digits = value.replace(/\D/g, "");
   const national = digits.startsWith("55") && digits.length >= 12 ? digits.slice(2) : digits;
 
-  if (national.length < MIN_PHONE_DIGITS) {
+  if (national.length < MIN_PHONE_DIGITS || national.length > MAX_PHONE_DIGITS - 2) {
     return "Informe um telefone válido com DDD.";
   }
   return null;
