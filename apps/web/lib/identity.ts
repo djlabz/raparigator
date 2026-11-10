@@ -6,5 +6,6 @@ export {
   validateCpf,
   validateEmailPair,
   validatePasswordPair,
+  validatePhone,
   validateRequiredName,
 } from "@sigillus/domain";

@@ -11,9 +11,11 @@ import {
 } from "../src/identity";
 
 describe("identidade", () => {
-  it("formata e valida CPF por comprimento", () => {
+  it("formata CPF e valida com os dígitos verificadores", () => {
     expect(formatCpf("12345678900")).toBe("123.456.789-00");
-    expect(validateCpf("123.456.789-00")).toBeNull();
+    expect(validateCpf("529.982.247-25")).toBeNull();
+    expect(validateCpf("123.456.789-00")).toBe("Informe um CPF válido.");
+    expect(validateCpf("529.982.247-24")).toBe("Informe um CPF válido.");
     expect(validateCpf("123")).toBe("Informe um CPF válido.");
   });
 
@@ -47,7 +49,7 @@ describe("identidade", () => {
   it("cliente precisa de cidade e preferência; profissional não", () => {
     const form = {
       fullName: "Ana",
-      cpf: "12345678900",
+      cpf: "52998224725",
       email: "a@b.co",
       confirmEmail: "a@b.co",
       phone: "11999998888",
