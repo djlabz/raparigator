@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import type { AuthRole, User } from "@/lib/types";
-import { getProfileHref, getRoleLabel } from "@/lib/navigation";
+import { getProfileHref, getRoleLabel } from "@sigillus/domain";
 import { chromeCircle } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import type { NavigationItem } from "@/lib/navigation";
+import type { NavigationItem } from "@sigillus/domain";
 import {
   getDirectionBetweenTabs,
   getTabHrefForPathname,

@@ -2,7 +2,7 @@
 
 import { PropsWithChildren, useLayoutEffect, type ReactNode } from "react";
 import { useAuthSession } from "@/lib/auth-session";
-import { getNavigationItems } from "@/lib/navigation";
+import { getNavigationItems } from "@sigillus/domain";
 import {
   chromeDesktopNavSticky,
   chromeHeaderOffset,

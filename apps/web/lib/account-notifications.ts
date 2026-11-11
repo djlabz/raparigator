@@ -9,12 +9,6 @@ import { formatRelativeTime } from "@sigillus/domain";
 export type { AccountNotificationItem };
 export { formatRelativeTime };
 
-const DEFAULT_NOTIFICATION_HREF = "/conta#profile-workflow";
-
-export function getNotificationHref(notification: AccountNotificationItem) {
-  return notification.href ?? DEFAULT_NOTIFICATION_HREF;
-}
-
 interface AccountNotificationState {
   items: AccountNotificationItem[];
   bannerClosed: boolean;

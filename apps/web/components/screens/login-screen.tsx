@@ -11,7 +11,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { readRedirectTargetInHandler } from "../../lib/auth-return";
 import { authClient } from "@/lib/api/auth-client";
-import { translateAuthError } from "@/lib/auth-errors";
+import { translateAuthError } from "@sigillus/domain";
 
 const loginHeroImage = {
   src: "/images/personas/persona2/persona2-elegant-look.webp",

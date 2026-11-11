@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import { Stepper, StepItem } from "@/components/ui/stepper";
 import { authClient } from "@/lib/api/auth-client";
-import { translateAuthError } from "@/lib/auth-errors";
+import { translateAuthError } from "@sigillus/domain";
 import {
   formatCpf,
   validateCpf,

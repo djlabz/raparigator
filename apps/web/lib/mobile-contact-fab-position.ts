@@ -1,13 +1,7 @@
-export type MobileContactFabSide = "left" | "right";
+import type { MobileContactFabSide } from "@sigillus/domain";
 
 const SIDE_STORAGE_KEY = "sigillus-mobile-contact-fab-side-v2";
 const Y_STORAGE_KEY = "sigillus-mobile-contact-fab-y-v2";
-
-export const MOBILE_CONTACT_FAB_SIZE = 56;
-const MOBILE_CONTACT_FAB_BOTTOM_OFFSET = 69;
-export const MOBILE_CONTACT_FAB_EDGE_INSET = 16;
-export const MOBILE_CONTACT_FAB_DRAG_THRESHOLD = 8;
-export const MOBILE_CONTACT_FAB_SCROLL_THRESHOLD = 450;
 
 export function readMobileContactFabSide(): MobileContactFabSide {
   if (typeof window === "undefined") {
@@ -46,43 +40,4 @@ export function saveMobileContactFabY(y: number) {
   }
 
   window.localStorage.setItem(Y_STORAGE_KEY, String(y));
-}
-
-export function clampMobileContactFabY(
-  y: number,
-  viewportHeight = typeof window !== "undefined" ? window.innerHeight : 800,
-) {
-  const travelUp = Math.max(
-    0,
-    viewportHeight -
-      MOBILE_CONTACT_FAB_SIZE -
-      MOBILE_CONTACT_FAB_BOTTOM_OFFSET -
-      MOBILE_CONTACT_FAB_EDGE_INSET,
-  );
-  return Math.min(0, Math.max(-travelUp, y));
-}
-
-export function getMobileContactFabTooltipSide(fabSide: MobileContactFabSide): "left" | "right" {
-  return fabSide === "left" ? "right" : "left";
-}
-
-export function getMobileContactFabDragConstraints(viewportWidth: number, viewportHeight: number) {
-  const maxUp = Math.max(
-    0,
-    viewportHeight -
-      MOBILE_CONTACT_FAB_SIZE -
-      MOBILE_CONTACT_FAB_BOTTOM_OFFSET -
-      MOBILE_CONTACT_FAB_EDGE_INSET,
-  );
-  const maxHorizontal = Math.max(
-    0,
-    viewportWidth - MOBILE_CONTACT_FAB_SIZE - MOBILE_CONTACT_FAB_EDGE_INSET * 2,
-  );
-
-  return {
-    top: -maxUp,
-    bottom: 0,
-    left: 0,
-    right: maxHorizontal,
-  };
 }
