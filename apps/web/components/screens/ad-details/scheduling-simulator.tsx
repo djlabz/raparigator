@@ -152,7 +152,7 @@ export function SchedulingSimulator({
     >
       <div className="flex flex-col gap-3">
         <div className="flex flex-nowrap items-center justify-between gap-2">
-          <h3 className="flex min-w-0 shrink items-center gap-2.5 font-display text-lg font-bold tracking-tight whitespace-nowrap text-zinc-900 sm:text-xl">
+          <h3 className="flex min-w-0 shrink items-center gap-2.5 font-display text-lg font-bold tracking-tight text-zinc-900 sm:text-xl">
             <Zap className={cn("h-5 w-5 shrink-0", theme.titleIcon)} /> Simulador de Encontro
           </h3>
           <div className="mt-0.5 shrink-0">
