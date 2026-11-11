@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ads } from "./helpers/credentials";
+import { adTiers, ads, credentials } from "./helpers/credentials";
 import { seedUserRole } from "./helpers/auth";
 
 test.describe("Detalhe do anúncio", () => {
@@ -27,6 +27,29 @@ test.describe("Detalhe do anúncio", () => {
     await page.waitForURL("**/chat**");
     await expect(page.getByRole("heading", { name: "Conversas" })).toBeVisible();
   });
+
+  for (const { tier, slug, name } of adTiers) {
+    test(`visitante no FAB do anúncio ${tier} vai ao login e volta ao anúncio`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(`/anuncio/${slug}`);
+      await expect(page.getByRole("heading", { name })).toBeVisible();
+
+      await page.evaluate(() => window.scrollTo(0, 700));
+      const fabToggle = page.getByRole("button", { name, exact: true });
+      await expect(fabToggle).toBeVisible();
+      await fabToggle.click();
+
+      await page.getByRole("link", { name: "Entrar para interagir", exact: true }).click();
+      await page.waitForURL("**/auth/login**");
+
+      await page.getByLabel("E-mail").fill(credentials.cliente.email);
+      await page.getByLabel("Senha").fill(credentials.cliente.password);
+      await page.getByRole("button", { name: "Entrar na plataforma" }).click();
+      await page.waitForURL(`**/anuncio/${slug}`);
+    });
+  }
 
   test("slug inexistente mostra estado vazio", async ({ page }) => {
     await page.goto("/anuncio/nao-existe-este-perfil");

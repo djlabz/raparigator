@@ -23,4 +23,11 @@ export const credentials = {
 export const ads = {
   premiumSlug: "luna-velvet-sao-paulo",
   premiumName: "Luna Velvet",
+  standardSlug: "valentina-noir-campinas",
+  standardName: "Valentina Noir",
 };
+
+export const adTiers = [
+  { tier: "premium", slug: ads.premiumSlug, name: ads.premiumName },
+  { tier: "standard", slug: ads.standardSlug, name: ads.standardName },
+] as const;
