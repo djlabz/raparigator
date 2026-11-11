@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { addBillingCycle } from "@sigillus/domain";
+import { addBillingCycle } from "../src/premium";
 import {
+  cycleForMonths,
+  isSubscriptionActiveAt,
+  planFromSubscriptionStatus,
   reduceSubscriptionEvents,
   type SubscriptionEventInput,
-} from "../src/modules/premium/reducer";
+} from "../src/subscription";
 
 const T0 = new Date("2026-01-10T12:00:00.000Z");
 const T1 = new Date("2026-01-10T12:05:00.000Z");
@@ -122,5 +125,28 @@ describe("reduceSubscriptionEvents", () => {
       T2,
     );
     expect(state.status).toBe("active");
+  });
+});
+
+describe("regras da assinatura", () => {
+  it("só assinatura ativa vale como Premium", () => {
+    expect(planFromSubscriptionStatus("active")).toBe("premium");
+    expect(planFromSubscriptionStatus("pending_payment")).toBe("standard");
+    expect(planFromSubscriptionStatus(null)).toBe("standard");
+  });
+
+  it("ativa no instante exige status active e fim do período no futuro", () => {
+    const end = new Date("2026-02-10T12:00:00.000Z");
+    expect(isSubscriptionActiveAt({ status: "active", currentPeriodEnd: end }, T0)).toBe(true);
+    expect(isSubscriptionActiveAt({ status: "active", currentPeriodEnd: end }, end)).toBe(false);
+    expect(isSubscriptionActiveAt({ status: "past_due", currentPeriodEnd: end }, T0)).toBe(false);
+    expect(isSubscriptionActiveAt({ status: "active", currentPeriodEnd: null }, T0)).toBe(false);
+    expect(isSubscriptionActiveAt(null, T0)).toBe(false);
+  });
+
+  it("seis meses ou mais viram ciclo semestral", () => {
+    expect(cycleForMonths(1)).toBe("monthly");
+    expect(cycleForMonths(5)).toBe("monthly");
+    expect(cycleForMonths(6)).toBe("semiannual");
   });
 });

@@ -8,7 +8,16 @@ import type {
   Subscription,
   SubscriptionEventType,
 } from "@sigillus/contracts";
-import { PREMIUM_PLAN_OPTIONS, addMonths, getPlanLimits, getPlanOption } from "@sigillus/domain";
+import {
+  PREMIUM_PLAN_OPTIONS,
+  addMonths,
+  getPlanLimits,
+  getPlanOption,
+  reduceSubscriptionEvents,
+  planFromSubscriptionStatus,
+  isSubscriptionActiveAt,
+  cycleForMonths,
+} from "@sigillus/domain";
 import type { AppConfig } from "../../config";
 import type { Database } from "../../db/client";
 import { professionalProfiles, subscriptionEvents, subscriptions } from "../../db/schema";
@@ -16,7 +25,6 @@ import type { BillingProvider } from "../../lib/billing/provider";
 import { newId } from "../../lib/ids";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
-import { reduceSubscriptionEvents } from "./reducer";
 
 export type PremiumServiceDeps = {
   db: Database;
@@ -137,7 +145,7 @@ export function createPremiumService(deps: PremiumServiceDeps) {
   }
 
   function stateFrom(subscription: Subscription | null): PremiumState {
-    const plan = subscription?.status === "active" ? "premium" : "standard";
+    const plan = planFromSubscriptionStatus(subscription?.status);
     return {
       plan,
       limits: getPlanLimits(plan),
@@ -263,12 +271,9 @@ export function createPremiumService(deps: PremiumServiceDeps) {
     async grantManual(userId: string, months: number): Promise<Subscription> {
       const now = new Date();
       const latest = await findLatestForUser(userId);
-      const isCurrentlyActive =
-        latest &&
-        latest.status === "active" &&
-        latest.currentPeriodEnd &&
-        latest.currentPeriodEnd.getTime() > now.getTime();
-      const baseDate = isCurrentlyActive ? (latest.currentPeriodEnd as Date) : now;
+      const isCurrentlyActive = isSubscriptionActiveAt(latest, now);
+      const baseDate =
+        isCurrentlyActive && latest?.currentPeriodEnd ? latest.currentPeriodEnd : now;
       const until = addMonths(baseDate, months);
 
       if (latest?.status === "pending_payment" && latest.provider !== "manual") {
@@ -291,7 +296,7 @@ export function createPremiumService(deps: PremiumServiceDeps) {
         id: subscriptionId,
         userId,
         provider: "manual",
-        cycle: months >= 6 ? "semiannual" : "monthly",
+        cycle: cycleForMonths(months),
         status: "pending_payment",
       });
 

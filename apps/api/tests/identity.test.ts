@@ -12,7 +12,6 @@ import { DEV_ADMINS, upsertAdminWithPassword } from "../src/db/seed/users";
 import { createAnnouncementsService } from "../src/modules/announcements";
 import {
   ADMIN_IDENTITY_DIGEST_JOB,
-  IDENTITY_FILES_RETENTION_DAYS,
   createIdentityService,
   purgeExpiredIdentityFiles,
   registerAdminIdentityDigestJob,
@@ -21,6 +20,7 @@ import {
 import { createTestHarness } from "./helpers/app";
 import { signInAdmin, signUp } from "./helpers/auth";
 import { completeDraft } from "./helpers/drafts";
+import { IDENTITY_FILES_RETENTION_DAYS } from "@sigillus/domain";
 
 const ADMIN_EMAIL = "identidade@sigillus.test";
 const CIVIL_NAME = "Nome Civil Reservado";

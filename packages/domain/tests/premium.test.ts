@@ -6,6 +6,8 @@ import {
   canUploadMedia,
   getBillingSavingsPercent,
   getPlanLimits,
+  canSendViewOnceMessage,
+  canSetConversationAlias,
 } from "../src/premium";
 
 describe("limites por plano", () => {
@@ -48,5 +50,20 @@ describe("limites por plano", () => {
     expect(addMonths(new Date("2026-03-31T10:00:00.000Z"), 3).toISOString()).toBe(
       "2026-06-30T10:00:00.000Z",
     );
+  });
+});
+
+describe("gates de chat por papel", () => {
+  it("mídia temporária só para profissional com plano que permite", () => {
+    expect(canSendViewOnceMessage("profissional", { canSendViewOnce: true })).toBe(true);
+    expect(canSendViewOnceMessage("profissional", { canSendViewOnce: false })).toBe(false);
+    expect(canSendViewOnceMessage("cliente", { canSendViewOnce: true })).toBe(false);
+    expect(canSendViewOnceMessage("visitor", { canSendViewOnce: true })).toBe(false);
+  });
+
+  it("apelido na conversa: cliente sempre pode, profissional depende do plano", () => {
+    expect(canSetConversationAlias("cliente", { canUseAlias: false })).toBe(true);
+    expect(canSetConversationAlias("profissional", { canUseAlias: true })).toBe(true);
+    expect(canSetConversationAlias("profissional", { canUseAlias: false })).toBe(false);
   });
 });

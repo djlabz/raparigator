@@ -9,7 +9,6 @@ import { IdSchema, SlugSchema } from "./common";
 export const REPORT_RESPONSE_SLA_HOURS = 48;
 export const REPORT_EVIDENCE_MAX_FILES = 3;
 export const REPORT_EVIDENCE_MAX_BYTES = MEDIA_MAX_IMAGE_BYTES;
-export const REPORT_EVIDENCE_RETENTION_DAYS = 180;
 export const REPORT_EVIDENCE_UNCONFIRMED_HOURS = 24;
 
 export const ReportSourceSchema = z.enum(["chat", "public"]);

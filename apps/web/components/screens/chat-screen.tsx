@@ -91,6 +91,7 @@ import type {
 import { useAuthSession } from "@/lib/auth-session";
 import { usePremiumPlan } from "@/lib/premium-plan";
 import { cn } from "@/lib/utils";
+import { canSendViewOnceMessage } from "@sigillus/domain";
 
 const getStatusColor = (status: Conversation["contactStatus"]) =>
   status === "online" ? "bg-emerald-500" : "bg-zinc-400";
@@ -365,7 +366,8 @@ function ChatLoggedOut() {
 
 function ChatScreenInner() {
   const { isLoggedIn, user, role } = useAuthSession();
-  const { canSendViewOnce, canUseAlias, checkoutEnabled } = usePremiumPlan();
+  const { canSendViewOnce: planAllowsViewOnce, canUseAlias, checkoutEnabled } = usePremiumPlan();
+  const canSendViewOnce = canSendViewOnceMessage(role, { canSendViewOnce: planAllowsViewOnce });
   const { getInvite } = useReviewInvites();
   useEffect(() => {
     ensureChatStore();

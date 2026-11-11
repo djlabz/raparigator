@@ -24,23 +24,17 @@ import {
   type IdentityVerificationListRow,
   type IdentityVerificationRow,
 } from "./repository";
+import {
+  IDENTITY_FILES_RETENTION_DAYS,
+  identityPublishGate,
+  identityGateNeedsHistory,
+} from "@sigillus/domain";
+import type { IdentityPublishGate } from "@sigillus/domain";
 
-export const IDENTITY_FILES_RETENTION_DAYS = 30;
 const IDENTITY_FILE_URL_TTL_SECONDS = 120;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const FILE_NAME = /^[0-9a-f-]{36}\.(jpg|png|webp)$/;
-
-const IDENTITY_REQUIRED_MESSAGES = {
-  missing:
-    "Para publicar o anúncio, envie um documento com foto e uma selfie na verificação de identidade.",
-  pending:
-    "Sua verificação de identidade está em análise. O anúncio pode ser publicado assim que ela for aprovada.",
-  rejected:
-    "Sua verificação de identidade foi reprovada. Veja o motivo e envie novamente para publicar o anúncio.",
-} as const;
-
-export type IdentityPublishGate = { ok: true } | { ok: false; message: string };
 
 export type IdentityServiceDeps = {
   db: Database;
@@ -188,21 +182,14 @@ export function createIdentityService(deps: IdentityServiceDeps) {
 
   return {
     async publishGate(userId: string): Promise<IdentityPublishGate> {
-      if (!config.IDENTITY_REQUIRED) {
-        return { ok: true };
-      }
-      const active = await repo.activeForUser(userId);
-      if (active?.status === "approved") {
-        return { ok: true };
-      }
-      if (active?.status === "pending") {
-        return { ok: false, message: IDENTITY_REQUIRED_MESSAGES.pending };
-      }
-      const latest = await repo.latestForUser(userId);
-      return {
-        ok: false,
-        message: latest ? IDENTITY_REQUIRED_MESSAGES.rejected : IDENTITY_REQUIRED_MESSAGES.missing,
-      };
+      const required = config.IDENTITY_REQUIRED;
+      const active = required ? await repo.activeForUser(userId) : null;
+      const activeStatus =
+        active?.status === "approved" || active?.status === "pending" ? active.status : null;
+      const hasPrevious = identityGateNeedsHistory(required, activeStatus)
+        ? Boolean(await repo.latestForUser(userId))
+        : false;
+      return identityPublishGate({ required, activeStatus, hasPrevious });
     },
 
     async getMine(userId: string): Promise<IdentityVerificationMine> {

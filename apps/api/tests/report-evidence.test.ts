@@ -7,7 +7,6 @@ import { registerAccessLogJobs } from "../src/modules/access-log";
 import {
   REPORT_EVIDENCE_PROCESS_GRACE_HOURS,
   REPORT_EVIDENCE_PURGE_MARGIN_HOURS,
-  REPORT_EVIDENCE_RETENTION_DAYS,
   REPORT_EVIDENCE_UNCONFIRMED_HOURS,
   processReportEvidence,
   purgeReportEvidence,
@@ -16,6 +15,7 @@ import {
 import { createTestHarness } from "./helpers/app";
 import { signInAdmin, signUp } from "./helpers/auth";
 import { createPublishedProfile } from "./helpers/conversations";
+import { REPORT_EVIDENCE_RETENTION_DAYS } from "@sigillus/domain";
 
 const CONTACT_EMAIL = "contato-denuncia@contato.dev";
 const DAY_MS = 24 * 60 * 60 * 1000;

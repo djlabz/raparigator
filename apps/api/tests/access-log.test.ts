@@ -4,14 +4,13 @@ import { accessLogs, adminSessions, sessions, users } from "../src/db/schema";
 import { DEV_ADMINS, upsertAdminWithPassword } from "../src/db/seed/users";
 import { newId } from "../src/lib/ids";
 import {
-  ACCESS_LOG_RETENTION_DAYS,
-  SESSION_PURGE_GRACE_DAYS,
   purgeExpiredAccessLogs,
   purgeExpiredSessions,
   registerAccessLogJobs,
 } from "../src/modules/access-log";
 import { createTestHarness } from "./helpers/app";
 import { cookieHeader, signInAdmin, signUp } from "./helpers/auth";
+import { ACCESS_LOG_RETENTION_DAYS, SESSION_PURGE_GRACE_DAYS } from "@sigillus/domain";
 
 const harness = createTestHarness();
 const DAY_MS = 24 * 60 * 60 * 1000;
