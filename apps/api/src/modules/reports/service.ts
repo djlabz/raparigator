@@ -55,6 +55,10 @@ export function createReportsService(deps: ReportsServiceDeps) {
   const repo = createReportsRepository(db);
 
   return {
+    listBlockedHashes() {
+      return repo.listBlockedHashes();
+    },
+
     async recordChatReport(input: ChatReportInput): Promise<string> {
       const row = await repo.insert({
         id: newId(),

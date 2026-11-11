@@ -70,7 +70,13 @@ async function main() {
     ready: () => ready,
   };
 
-  await registerMediaJobs({ db, storage, jobs, logger });
+  await registerMediaJobs({
+    db,
+    storage,
+    jobs,
+    logger,
+    listBlockedHashes: () => deps.services.reports.listBlockedHashes(),
+  });
   await registerReviewJobs({ jobs, logger });
   await registerAccessLogJobs({ db, jobs, logger });
   await registerAdminReviewDigestJob({ db, config, mailer, jobs, logger });

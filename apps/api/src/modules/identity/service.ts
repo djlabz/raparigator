@@ -16,7 +16,7 @@ import { newId } from "../../lib/ids";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
 import { PRIVATE_STORAGE_PREFIX, type ObjectStorage } from "../../lib/storage";
-import { stripImageMetadata } from "../media/jobs";
+import { stripImageMetadata } from "../../lib/image";
 import { enqueueAdminIdentityDigest } from "./digest";
 import {
   createIdentityRepository,

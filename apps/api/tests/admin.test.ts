@@ -12,6 +12,8 @@ import {
 } from "../src/db/schema";
 import { DEV_ADMINS, upsertAdminWithPassword } from "../src/db/seed/users";
 import { adminRouter } from "../src/modules/admin/router";
+import { createMediaRepository } from "../src/modules/media";
+import { createReportsRepository } from "../src/modules/reports";
 import { createAdminService, type AdminNotification } from "../src/modules/admin/service";
 import { createAppContext } from "../src/orpc/context";
 import type { AppDeps } from "../src/deps";
@@ -34,6 +36,8 @@ function setup() {
     notify: async (userId, notification) => {
       notified.push({ userId, notification });
     },
+    reportsRepo: createReportsRepository(harness.db),
+    mediaRepo: createMediaRepository(harness.db),
   });
   const deps: AppDeps = {
     ...harness.deps,
@@ -109,7 +113,7 @@ describe("admin / backoffice", () => {
     expect(me.body.admin.fullName).toBe(DEV_ADMINS[0]!.fullName);
   });
 
-  it("sem sessão admin → UNAUTHORIZED; sessão de usuário comum não acessa", async () => {
+  it("sem sessão → UNAUTHORIZED; sessão de usuário comum → FORBIDDEN (P-26)", async () => {
     const { rpc } = setup();
     const anonymous = await rpc<{ code: string }>("admin/dashboard");
     expect(anonymous.status).toBe(401);
@@ -117,10 +121,10 @@ describe("admin / backoffice", () => {
 
     const user = await signUp(harness, { email: "comum@teste.dev" });
     const asUser = await rpc<{ code: string }>("admin/dashboard", {}, user.cookie);
-    expect(asUser.status).toBe(401);
-    expect(asUser.body.code).toBe("UNAUTHORIZED");
+    expect(asUser.status).toBe(403);
+    expect(asUser.body.code).toBe("FORBIDDEN");
     const list = await rpc<{ code: string }>("admin/clients", {}, user.cookie);
-    expect(list.status).toBe(401);
+    expect(list.status).toBe(403);
   });
 
   it("dashboard conta clientes, perfis e semanas", async () => {

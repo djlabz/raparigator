@@ -1,7 +1,8 @@
 import { implement, ORPCError } from "@orpc/server";
-import { contract, type UserRole } from "@sigillus/contracts";
+import { contract, type AccessLogEvent, type UserRole } from "@sigillus/contracts";
 import type { RateLimitRule } from "../lib/rate-limit";
 import { getAdminSession, getUserSession, type AppContext } from "./context";
+import { recordAccess } from "../modules/access-log/service";
 
 export const os = implement(contract).$context<AppContext>();
 
@@ -58,6 +59,9 @@ export function requireRole(role: UserRole) {
 const withAdmin = os.middleware(async ({ context, next }) => {
   const session = await getAdminSession(context);
   if (!session) {
+    if (await getUserSession(context)) {
+      throw new ORPCError("FORBIDDEN", { message: "Acesso restrito à administração." });
+    }
     throw new ORPCError("UNAUTHORIZED", { message: "Sessão de administrador necessária." });
   }
   return next({
@@ -83,6 +87,26 @@ export function rateLimited(name: string, rule: RateLimitRule) {
       });
     }
     return next();
+  });
+}
+
+export function withAccessLog(
+  event: AccessLogEvent,
+  options: { onlyWhen?: (output: unknown) => boolean } = {},
+) {
+  return os.middleware(async ({ context, next }) => {
+    const actors = context as { user?: { id: string }; admin?: { id: string } };
+    const actorId =
+      actors.admin?.id ?? actors.user?.id ?? (await getUserSession(context))?.user.id ?? null;
+    const result = await next();
+    if (actorId && (!options.onlyWhen || options.onlyWhen(result.output))) {
+      await recordAccess(context.deps.jobs, {
+        userId: actorId,
+        event,
+        headers: context.request.headers,
+      });
+    }
+    return result;
   });
 }
 

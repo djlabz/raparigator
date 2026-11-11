@@ -11,7 +11,6 @@ export {
   enqueueAdminReportDigest,
   registerAdminReportDigestJob,
 } from "./digest";
-export { computeImageHash } from "./image-hash";
 export {
   REPORT_EVIDENCE_PROCESS_GRACE_HOURS,
   REPORT_EVIDENCE_PROCESS_JOB,
@@ -21,4 +20,4 @@ export {
   purgeReportEvidence,
   registerReportEvidenceJobs,
 } from "./evidence";
-export { createReportsRepository, type ReportRow } from "./repository";
+export { createReportsRepository, type ReportRow, type ReportsRepository } from "./repository";

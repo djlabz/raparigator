@@ -19,17 +19,6 @@ export function createAppContext(deps: AppDeps, request: RequestInfo): AppContex
   return { request, deps, sessions: {} };
 }
 
-export function resolveClientIp(headers: Headers, fallback = "unknown"): string {
-  const forwarded = headers.get("x-forwarded-for");
-  if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim();
-    if (first) {
-      return first;
-    }
-  }
-  return headers.get("x-real-ip") ?? fallback;
-}
-
 export async function getUserSession(context: AppContext): Promise<UserSession | null> {
   if (!context.sessions.user) {
     context.sessions.user = context.deps.auth.api

@@ -1,24 +1,4 @@
-import { ORPCError } from "@orpc/server";
-import { getAdminSession, getUserSession } from "../../orpc/context";
-import { os, professional } from "../../orpc/base";
-
-const identityAdmin = os.middleware(async ({ context, next }) => {
-  const session = await getAdminSession(context);
-  if (!session) {
-    const userSession = await getUserSession(context);
-    if (userSession) {
-      throw new ORPCError("FORBIDDEN", { message: "Acesso restrito à administração." });
-    }
-    throw new ORPCError("UNAUTHORIZED", { message: "Sessão de administrador necessária." });
-  }
-  return next({
-    context: {
-      admin: { id: session.user.id, name: session.user.name, email: session.user.email },
-    },
-  });
-});
-
-const admin = os.use(identityAdmin);
+import { admin, professional } from "../../orpc/base";
 
 export const identityRouter = {
   getMine: professional.identity.getMine.handler(({ context }) =>

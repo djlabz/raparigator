@@ -3,7 +3,7 @@ import type { Database } from "../../db/client";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
 import type { ObjectStorage } from "../../lib/storage";
-import { stripImageMetadata } from "../media/jobs";
+import { stripImageMetadata } from "../../lib/image";
 import { createReportsRepository, type ReportEvidenceRow } from "./repository";
 import { REPORT_EVIDENCE_RETENTION_DAYS } from "@sigillus/domain";
 

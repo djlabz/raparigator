@@ -43,7 +43,7 @@ export type AnnouncementsServiceDeps = {
   profiles: ProfileRepository;
   jobs: JobQueue;
   logger: Logger;
-  identityGate?: AnnouncementIdentityGate;
+  identityGate: AnnouncementIdentityGate;
 };
 
 export type AnnouncementOwner = { id: string; name: string; alias?: string | null };
@@ -270,7 +270,7 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
       }
       const transition = transitionOnPublish(profile.verificationStatus);
       const needsReview = transition.needsReview;
-      if (needsReview && identityGate) {
+      if (needsReview) {
         const gate = await identityGate(owner.id);
         if (!gate.ok) {
           return { ok: false, reason: "identity_required", message: gate.message };

@@ -136,6 +136,7 @@ beforeAll(async () => {
     storage: harness.storage,
     jobs: harness.jobs,
     logger: harness.deps.logger,
+    listBlockedHashes: () => harness.deps.services.reports.listBlockedHashes(),
   });
   await registerAdminReportDigestJob({
     db: harness.db,
@@ -363,7 +364,7 @@ describe("canal de denúncia e retirada", () => {
       { id: reportId },
       { cookie: user.cookie },
     );
-    expect(asUser.status).toBe(401);
+    expect(asUser.status).toBe(403);
 
     const png = await sharp({
       create: { width: 16, height: 16, channels: 3, background: { r: 10, g: 20, b: 30 } },

@@ -50,6 +50,36 @@ export async function deleteObjectsBestEffort(
   }
 }
 
+const TRANSIENT_ERROR_CODES = new Set([
+  "ECONNREFUSED",
+  "ECONNRESET",
+  "ETIMEDOUT",
+  "EPIPE",
+  "ENOTFOUND",
+  "EAI_AGAIN",
+]);
+const TRANSIENT_ERROR_NAMES = new Set([
+  "TimeoutError",
+  "AbortError",
+  "RequestTimeout",
+  "SlowDown",
+  "ServiceUnavailable",
+  "InternalError",
+]);
+
+export function isTransientStorageError(err: unknown): boolean {
+  if (!(err instanceof Error)) {
+    return false;
+  }
+  const detail = err as Error & { code?: string; $metadata?: { httpStatusCode?: number } };
+  const status = detail.$metadata?.httpStatusCode;
+  return (
+    (status !== undefined && status >= 500) ||
+    TRANSIENT_ERROR_NAMES.has(err.name) ||
+    (detail.code !== undefined && TRANSIENT_ERROR_CODES.has(detail.code))
+  );
+}
+
 function isNotFound(err: unknown) {
   if (!(err instanceof Error)) {
     return false;

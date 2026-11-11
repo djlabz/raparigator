@@ -3,8 +3,13 @@ import type { Database } from "../../db/client";
 import { newId } from "../../lib/ids";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
-import { resolveClientIp } from "../../orpc/context";
-import { deleteAccessLogsBefore, deleteSessionsExpiredBefore, insertAccessLog } from "./repository";
+import { resolveClientIp } from "../../lib/http";
+import {
+  deleteAccessLogsBefore,
+  deleteSessionsExpiredBefore,
+  insertAccessLog,
+  listAccessLogs,
+} from "./repository";
 import { ACCESS_LOG_RETENTION_DAYS, SESSION_PURGE_GRACE_DAYS } from "@sigillus/domain";
 
 const ACCESS_LOG_USER_AGENT_MAX_LENGTH = 256;
@@ -30,6 +35,14 @@ export async function recordAccess(jobs: JobQueue, input: RecordAccessInput) {
     userAgent: userAgent || null,
     occurredAt: new Date().toISOString(),
   });
+}
+
+export function createAccessLogService(db: Database) {
+  return {
+    list(input: Parameters<typeof listAccessLogs>[1]) {
+      return listAccessLogs(db, input);
+    },
+  };
 }
 
 export function purgeExpiredAccessLogs(db: Database, now = new Date()) {

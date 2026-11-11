@@ -4,9 +4,8 @@ import { isAPIError } from "better-auth/api";
 import type { User } from "@sigillus/contracts";
 import { INVALID_CPF_MESSAGE, isValidCpf } from "@sigillus/domain";
 import { mediaAssets, professionalProfiles, users } from "../../db/schema";
-import { authed, os } from "../../orpc/base";
+import { authed, os, withAccessLog } from "../../orpc/base";
 import { getUserSession, type AppContext } from "../../orpc/context";
-import { recordAccess } from "../access-log";
 
 const DELETE_ACCOUNT_ERRORS: Record<string, string> = {
   INVALID_PASSWORD: "Senha incorreta.",
@@ -62,58 +61,54 @@ function profileChanges(input: { cpf?: string; city?: string }) {
 
 export const authRouter = {
   me: os.auth.me.handler(async ({ context }) => ({ user: await resolveSessionUser(context) })),
-  deleteAccount: os.auth.deleteAccount.handler(async ({ context, input }) => {
-    const session = await getUserSession(context);
-    if (!session) {
-      throw new ORPCError("UNAUTHORIZED", { message: "Não autenticado." });
-    }
-    const userId = session.user.id;
-
-    const userMedia = await context.deps.db
-      .select({
-        id: mediaAssets.id,
-        storageKey: mediaAssets.storageKey,
-        thumbnailKey: mediaAssets.thumbnailKey,
-      })
-      .from(mediaAssets)
-      .where(eq(mediaAssets.ownerUserId, userId));
-
-    try {
-      await context.deps.auth.api.deleteUser({
-        body: { password: input.password },
-        headers: context.request.headers,
-      });
-    } catch (err) {
-      const message = isAPIError(err) ? DELETE_ACCOUNT_ERRORS[String(err.body?.code)] : undefined;
-      if (message) {
-        throw new ORPCError("BAD_REQUEST", { message });
+  deleteAccount: os.auth.deleteAccount
+    .use(withAccessLog("account_delete"))
+    .handler(async ({ context, input }) => {
+      const session = await getUserSession(context);
+      if (!session) {
+        throw new ORPCError("UNAUTHORIZED", { message: "Não autenticado." });
       }
-      context.deps.logger.error({ err, userId }, "Erro em deleteAccount");
-      throw err;
-    }
+      const userId = session.user.id;
 
-    await recordAccess(context.deps.jobs, {
-      userId,
-      event: "account_delete",
-      headers: context.request.headers,
-    });
+      const userMedia = await context.deps.db
+        .select({
+          id: mediaAssets.id,
+          storageKey: mediaAssets.storageKey,
+          thumbnailKey: mediaAssets.thumbnailKey,
+        })
+        .from(mediaAssets)
+        .where(eq(mediaAssets.ownerUserId, userId));
 
-    for (const asset of userMedia) {
       try {
-        await context.deps.storage.deleteObject(asset.storageKey);
-        if (asset.thumbnailKey) {
-          await context.deps.storage.deleteObject(asset.thumbnailKey);
-        }
+        await context.deps.auth.api.deleteUser({
+          body: { password: input.password },
+          headers: context.request.headers,
+        });
       } catch (err) {
-        context.deps.logger.warn(
-          { err, assetId: asset.id },
-          "Falha ao apagar mídia do storage durante exclusão de conta",
-        );
+        const message = isAPIError(err) ? DELETE_ACCOUNT_ERRORS[String(err.body?.code)] : undefined;
+        if (message) {
+          throw new ORPCError("BAD_REQUEST", { message });
+        }
+        context.deps.logger.error({ err, userId }, "Erro em deleteAccount");
+        throw err;
       }
-    }
 
-    return { ok: true as const };
-  }),
+      for (const asset of userMedia) {
+        try {
+          await context.deps.storage.deleteObject(asset.storageKey);
+          if (asset.thumbnailKey) {
+            await context.deps.storage.deleteObject(asset.thumbnailKey);
+          }
+        } catch (err) {
+          context.deps.logger.warn(
+            { err, assetId: asset.id },
+            "Falha ao apagar mídia do storage durante exclusão de conta",
+          );
+        }
+      }
+
+      return { ok: true as const };
+    }),
   updateProfile: authed.auth.updateProfile.handler(async ({ context, input }) => {
     const changes = profileChanges(input);
     if (Object.keys(changes).length > 0) {

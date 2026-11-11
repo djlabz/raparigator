@@ -14,6 +14,7 @@ function service() {
     profiles: harness.deps.services.profiles,
     jobs: harness.jobs,
     logger: harness.deps.logger,
+    identityGate: async () => ({ ok: true }),
   });
 }
 
@@ -57,6 +58,7 @@ describe("announcements", () => {
       profiles,
       jobs: harness.jobs,
       logger: harness.deps.logger,
+      identityGate: async () => ({ ok: true }),
     });
     const results = await Promise.all([svc.getMine(owner), svc.getMine(owner), svc.getMine(owner)]);
     const ids = new Set(results.map((result) => result.ad?.id));

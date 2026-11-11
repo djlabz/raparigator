@@ -10,7 +10,8 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { contract } from "@sigillus/contracts";
 import type { AppDeps } from "./deps";
 import { captureException } from "./lib/sentry";
-import { createAppContext, resolveClientIp } from "./orpc/context";
+import { resolveClientIp } from "./lib/http";
+import { createAppContext } from "./orpc/context";
 import { router } from "./router";
 import { createBillingWebhookRoute } from "./routes/billing-webhook";
 

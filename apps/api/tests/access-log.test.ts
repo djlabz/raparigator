@@ -162,7 +162,7 @@ describe("registros de acesso", () => {
     const asUser = await harness.rpc<{ code: string }>("admin/accessLogs", input, {
       cookie: user.cookie,
     });
-    expect(asUser.status).toBe(401);
+    expect(asUser.status).toBe(403);
 
     await upsertAdminWithPassword(harness.db, DEV_ADMINS[0]!);
     const adminCookie = await signInAdmin(harness, DEV_ADMINS[0]!.email, DEV_ADMINS[0]!.password);

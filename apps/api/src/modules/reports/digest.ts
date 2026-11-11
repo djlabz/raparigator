@@ -6,6 +6,7 @@ import type { Logger } from "../../lib/logger";
 import type { Mailer } from "../../lib/mail";
 import { createReportsRepository, type ReportRow } from "./repository";
 import { formatDateBR } from "@sigillus/domain";
+import { registerAdminDigestJob } from "../../lib/admin-digest";
 
 export const ADMIN_REPORT_DIGEST_JOB = "admin.report-digest";
 const ADMIN_REPORT_DIGEST_WINDOW_SECONDS = 3600;
@@ -64,37 +65,17 @@ function buildAdminReportDigestEmail(rows: ReportRow[], webOrigin: string) {
 }
 
 export async function registerAdminReportDigestJob(deps: AdminReportDigestDeps): Promise<void> {
-  const { db, config, mailer, jobs, logger } = deps;
-  const repo = createReportsRepository(db);
-
-  await jobs.work(ADMIN_REPORT_DIGEST_JOB, async () => {
-    const claimedAt = new Date();
-    const claimed = await repo.claimUnnotified(claimedAt);
-    if (claimed.length === 0) {
-      return;
-    }
-    if (!config.ADMIN_NOTIFY_EMAIL) {
-      logger.info(
-        { reports: claimed.length },
-        "notificação de denúncias pulada (ADMIN_NOTIFY_EMAIL ausente)",
-      );
-      return;
-    }
-    const ordered = [...claimed].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-    const { subject, text } = buildAdminReportDigestEmail(ordered, config.WEB_ORIGIN);
-    const result = await mailer.send({
-      kind: "admin-notify",
-      to: config.ADMIN_NOTIFY_EMAIL,
-      subject,
-      text,
-    });
-    if (!result.ok) {
-      await repo.releaseClaim(
-        claimed.map((report) => report.id),
-        claimedAt,
-      );
-      throw new Error("falha ao enviar o resumo de denúncias");
-    }
-    logger.info({ reports: claimed.length }, "resumo de denúncias enviado ao admin");
+  const repo = createReportsRepository(deps.db);
+  await registerAdminDigestJob(deps, {
+    name: ADMIN_REPORT_DIGEST_JOB,
+    topic: "denúncias",
+    logKey: "reports",
+    claim: (claimedAt) => repo.claimUnnotified(claimedAt),
+    release: (ids, claimedAt) => repo.releaseClaim(ids, claimedAt),
+    buildEmail: (claimed, webOrigin) =>
+      buildAdminReportDigestEmail(
+        [...claimed].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
+        webOrigin,
+      ),
   });
 }

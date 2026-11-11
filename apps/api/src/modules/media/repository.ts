@@ -6,6 +6,8 @@ import type { MediaAssetRow } from "./mapper";
 
 const COUNTED_STATUSES: MediaAssetRow["status"][] = ["failed", "rejected", "blocked"];
 
+export type MediaRepository = ReturnType<typeof createMediaRepository>;
+
 export function createMediaRepository(db: Database) {
   return {
     async findById(id: string): Promise<MediaAssetRow | null> {
