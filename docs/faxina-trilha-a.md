@@ -13,6 +13,7 @@ Sessão A da execução da Fase F. Autossuficiente para quem leu `AGENTS.md`, `C
 7. **Merge:** `gh pr merge --auto --squash` só com a CI verde e as conversas do CodeRabbit resolvidas (regras do `AGENTS.md`). O repositório não tem auto-merge habilitado: o comando só merge quando os checks já terminaram.
 8. **Migrations do Drizzle nunca em paralelo** (duas branches gerando `drizzle/meta/_journal.json` conflitam): F-05 (B), F-13 (A) e F-10 (B) são sequenciais entre si, nessa ordem. Única exceção: se o F-13 atrasar, o F-10 pode entrar antes dele (nunca ao mesmo tempo), com rebase do rename no F-13 e conferência do diff final de `apps/api/drizzle/meta/_journal.json` e das migrations SQL contra a `main` antes do merge do F-13 (detalhe na linha do F-10 em `docs/faxina-trilha-b.md`).
 9. `AGENTS.md`, `README.md` e `docs/roteiro.md` são tocados por vários PRs (F-07, F-12, F-14, F-22 nesta trilha): editar só o trecho do próprio PR e fazer rebase antes de abrir.
+10. **Menos de 100 arquivos por PR** (pedido do Daniel em 11/11): acima disso o CodeRabbit não revisa. PR da trilha que passar do limite é dividido em sub-PRs, e a divisão vai registrada na linha dele.
 
 ## Notas sobre a alocação
 
@@ -24,8 +25,8 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 | ----- | -------------------------------------------------- | -------------------------- |
 | A1    | F-02 código morto e comentários                    | [x] #105 25/10             |
 | A2    | F-03 bugs de regra sem decisão                     | [x] #111 10/11             |
-| A3    | F-06 regras puras para o domain                    | em andamento (#114, 11/11) |
-| A4    | F-07 camadas da API                                |                            |
+| A3    | F-06 regras puras para o domain                    | [x] #114 11/11             |
+| A4    | F-07 camadas da API                                | em andamento (#116, 11/11) |
 | A5    | F-08 mensagens em português                        |                            |
 | A6    | F-09 seeds: CPF e pexels                           | [x] #106 25/10             |
 | A7    | F-11 CSS                                           | [x] #109 25/10             |
@@ -133,6 +134,8 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 
 ### A11 — F-16 `refactor/F-16-duplicacao-web`
 
+- **Tamanho:** dividir em sub-PRs de menos de 100 arquivos (regra 10); registrar aqui a divisão usada.
+
 - **Achados:** F-058, F-059, F-060, F-061, F-063, F-074, F-075, F-076, F-077, F-078, F-079, F-094, F-096, F-119, F-091.
 - **Decisões aplicadas:** D-23 "apagar todos os re-exports finos de `lib/` e importar direto de `@sigillus/*`" (entra aqui, antes das pastas); D-16 só o que é folha: `chat-store.test.ts` criado **antes** de F-074.
 - **Arquivos:** `components/layout/{bottom-nav,desktop-nav,account-menu,guest-auth-controls,notification-bell-button}.tsx` + hooks novos `use-nav-indicator.ts`, `use-nav-badges.ts`, `use-anchored-popover.ts`; `header-title-flight/{use-header-title-scroll.ts, use-title-flight-values.ts}` (novos) + `feed-screen/use-feed-section-title-scroll.ts`, `professional-dashboard/use-dashboard-title-scroll.ts`, `feed-mobile-title-flight.tsx`, `dashboard-mobile-title-flight.tsx`, `feed-mobile-heading-row.tsx`, `dashboard-heading.tsx`; `components/screens/admin/ui/{filter-tabs,suspend-modal,admin-dialog,admin-toast,admin-search-input,admin-empty-state}.tsx` (novos) e as 4 telas admin que os usam; `ui/{eyebrow,spinner,media-hover-overlay,field-error,floating-label}.tsx` (novos), `ui/{input,select,premium-conversion-modal}.tsx`; `ad-details/photo-gallery-section.tsx`; `feed-screen/{feed-location-modal,feed-filters-content,feed-ad-card}.tsx` (só os blocos repetidos); `account-screen.tsx` (só o card repetido); `app/(public)/{termos,privacidade}/page.tsx` + `layout/legal-page-layout.tsx`; `screens/{forgot-password,reset-password,login}-screen.tsx` + `lib/auth/use-auth-action.ts`, `ui/password-field.tsx`; `lib/chat-store.ts` (+ `lib/chat-store.test.ts`, `sendOptimistic`/`mutateOptimistic`); `lib/{age-gate,verification (já `contact-verification`),account-notifications (já `notifications`),premium-state,encounter-brief,auth-return}.ts` com `createExternalStore`/`safeStorage` (`lib/external-store.ts`, `lib/safe-storage.ts` novos); remoção dos re-exports `lib/{types,*-types,identity (já `signup-validation`),feed-filters,ad-profile-image}.ts` e sed nos importadores; fixtures de teste (`apps/web/tests/{helpers/auth.ts,identity-verification.spec.ts}`, `apps/api/tests/{helpers/drafts.ts,media.test.ts}`).
@@ -142,6 +145,8 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 
 ### A12 — F-18 `refactor/F-18-pastas-<feature>` (um PR por feature)
 
+- **Tamanho:** cada sub-PR por feature com menos de 100 arquivos (regra 10); se uma feature passar disso, dividir de novo e registrar aqui.
+
 - **Achados:** F-103, F-104, F-105 (já feito no F-16), F-107.
 - **Decisões aplicadas:** D-22 "(A) `components/screens/<feature>/` + `lib/<feature>/`, um PR por feature"; D-23 já aplicada no F-16.
 - **Arquivos:** árvore-alvo na seção "Estrutura-alvo de pastas" do inventário. Sub-PRs, nesta ordem: 18-home (onboarding, age-gate, popular-links + `lib/shell/`), 18-popular, 18-auth (telas + `lib/auth/`), 18-admin (`lib/admin/`), 18-feed (`feed-screen/` → `feed/` + `lib/feed/`), 18-ads (`lib/ads/`), 18-premium, 18-account (`lib/account/`), 18-chat (`chat-screen.tsx` + `lib/chat/`), 18-dashboard (`professional-dashboard/` → `dashboard/` + `lib/announcement/`), 18-professional. Cada um: `git mv`, imports (`app/**/page.tsx` importa cada tela 1×), `.oxlintrc.json` (overrides por caminho), `apps/web/vitest.config.ts` (não muda na opção A), `AGENTS.md` (seção "Estrutura do web").
@@ -150,6 +155,8 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 - **Não rodar em paralelo com:** **qualquer PR da B que toque a feature sendo movida.** Regra prática: 18-chat só depois que a B fechar o passo de chat do F-19 e o F-04; 18-dashboard só depois dos passos de `announcement-tab` do F-19; 18-auth só depois do F-17; 18-account só depois do passo `account-screen` do F-19; 18-ads/ad-details só depois do F-15. Os sub-PRs cujas features a B não está tocando (home, popular, admin, feed, premium, professional) podem ir a qualquer momento. Conferir `gh pr list --state open` antes de cada um.
 
 ### A13 — F-20 `refactor/F-20-api-por-caso-de-uso`
+
+- **Tamanho:** dividir em sub-PRs de menos de 100 arquivos (regra 10), por exemplo admin, chat, contrato e domain do anúncio; registrar aqui a divisão usada.
 
 - **Achados:** F-098, F-099, F-100, F-101, F-189, F-185.
 - **Decisões aplicadas:** D-45 "repository obrigatório nos módulos grandes (extrair em premium, reviews, admin, verification); opcional nos pequenos (catalogs, ads, notifications); AGENTS ajustado"; D-16 (árvores da API da seção "Propostas de quebra": `admin/services/*`, `chat/services/*`, `contract/*`, `domain/announcement/*`).
@@ -201,3 +208,4 @@ Formato: data, PR de origem, arquivo:linha, achado e proposta. Consolidados no i
 - 11/11, F-06 (#114), `apps/web/components/screens/chat-screen.tsx` (`openRenameModal`) × `apps/api/src/modules/chat/service.ts` (`setAlias`): a API deixa o cliente pôr apelido por conversa (o gate só vale para profissional sem Premium, agora `canSetConversationAlias` no domain), mas o web bloqueia o cliente e abre o upsell de Premium (que nem existe para cliente). Proposta: o Daniel decide se o cliente pode renomear a conversa; se sim, o web passa a usar `canSetConversationAlias(role, limits)`.
 - 11/11, F-06 (#114), D-47: o texto da decisão diz que `IDENTITY_FILES_RETENTION_DAYS` "continua sobrescritível por env", mas ele nunca foi (só `IDENTITY_REQUIRED` vem do env). Ficou constante em `domain/retention.ts`. Proposta: se for para configurar por env, abrir task própria.
 - 11/11, F-06 (#114), `announcement-tab.tsx` (`handleAddPhoto`): o `accept` do upload não inclui `.mkv`/`video/x-matroska`, que a API aceita (`domain/media.ts`). Proposta: decidir no passo `announcement-tab` do F-19 se o `accept` passa a vir do catálogo do domain.
+- 11/11, F-07 (#116), regra 6 de camada (service não importa repository de outro módulo): depois da injeção, `admin/service.ts` só importa `type ReportsRepository`/`type MediaRepository` para tipar as dependências injetadas. O dependency-cruiser 17 com `tsPreCompilationDeps: true` não marca esses imports como `type-only` (testado com `dependencyTypesNot` e com `"specify"` + `parser: "tsc"`). Proposta: no F-22, escrever a regra 6 por caminho de arquivo com exceção explícita para esses dois imports de tipo, ou mover os tipos das dependências injetadas para um arquivo `types.ts` por módulo.

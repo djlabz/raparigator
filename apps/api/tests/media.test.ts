@@ -5,9 +5,10 @@ import { MEDIA_MAX_IMAGE_BYTES } from "@sigillus/contracts";
 import { mediaAssets, professionalProfiles } from "../src/db/schema";
 import { createAnnouncementsService } from "../src/modules/announcements";
 import { createMediaService, registerMediaJobs } from "../src/modules/media";
-import { stripImageMetadata } from "../src/modules/media/jobs";
+import { stripImageMetadata } from "../src/lib/image";
 import { createTestHarness } from "./helpers/app";
 import { signUp } from "./helpers/auth";
+import type { JobQueue } from "../src/lib/jobs";
 
 const harness = createTestHarness();
 
@@ -28,6 +29,7 @@ async function professionalWithProfile(email: string, tier: "normal" | "premium"
     profiles: harness.deps.services.profiles,
     jobs: harness.jobs,
     logger: harness.deps.logger,
+    identityGate: async () => ({ ok: true }),
   });
   const mine = await announcements.getMine({ id: user.userId, name: "Pro Mídia" });
   const profileId = mine.ad!.id;
@@ -243,6 +245,7 @@ describe("media", () => {
       storage: harness.storage,
       jobs: harness.jobs,
       logger: harness.deps.logger,
+      listBlockedHashes: () => harness.deps.services.reports.listBlockedHashes(),
     });
     const { userId } = await professionalWithProfile("pro@test.dev");
     const asset = await uploadReadyImage(userId, "gallery");
@@ -269,6 +272,7 @@ describe("media", () => {
       storage: harness.storage,
       jobs: harness.jobs,
       logger: harness.deps.logger,
+      listBlockedHashes: () => harness.deps.services.reports.listBlockedHashes(),
     });
     const { userId } = await signUp(harness, {
       email: "cliente-chat@test.dev",
@@ -291,6 +295,7 @@ describe("media", () => {
       storage: harness.storage,
       jobs: harness.jobs,
       logger: harness.deps.logger,
+      listBlockedHashes: () => harness.deps.services.reports.listBlockedHashes(),
     });
     const { userId } = await professionalWithProfile("pro@test.dev");
     const svc = mediaService();
@@ -316,6 +321,7 @@ describe("media", () => {
       storage: harness.storage,
       jobs: harness.jobs,
       logger: harness.deps.logger,
+      listBlockedHashes: () => harness.deps.services.reports.listBlockedHashes(),
     });
     const { userId } = await professionalWithProfile("pro@test.dev");
     const jpeg = await sharp({
@@ -373,6 +379,7 @@ describe("media", () => {
       storage: harness.storage,
       jobs: harness.jobs,
       logger: harness.deps.logger,
+      listBlockedHashes: () => harness.deps.services.reports.listBlockedHashes(),
     });
     const { userId } = await professionalWithProfile("pro@test.dev");
     const png = await pngBuffer();
@@ -418,6 +425,7 @@ describe("media", () => {
       storage: harness.storage,
       jobs: harness.jobs,
       logger: harness.deps.logger,
+      listBlockedHashes: () => harness.deps.services.reports.listBlockedHashes(),
     });
     const { userId } = await professionalWithProfile("pro@test.dev");
     const svc = mediaService();
@@ -444,6 +452,7 @@ describe("media", () => {
       storage: harness.storage,
       jobs: harness.jobs,
       logger: harness.deps.logger,
+      listBlockedHashes: () => harness.deps.services.reports.listBlockedHashes(),
     });
     const a = await professionalWithProfile("pro-a@test.dev");
     const b = await professionalWithProfile("pro-b@test.dev");
@@ -496,6 +505,7 @@ describe("media", () => {
       storage: harness.storage,
       jobs: harness.jobs,
       logger: harness.deps.logger,
+      listBlockedHashes: () => harness.deps.services.reports.listBlockedHashes(),
     });
     const { userId, profileId } = await professionalWithProfile("pro-ordem@test.dev");
     const svc = mediaService();
@@ -527,6 +537,7 @@ describe("media", () => {
       storage: harness.storage,
       jobs: harness.jobs,
       logger: harness.deps.logger,
+      listBlockedHashes: () => harness.deps.services.reports.listBlockedHashes(),
     });
     const { userId } = await professionalWithProfile("pro-falha@test.dev");
     const svc = mediaService();
@@ -568,6 +579,7 @@ describe("media", () => {
       storage: harness.storage,
       jobs: harness.jobs,
       logger: harness.deps.logger,
+      listBlockedHashes: () => harness.deps.services.reports.listBlockedHashes(),
     });
     const { userId, profileId } = await professionalWithProfile("pro@test.dev");
     const asset = await uploadReadyImage(userId, "gallery");
@@ -582,6 +594,100 @@ describe("media", () => {
       images: [asset.url],
       profileImage: asset.url,
       profileImageIndex: 0,
+    });
+  });
+
+  describe("media.process: retry só para erro transitório", () => {
+    type Handler = (
+      payload: { assetId: string },
+      meta: { isFinalAttempt: boolean },
+    ) => Promise<void>;
+
+    async function processingImage(email: string, bytes: Uint8Array) {
+      const { userId } = await professionalWithProfile(email);
+      const created = await mediaService().createUpload(userId, {
+        kind: "image",
+        purpose: "gallery",
+        contentType: "image/png",
+        sizeBytes: bytes.byteLength,
+      });
+      await harness.storage.putObject(
+        `public/media/${userId}/${created.asset.id}.png`,
+        bytes,
+        "image/png",
+      );
+      await harness.db
+        .update(mediaAssets)
+        .set({ status: "processing" })
+        .where(eq(mediaAssets.id, created.asset.id));
+      return created.asset.id;
+    }
+
+    async function processHandler() {
+      const handlers = new Map<string, Handler>();
+      const queue = {
+        ...harness.jobs,
+        async work(name: string, handler: Handler) {
+          handlers.set(name, handler);
+        },
+        async enqueue() {},
+      } as unknown as JobQueue;
+      await registerMediaJobs({
+        db: harness.db,
+        storage: harness.storage,
+        jobs: queue,
+        logger: harness.deps.logger,
+        listBlockedHashes: () => harness.deps.services.reports.listBlockedHashes(),
+      });
+      return handlers.get("media.process")!;
+    }
+
+    async function statusOf(assetId: string) {
+      const [row] = await harness.db.select().from(mediaAssets).where(eq(mediaAssets.id, assetId));
+      return row?.status;
+    }
+
+    it("storage fora do ar com tentativas restantes relança e mantém processing", async () => {
+      const assetId = await processingImage("retry-a@test.dev", new Uint8Array(await pngBuffer()));
+      const handler = await processHandler();
+      const timeout = Object.assign(new Error("socket timeout"), { name: "TimeoutError" });
+      const spy = vi.spyOn(harness.storage, "getObject").mockRejectedValueOnce(timeout);
+      try {
+        await expect(handler({ assetId }, { isFinalAttempt: false })).rejects.toThrow(
+          "socket timeout",
+        );
+      } finally {
+        spy.mockRestore();
+      }
+      expect(await statusOf(assetId)).toBe("processing");
+
+      await handler({ assetId }, { isFinalAttempt: false });
+      expect(await statusOf(assetId)).toBe("ready");
+    });
+
+    it("erro transitório na última tentativa marca failed", async () => {
+      const assetId = await processingImage("retry-b@test.dev", new Uint8Array(await pngBuffer()));
+      const handler = await processHandler();
+      const unavailable = Object.assign(new Error("Service Unavailable"), {
+        $metadata: { httpStatusCode: 503 },
+      });
+      const spy = vi.spyOn(harness.storage, "getObject").mockRejectedValueOnce(unavailable);
+      try {
+        await handler({ assetId }, { isFinalAttempt: true });
+      } finally {
+        spy.mockRestore();
+      }
+      expect(await statusOf(assetId)).toBe("failed");
+    });
+
+    it("arquivo corrompido marca failed na primeira tentativa, sem retry", async () => {
+      const assetId = await processingImage(
+        "retry-c@test.dev",
+        new TextEncoder().encode("não é png"),
+      );
+      const handler = await processHandler();
+      await handler({ assetId }, { isFinalAttempt: false });
+      expect(await statusOf(assetId)).toBe("failed");
     });
   });
 });

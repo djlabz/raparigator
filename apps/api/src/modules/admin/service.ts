@@ -40,12 +40,12 @@ import {
 import { newId } from "../../lib/ids";
 import type { Logger } from "../../lib/logger";
 import { deleteObjectsBestEffort, type ObjectStorage } from "../../lib/storage";
-import { createMediaRepository } from "../media/repository";
-import { computeImageHash } from "../reports/image-hash";
-import { createReportsRepository, type ReportRow } from "../reports/repository";
+import { computeImageHash } from "../../lib/image";
+import type { ReportRow, ReportsRepository } from "../reports/repository";
 import { toProfessionalAd, type ProfileRow } from "../profiles/mapper";
 import type { ProfileRepository } from "../profiles/repository";
 import type { PremiumService } from "../premium/service";
+import type { MediaRepository } from "../media/repository";
 
 export type AdminActor = { id: string; name: string; email: string };
 
@@ -61,15 +61,17 @@ function approvalMessage(profile: ProfileRow): string {
 
 export type AdminNotification = { key: string; title: string; message: string; href: string };
 
-type AdminNotify = (userId: string, notification: AdminNotification) => Promise<void>;
+type AdminNotify = (userId: string, notification: AdminNotification) => Promise<unknown>;
 
 export type AdminServiceDeps = {
   db: Database;
   profiles: ProfileRepository;
   storage: ObjectStorage;
   logger: Logger;
-  notify?: AdminNotify;
-  premium?: PremiumService;
+  notify: AdminNotify;
+  premium: PremiumService;
+  reportsRepo: ReportsRepository;
+  mediaRepo: MediaRepository;
 };
 
 type ActivityRow = typeof adminActivityLogs.$inferSelect;
@@ -148,9 +150,7 @@ function profileLabel(row: ProfileRow): string {
 }
 
 export function createAdminService(deps: AdminServiceDeps) {
-  const { db, profiles, storage, logger, notify, premium } = deps;
-  const reportsRepo = createReportsRepository(db);
-  const media = createMediaRepository(db);
+  const { db, profiles, storage, logger, notify, premium, reportsRepo, mediaRepo: media } = deps;
 
   async function logActivity(entry: {
     action: ActivityRow["action"];
@@ -430,9 +430,6 @@ export function createAdminService(deps: AdminServiceDeps) {
   }
 
   async function notifyProfileOwner(userId: string, notification: AdminNotification) {
-    if (!notify) {
-      return;
-    }
     try {
       await notify(userId, notification);
     } catch (error) {
@@ -810,11 +807,6 @@ export function createAdminService(deps: AdminServiceDeps) {
     },
 
     async grantPremium(admin: AdminActor, input: { id: string; months?: number }) {
-      if (!premium) {
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: "Serviço de premium não configurado.",
-        });
-      }
       const months = input.months ?? 1;
       const row = await requireProfile(input.id);
       await premium.grantManual(row.userId, months);

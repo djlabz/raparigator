@@ -1,7 +1,6 @@
 import type { AdminSession } from "@sigillus/contracts";
-import { admin, os } from "../../orpc/base";
+import { admin, os, withAccessLog } from "../../orpc/base";
 import { getAdminSession, type AppContext } from "../../orpc/context";
-import { listAccessLogs, recordAccess } from "../access-log";
 
 async function resolveAdminSession(context: AppContext): Promise<AdminSession> {
   const session = await getAdminSession(context);
@@ -27,7 +26,7 @@ export const adminRouter = {
     context.deps.services.admin.activity(input),
   ),
   accessLogs: admin.admin.accessLogs.handler(({ context, input }) =>
-    listAccessLogs(context.deps.db, input),
+    context.deps.services.accessLog.list(input),
   ),
   clients: admin.admin.clients.handler(({ context, input }) =>
     context.deps.services.admin.clients(input),
@@ -68,15 +67,11 @@ export const adminRouter = {
   reportEvidence: admin.admin.reportEvidence.handler(({ context, input }) =>
     context.deps.services.admin.reportEvidence(input),
   ),
-  reportContact: admin.admin.reportContact.handler(async ({ context, input }) => {
-    const result = await context.deps.services.admin.reportContact(context.admin, input);
-    await recordAccess(context.deps.jobs, {
-      userId: context.admin.id,
-      event: "report_contact_view",
-      headers: context.request.headers,
-    });
-    return result;
-  }),
+  reportContact: admin.admin.reportContact
+    .use(withAccessLog("report_contact_view"))
+    .handler(({ context, input }) =>
+      context.deps.services.admin.reportContact(context.admin, input),
+    ),
   reportTargetMedia: admin.admin.reportTargetMedia.handler(({ context, input }) =>
     context.deps.services.admin.reportTargetMedia(input),
   ),

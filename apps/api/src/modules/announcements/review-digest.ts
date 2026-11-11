@@ -6,6 +6,7 @@ import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
 import type { Mailer } from "../../lib/mail";
 import { formatDateBR } from "@sigillus/domain";
+import { registerAdminDigestJob } from "../../lib/admin-digest";
 
 export const ADMIN_REVIEW_DIGEST_JOB = "admin.review-digest";
 export const ADMIN_REVIEW_DIGEST_WINDOW_SECONDS = 3600;
@@ -67,69 +68,50 @@ function buildAdminReviewDigestEmail(profiles: PendingProfile[], webOrigin: stri
 }
 
 export async function registerAdminReviewDigestJob(deps: AdminReviewDigestDeps): Promise<void> {
-  const { db, config, mailer, jobs, logger } = deps;
-
-  await jobs.work(ADMIN_REVIEW_DIGEST_JOB, async () => {
-    const claimedAt = new Date();
-    const claimed = await db
-      .update(professionalProfiles)
-      .set({ reviewNotifiedAt: claimedAt })
-      .where(
-        and(
-          eq(professionalProfiles.verificationStatus, "pending_review"),
-          isNotNull(professionalProfiles.submittedAt),
-          or(
-            isNull(professionalProfiles.reviewNotifiedAt),
-            lt(professionalProfiles.reviewNotifiedAt, professionalProfiles.submittedAt),
+  const { db } = deps;
+  await registerAdminDigestJob(deps, {
+    name: ADMIN_REVIEW_DIGEST_JOB,
+    topic: "perfis em revisão",
+    logKey: "profiles",
+    claim: (claimedAt) =>
+      db
+        .update(professionalProfiles)
+        .set({ reviewNotifiedAt: claimedAt })
+        .where(
+          and(
+            eq(professionalProfiles.verificationStatus, "pending_review"),
+            isNotNull(professionalProfiles.submittedAt),
+            or(
+              isNull(professionalProfiles.reviewNotifiedAt),
+              lt(professionalProfiles.reviewNotifiedAt, professionalProfiles.submittedAt),
+            ),
           ),
-        ),
-      )
-      .returning({
-        id: professionalProfiles.id,
-        artisticName: professionalProfiles.artisticName,
-        displayName: professionalProfiles.displayName,
-        city: professionalProfiles.city,
-        state: professionalProfiles.state,
-        submittedAt: professionalProfiles.submittedAt,
-      });
-
-    if (claimed.length === 0) {
-      return;
-    }
-
-    if (!config.ADMIN_NOTIFY_EMAIL) {
-      logger.info(
-        { profiles: claimed.length },
-        "notificação de perfis em revisão pulada (ADMIN_NOTIFY_EMAIL ausente)",
-      );
-      return;
-    }
-
-    const ordered = [...claimed].sort(
-      (a, b) => (a.submittedAt?.getTime() ?? 0) - (b.submittedAt?.getTime() ?? 0),
-    );
-    const { subject, text } = buildAdminReviewDigestEmail(ordered, config.WEB_ORIGIN);
-    const result = await mailer.send({
-      kind: "admin-notify",
-      to: config.ADMIN_NOTIFY_EMAIL,
-      subject,
-      text,
-    });
-    if (!result.ok) {
+        )
+        .returning({
+          id: professionalProfiles.id,
+          artisticName: professionalProfiles.artisticName,
+          displayName: professionalProfiles.displayName,
+          city: professionalProfiles.city,
+          state: professionalProfiles.state,
+          submittedAt: professionalProfiles.submittedAt,
+        }),
+    release: async (ids, claimedAt) => {
       await db
         .update(professionalProfiles)
         .set({ reviewNotifiedAt: null })
         .where(
           and(
-            inArray(
-              professionalProfiles.id,
-              claimed.map((profile) => profile.id),
-            ),
+            inArray(professionalProfiles.id, ids),
             eq(professionalProfiles.reviewNotifiedAt, claimedAt),
           ),
         );
-      throw new Error("falha ao enviar o resumo de perfis em revisão");
-    }
-    logger.info({ profiles: claimed.length }, "resumo de perfis em revisão enviado ao admin");
+    },
+    buildEmail: (claimed, webOrigin) =>
+      buildAdminReviewDigestEmail(
+        [...claimed].sort(
+          (a, b) => (a.submittedAt?.getTime() ?? 0) - (b.submittedAt?.getTime() ?? 0),
+        ),
+        webOrigin,
+      ),
   });
 }

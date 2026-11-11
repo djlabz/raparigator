@@ -56,8 +56,10 @@ O `apps/web` conecta-se 100% à API pelo client oRPC tipado (`apps/web/lib/api/`
 ## Estrutura da API
 
 - `src/modules/<área>/{router,service,repository}.ts` — router implementa o contrato de `@sigillus/contracts`; service tem a regra e o **ownership check**; repository fala com o Drizzle.
+- Um módulo não cria repository nem chama job de outro: a dependência entra por injeção em `src/services.ts` (ex.: `admin` recebe `reportsRepo`, `mediaRepo`, `premium` e `notify`; `media/jobs` recebe `listBlockedHashes`). Exceção declarada: `src/modules/profiles/` é o kernel compartilhado (read-model do perfil, sem service nem router) e pode ser importado por qualquer módulo.
+- Log de acesso (`access_log`) nos routers sai pelo middleware `withAccessLog(evento)` de `src/orpc/base.ts`, ao lado de `rateLimited`; rotas `admin.*` respondem 401 sem sessão e 403 para usuário logado que não é admin (P-26, middleware `admin`).
 - `src/db/schema/` (tabelas), `drizzle/` (SQL gerado, commitado), `src/db/seed/` (catálogos)
-- `src/lib/` — config (env validado por Zod), logger (pino com redaction de PII), auth (better-auth: instância de usuários e instância separada de admin), storage S3, filas (pg-boss), event bus do chat (LISTEN/NOTIFY), billing (`BillingProvider` + fake)
+- `src/lib/` — config (env validado por Zod), logger (pino com redaction de PII), auth (better-auth: instância de usuários e instância separada de admin), storage S3, filas (pg-boss), event bus do chat (LISTEN/NOTIFY), billing (`BillingProvider` + fake), `http.ts` (IP do cliente), `image.ts` (limpeza de metadados e hash de imagem), `admin-digest.ts` (esqueleto dos resumos por e-mail ao admin)
 - Rotas fora do contrato ficam no Hono: `/healthz`, `/readyz`, `/api/auth/*`, `/api/admin-auth/*`, `/api/billing/webhook`, `/api/openapi.json`, `/api/docs`
 
 ## Convenções

@@ -34,7 +34,12 @@ const JOB_QUEUE_POLICIES: Partial<Record<JobName, QueuePolicy>> = {
   "admin.identity-digest": "short",
 };
 
-type JobHandler<TName extends JobName> = (payload: JobPayloads[TName]) => Promise<void>;
+export type JobAttempt = { isFinalAttempt: boolean };
+
+type JobHandler<TName extends JobName> = (
+  payload: JobPayloads[TName],
+  attempt: JobAttempt,
+) => Promise<void>;
 
 export interface JobQueue {
   schedule(name: JobName, cron: string): Promise<void>;
@@ -92,9 +97,9 @@ export function createPgBossQueue(databaseUrl: string, logger: Logger): JobQueue
     },
     async work(name, handler) {
       await ensureQueue(name);
-      await boss.work(name, async (jobs) => {
+      await boss.work(name, { includeMetadata: true }, async (jobs) => {
         for (const job of jobs) {
-          await handler(job.data as never);
+          await handler(job.data as never, { isFinalAttempt: job.retryCount >= job.retryLimit });
         }
       });
     },
@@ -119,7 +124,7 @@ export function createInlineQueue(logger?: Logger): JobQueue & {
       return;
     }
     try {
-      await handler(payload as never);
+      await handler(payload as never, { isFinalAttempt: true });
     } catch (error) {
       logger?.error({ err: error, job: name }, "job inline falhou");
     }

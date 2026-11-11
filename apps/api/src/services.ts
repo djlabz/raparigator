@@ -20,6 +20,9 @@ import { createProfileRepository } from "./modules/profiles/repository";
 import { createReportsService } from "./modules/reports/service";
 import { createReviewsService } from "./modules/reviews/service";
 import { createVerificationService } from "./modules/verification/service";
+import { createAccessLogService } from "./modules/access-log/service";
+import { createReportsRepository } from "./modules/reports/repository";
+import { createMediaRepository } from "./modules/media/repository";
 
 export type ServiceDeps = {
   config: AppConfig;
@@ -44,6 +47,7 @@ export function createServices(deps: ServiceDeps) {
   return {
     profiles,
     notifications,
+    accessLog: createAccessLogService(db),
     catalogs: createCatalogsService(db),
     feed: createFeedService(profiles),
     ads: createAdsService(db, profiles),
@@ -67,9 +71,9 @@ export function createServices(deps: ServiceDeps) {
       storage,
       logger,
       premium,
-      notify: async (userId, item) => {
-        await notifications.push(userId, item);
-      },
+      notify: notifications.push,
+      reportsRepo: createReportsRepository(db),
+      mediaRepo: createMediaRepository(db),
     }),
   };
 }

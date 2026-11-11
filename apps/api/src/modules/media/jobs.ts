@@ -1,11 +1,14 @@
-import sharp, { type Sharp } from "sharp";
+import sharp from "sharp";
 import { isBlockedHash } from "@sigillus/domain";
 import type { Database } from "../../db/client";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
-import { deleteObjectsBestEffort, type ObjectStorage } from "../../lib/storage";
-import { computeImageHash } from "../reports/image-hash";
-import { createReportsRepository } from "../reports/repository";
+import {
+  deleteObjectsBestEffort,
+  isTransientStorageError,
+  type ObjectStorage,
+} from "../../lib/storage";
+import { computeImageHash, stripImageMetadata } from "../../lib/image";
 import { createMediaRepository } from "./repository";
 
 export type MediaJobsDeps = {
@@ -13,6 +16,7 @@ export type MediaJobsDeps = {
   storage: ObjectStorage;
   jobs: JobQueue;
   logger: Logger;
+  listBlockedHashes: () => Promise<Array<{ hash: string; reportId: string }>>;
 };
 
 const MEDIA_THUMBNAIL_WIDTH = 480;
@@ -22,50 +26,17 @@ function thumbnailKeyFor(storageKey: string): string {
   return `${storageKey}.thumb.webp`;
 }
 
-export type StrippedImage = {
-  data: Uint8Array;
-  width: number;
-  height: number;
-};
-
-function encodeAs(image: Sharp, contentType: string): Sharp {
-  switch (contentType) {
-    case "image/jpeg":
-      return image.jpeg({ quality: 90, mozjpeg: true });
-    case "image/png":
-      return image.png();
-    case "image/webp":
-      return image.webp({ quality: 90 });
-    case "image/avif":
-      return image.avif();
-    case "image/gif":
-      return image.gif();
-    default:
-      throw new Error(`formato de imagem sem limpeza de metadados: ${contentType}`);
-  }
-}
-
-export async function stripImageMetadata(
-  bytes: Uint8Array,
-  contentType: string,
-): Promise<StrippedImage> {
-  const image = encodeAs(sharp(Buffer.from(bytes), { failOn: "none" }).rotate(), contentType);
-  const { data, info } = await image.toBuffer({ resolveWithObject: true });
-  return { data: new Uint8Array(data), width: info.width, height: info.height };
-}
-
 export async function registerMediaJobs(deps: MediaJobsDeps): Promise<void> {
-  const { db, storage, jobs, logger } = deps;
+  const { db, storage, jobs, logger, listBlockedHashes } = deps;
   const repo = createMediaRepository(db);
-  const reports = createReportsRepository(db);
 
   async function findBlockingReport(hash: string): Promise<string | null> {
-    const blocked = await reports.listBlockedHashes();
+    const blocked = await listBlockedHashes();
     const match = blocked.find((entry) => isBlockedHash(hash, [entry.hash]));
     return match ? match.reportId : null;
   }
 
-  await jobs.work("media.process", async ({ assetId }) => {
+  await jobs.work("media.process", async ({ assetId }, { isFinalAttempt }) => {
     const row = await repo.findById(assetId);
     if (!row) {
       logger.warn({ assetId }, "media.process: asset inexistente");
@@ -115,6 +86,10 @@ export async function registerMediaJobs(deps: MediaJobsDeps): Promise<void> {
         await repo.update(row.id, { status: "ready", processedAt: new Date() });
       }
     } catch (error) {
+      if (isTransientStorageError(error) && !isFinalAttempt) {
+        logger.warn({ err: error, assetId }, "media.process: falha transitória, nova tentativa");
+        throw error;
+      }
       logger.error({ err: error, assetId }, "media.process falhou");
       await repo.update(row.id, { status: "failed", processedAt: new Date() });
       return;
