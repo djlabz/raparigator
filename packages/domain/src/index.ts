@@ -11,3 +11,4 @@ export * from "./client-alias";
 export * from "./image-hash";
 export * from "./earnings-simulator";
 export * from "./profile-moderation";
+export * from "./report-status";

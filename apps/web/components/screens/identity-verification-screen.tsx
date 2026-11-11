@@ -14,6 +14,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getApiClient } from "@/lib/api/client";
+import { formatDateBR } from "@sigillus/domain";
 
 const ACCEPT = IDENTITY_VERIFICATION_CONTENT_TYPES.join(",");
 const SUBMIT_ERROR = "Não foi possível enviar a verificação. Tente novamente.";
@@ -33,17 +34,6 @@ function fileError(file: File | null): string | null {
     return "Cada imagem pode ter até 15 MB.";
   }
   return null;
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 async function uploadFile(kind: IdentityVerificationFileKind, file: File): Promise<string> {
@@ -188,7 +178,8 @@ function StatusCard({ mine }: { mine: IdentityVerificationMine }) {
         <div>
           <p className="font-semibold text-emerald-900">Identidade verificada</p>
           <p className="mt-1 text-sm text-emerald-800">
-            Aprovada em {formatDate(mine.reviewedAt)}. Seu anúncio já pode ser publicado.
+            Aprovada em {formatDateBR(mine.reviewedAt, "dateTime")}. Seu anúncio já pode ser
+            publicado.
           </p>
         </div>
       </Card>
@@ -201,8 +192,8 @@ function StatusCard({ mine }: { mine: IdentityVerificationMine }) {
         <div>
           <p className="font-semibold text-amber-900">Em análise</p>
           <p className="mt-1 text-sm text-amber-800">
-            Recebemos seus documentos em {formatDate(mine.submittedAt)}. O anúncio pode ser
-            publicado assim que a verificação for aprovada.
+            Recebemos seus documentos em {formatDateBR(mine.submittedAt, "dateTime")}. O anúncio
+            pode ser publicado assim que a verificação for aprovada.
           </p>
         </div>
       </Card>

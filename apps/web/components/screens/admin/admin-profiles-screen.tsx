@@ -21,6 +21,7 @@ import { AdminLayoutShell } from "./admin-layout-shell";
 import { useAdminSession } from "@/lib/admin-session";
 import { getAllProfiles, approveProfile } from "@/lib/admin-service";
 import type { ProfessionalAd, VerificationStatus } from "@/lib/types";
+import { formatDateBR } from "@sigillus/domain";
 
 type TabStatus = "pending_review" | "published" | "rejected";
 
@@ -64,15 +65,6 @@ function StatusBadge({ status }: { status: VerificationStatus | undefined }) {
     );
   }
   return null;
-}
-
-function formatDate(iso?: string) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
 }
 
 export function AdminProfilesScreen() {
@@ -316,7 +308,7 @@ export function AdminProfilesScreen() {
                         </span>
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3.5 w-3.5 text-zinc-500" />
-                          {formatDate(profile.submittedAt)}
+                          {formatDateBR(profile.submittedAt, "date", "—")}
                         </span>
                       </div>
 

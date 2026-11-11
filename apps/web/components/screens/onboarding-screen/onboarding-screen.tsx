@@ -16,6 +16,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { ChromeScrim } from "@/components/layout/chrome-scrim";
 import { chromeControlsRow, chromePill, chromeSafeTop } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
+import { normalizeText } from "@sigillus/domain";
 
 export function OnboardingScreen() {
   const { role, user, isLoggedIn, logout } = useAuthSession();
@@ -52,13 +53,9 @@ export function OnboardingScreen() {
     return () => observer.disconnect();
   }, []);
 
-  const removeAccents = (str: string) => {
-    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  };
-
   const filteredLocations = locationsData.filter((loc) => {
-    const searchStr = removeAccents(`${loc.city}, ${loc.state}`.toLowerCase());
-    const queryStr = removeAccents(locationQuery.toLowerCase());
+    const searchStr = normalizeText(`${loc.city}, ${loc.state}`);
+    const queryStr = normalizeText(locationQuery);
     return searchStr.includes(queryStr);
   });
 

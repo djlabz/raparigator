@@ -2,7 +2,8 @@
 
 import { X } from "lucide-react";
 import { FEED_QUICK_FILTER_LABELS } from "@/lib/feed-filters";
-import { cn, currency } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatCurrencyBRL } from "@sigillus/domain";
 
 type SelectionField = "ethnicities" | "hairs" | "services";
 
@@ -162,7 +163,7 @@ export function FeedFiltersContent({
       <section>
         <div className="mb-2.5 flex items-center justify-between">
           <h3 className="text-sm font-bold text-zinc-900">Investimento (h)</h3>
-          <span className="text-xs font-bold text-wine-700">Até {currency(maxPrice)}</span>
+          <span className="text-xs font-bold text-wine-700">Até {formatCurrencyBRL(maxPrice)}</span>
         </div>
         <input
           type="range"

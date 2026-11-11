@@ -26,16 +26,7 @@ import { AdminLayoutShell } from "./admin-layout-shell";
 import { getDashboardStats } from "@/lib/admin-service";
 import { useAdminSession } from "@/lib/admin-session";
 import type { AdminActivityLog, DashboardStats } from "@/lib/types";
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-  if (mins < 60) return `há ${mins} min`;
-  if (hours < 24) return `há ${hours} h`;
-  return `há ${days} d`;
-}
+import { formatRelativeTime } from "@sigillus/domain";
 
 function ActivityIcon({ action }: { action: AdminActivityLog["action"] }) {
   switch (action) {
@@ -378,7 +369,7 @@ export function AdminDashboardScreen() {
                           {activityLabel(log)}
                         </p>
                         <div className="mt-1 flex items-center justify-between text-[10px] text-zinc-500">
-                          <span>{timeAgo(log.timestamp)}</span>
+                          <span>{formatRelativeTime(log.timestamp)}</span>
                           {log.adminEmail && (
                             <span className="font-mono text-wine-400">
                               {log.adminEmail.split("@")[0]}

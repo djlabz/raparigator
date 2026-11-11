@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
-import { currency } from "@/lib/utils";
 import { OptionGroup } from "./option-group";
 import type { EarningsSimulatorState } from "./use-earnings-simulator";
+import { formatCurrencyBRL } from "@sigillus/domain";
 
 export function ScenariosSection({ state }: { state: EarningsSimulatorState }) {
   const { monthly, scenario, scenarios } = state;
@@ -25,16 +25,16 @@ export function ScenariosSection({ state }: { state: EarningsSimulatorState }) {
         >
           <div>
             <dt className="text-xs text-zinc-500">Projeção atual por mês</dt>
-            <dd className="font-semibold text-zinc-900">{currency(monthly)}</dd>
+            <dd className="font-semibold text-zinc-900">{formatCurrencyBRL(monthly)}</dd>
           </div>
           <div>
             <dt className="text-xs text-zinc-500">{scenario.label}, por mês</dt>
-            <dd className="font-semibold text-zinc-900">{currency(scenario.monthly)}</dd>
+            <dd className="font-semibold text-zinc-900">{formatCurrencyBRL(scenario.monthly)}</dd>
           </div>
           <div className="col-span-2">
             <dt className="text-xs text-zinc-500">Diferença por mês</dt>
             <dd className="font-semibold text-zinc-900">
-              {currency(Math.abs(scenario.monthly - monthly))}
+              {formatCurrencyBRL(Math.abs(scenario.monthly - monthly))}
             </dd>
           </div>
         </dl>

@@ -7,18 +7,17 @@ import {
   REPORT_RESPONSE_SLA_HOURS,
   type CreatePublicReportInput,
   type PublicReportReason,
+  PublicReportReasonSchema,
+  PUBLIC_REPORT_REASON_LABELS,
 } from "@sigillus/contracts";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getApiClient } from "@/lib/api/client";
 
-const REASONS: { value: PublicReportReason; label: string }[] = [
-  { value: "photo_without_consent", label: "Foto publicada sem consentimento" },
-  { value: "minor", label: "Pessoa menor de idade" },
-  { value: "coercion", label: "Anunciante sob coação" },
-  { value: "illegal_content", label: "Conteúdo ilegal" },
-  { value: "other", label: "Outro motivo" },
-];
+const REASONS = PublicReportReasonSchema.options.map((value) => ({
+  value,
+  label: PUBLIC_REPORT_REASON_LABELS[value],
+}));
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const AD_PATH_PATTERN = /^\/?anuncio\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/;

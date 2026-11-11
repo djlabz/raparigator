@@ -6,6 +6,10 @@ import {
   canReview,
   isInformativeHash,
   transitionOnReview,
+  splitCityState,
+  maskEmail,
+  isReportOpen,
+  canStartReportReview,
 } from "@sigillus/domain";
 import type {
   ActOnReportInput,
@@ -77,24 +81,6 @@ const SEARCH_LIMIT = 5;
 const RECENT_ACTIVITY_LIMIT = 8;
 const PROFESSIONAL_ADS_HREF = "/profissional/anuncios";
 const REMOVED_MEDIA_MESSAGE = "Mídia retirada após análise de denúncia.";
-
-function splitCityState(value: string | null): { city: string; state: string } {
-  if (!value) {
-    return { city: "", state: "" };
-  }
-  const separator = value.lastIndexOf(",");
-  if (separator === -1) {
-    return { city: value.trim(), state: "" };
-  }
-  return {
-    city: value.slice(0, separator).trim(),
-    state: value.slice(separator + 1).trim(),
-  };
-}
-
-function maskEmail(email: string): string {
-  return `${email.slice(0, 8)}***`;
-}
 
 function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, (char) => `\\${char}`);
@@ -266,7 +252,7 @@ export function createAdminService(deps: AdminServiceDeps) {
   }
 
   function requireOpenReport(row: ReportRow) {
-    if (row.status === "resolved" || row.status === "dismissed") {
+    if (!isReportOpen(row.status)) {
       throw new ORPCError("CONFLICT", { message: "Denúncia já foi encerrada." });
     }
   }
@@ -748,7 +734,7 @@ export function createAdminService(deps: AdminServiceDeps) {
 
     async startReportReview(input: { id: string }) {
       const row = await requireReport(input.id);
-      if (row.status !== "pending") {
+      if (!canStartReportReview(row.status)) {
         throw new ORPCError("CONFLICT", { message: "Denúncia já está em análise ou encerrada." });
       }
       await reportsRepo.update(row.id, { status: "under_review", updatedAt: new Date() });

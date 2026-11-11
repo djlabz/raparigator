@@ -15,6 +15,7 @@ import type {
   AnnouncementSmartTip,
   AvailabilityDay,
 } from "@sigillus/contracts";
+import { normalizeText } from "./format";
 
 export const SELECT_PLACEHOLDER = "Selecionar";
 const HAIR_SELECTION_SEPARATOR = "::";
@@ -170,16 +171,8 @@ export const defaultAvailability: AvailabilityDay[] = [
 export function buildInitialState(ad: AnnouncementAdPreview): AnnouncementDraftState {
   const pricing = defaultPricing.map((defaultItem) => {
     const match = ad.pricingTable?.find((p) => {
-      const normalizedDefaultLabel = defaultItem.label
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim();
-      const normalizedLabel = p.label
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim();
+      const normalizedDefaultLabel = normalizeText(defaultItem.label);
+      const normalizedLabel = normalizeText(p.label);
 
       if (normalizedLabel === normalizedDefaultLabel) {
         return true;

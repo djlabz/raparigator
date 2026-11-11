@@ -46,3 +46,63 @@ export function formatRelativeTime(time: string, now = Date.now()): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   return `${day}/${month}, ${hours}:${minutes}`;
 }
+
+export const APP_TIME_ZONE = "America/Sao_Paulo";
+
+export type DateStyle = "date" | "dateTime" | "dateTimeLong";
+
+const DATE_STYLE_OPTIONS: Record<DateStyle, Intl.DateTimeFormatOptions> = {
+  date: { day: "2-digit", month: "short", year: "numeric" },
+  dateTime: {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  },
+  dateTimeLong: {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  },
+};
+
+export function formatDateBR(
+  value: string | Date | null | undefined,
+  style: DateStyle = "dateTime",
+  fallback = "",
+): string {
+  if (!value) {
+    return fallback;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return fallback;
+  }
+  return date.toLocaleString("pt-BR", { ...DATE_STYLE_OPTIONS[style], timeZone: APP_TIME_ZONE });
+}
+
+export function maskEmail(email: string): string {
+  const at = email.lastIndexOf("@");
+  const local = at === -1 ? email : email.slice(0, at);
+  const domain = at === -1 ? "" : email.slice(at + 1);
+  const visible = local.slice(0, Math.min(3, Math.max(local.length - 1, 0)));
+  const masked = `${visible}${"*".repeat(Math.max(local.length - visible.length, 3))}`;
+  return domain ? `${masked}@${domain}` : masked;
+}
+
+export function splitCityState(value: string | null | undefined): { city: string; state: string } {
+  if (!value) {
+    return { city: "", state: "" };
+  }
+  const separator = value.lastIndexOf(",");
+  if (separator === -1) {
+    return { city: value.trim(), state: "" };
+  }
+  return {
+    city: value.slice(0, separator).trim(),
+    state: value.slice(separator + 1).trim(),
+  };
+}

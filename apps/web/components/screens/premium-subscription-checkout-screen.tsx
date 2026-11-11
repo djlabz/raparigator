@@ -12,7 +12,8 @@ import { Toast } from "@/components/ui/toast";
 import { getImmediateGains, getPlanOption, usePremiumPlans } from "@/lib/premium-catalog";
 import { usePremiumPlan } from "@/lib/premium-plan";
 import type { PremiumBillingCycle } from "@/lib/types";
-import { currency, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatCurrencyBRL } from "@sigillus/domain";
 
 function isBillingCycle(value: string | null): value is PremiumBillingCycle {
   return value === "monthly" || value === "semiannual";
@@ -180,11 +181,11 @@ export function PremiumSubscriptionCheckoutScreen() {
                             selected ? "text-gold-bright" : "text-white",
                           )}
                         >
-                          {currency(option.price)}
+                          {formatCurrencyBRL(option.price)}
                         </p>
                         {option.cycle === "semiannual" ? (
                           <p className="mt-1 text-xs text-zinc-500">
-                            {currency(option.monthlyEquivalent)}/mês
+                            {formatCurrencyBRL(option.monthlyEquivalent)}/mês
                           </p>
                         ) : (
                           <p className="mt-1 text-xs text-zinc-500">por mês</p>
@@ -350,7 +351,9 @@ export function PremiumSubscriptionCheckoutScreen() {
                 onClick={handleConfirm}
                 className="tabular-nums tracking-tight"
               >
-                {isPaying ? "Processando..." : `Confirmar · ${currency(selectedPlan.price)}`}
+                {isPaying
+                  ? "Processando..."
+                  : `Confirmar · ${formatCurrencyBRL(selectedPlan.price)}`}
               </ShinyButton>
 
               {showSuccess ? (
@@ -375,18 +378,18 @@ export function PremiumSubscriptionCheckoutScreen() {
                 <div className="flex items-center justify-between gap-3 text-zinc-300">
                   <span>Plano {selectedPlan.label}</span>
                   <strong className="shrink-0 font-sans tabular-nums tracking-tight text-gold-bright">
-                    {currency(selectedPlan.price)}
+                    {formatCurrencyBRL(selectedPlan.price)}
                   </strong>
                 </div>
                 {selectedPlan.cycle === "semiannual" ? (
                   <p className="text-xs text-zinc-500">
-                    Equivale a {currency(selectedPlan.monthlyEquivalent)}/mês
+                    Equivale a {formatCurrencyBRL(selectedPlan.monthlyEquivalent)}/mês
                   </p>
                 ) : null}
                 <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-3 text-base text-white">
                   <span>Total</span>
                   <strong className="font-sans text-2xl font-semibold tabular-nums tracking-tight text-gold-bright">
-                    {currency(selectedPlan.price)}
+                    {formatCurrencyBRL(selectedPlan.price)}
                   </strong>
                 </div>
               </div>

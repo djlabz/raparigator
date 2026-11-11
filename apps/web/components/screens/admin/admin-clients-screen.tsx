@@ -7,23 +7,10 @@ import { AdminLayoutShell } from "./admin-layout-shell";
 import { useAdminSession } from "@/lib/admin-session";
 import { getClients, suspendClient, reinstateClient } from "@/lib/admin-service";
 import type { ClientAccount } from "@sigillus/contracts";
-
-function maskEmail(email: string): string {
-  const [local, domain] = email.split("@");
-  const visible = local.slice(0, 3);
-  return `${visible}${"*".repeat(Math.max(local.length - 3, 3))}@${domain}`;
-}
+import { formatDateBR, maskEmail } from "@sigillus/domain";
 
 function maskCpf(cpf: string): string {
   return cpf.replace(/^(\d{3}\.\d{3}\.)(\d{3}-\d{2})$/, "***.***.$2");
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
 }
 
 function avatarColor(name: string): string {
@@ -259,7 +246,7 @@ export function AdminClientsScreen() {
                   {/* Data */}
                   <div className="flex items-center gap-1.5 text-xs text-zinc-500">
                     <Calendar className="h-3.5 w-3.5 text-zinc-600 shrink-0" />
-                    <span>{formatDate(client.registeredAt)}</span>
+                    <span>{formatDateBR(client.registeredAt, "date")}</span>
                   </div>
 
                   {/* Contatos */}

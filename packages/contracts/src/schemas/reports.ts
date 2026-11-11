@@ -24,6 +24,14 @@ export const PublicReportReasonSchema = z.enum([
 ]);
 export type PublicReportReason = z.infer<typeof PublicReportReasonSchema>;
 
+export const PUBLIC_REPORT_REASON_LABELS: Record<PublicReportReason, string> = {
+  photo_without_consent: "Foto publicada sem consentimento",
+  minor: "Pessoa menor de idade",
+  coercion: "Anunciante sob coação",
+  illegal_content: "Conteúdo ilegal",
+  other: "Outro motivo",
+};
+
 export const ReportActionSchema = z.enum(["remove_media", "unpublish_profile", "dismiss"]);
 export type ReportAction = z.infer<typeof ReportActionSchema>;
 

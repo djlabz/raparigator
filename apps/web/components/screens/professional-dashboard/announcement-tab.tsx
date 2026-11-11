@@ -72,6 +72,7 @@ import {
   useAnnouncementMedia,
 } from "@/lib/announcement-media";
 import { getCroppedImg } from "@/lib/cropImage";
+import { normalizeText } from "@sigillus/domain";
 
 const SELECT_PLACEHOLDER = "Selecionar";
 const GENDER_OPTIONS = [SELECT_PLACEHOLDER, "Feminino", "Masculino", "Trans", "Não-binário"];
@@ -233,14 +234,6 @@ function resolvePricingBillingType(item: AnnouncementPricingItem) {
   const normalizedLabel = normalizeText(item.label);
   const isHourly = normalizedLabel.includes("hora") || normalizedLabel.includes("min");
   return isHourly ? "hourly" : "fixed";
-}
-
-function normalizeText(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
 }
 
 function createLocationId() {

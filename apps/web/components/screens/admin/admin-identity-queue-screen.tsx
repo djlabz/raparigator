@@ -11,6 +11,7 @@ import type {
 import { getApiClient } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { AdminLayoutShell } from "./admin-layout-shell";
+import { formatDateBR } from "@sigillus/domain";
 
 type TabFilter = "all" | IdentityVerificationStatus;
 
@@ -43,17 +44,6 @@ const STATUS_BADGES: Record<
 };
 
 const MIN_REASON_LENGTH = 3;
-
-function formatDateTime(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
@@ -197,7 +187,9 @@ function VerificationCard({
           {item.profileSlug ? (
             <p className="text-xs text-zinc-500">/anuncio/{item.profileSlug}</p>
           ) : null}
-          <p className="mt-1 text-xs text-zinc-500">Enviada em {formatDateTime(item.createdAt)}</p>
+          <p className="mt-1 text-xs text-zinc-500">
+            Enviada em {formatDateBR(item.createdAt, "dateTime")}
+          </p>
         </div>
         <span
           className={cn(
@@ -214,7 +206,7 @@ function VerificationCard({
         <div className="space-y-1 rounded-2xl border border-zinc-800/60 bg-zinc-900/50 p-3 text-xs text-zinc-400">
           <p>
             Analisada por <span className="font-semibold text-zinc-200">{item.reviewedBy}</span> em{" "}
-            {formatDateTime(item.reviewedAt)}
+            {formatDateBR(item.reviewedAt, "dateTime")}
           </p>
           {item.rejectReason ? <p>Motivo: {item.rejectReason}</p> : null}
           {!item.filesAvailable ? <p>Arquivos já apagados do armazenamento.</p> : null}

@@ -14,7 +14,8 @@ import {
 } from "@/lib/encounter-brief";
 import { useContactCta } from "./use-contact-cta";
 import type { EncounterBrief, ProfessionalAd } from "@/lib/types";
-import { cn, currency } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatCurrencyBRL } from "@sigillus/domain";
 
 const PAYMENT_METHOD_OPTIONS = [
   {
@@ -193,7 +194,7 @@ export function SchedulingSimulator({
               <div className="flex shrink-0 flex-nowrap items-center gap-3">
                 {isSelected && (
                   <span className="mr-1 text-sm font-bold whitespace-nowrap text-zinc-900 sm:text-base">
-                    {currency(plan.price)}
+                    {formatCurrencyBRL(plan.price)}
                   </span>
                 )}
                 <div
@@ -249,7 +250,8 @@ export function SchedulingSimulator({
                 <div className="flex shrink-0 items-center gap-3">
                   {hasExtra && (
                     <span className="flex items-center text-sm font-medium text-zinc-900">
-                      <span className="mr-1 font-bold text-wine-800">+</span> {currency(150)}
+                      <span className="mr-1 font-bold text-wine-800">+</span>{" "}
+                      {formatCurrencyBRL(150)}
                     </span>
                   )}
                   <div
@@ -273,14 +275,14 @@ export function SchedulingSimulator({
         <div className="space-y-3 p-5 pb-4">
           <div className="flex items-center justify-between text-xs text-zinc-400">
             <span>Encontro Selecionado ({selectedDuration})</span>
-            <span className="font-mono">{currency(basePrice)}</span>
+            <span className="font-mono">{formatCurrencyBRL(basePrice)}</span>
           </div>
           {selectedExtras.length > 0 && (
             <div className="animate-slide-in flex items-center justify-between text-xs text-zinc-400">
               <span>Adicionais Personalizados ({selectedExtras.length})</span>
               <span className="flex items-center font-mono">
                 <span className="mr-1.5 font-bold text-wine-800">+</span>{" "}
-                {currency(calculatedExtrasCost)}
+                {formatCurrencyBRL(calculatedExtrasCost)}
               </span>
             </div>
           )}
@@ -290,7 +292,7 @@ export function SchedulingSimulator({
               Valor Total:
             </span>
             <span className="font-mono text-lg font-black text-amber-300">
-              {currency(totalCalculatedValue)}
+              {formatCurrencyBRL(totalCalculatedValue)}
             </span>
           </div>
         </div>

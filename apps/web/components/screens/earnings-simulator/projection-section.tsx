@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
-import { currency } from "@/lib/utils";
 import type { EarningsSimulatorState } from "./use-earnings-simulator";
+import { formatCurrencyBRL } from "@sigillus/domain";
 
 export function ProjectionSection({ state }: { state: EarningsSimulatorState }) {
   if (state.monthly === null || state.yearly === null) {
@@ -19,7 +19,7 @@ export function ProjectionSection({ state }: { state: EarningsSimulatorState }) 
           data-testid="earnings-projection-month"
           className="mt-1 text-lg font-bold text-zinc-900 md:text-2xl"
         >
-          {currency(state.monthly)}
+          {formatCurrencyBRL(state.monthly)}
         </p>
       </Card>
       <Card className="p-4">
@@ -28,7 +28,7 @@ export function ProjectionSection({ state }: { state: EarningsSimulatorState }) 
           data-testid="earnings-projection-year"
           className="mt-1 text-lg font-bold text-zinc-900 md:text-2xl"
         >
-          {currency(state.yearly)}
+          {formatCurrencyBRL(state.yearly)}
         </p>
       </Card>
     </section>

@@ -1,6 +1,5 @@
-import { EARNINGS_GOALS } from "@sigillus/domain";
+import { EARNINGS_GOALS, formatCurrencyBRL } from "@sigillus/domain";
 import { Card } from "@/components/ui/card";
-import { currency } from "@/lib/utils";
 import { OptionGroup } from "./option-group";
 import type { EarningsSimulatorState } from "./use-earnings-simulator";
 
@@ -43,13 +42,17 @@ export function GoalsSection({ state }: { state: EarningsSimulatorState }) {
           {goal === "customDeadline" ? (
             <p className="text-zinc-700">
               Em {formatMonths(goalResult.months)}, com a projeção atual:{" "}
-              <span className="font-semibold text-zinc-900">{currency(goalResult.target)}</span>
+              <span className="font-semibold text-zinc-900">
+                {formatCurrencyBRL(goalResult.target)}
+              </span>
             </p>
           ) : (
             <p className="text-zinc-700">
               Meta de{" "}
-              <span className="font-semibold text-zinc-900">{currency(goalResult.target)}</span>:
-              com a projeção atual, {formatMonths(goalResult.months)}
+              <span className="font-semibold text-zinc-900">
+                {formatCurrencyBRL(goalResult.target)}
+              </span>
+              : com a projeção atual, {formatMonths(goalResult.months)}
             </p>
           )}
         </div>
