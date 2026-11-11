@@ -20,23 +20,23 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 
 ## Ordem da trilha A
 
-| Ordem | PR                                                 | Status         |
-| ----- | -------------------------------------------------- | -------------- |
-| A1    | F-02 código morto e comentários                    | [x] #105 25/10 |
-| A2    | F-03 bugs de regra sem decisão                     | [x] #111 10/11 |
-| A3    | F-06 regras puras para o domain                    |                |
-| A4    | F-07 camadas da API                                |                |
-| A5    | F-08 mensagens em português                        |                |
-| A6    | F-09 seeds: CPF e pexels                           | [x] #106 25/10 |
-| A7    | F-11 CSS                                           | [x] #109 25/10 |
-| A8    | F-12 nomes                                         |                |
-| A9    | F-13 `moderationStatus`                            |                |
-| A10a  | F-14a consolidação da documentação                 |                |
-| A10b  | F-14b ADRs 017 e 020 (rascunho, revisão do Daniel) |                |
-| A11   | F-16 duplicação do web                             |                |
-| A12   | F-18 pastas por funcionalidade (um PR por feature) |                |
-| A13   | F-20 API por caso de uso                           |                |
-| A14   | F-22 guardas de arquitetura na CI                  |                |
+| Ordem | PR                                                 | Status                     |
+| ----- | -------------------------------------------------- | -------------------------- |
+| A1    | F-02 código morto e comentários                    | [x] #105 25/10             |
+| A2    | F-03 bugs de regra sem decisão                     | [x] #111 10/11             |
+| A3    | F-06 regras puras para o domain                    | em andamento (#114, 11/11) |
+| A4    | F-07 camadas da API                                |                            |
+| A5    | F-08 mensagens em português                        |                            |
+| A6    | F-09 seeds: CPF e pexels                           | [x] #106 25/10             |
+| A7    | F-11 CSS                                           | [x] #109 25/10             |
+| A8    | F-12 nomes                                         |                            |
+| A9    | F-13 `moderationStatus`                            |                            |
+| A10a  | F-14a consolidação da documentação                 |                            |
+| A10b  | F-14b ADRs 017 e 020 (rascunho, revisão do Daniel) |                            |
+| A11   | F-16 duplicação do web                             |                            |
+| A12   | F-18 pastas por funcionalidade (um PR por feature) |                            |
+| A13   | F-20 API por caso de uso                           |                            |
+| A14   | F-22 guardas de arquitetura na CI                  |                            |
 
 ## PRs
 
@@ -198,3 +198,6 @@ Formato: data, PR de origem, arquivo:linha, achado e proposta. Consolidados no i
 - 25/10, F-11 (#109), verificação de motion: o MCP do Playwright está sem navegador (`chrome-for-testing` não instalado) e o fallback Python da `refine-motion` não tem o módulo `playwright`. Proposta: o Daniel decide se instala um dos dois ou se a skill passa a aceitar o `@playwright/test` do repo como caminho de verificação.
 - 10/11, F-03 (#111), `apps/api/src/modules/media/jobs.ts:111-121`: o `media.process` marca `failed` qualquer erro, inclusive falha transitória do storage (agora o `head` propaga o erro em vez de devolver `null`). Proposta: no F-07 (camadas), relançar erros transitórios para o retry do pg-boss e marcar `failed` só depois da última tentativa. **Decidido pelo Daniel em 10/11:** só os transitórios (storage indisponível, timeout, 5xx) vão para o retry; os permanentes (tipo não suportado, HEIC, arquivo corrompido, falha de decodificação) marcam `failed` sem retry. Linha do F-07 atualizada.
 - 10/11, F-03 (#111), `apps/api/src/modules/premium/service.ts` (`grantManual`): com assinatura `pending_payment` do provedor aberta, a concessão manual agora cria uma assinatura própria e as duas coexistem; se o pagamento do provedor confirmar depois, a profissional fica com dois períodos ativos em paralelo (não somados). Proposta: o Daniel decide se o admin deve cancelar a pendente do provedor ao conceder manualmente. **Decidido pelo Daniel em 10/11:** `grantPremium` recusa com `CONFLICT` ("Há uma assinatura aguardando pagamento; resolva antes de conceder o Premium manualmente.") e não cancela nada localmente; aplicado no PR complementar do F-03. Rever quando o PSP real existir (pendência registrada na Fase 3 do `docs/roteiro.md`).
+- 11/11, F-06 (#114), `apps/web/components/screens/chat-screen.tsx` (`openRenameModal`) × `apps/api/src/modules/chat/service.ts` (`setAlias`): a API deixa o cliente pôr apelido por conversa (o gate só vale para profissional sem Premium, agora `canSetConversationAlias` no domain), mas o web bloqueia o cliente e abre o upsell de Premium (que nem existe para cliente). Proposta: o Daniel decide se o cliente pode renomear a conversa; se sim, o web passa a usar `canSetConversationAlias(role, limits)`.
+- 11/11, F-06 (#114), D-47: o texto da decisão diz que `IDENTITY_FILES_RETENTION_DAYS` "continua sobrescritível por env", mas ele nunca foi (só `IDENTITY_REQUIRED` vem do env). Ficou constante em `domain/retention.ts`. Proposta: se for para configurar por env, abrir task própria.
+- 11/11, F-06 (#114), `announcement-tab.tsx` (`handleAddPhoto`): o `accept` do upload não inclui `.mkv`/`video/x-matroska`, que a API aceita (`domain/media.ts`). Proposta: decidir no passo `announcement-tab` do F-19 se o `accept` passa a vir do catálogo do domain.
