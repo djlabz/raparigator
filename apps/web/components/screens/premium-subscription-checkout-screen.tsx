@@ -13,27 +13,15 @@ import { getImmediateGains, getPlanOption, usePremiumPlans } from "@/lib/premium
 import { usePremiumPlan } from "@/lib/premium-plan";
 import type { PremiumBillingCycle } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { formatCurrencyBRL } from "@sigillus/domain";
+import {
+  formatCurrencyBRL,
+  formatCardNumber,
+  formatCardExpiry,
+  formatCardCvv,
+} from "@sigillus/domain";
 
 function isBillingCycle(value: string | null): value is PremiumBillingCycle {
   return value === "monthly" || value === "semiannual";
-}
-
-function formatCardNumber(value: string) {
-  const digits = value.replace(/\D/g, "").slice(0, 16);
-  return digits.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
-}
-
-function formatCardExpiry(value: string) {
-  const digits = value.replace(/\D/g, "").slice(0, 4);
-  if (digits.length <= 2) {
-    return digits;
-  }
-  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-}
-
-function formatCardCvv(value: string) {
-  return value.replace(/\D/g, "").slice(0, 4);
 }
 
 const fieldClassName =

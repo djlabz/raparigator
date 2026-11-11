@@ -72,7 +72,17 @@ import {
   useAnnouncementMedia,
 } from "@/lib/announcement-media";
 import { getCroppedImg } from "@/lib/cropImage";
-import { normalizeText } from "@sigillus/domain";
+import {
+  normalizeText,
+  splitHairSelection,
+  joinHairSelection,
+  createLocationId,
+  formatCurrencyInput,
+  formatWeightInput,
+  formatHeightInput,
+  sanitizeCityInput,
+  formatTimeInput,
+} from "@sigillus/domain";
 
 const SELECT_PLACEHOLDER = "Selecionar";
 const GENDER_OPTIONS = [SELECT_PLACEHOLDER, "Feminino", "Masculino", "Trans", "Não-binário"];
@@ -104,7 +114,6 @@ const HAIR_COLOR_OPTIONS = [
   "Platinado",
 ];
 const SMOKER_OPTIONS = [SELECT_PLACEHOLDER, "Sim", "Não"];
-const HAIR_SELECTION_SEPARATOR = "::";
 type VisibilityStatus = "Ativo" | "Pausado" | "Invisível";
 const MAX_LOCATION_ADDRESSES = 10;
 const GROUP_WARNING_AUTO_DISMISS_MS = 3200;
@@ -131,85 +140,8 @@ type DetectedLocation = LocationDraft & {
   displayName: string;
 };
 
-function formatIntegerGroup(value: string) {
-  const normalized = value.replace(/^0+(?=\d)/, "");
-
-  if (!normalized) {
-    return "0";
-  }
-
-  return normalized.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-}
-
-function formatCurrencyInput(value: string) {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length === 0) {
-    return "";
-  }
-
-  const normalizedDigits = digits.padStart(3, "0");
-  const integerPart = normalizedDigits.slice(0, -2);
-  const fractionPart = normalizedDigits.slice(-2);
-
-  return `${formatIntegerGroup(integerPart)},${fractionPart}`;
-}
-
-function formatWeightInput(value: string) {
-  const digits = value.replace(/\D/g, "");
-
-  if (digits.length === 0) {
-    return "";
-  }
-
-  const clampedDigits = Number(digits) > 1000 ? "1000" : digits;
-  const normalizedDigits = clampedDigits.padStart(2, "0");
-  const integerPart = normalizedDigits.slice(0, -1);
-  const fractionPart = normalizedDigits.slice(-1);
-
-  return `${formatIntegerGroup(integerPart)},${fractionPart}`;
-}
-
-function formatHeightInput(value: string) {
-  return value.replace(/\D/g, "").slice(0, 3);
-}
-
-function sanitizeCityInput(value: string) {
-  return value
-    .replace(/[^A-Za-zÀ-ÿ' -]/g, "")
-    .replace(/\s{2,}/g, " ")
-    .slice(0, 60);
-}
-
-function parseHairSelection(value: string) {
-  if (!value.trim() || value === SELECT_PLACEHOLDER) {
-    return {
-      type: SELECT_PLACEHOLDER,
-      color: SELECT_PLACEHOLDER,
-    };
-  }
-
-  if (value.includes(HAIR_SELECTION_SEPARATOR)) {
-    const [type = SELECT_PLACEHOLDER, color = SELECT_PLACEHOLDER] =
-      value.split(HAIR_SELECTION_SEPARATOR);
-
-    return {
-      type: type.trim() || SELECT_PLACEHOLDER,
-      color: color.trim() || SELECT_PLACEHOLDER,
-    };
-  }
-
-  return {
-    type: SELECT_PLACEHOLDER,
-    color: value,
-  };
-}
-
-function serializeHairSelection(type: string, color: string) {
-  return `${type}${HAIR_SELECTION_SEPARATOR}${color}`;
-}
-
 function formatHairSelectionSummary(value: string) {
-  const { type, color } = parseHairSelection(value);
+  const { type, color } = splitHairSelection(value);
 
   if (isHairSelectionComplete(value)) {
     return `${type} • ${color}`;
@@ -234,14 +166,6 @@ function resolvePricingBillingType(item: AnnouncementPricingItem) {
   const normalizedLabel = normalizeText(item.label);
   const isHourly = normalizedLabel.includes("hora") || normalizedLabel.includes("min");
   return isHourly ? "hourly" : "fixed";
-}
-
-function createLocationId() {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-
-  return `location-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function buildLocationLabel(location: LocationDraft) {
@@ -353,12 +277,6 @@ function buildLocationFromDetected(detected: DetectedLocation): LocationDraft {
     country: detected.country || "",
     notes: detected.notes,
   };
-}
-
-function sanitizeTimeInput(value: string) {
-  const digits = value.replace(/\D/g, "").slice(0, 4);
-  if (digits.length <= 2) return digits;
-  return `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
 }
 
 function resolveCoverIndex(coverIndex: number, imageCount: number) {
@@ -2051,7 +1969,7 @@ export function AnnouncementTab({
               }}
               onTimeChange={(idx: number, field: string, value: string) => {
                 const next = form.availability.map((d, i) =>
-                  i === idx ? { ...d, [field]: sanitizeTimeInput(value) } : d,
+                  i === idx ? { ...d, [field]: formatTimeInput(value) } : d,
                 );
                 updateField("availability", next);
               }}
@@ -3394,7 +3312,7 @@ function HairTypeAndColorField({
   invalid?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const selection = parseHairSelection(value);
+  const selection = splitHairSelection(value);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -3426,7 +3344,7 @@ function HairTypeAndColorField({
   }, []);
 
   const updateSelection = (nextSelection: { type: string; color: string }) => {
-    onChange(serializeHairSelection(nextSelection.type, nextSelection.color));
+    onChange(joinHairSelection(nextSelection.type, nextSelection.color));
   };
 
   const summary = formatHairSelectionSummary(value);
