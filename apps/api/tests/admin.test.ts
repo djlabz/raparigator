@@ -361,8 +361,8 @@ describe("admin / backoffice", () => {
     >("admin/search", { q: "mariana" }, cookie);
     expect(result.status).toBe(200);
     const clientHit = result.body.find((item) => item.type === "client");
-    expect(clientHit?.subtitle).toBe("Curitiba, PR · mariana@***");
-    expect(clientHit?.subtitle).not.toContain("teste.dev");
+    expect(clientHit?.subtitle).toBe("Curitiba, PR · mar****@teste.dev");
+    expect(clientHit?.subtitle).not.toContain("mariana");
     expect(clientHit?.href).toBe("/admin/clientes");
     const pros = result.body.filter((item) => item.type === "professional");
     expect(pros.map((item) => item.name)).toEqual(["Luna Mariana"]);
