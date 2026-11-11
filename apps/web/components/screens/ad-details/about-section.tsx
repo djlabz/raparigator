@@ -3,21 +3,48 @@
 import { Check, Sparkles, Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { ProfessionalAd } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import type { AdDetailsVariant } from "./variant";
+
+const ABOUT_THEME = {
+  premium: {
+    card: "relative overflow-hidden",
+    label: "rounded-md border border-red-100/60 bg-red-50 px-2.5 py-1 text-wine-800",
+    quote: "border-wine-800",
+    star: "text-amber-600",
+  },
+  standard: {
+    card: "",
+    label: "rounded-full border border-zinc-950 bg-zinc-900 px-3 py-1 text-white",
+    quote: "border-wine-700",
+    star: "text-amber-500",
+  },
+} as const satisfies Record<AdDetailsVariant, Record<string, string>>;
 
 interface AboutSectionProps {
   ad: ProfessionalAd;
+  variant: AdDetailsVariant;
 }
 
-export function AboutSection({ ad }: AboutSectionProps) {
+export function AboutSection({ ad, variant }: AboutSectionProps) {
+  const theme = ABOUT_THEME[variant];
+
   return (
-    <Card className="relative space-y-5 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm">
-      <div className="pointer-events-none absolute top-0 right-0 p-5">
-        <Sparkles className="h-28 w-28 text-gold/10" strokeWidth={2} />
-      </div>
+    <Card
+      className={cn(
+        "space-y-5 rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm",
+        theme.card,
+      )}
+    >
+      {variant === "premium" && (
+        <div className="pointer-events-none absolute top-0 right-0 p-5">
+          <Sparkles className="h-28 w-28 text-gold/10" strokeWidth={2} />
+        </div>
+      )}
 
       <div className="space-y-3">
         <div className="flex items-center gap-1.5">
-          <span className="rounded-md border border-red-100/60 bg-red-50 px-2.5 py-1 text-xs font-bold tracking-[0.2em] text-wine-800 uppercase">
+          <span className={cn("text-xs font-bold tracking-[0.2em] uppercase", theme.label)}>
             Sobre a Profissional
           </span>
           <div className="hidden h-1 rounded-full bg-zinc-100 sm:block lg:grow" />
@@ -27,7 +54,12 @@ export function AboutSection({ ad }: AboutSectionProps) {
           Perfil Premium com discrição absoluta
         </h3>
 
-        <blockquote className="border-l-4 border-wine-800 py-1 pl-4 font-serif text-sm leading-relaxed text-zinc-600 italic sm:text-base">
+        <blockquote
+          className={cn(
+            "border-l-4 py-1 pl-4 font-serif text-sm leading-relaxed text-zinc-600 italic sm:text-base",
+            theme.quote,
+          )}
+        >
           &ldquo;{ad.shortDescription}&rdquo;
         </blockquote>
       </div>
@@ -43,7 +75,7 @@ export function AboutSection({ ad }: AboutSectionProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="rounded-full border border-amber-100 bg-amber-50 p-1.5 text-amber-600">
+          <div className={cn("rounded-full border border-amber-100 bg-amber-50 p-1.5", theme.star)}>
             <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
           </div>
           <div>
