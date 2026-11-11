@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { ads, credentials } from "./helpers/credentials";
+import { adTiers, credentials } from "./helpers/credentials";
 import { seedUserRole } from "./helpers/auth";
 
 const SIMULATOR_DURATION = "2 horas";
@@ -18,127 +18,43 @@ async function buildSimulation(page: Page) {
     .click();
 }
 
-test.describe("Briefing de encontro", () => {
-  test("leva a simulação do anúncio para o chat e envia como card", async ({ page }) => {
-    await seedUserRole(page, "cliente");
-    await page.goto(`/anuncio/${ads.premiumSlug}`);
+for (const { tier, slug, name } of adTiers) {
+  test.describe(`Briefing de encontro (${tier})`, () => {
+    test("leva a simulação do anúncio para o chat e envia como card", async ({ page }) => {
+      await seedUserRole(page, "cliente");
+      await page.goto(`/anuncio/${slug}`);
 
-    await buildSimulation(page);
-    await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
-    await page.waitForURL("**/chat**");
+      await buildSimulation(page);
+      await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
+      await page.waitForURL("**/chat**");
 
-    const preview = page.getByText("Seu interesse, pronto para enviar").first();
-    await expect(preview).toBeVisible();
+      const preview = page.getByText("Seu interesse, pronto para enviar").first();
+      await expect(preview).toBeVisible();
 
-    await page.getByRole("button", { name: "Enviar interesse" }).first().click();
+      await page.getByRole("button", { name: "Enviar interesse" }).first().click();
 
-    await expect(page.getByText("Simulação de encontro").first()).toBeVisible();
-    await expect(page.getByText(SIMULATOR_DURATION).first()).toBeVisible();
-    await expect(preview).toBeHidden();
-  });
-
-  test("o link 'Ver anúncio' do card enviado pousa no simulador, não no topo", async ({ page }) => {
-    await seedUserRole(page, "cliente");
-    await page.goto(`/anuncio/${ads.premiumSlug}`);
-
-    await buildSimulation(page);
-    await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
-    await page.waitForURL("**/chat**");
-    await page.getByRole("button", { name: "Enviar interesse" }).first().click();
-
-    await page
-      .getByRole("link", { name: `Ver anúncio de ${ads.premiumName}` })
-      .first()
-      .click();
-    await page.waitForURL(`**/anuncio/${ads.premiumSlug}#simulador-de-encontro`);
-
-    await expect(async () => {
-      const top = await page
-        .locator("#simulador-de-encontro")
-        .evaluate((el) => el.getBoundingClientRect().top);
-      expect(top).toBeGreaterThan(0);
-      expect(top).toBeLessThan(200);
-    }).toPass();
-  });
-
-  test("permite editar a mensagem antes de enviar e restaurar a sugestão", async ({ page }) => {
-    await seedUserRole(page, "cliente");
-    await page.goto(`/anuncio/${ads.premiumSlug}`);
-
-    await buildSimulation(page);
-    await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
-    await page.waitForURL("**/chat**");
-
-    const greeting = page.getByLabel("Sua mensagem").first();
-    const suggestion =
-      await test.step("a sugestão já vem preenchida ao montar com o interesse", async () => {
-        const value = await greeting.inputValue();
-        expect(value.length).toBeGreaterThan(0);
-        return value;
-      });
-
-    const custom = "Oi! Montei essa simulação, topa conversar sobre?";
-    await greeting.fill(custom);
-    await page.getByRole("button", { name: "Restaurar sugestão" }).first().click();
-    await expect(greeting).toHaveValue(suggestion);
-
-    await greeting.fill(custom);
-    await page.getByRole("button", { name: "Enviar interesse" }).first().click();
-
-    await expect(page.getByText(custom).first()).toBeVisible();
-    await expect(page.getByText("Simulação de encontro").first()).toBeVisible();
-  });
-
-  test("mensagem vazia bloqueia o envio", async ({ page }) => {
-    await seedUserRole(page, "cliente");
-    await page.goto(`/anuncio/${ads.premiumSlug}`);
-
-    await buildSimulation(page);
-    await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
-    await page.waitForURL("**/chat**");
-
-    await page.getByLabel("Sua mensagem").first().fill("   ");
-    await expect(page.getByRole("button", { name: "Enviar interesse" }).first()).toBeDisabled();
-  });
-
-  test("funciona mesmo com o chat já visitado antes, sem recarregar a página", async ({ page }) => {
-    await seedUserRole(page, "cliente");
-    await page.goto("/chat");
-    await expect(page.getByRole("heading", { name: "Conversas" })).toBeVisible();
-
-    await test.step("navega client-side até o anúncio, sem remontar o chat nem usar parâmetro na URL", async () => {
-      await page.getByRole("link", { name: "Feed" }).first().click();
-      await page.waitForURL("**/feed**");
-      const adCard = page
-        .locator("[data-feed-premium-section]")
-        .locator(`a[href*="/anuncio/${ads.premiumSlug}"]`)
-        .first();
-      await expect(adCard).toBeVisible();
-      await adCard.click();
-      await page.waitForURL(`**/anuncio/${ads.premiumSlug}`);
+      await expect(page.getByText("Simulação de encontro").first()).toBeVisible();
+      await expect(page.getByText(SIMULATOR_DURATION).first()).toBeVisible();
+      await expect(preview).toBeHidden();
     });
 
-    await buildSimulation(page);
-    await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
-    await page.waitForURL("**/chat**");
+    test("o link 'Ver anúncio' do card enviado pousa no simulador, não no topo", async ({
+      page,
+    }) => {
+      await seedUserRole(page, "cliente");
+      await page.goto(`/anuncio/${slug}`);
 
-    await expect(page.getByText("Seu interesse, pronto para enviar").first()).toBeVisible();
-  });
+      await buildSimulation(page);
+      await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
+      await page.waitForURL("**/chat**");
+      await page.getByRole("button", { name: "Enviar interesse" }).first().click();
 
-  test("clicar no corpo da prévia volta ao anúncio, mantendo o interesse pendente", async ({
-    page,
-  }) => {
-    await seedUserRole(page, "cliente");
-    await page.goto(`/anuncio/${ads.premiumSlug}`);
+      await page
+        .getByRole("link", { name: `Ver anúncio de ${name}` })
+        .first()
+        .click();
+      await page.waitForURL(`**/anuncio/${slug}#simulador-de-encontro`);
 
-    await buildSimulation(page);
-    await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
-    await page.waitForURL("**/chat**");
-
-    await page.getByRole("button", { name: "Toque para ajustar a simulação" }).first().click();
-    await page.waitForURL(`**/anuncio/${ads.premiumSlug}#simulador-de-encontro`);
-
-    await test.step("cai no simulador, não no topo do anúncio, e fora do cabeçalho fixo", async () => {
       await expect(async () => {
         const top = await page
           .locator("#simulador-de-encontro")
@@ -148,60 +64,147 @@ test.describe("Briefing de encontro", () => {
       }).toPass();
     });
 
-    await page.getByRole("link", { name: "Chat" }).first().click();
-    await page.waitForURL("**/chat**");
-    await expect(page.getByText("Seu interesse, pronto para enviar").first()).toBeVisible();
-  });
+    test("permite editar a mensagem antes de enviar e restaurar a sugestão", async ({ page }) => {
+      await seedUserRole(page, "cliente");
+      await page.goto(`/anuncio/${slug}`);
 
-  test("descartar a prévia não envia nada", async ({ page }) => {
-    await seedUserRole(page, "cliente");
-    await page.goto(`/anuncio/${ads.premiumSlug}`);
+      await buildSimulation(page);
+      await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
+      await page.waitForURL("**/chat**");
 
-    await buildSimulation(page);
-    await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
-    await page.waitForURL("**/chat**");
+      const greeting = page.getByLabel("Sua mensagem").first();
+      const suggestion =
+        await test.step("a sugestão já vem preenchida ao montar com o interesse", async () => {
+          const value = await greeting.inputValue();
+          expect(value.length).toBeGreaterThan(0);
+          return value;
+        });
 
-    await page.getByRole("button", { name: "Descartar simulação" }).first().click();
+      const custom = "Oi! Montei essa simulação, topa conversar sobre?";
+      await greeting.fill(custom);
+      await page.getByRole("button", { name: "Restaurar sugestão" }).first().click();
+      await expect(greeting).toHaveValue(suggestion);
 
-    await expect(page.getByText("Seu interesse, pronto para enviar")).toBeHidden();
-    await expect(page.getByRole("button", { name: "Descartar simulação" })).toHaveCount(0);
-  });
+      await greeting.fill(custom);
+      await page.getByRole("button", { name: "Enviar interesse" }).first().click();
 
-  test("link de simulação remonta as seleções e ignora serviço inválido", async ({ page }) => {
-    await page.goto(
-      `/p/${ads.premiumSlug}?d=${encodeURIComponent(SIMULATOR_DURATION)}&e=${encodeURIComponent(
-        `${SIMULATOR_EXTRA}|Servico Inexistente`,
-      )}`,
-    );
-
-    const duration = page
-      .getByRole("button")
-      .filter({ hasText: new RegExp(`^Duração${SIMULATOR_DURATION}`) })
-      .first();
-
-    await test.step("só a opção escolhida mostra o preço no rótulo", async () => {
-      await expect(duration).toContainText("R$");
-      await expect(page.getByText("Servico Inexistente")).toHaveCount(0);
+      await expect(page.getByText(custom).first()).toBeVisible();
+      await expect(page.getByText("Simulação de encontro").first()).toBeVisible();
     });
-  });
 
-  test("login preserva as seleções e devolve o visitante ao anúncio", async ({ page }) => {
-    await page.goto(`/anuncio/${ads.premiumSlug}`);
+    test("mensagem vazia bloqueia o envio", async ({ page }) => {
+      await seedUserRole(page, "cliente");
+      await page.goto(`/anuncio/${slug}`);
 
-    await buildSimulation(page);
-    await page.getByRole("link", { name: "Entrar para Interagir" }).first().click();
-    await page.waitForURL("**/auth/login**");
+      await buildSimulation(page);
+      await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
+      await page.waitForURL("**/chat**");
 
-    await page.getByLabel("E-mail").fill(credentials.cliente.email);
-    await page.getByLabel("Senha").fill(credentials.cliente.password);
-    await page.getByRole("button", { name: "Entrar na plataforma" }).click();
+      await page.getByLabel("Sua mensagem").first().fill("   ");
+      await expect(page.getByRole("button", { name: "Enviar interesse" }).first()).toBeDisabled();
+    });
 
-    await page.waitForURL(`**/anuncio/${ads.premiumSlug}`);
-    await expect(
-      page
+    test("funciona mesmo com o chat já visitado antes, sem recarregar a página", async ({
+      page,
+    }) => {
+      await seedUserRole(page, "cliente");
+      await page.goto("/chat");
+      await expect(page.getByRole("heading", { name: "Conversas" })).toBeVisible();
+
+      await test.step("navega client-side até o anúncio, sem remontar o chat nem usar parâmetro na URL", async () => {
+        await page.getByRole("link", { name: "Feed" }).first().click();
+        await page.waitForURL("**/feed**");
+        const section =
+          tier === "premium" ? "[data-feed-premium-section]" : "[data-feed-content-column]";
+        await page.locator(section).locator(`a[href*="/anuncio/${slug}"]`).first().click();
+        await page.waitForURL(`**/anuncio/${slug}`);
+      });
+
+      await buildSimulation(page);
+      await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
+      await page.waitForURL("**/chat**");
+
+      await expect(page.getByText("Seu interesse, pronto para enviar").first()).toBeVisible();
+    });
+
+    test("clicar no corpo da prévia volta ao anúncio, mantendo o interesse pendente", async ({
+      page,
+    }) => {
+      await seedUserRole(page, "cliente");
+      await page.goto(`/anuncio/${slug}`);
+
+      await buildSimulation(page);
+      await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
+      await page.waitForURL("**/chat**");
+
+      await page.getByRole("button", { name: "Toque para ajustar a simulação" }).first().click();
+      await page.waitForURL(`**/anuncio/${slug}#simulador-de-encontro`);
+
+      await test.step("cai no simulador, não no topo do anúncio, e fora do cabeçalho fixo", async () => {
+        await expect(async () => {
+          const top = await page
+            .locator("#simulador-de-encontro")
+            .evaluate((el) => el.getBoundingClientRect().top);
+          expect(top).toBeGreaterThan(0);
+          expect(top).toBeLessThan(200);
+        }).toPass();
+      });
+
+      await page.getByRole("link", { name: "Chat" }).first().click();
+      await page.waitForURL("**/chat**");
+      await expect(page.getByText("Seu interesse, pronto para enviar").first()).toBeVisible();
+    });
+
+    test("descartar a prévia não envia nada", async ({ page }) => {
+      await seedUserRole(page, "cliente");
+      await page.goto(`/anuncio/${slug}`);
+
+      await buildSimulation(page);
+      await page.getByRole("button", { name: "Chat Direto", exact: true }).click();
+      await page.waitForURL("**/chat**");
+
+      await page.getByRole("button", { name: "Descartar simulação" }).first().click();
+
+      await expect(page.getByText("Seu interesse, pronto para enviar")).toBeHidden();
+      await expect(page.getByRole("button", { name: "Descartar simulação" })).toHaveCount(0);
+    });
+
+    test("link de simulação remonta as seleções e ignora serviço inválido", async ({ page }) => {
+      await page.goto(
+        `/p/${slug}?d=${encodeURIComponent(SIMULATOR_DURATION)}&e=${encodeURIComponent(
+          `${SIMULATOR_EXTRA}|Servico Inexistente`,
+        )}`,
+      );
+
+      const duration = page
         .getByRole("button")
         .filter({ hasText: new RegExp(`^Duração${SIMULATOR_DURATION}`) })
-        .first(),
-    ).toContainText("R$");
+        .first();
+
+      await test.step("só a opção escolhida mostra o preço no rótulo", async () => {
+        await expect(duration).toContainText("R$");
+        await expect(page.getByText("Servico Inexistente")).toHaveCount(0);
+      });
+    });
+
+    test("login preserva as seleções e devolve o visitante ao anúncio", async ({ page }) => {
+      await page.goto(`/anuncio/${slug}`);
+
+      await buildSimulation(page);
+      await page.getByRole("link", { name: "Entrar para Interagir" }).first().click();
+      await page.waitForURL("**/auth/login**");
+
+      await page.getByLabel("E-mail").fill(credentials.cliente.email);
+      await page.getByLabel("Senha").fill(credentials.cliente.password);
+      await page.getByRole("button", { name: "Entrar na plataforma" }).click();
+
+      await page.waitForURL(`**/anuncio/${slug}`);
+      await expect(
+        page
+          .getByRole("button")
+          .filter({ hasText: new RegExp(`^Duração${SIMULATOR_DURATION}`) })
+          .first(),
+      ).toContainText("R$");
+    });
   });
-});
+}

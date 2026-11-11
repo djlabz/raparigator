@@ -35,18 +35,7 @@ export interface UseAdDetailsReturn {
   totalCalculatedValue: number;
   nextPhoto: () => void;
   prevPhoto: () => void;
-  isPremium: boolean;
-  premiumAttributes: Array<{ label: string; value: string; icon: string }>;
   brief: EncounterBrief | null;
-}
-
-export interface UseAdDetailsOptions {
-  /**
-   * Grava a simulação na sessão para sobreviver a idas ao login. Só a instância que
-   * de fato renderiza o simulador deve ativar — `ad-details-screen` chama o hook
-   * apenas para escolher a variante e descarta o estado.
-   */
-  persistDraft?: boolean;
 }
 
 const DEFAULT_DURATION = "1 hora";
@@ -77,8 +66,7 @@ function resolveInitialSelection(ad: ProfessionalAd | undefined): SimulationSele
   return { duration: fallbackDuration, extras: [] };
 }
 
-export function useAdDetails(slug: string, options: UseAdDetailsOptions = {}): UseAdDetailsReturn {
-  const { persistDraft = false } = options;
+export function useAdDetails(slug: string): UseAdDetailsReturn {
   const { role } = useAuthSession();
   const [riskTarget, setRiskTarget] = useState<"WhatsApp" | "Telegram" | null>(null);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
@@ -103,16 +91,18 @@ export function useAdDetails(slug: string, options: UseAdDetailsOptions = {}): U
     return items;
   }, [ad]);
 
-  const [initialSelection] = useState<SimulationSelection>(() => resolveInitialSelection(ad));
-  const [selectedDuration, setSelectedDuration] = useState<string>(initialSelection.duration);
-  const [selectedExtras, setSelectedExtras] = useState<string[]>(initialSelection.extras);
+  const initialSelection = useMemo<SimulationSelection>(() => resolveInitialSelection(ad), [ad]);
+  const [chosenDuration, setSelectedDuration] = useState<string | null>(null);
+  const [chosenExtras, setChosenExtras] = useState<string[] | null>(null);
+  const selectedDuration = chosenDuration ?? initialSelection.duration;
+  const selectedExtras = chosenExtras ?? initialSelection.extras;
 
   useEffect(() => {
-    if (!persistDraft || !ad) {
+    if (!ad) {
       return;
     }
     saveSimulationDraft(ad.slug, { duration: selectedDuration, extras: selectedExtras });
-  }, [ad, persistDraft, selectedDuration, selectedExtras]);
+  }, [ad, selectedDuration, selectedExtras]);
 
   const basePrice = useMemo(() => {
     if (!ad) return 0;
@@ -127,9 +117,12 @@ export function useAdDetails(slug: string, options: UseAdDetailsOptions = {}): U
   );
 
   const toggleExtra = (extra: string) => {
-    setSelectedExtras((prev) =>
-      prev.includes(extra) ? prev.filter((e) => e !== extra) : [...prev, extra],
-    );
+    setChosenExtras((prev) => {
+      const current = prev ?? selectedExtras;
+      return current.includes(extra)
+        ? current.filter((item) => item !== extra)
+        : [...current, extra];
+    });
   };
 
   const nextPhoto = () => {
@@ -159,22 +152,6 @@ export function useAdDetails(slug: string, options: UseAdDetailsOptions = {}): U
     [ad, basePrice, calculatedExtrasCost, selectedDuration, selectedExtras, totalCalculatedValue],
   );
 
-  const isPremium = ad?.adTier === "premium";
-  const premiumAttributes = ad
-    ? [
-        { label: "Altura", value: `${ad.heightCm} cm`, icon: "/icons/attributes/size-woman.svg" },
-        {
-          label: "Cabelo",
-          value: `${ad.hairType} • ${ad.hairColor}`,
-          icon: "/icons/attributes/hair-woman.svg",
-        },
-        { label: "Etnia", value: ad.ethnicity, icon: "/icons/attributes/person.svg" },
-        { label: "Olhos", value: ad.eyeColor, icon: "/icons/attributes/eye.svg" },
-        { label: "Fumante?", value: "Não", icon: "/icons/attributes/smoking.svg" },
-        { label: "Peso", value: `${ad.weightKg} kg`, icon: "/icons/attributes/weight.svg" },
-      ]
-    : [];
-
   return {
     ad,
     isLoading,
@@ -195,8 +172,6 @@ export function useAdDetails(slug: string, options: UseAdDetailsOptions = {}): U
     totalCalculatedValue,
     nextPhoto,
     prevPhoto,
-    isPremium,
-    premiumAttributes,
     brief,
   };
 }
