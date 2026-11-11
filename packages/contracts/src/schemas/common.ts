@@ -32,11 +32,9 @@ export type AdminRole = z.infer<typeof AdminRoleSchema>;
 export const IsoDateTimeSchema = z.string();
 
 export const IdSchema = z.string().min(1);
-export const SlugSchema = z
-  .string()
-  .min(1)
-  .max(120)
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+export const AD_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export const SlugSchema = z.string().min(1).max(120).regex(AD_SLUG_PATTERN);
 
 export const PAGE_SIZE_MAX = 100;
 

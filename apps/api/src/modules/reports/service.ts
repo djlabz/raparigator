@@ -15,15 +15,13 @@ import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
 import type { RateLimitRule } from "../../lib/rate-limit";
 import { PRIVATE_STORAGE_PREFIX, type ObjectStorage } from "../../lib/storage";
-import { extensionFor } from "../media/service";
 import type { ProfileRepository } from "../profiles/repository";
 import { enqueueAdminReportDigest } from "./digest";
 import { REPORT_EVIDENCE_PROCESS_JOB, isEvidenceUploadOpen } from "./evidence";
 import { createReportsRepository } from "./repository";
+import { mediaExtensionFor, slugFromAdUrl } from "@sigillus/domain";
 
 export const PUBLIC_REPORT_RATE_LIMIT = { windowMs: 60_000, max: 5 } satisfies RateLimitRule;
-
-const AD_PATH = /^\/anuncio\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/;
 
 export type ReportsServiceDeps = {
   db: Database;
@@ -49,16 +47,7 @@ export type ChatReportInput = {
 export type ReportsService = ReturnType<typeof createReportsService>;
 
 function reportEvidenceKey(reportId: string, evidenceId: string, contentType: string) {
-  return `${PRIVATE_STORAGE_PREFIX}reports/${reportId}/${evidenceId}.${extensionFor(contentType)}`;
-}
-
-function slugFromAdUrl(targetUrl: string): string | null {
-  try {
-    const { pathname } = new URL(targetUrl);
-    return AD_PATH.exec(pathname)?.[1] ?? null;
-  } catch {
-    return null;
-  }
+  return `${PRIVATE_STORAGE_PREFIX}reports/${reportId}/${evidenceId}.${mediaExtensionFor(contentType)}`;
 }
 
 export function createReportsService(deps: ReportsServiceDeps) {

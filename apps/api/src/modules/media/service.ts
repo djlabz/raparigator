@@ -7,7 +7,7 @@ import {
   type MediaAsset,
   type MediaPurpose,
 } from "@sigillus/contracts";
-import { canUploadMedia } from "@sigillus/domain";
+import { canUploadMedia, isPublicMediaPurpose, mediaExtensionFor } from "@sigillus/domain";
 import { and, eq } from "drizzle-orm";
 import type { Database } from "../../db/client";
 import { mediaAssets, professionalProfiles } from "../../db/schema";
@@ -32,42 +32,14 @@ export type MediaServiceDeps = {
   logger: Logger;
 };
 
-const EXTENSION_BY_CONTENT_TYPE: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/jpg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/gif": "gif",
-  "image/heic": "heic",
-  "image/heif": "heif",
-  "image/avif": "avif",
-  "video/mp4": "mp4",
-  "video/quicktime": "mov",
-  "video/webm": "webm",
-  "video/x-matroska": "mkv",
-};
-
-export function extensionFor(contentType: string): string {
-  const known = EXTENSION_BY_CONTENT_TYPE[contentType];
-  if (known) {
-    return known;
-  }
-  const subtype = contentType.split("/")[1] ?? "bin";
-  return subtype.replace(/[^a-z0-9]/g, "").slice(0, 8) || "bin";
-}
-
-function isProfileMedia(purpose: MediaPurpose): boolean {
-  return purpose === "gallery" || purpose === "profile";
-}
-
 export function storageKeyFor(
   ownerUserId: string,
   assetId: string,
   contentType: string,
   purpose: MediaPurpose,
 ): string {
-  const visibility = isProfileMedia(purpose) ? PUBLIC_STORAGE_PREFIX : PRIVATE_STORAGE_PREFIX;
-  return `${visibility}media/${ownerUserId}/${assetId}.${extensionFor(contentType)}`;
+  const visibility = isPublicMediaPurpose(purpose) ? PUBLIC_STORAGE_PREFIX : PRIVATE_STORAGE_PREFIX;
+  return `${visibility}media/${ownerUserId}/${assetId}.${mediaExtensionFor(contentType)}`;
 }
 
 export function createMediaService(deps: MediaServiceDeps) {
@@ -112,7 +84,7 @@ export function createMediaService(deps: MediaServiceDeps) {
 
       let profileId: string | null = null;
       let position: number | null = null;
-      if (isProfileMedia(input.purpose)) {
+      if (isPublicMediaPurpose(input.purpose)) {
         const profile = await requireProfile(ownerUserId);
         profileId = profile.id;
         const plan = profile.adTier === "premium" ? "premium" : "standard";

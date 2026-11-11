@@ -17,7 +17,6 @@ import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
 import { PRIVATE_STORAGE_PREFIX, type ObjectStorage } from "../../lib/storage";
 import { stripImageMetadata } from "../media/jobs";
-import { extensionFor } from "../media/service";
 import { enqueueAdminIdentityDigest } from "./digest";
 import {
   createIdentityRepository,
@@ -28,6 +27,7 @@ import {
   IDENTITY_FILES_RETENTION_DAYS,
   identityPublishGate,
   identityGateNeedsHistory,
+  mediaExtensionFor,
 } from "@sigillus/domain";
 import type { IdentityPublishGate } from "@sigillus/domain";
 
@@ -51,7 +51,7 @@ export function identityUserPrefix(userId: string): string {
 }
 
 function identityFileKey(userId: string, contentType: string): string {
-  return `${identityUserPrefix(userId)}${newId()}.${extensionFor(contentType)}`;
+  return `${identityUserPrefix(userId)}${newId()}.${mediaExtensionFor(contentType)}`;
 }
 
 function isAllowedContentType(contentType: string | null): contentType is string {

@@ -16,12 +16,12 @@ import {
   generateSmartTips,
   getPublishBlockingItems,
   isSelectUnselected,
-  normalizeText,
   PROFILE_INITIAL_STATUS,
   sanitizeNumericInput,
   transitionOnPublish,
   validateSectionForSave,
   splitHairSelection,
+  slugify,
 } from "@sigillus/domain";
 import { ORPCError } from "@orpc/server";
 import { eq } from "drizzle-orm";
@@ -58,13 +58,6 @@ const ALL_SECTIONS: AnnouncementSectionKey[] = [
   "services",
   "availability",
 ];
-
-function slugify(value: string): string {
-  return normalizeText(value)
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-}
 
 function optionalSelect(value: string): string | null {
   return isSelectUnselected(value) ? null : value.trim();

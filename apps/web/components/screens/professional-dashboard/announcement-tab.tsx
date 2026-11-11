@@ -82,6 +82,7 @@ import {
   formatHeightInput,
   sanitizeCityInput,
   formatTimeInput,
+  isVideoSource,
 } from "@sigillus/domain";
 
 const SELECT_PLACEHOLDER = "Selecionar";
@@ -352,11 +353,6 @@ function useSmUp() {
   return useSyncExternalStore(subscribeSmUp, getSmUpSnapshot, () => true);
 }
 
-function isVideoSrc(src: string): boolean {
-  if (!src) return false;
-  return src.startsWith("data:video") || /\.(mp4|webm|mov|mkv)(\?.*)?$/i.test(src);
-}
-
 export function AnnouncementTab({
   ad,
   status,
@@ -489,7 +485,7 @@ export function AnnouncementTab({
       const files = Array.from((e.target as HTMLInputElement).files || []);
       if (!files.length) return;
 
-      let currentVideos = form.images.filter((img) => isVideoSrc(img)).length;
+      let currentVideos = form.images.filter((img) => isVideoSource(img)).length;
       let currentPhotos = form.images.length - currentVideos;
 
       for (const file of files) {
@@ -2281,7 +2277,7 @@ function BentoPhotoGallery({
     return Math.min(Math.max(ratio, 0.42), 2.4);
   };
 
-  const videosCount = images.filter((img) => isVideoSrc(img)).length;
+  const videosCount = images.filter((img) => isVideoSource(img)).length;
   const photosCount = images.length - videosCount;
   const canAddMore = photosCount < photoLimit || videosCount < videoLimit;
   const mediaCapacity = photoLimit + videoLimit;
@@ -2313,7 +2309,7 @@ function BentoPhotoGallery({
         mediaSources.map(
           (src, idx) =>
             new Promise<void>((resolve) => {
-              if (!src || isVideoSrc(src)) {
+              if (!src || isVideoSource(src)) {
                 nextRatios[idx] = 1;
                 resolve();
                 return;

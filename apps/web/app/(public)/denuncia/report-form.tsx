@@ -5,7 +5,6 @@ import {
   REPORT_EVIDENCE_MAX_BYTES,
   REPORT_EVIDENCE_MAX_FILES,
   REPORT_RESPONSE_SLA_HOURS,
-  type CreatePublicReportInput,
   type PublicReportReason,
   PublicReportReasonSchema,
   PUBLIC_REPORT_REASON_LABELS,
@@ -13,34 +12,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getApiClient } from "@/lib/api/client";
+import { parseAdTarget } from "@sigillus/domain";
 
 const REASONS = PublicReportReasonSchema.options.map((value) => ({
   value,
   label: PUBLIC_REPORT_REASON_LABELS[value],
 }));
 
-const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const AD_PATH_PATTERN = /^\/?anuncio\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/;
 const MAX_MEGABYTES = Math.round(REPORT_EVIDENCE_MAX_BYTES / (1024 * 1024));
-
-type Target = Pick<CreatePublicReportInput, "targetUrl" | "profileSlug">;
-
-function parseTarget(value: string): Target | null {
-  const trimmed = value.trim();
-  if (/^https?:\/\//i.test(trimmed)) {
-    try {
-      return { targetUrl: new URL(trimmed).toString() };
-    } catch {
-      return null;
-    }
-  }
-  const path = AD_PATH_PATTERN.exec(trimmed);
-  if (path) {
-    return { profileSlug: path[1] };
-  }
-  const slug = trimmed.toLowerCase();
-  return SLUG_PATTERN.test(slug) ? { profileSlug: slug } : null;
-}
 
 function errorMessage(error: unknown): string {
   const code = (error as { code?: string } | null)?.code;
@@ -84,7 +63,7 @@ export function ReportForm() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const parsed = parseTarget(target);
+    const parsed = parseAdTarget(target);
     if (!parsed) {
       setError("Informe o link do anúncio (o endereço que termina em /anuncio/nome).");
       return;

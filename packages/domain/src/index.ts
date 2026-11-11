@@ -17,3 +17,5 @@ export * from "./professional-ad";
 export * from "./subscription";
 export * from "./retention";
 export * from "./identity-verification";
+export * from "./media";
+export * from "./ad-slug";
