@@ -4,7 +4,8 @@ import { ArrowRight, Clock, Pencil, RotateCcw, Send, X } from "lucide-react";
 import Link from "next/link";
 import { buildBriefGreeting, getAdEditHref } from "@/lib/encounter-brief";
 import type { EncounterBrief } from "@/lib/types";
-import { cn, currency } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatCurrencyBRL } from "@sigillus/domain";
 
 function BriefLabel({ className }: { className?: string }) {
   return (
@@ -49,7 +50,7 @@ function BriefRows({ brief }: { brief: EncounterBrief }) {
       <div className="flex items-center justify-between gap-3 border-t border-dashed border-zinc-200 pt-2.5">
         <span className="text-xs text-zinc-500">Estimativa</span>
         <span className="font-mono text-base font-black text-wine-800">
-          {currency(brief.total)}
+          {formatCurrencyBRL(brief.total)}
         </span>
       </div>
     </>
@@ -187,7 +188,7 @@ export function EncounterBriefPreview({
               <span className="text-xs text-zinc-500">Sem adicionais</span>
             )}
             <span className="ml-auto font-mono text-base font-black text-wine-800">
-              {currency(brief.total)}
+              {formatCurrencyBRL(brief.total)}
             </span>
           </div>
 

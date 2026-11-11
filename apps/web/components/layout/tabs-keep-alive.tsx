@@ -4,7 +4,7 @@ import { useLayoutEffect, useState, type PropsWithChildren, type ReactNode } fro
 import { usePathname } from "next/navigation";
 import { animate, motion, useMotionValue } from "motion/react";
 import { useAuthSession } from "@/lib/auth-session";
-import { getNavigationItems } from "@/lib/navigation";
+import { getNavigationItems } from "@sigillus/domain";
 import {
   consumeTabDirection,
   getDirectionBetweenTabs,

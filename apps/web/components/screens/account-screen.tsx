@@ -11,7 +11,7 @@ import { Input } from "../ui/input";
 import { Select } from "../ui/select";
 import { useAuthSession } from "../../lib/auth-session";
 import { useAccountNotifications } from "../../lib/account-notifications";
-import { getRoleLabel } from "../../lib/navigation";
+import { getRoleLabel } from "@sigillus/domain";
 import {
   formatCpf,
   formatPhone,

@@ -79,6 +79,14 @@ export const ReportTypeSchema = z.enum([
 ]);
 export type ReportType = z.infer<typeof ReportTypeSchema>;
 
+export const REPORT_TYPE_LABELS: Record<ReportType, string> = {
+  fake_profile: "Perfil Falso",
+  scam: "Golpe / Fraude",
+  harassment: "Assédio",
+  inappropriate_content: "Conteúdo Inapropriado",
+  other: "Outro",
+};
+
 export const ReportStatusSchema = z.enum(["pending", "under_review", "resolved", "dismissed"]);
 export type ReportStatus = z.infer<typeof ReportStatusSchema>;
 

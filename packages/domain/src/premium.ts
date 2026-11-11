@@ -3,6 +3,7 @@ import type {
   PlanTier,
   PremiumBillingCycle,
   PremiumPlanOption,
+  UserRole,
 } from "@sigillus/contracts";
 
 export const STANDARD_PHOTO_LIMIT = 10;
@@ -44,6 +45,20 @@ export function getPlanLimits(plan: PlanTier): PlanLimits {
       ? PREMIUM_VISIBILITY_MULTIPLIER
       : STANDARD_VISIBILITY_MULTIPLIER,
   };
+}
+
+export function canSendViewOnceMessage(
+  role: UserRole | "visitor",
+  limits: Pick<PlanLimits, "canSendViewOnce">,
+): boolean {
+  return role === "profissional" && limits.canSendViewOnce;
+}
+
+export function canSetConversationAlias(
+  role: UserRole | "visitor",
+  limits: Pick<PlanLimits, "canUseAlias">,
+): boolean {
+  return role !== "profissional" || limits.canUseAlias;
 }
 
 export function canUploadMedia(

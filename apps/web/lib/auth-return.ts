@@ -1,14 +1,8 @@
+import { sanitizeRedirect } from "@sigillus/domain";
 const RETURN_SCROLL_KEY = "sigillus-return-scroll";
 const RETURN_TARGET_KEY = "sigillus-return-target";
 const REDIRECT_PARAM = "redirect";
 const DEFAULT_REDIRECT = "/feed";
-
-function sanitizeRedirect(value: string | null | undefined): string | null {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return null;
-  }
-  return value;
-}
 
 export function getCurrentReturnTo(): string {
   if (typeof window === "undefined") {

@@ -9,14 +9,9 @@ import { WhatsAppIcon, TelegramIcon } from "./contact-icons";
 import { ProfessionalAd } from "@/lib/types";
 import { isLocalImageSrc, resolveAdProfileImage } from "@/lib/ad-profile-image";
 import { useModalLock } from "@/lib/modal-lock";
-import {
-  copyToClipboard,
-  getShareCopyText,
-  getWhatsAppShareUrl,
-  getTelegramShareUrl,
-  vibrate,
-} from "@/lib/share-utils";
+import { copyToClipboard, vibrate } from "@/lib/share-utils";
 import { cn } from "@/lib/utils";
+import { shareCopyText, whatsAppShareUrl, telegramShareUrl } from "@sigillus/domain";
 
 interface ShareProfileModalProps {
   open: boolean;
@@ -56,7 +51,7 @@ export function ShareProfileModal({
 
   const handleCopy = async () => {
     vibrate(50);
-    const text = getShareCopyText(ad.artisticName, ad.slug);
+    const text = shareCopyText(ad.artisticName, ad.slug);
     const success = await copyToClipboard(text);
     if (success) {
       setCopied(true);
@@ -65,11 +60,11 @@ export function ShareProfileModal({
   };
 
   const handleWhatsApp = () => {
-    openShareUrl(getWhatsAppShareUrl(ad.artisticName, ad.slug));
+    openShareUrl(whatsAppShareUrl(ad.artisticName, ad.slug));
   };
 
   const handleTelegram = () => {
-    openShareUrl(getTelegramShareUrl(ad.artisticName, ad.slug));
+    openShareUrl(telegramShareUrl(ad.artisticName, ad.slug));
   };
 
   const adCover = ad.images[0];

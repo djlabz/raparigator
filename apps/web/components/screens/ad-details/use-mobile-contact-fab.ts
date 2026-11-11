@@ -4,6 +4,12 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { animate, useMotionValue, type PanInfo } from "motion/react";
 import {
+  readMobileContactFabSide,
+  readMobileContactFabY,
+  saveMobileContactFabSide,
+  saveMobileContactFabY,
+} from "@/lib/mobile-contact-fab-position";
+import {
   clampMobileContactFabY,
   getMobileContactFabDragConstraints,
   getMobileContactFabTooltipSide,
@@ -11,12 +17,8 @@ import {
   MOBILE_CONTACT_FAB_EDGE_INSET,
   MOBILE_CONTACT_FAB_SCROLL_THRESHOLD,
   MOBILE_CONTACT_FAB_SIZE,
-  readMobileContactFabSide,
-  readMobileContactFabY,
-  saveMobileContactFabSide,
-  saveMobileContactFabY,
-  type MobileContactFabSide,
-} from "@/lib/mobile-contact-fab-position";
+} from "@sigillus/domain";
+import type { MobileContactFabSide } from "@sigillus/domain";
 
 export function useMobileContactFab() {
   const [isOpen, setIsOpen] = useState(false);

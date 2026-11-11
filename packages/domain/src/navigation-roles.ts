@@ -1,4 +1,4 @@
-import type { AuthRole } from "@/lib/types";
+import type { AuthRole } from "@sigillus/contracts";
 
 export interface NavigationItem {
   label: string;

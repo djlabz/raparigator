@@ -22,7 +22,7 @@ import {
   validateRequiredName,
 } from "@/lib/identity";
 import { authClient } from "@/lib/api/auth-client";
-import { translateAuthError } from "@/lib/auth-errors";
+import { translateAuthError } from "@sigillus/domain";
 
 const HERO_IMAGE_INTERVAL_MS = 4500;
 

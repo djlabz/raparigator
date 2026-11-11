@@ -12,7 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { motion } from "motion/react";
-import type { NavigationItem } from "@/lib/navigation";
+import type { NavigationItem } from "@sigillus/domain";
 import {
   getDirectionBetweenTabs,
   getTabHrefForPathname,

@@ -14,8 +14,9 @@ import {
 import { motion, useMotionTemplate, useSpring } from "motion/react";
 import type { FeedAdSummary } from "@sigillus/contracts";
 import { isLocalImageSrc } from "@/lib/ad-profile-image";
-import { cn, currency } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { FEED_CARD_SIZE_CLASS } from "./constants";
+import { formatCurrencyBRL } from "@sigillus/domain";
 
 const DESKTOP_HOVER_QUERY = "(min-width: 1024px) and (pointer: fine)";
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
@@ -424,7 +425,7 @@ function PremiumFeedCard({ ad, priority = false }: { ad: FeedAdSummary; priority
               <p className="mt-1 text-[11px] font-medium uppercase tracking-widest text-zinc-300 drop-shadow-md">
                 A partir de{" "}
                 <span className="text-sm font-bold tracking-normal text-gold-bright">
-                  {currency(ad.startingPrice)}
+                  {formatCurrencyBRL(ad.startingPrice)}
                 </span>
               </p>
             </div>
@@ -586,7 +587,7 @@ export function FeedAdCard({ ad, priority = false }: { ad: FeedAdSummary; priori
           <p className="mt-1.5 text-[11px] font-medium uppercase tracking-widest text-zinc-300 [text-shadow:0_2px_4px_rgba(0,0,0,0.85)]">
             A partir de{" "}
             <span className="text-sm font-bold tracking-normal text-zinc-100">
-              {currency(ad.startingPrice)}
+              {formatCurrencyBRL(ad.startingPrice)}
             </span>
           </p>
         </div>

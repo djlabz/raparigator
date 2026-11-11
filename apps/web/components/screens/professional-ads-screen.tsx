@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useMyAnnouncement } from "@/lib/announcement-draft";
 import type { ProfessionalAd } from "@/lib/types";
-import { currency } from "@/lib/utils";
+import { formatCurrencyBRL } from "@sigillus/domain";
 
 export function ProfessionalAdsScreen() {
   const myAnnouncement = useMyAnnouncement();
@@ -141,7 +141,7 @@ function ProfessionalAdListCard({ ad }: { ad: ProfessionalAd }) {
         <div>
           <p className="text-lg font-semibold text-zinc-900">{ad.artisticName}</p>
           <p className="text-sm text-zinc-600">
-            {ad.city}, {ad.state} · A partir de {currency(ad.startingPrice)}
+            {ad.city}, {ad.state} · A partir de {formatCurrencyBRL(ad.startingPrice)}
           </p>
         </div>
         <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700">

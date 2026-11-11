@@ -9,7 +9,6 @@ import { IdSchema, SlugSchema } from "./common";
 export const REPORT_RESPONSE_SLA_HOURS = 48;
 export const REPORT_EVIDENCE_MAX_FILES = 3;
 export const REPORT_EVIDENCE_MAX_BYTES = MEDIA_MAX_IMAGE_BYTES;
-export const REPORT_EVIDENCE_RETENTION_DAYS = 180;
 export const REPORT_EVIDENCE_UNCONFIRMED_HOURS = 24;
 
 export const ReportSourceSchema = z.enum(["chat", "public"]);
@@ -23,6 +22,14 @@ export const PublicReportReasonSchema = z.enum([
   "other",
 ]);
 export type PublicReportReason = z.infer<typeof PublicReportReasonSchema>;
+
+export const PUBLIC_REPORT_REASON_LABELS: Record<PublicReportReason, string> = {
+  photo_without_consent: "Foto publicada sem consentimento",
+  minor: "Pessoa menor de idade",
+  coercion: "Anunciante sob coação",
+  illegal_content: "Conteúdo ilegal",
+  other: "Outro motivo",
+};
 
 export const ReportActionSchema = z.enum(["remove_media", "unpublish_profile", "dismiss"]);
 export type ReportAction = z.infer<typeof ReportActionSchema>;

@@ -15,7 +15,8 @@ import {
 } from "@/lib/premium-catalog";
 import { usePremiumPlan } from "@/lib/premium-plan";
 import type { PremiumBillingCycle } from "@/lib/types";
-import { cn, currency } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatCurrencyBRL } from "@sigillus/domain";
 
 export type PremiumHighlight =
   | "topSearch"
@@ -360,7 +361,7 @@ export function PremiumConversionModal({
                           selected ? "text-white" : "text-zinc-800",
                         )}
                       >
-                        {currency(option.price)}
+                        {formatCurrencyBRL(option.price)}
                       </p>
                       <p
                         className={cn(
@@ -375,7 +376,7 @@ export function PremiumConversionModal({
                 })}
               </div>
               <p className="text-center text-sm font-semibold text-zinc-900">
-                {currency(selectedPlan.monthlyEquivalent)}/mês
+                {formatCurrencyBRL(selectedPlan.monthlyEquivalent)}/mês
                 <span className="ml-1 font-normal text-zinc-500">
                   · {BILLING_LABELS[billingCycle].toLowerCase()}
                 </span>

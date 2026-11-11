@@ -17,7 +17,7 @@ import {
   chromeBelowHeaderStickyTop,
 } from "@/lib/chrome-styles";
 import { useAuthSession } from "@/lib/auth-session";
-import { getNavigationItems } from "@/lib/navigation";
+import { getNavigationItems } from "@sigillus/domain";
 import { useShellChrome } from "@/components/layout/shell-chrome";
 import { cn } from "@/lib/utils";
 import {

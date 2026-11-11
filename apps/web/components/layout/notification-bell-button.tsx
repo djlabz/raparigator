@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import type { AuthRole } from "@/lib/types";
-import { getNotificationHref, useAccountNotifications } from "@/lib/account-notifications";
+import { useAccountNotifications } from "@/lib/account-notifications";
 import { chromeCircle } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
 import { NotificationsCenter } from "./notifications-center";
+import { notificationHref } from "@sigillus/domain";
 
 interface NotificationBellButtonProps {
   role: Exclude<AuthRole, "visitor">;
@@ -109,7 +110,7 @@ export function NotificationBellButton({ role, className }: NotificationBellButt
           onSelect={(notification) => {
             markAsRead(notification.id);
             setOpen(false);
-            window.location.href = getNotificationHref(notification);
+            window.location.href = notificationHref(notification);
           }}
         />
       ) : null}

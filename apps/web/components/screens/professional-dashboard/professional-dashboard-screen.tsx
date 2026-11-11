@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuthSession } from "@/lib/auth-session";
 import { useAccountNotifications } from "@/lib/account-notifications";
-import type { AuthRole, ProfessionalAd } from "@/lib/types";
+import type { AuthRole } from "@/lib/types";
 import { useMyAnnouncement, updateListingStatus } from "@/lib/announcement-draft";
 import { chromeBelowDesktopNavStickyTop } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ import {
   useVerification,
   type VerificationChannel,
 } from "@/lib/verification";
+import { emptyProfessionalAd } from "@sigillus/domain";
 
 function DashboardTabSkeleton() {
   return <div className="min-h-80 rounded-2xl border border-zinc-100 bg-zinc-50/80" aria-hidden />;
@@ -150,40 +151,7 @@ export function ProfessionalDashboardScreen() {
     await updateListingStatus(nextStatus);
   };
 
-  const fallbackAd: ProfessionalAd = {
-    id: "meu-perfil",
-    slug: "meu-perfil",
-    artisticName: "",
-    city: "",
-    state: "",
-    neighborhood: "",
-    category: "",
-    shortDescription: "",
-    description: "",
-    serviceDescription: "",
-    startingPrice: 0,
-    age: 0,
-    heightCm: 0,
-    weightKg: 0,
-    ethnicity: "",
-    eyeColor: "",
-    hairType: "",
-    hairColor: "",
-    services: [],
-    serviceOptions: [],
-    fetishOptions: [],
-    fetishCustom: "",
-    pricingTable: [],
-    paymentMethods: [],
-    status: "livre",
-    adTier: "normal",
-    verificationStatus: "draft",
-    images: [],
-    rating: 0,
-    reviewsCount: 0,
-    profileViews: 0,
-  };
-  const currentAd = myAnnouncement.ad ?? fallbackAd;
+  const currentAd = myAnnouncement.ad ?? emptyProfessionalAd();
   const adSlug = currentAd.slug;
 
   if (isPending) {

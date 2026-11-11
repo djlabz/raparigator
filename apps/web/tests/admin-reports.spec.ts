@@ -102,7 +102,7 @@ test.describe("Denúncias no admin", () => {
 
     const card = page.getByTestId(`report-card-${removalId}`);
     await expect(card.getByText("Canal público")).toBeVisible();
-    await expect(card.getByText("Foto sem consentimento")).toBeVisible();
+    await expect(card.getByText("Foto publicada sem consentimento")).toBeVisible();
     await card.getByRole("button", { name: "Ver mídias do anúncio" }).click();
     await card.getByRole("button", { name: "Remover mídia" }).click();
     await page.getByLabel("Observação da moderação").fill("Foto sem consentimento confirmada");

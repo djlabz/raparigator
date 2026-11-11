@@ -1,9 +1,10 @@
 import type {
+  PlanTier,
   PremiumBillingCycle,
   SubscriptionEventType,
   SubscriptionStatus,
 } from "@sigillus/contracts";
-import { addBillingCycle } from "@sigillus/domain";
+import { addBillingCycle } from "./premium";
 
 export type SubscriptionEventInput = {
   type: SubscriptionEventType;
@@ -84,4 +85,26 @@ export function reduceSubscriptionEvents(
     return { ...state, status: "expired" };
   }
   return state;
+}
+
+export function planFromSubscriptionStatus(
+  status: SubscriptionStatus | null | undefined,
+): PlanTier {
+  return status === "active" ? "premium" : "standard";
+}
+
+export function isSubscriptionActiveAt(
+  subscription: { status: SubscriptionStatus; currentPeriodEnd: Date | null } | null | undefined,
+  now: Date,
+): boolean {
+  return Boolean(
+    subscription &&
+    subscription.status === "active" &&
+    subscription.currentPeriodEnd &&
+    subscription.currentPeriodEnd.getTime() > now.getTime(),
+  );
+}
+
+export function cycleForMonths(months: number): PremiumBillingCycle {
+  return months >= 6 ? "semiannual" : "monthly";
 }

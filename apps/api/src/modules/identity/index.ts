@@ -1,11 +1,9 @@
 export { identityAdminRouter, identityRouter } from "./router";
 export {
-  IDENTITY_FILES_RETENTION_DAYS,
   createIdentityService,
   deleteIdentityFiles,
   identityUserPrefix,
   purgeExpiredIdentityFiles,
-  type IdentityPublishGate,
   type IdentityReviewer,
   type IdentityServiceDeps,
 } from "./service";

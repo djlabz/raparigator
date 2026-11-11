@@ -1,4 +1,4 @@
-import type { NavigationItem } from "@/lib/navigation";
+import type { NavigationItem } from "@sigillus/domain";
 
 export type TabDirection = -1 | 0 | 1;
 

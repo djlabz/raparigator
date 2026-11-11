@@ -5,11 +5,10 @@ import { professionalProfiles } from "../../db/schema";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
 import type { Mailer } from "../../lib/mail";
+import { formatDateBR } from "@sigillus/domain";
 
 export const ADMIN_REVIEW_DIGEST_JOB = "admin.review-digest";
 export const ADMIN_REVIEW_DIGEST_WINDOW_SECONDS = 3600;
-
-const DIGEST_TIME_ZONE = "America/Sao_Paulo";
 
 export type AdminReviewDigestDeps = {
   db: Database;
@@ -36,20 +35,6 @@ export async function enqueueAdminReviewDigest(jobs: JobQueue, now: Date = new D
   );
 }
 
-function formatDate(date: Date | null): string {
-  if (!date) {
-    return "-";
-  }
-  return date.toLocaleString("pt-BR", {
-    timeZone: DIGEST_TIME_ZONE,
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 function reviewUrl(webOrigin: string, profileId: string): string {
   return new URL(`/admin/perfis/${encodeURIComponent(profileId)}`, webOrigin).toString();
 }
@@ -66,7 +51,7 @@ function buildAdminReviewDigestEmail(profiles: PendingProfile[], webOrigin: stri
     return [
       `- ${name}`,
       `  Cidade: ${place}`,
-      `  Enviado em: ${formatDate(profile.submittedAt)}`,
+      `  Enviado em: ${formatDateBR(profile.submittedAt, "dateTime", "-")}`,
       `  Revisar: ${reviewUrl(webOrigin, profile.id)}`,
     ].join("\n");
   });

@@ -18,7 +18,7 @@ import {
   Crown,
   FileText,
 } from "lucide-react";
-import { canReview } from "@sigillus/domain";
+import { canReview, formatDateBR } from "@sigillus/domain";
 import { AdminLayoutShell } from "./admin-layout-shell";
 import { useAdminSession } from "@/lib/admin-session";
 import { getProfileById, approveProfile, rejectProfile, grantPremium } from "@/lib/admin-service";
@@ -59,17 +59,6 @@ function StatusBadge({ status }: { status: VerificationStatus | undefined }) {
     );
   }
   return null;
-}
-
-function formatDate(iso?: string) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreenProps) {
@@ -206,7 +195,9 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
           </button>
           <div>
             <h1 className="text-lg font-bold text-zinc-100">{profile.artisticName}</h1>
-            <p className="text-xs text-zinc-500">Submetido em {formatDate(profile.submittedAt)}</p>
+            <p className="text-xs text-zinc-500">
+              Submetido em {formatDateBR(profile.submittedAt, "dateTimeLong", "—")}
+            </p>
           </div>
         </div>
 
@@ -326,7 +317,11 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
                   label: "A partir de",
                   value: `R$ ${profile.startingPrice.toLocaleString("pt-BR")}/h`,
                 },
-                { icon: Calendar, label: "Submetido em", value: formatDate(profile.submittedAt) },
+                {
+                  icon: Calendar,
+                  label: "Submetido em",
+                  value: formatDateBR(profile.submittedAt, "dateTimeLong", "—"),
+                },
                 { icon: Tag, label: "Etnia", value: profile.ethnicity },
               ].map((item) => (
                 <div key={item.label}>

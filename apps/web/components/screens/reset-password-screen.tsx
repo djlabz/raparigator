@@ -9,7 +9,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/api/auth-client";
-import { translateAuthError } from "@/lib/auth-errors";
+import { translateAuthError } from "@sigillus/domain";
 
 const resetHeroImage = {
   src: "/images/personas/persona2/persona2-elegant-look.webp",

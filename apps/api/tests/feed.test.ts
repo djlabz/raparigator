@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { createFeedFiltersCriteria } from "@sigillus/domain";
+import {
+  createFeedFiltersCriteria,
+  filterAds,
+  feedRelevanceScore,
+  PREMIUM_VISIBILITY_MULTIPLIER,
+} from "@sigillus/domain";
 import { seedDevData } from "../src/db/seed/dev-data";
 import { seedDevUsers } from "../src/db/seed/users";
 import { createTestHarness } from "./helpers/app";
+import { and, eq } from "drizzle-orm";
+import { professionalProfiles } from "../src/db/schema";
+import { toProfessionalAd } from "../src/modules/profiles/mapper";
 
 const harness = createTestHarness();
 
@@ -106,5 +114,50 @@ describe("feed, catálogos e anúncio público", () => {
     expect(await read()).toBe(before + 1);
     await harness.rpc("ads/registerView", { slug }, { "x-real-ip": "10.0.0.8" });
     expect(await read()).toBe(before + 2);
+  });
+
+  it("feed.list equivale a filterAds + feedRelevanceScore do domain sobre as seeds", async () => {
+    await seedDevUsers(harness.db);
+    await seedDevData(harness.db);
+    const rows = await harness.db
+      .select()
+      .from(professionalProfiles)
+      .where(
+        and(
+          eq(professionalProfiles.verificationStatus, "published"),
+          eq(professionalProfiles.listingStatus, "Ativo"),
+          eq(professionalProfiles.isSuspended, false),
+        ),
+      );
+    const universe = rows.map((row) => ({
+      ad: toProfessionalAd(row, { images: [] }),
+      updatedAt: row.updatedAt.getTime(),
+    }));
+    const criteriaList = [
+      createFeedFiltersCriteria({ maxPrice: 100_000 }),
+      createFeedFiltersCriteria(),
+      createFeedFiltersCriteria({ maxPrice: 600 }),
+      createFeedFiltersCriteria({ maxPrice: 100_000, adTiers: ["premium"] }),
+      createFeedFiltersCriteria({ maxPrice: 100_000, quickFilters: ["Livre Agora"] }),
+      createFeedFiltersCriteria({ maxPrice: 100_000, selectedGender: "Mulher" }),
+    ];
+    for (const criteria of criteriaList) {
+      const matched = new Set(
+        filterAds(
+          universe.map((entry) => entry.ad),
+          criteria,
+        ),
+      );
+      const expected = universe
+        .filter((entry) => matched.has(entry.ad))
+        .sort(
+          (a, b) =>
+            feedRelevanceScore(b.ad, PREMIUM_VISIBILITY_MULTIPLIER) -
+              feedRelevanceScore(a.ad, PREMIUM_VISIBILITY_MULTIPLIER) || b.updatedAt - a.updatedAt,
+        )
+        .map((entry) => entry.ad.slug);
+      const result = await feed(criteria, { pagination: { page: 1, pageSize: 100 } });
+      expect(result.items.map((item) => item.slug)).toEqual(expected);
+    }
   });
 });

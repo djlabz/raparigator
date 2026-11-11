@@ -8,7 +8,13 @@ import type {
   ReportType,
   UserRole,
 } from "@sigillus/contracts";
-import { buildEncounterBrief, estimateEncounter, getPlanLimits } from "@sigillus/domain";
+import {
+  buildEncounterBrief,
+  estimateEncounter,
+  getPlanLimits,
+  canSendViewOnceMessage,
+  canSetConversationAlias,
+} from "@sigillus/domain";
 import type { Database } from "../../db/client";
 import type { ChatEventBus } from "../../lib/chat-events";
 import { newId } from "../../lib/ids";
@@ -311,7 +317,7 @@ export function createChatService(deps: ChatServiceDeps) {
       ) {
         throw new ORPCError("NOT_FOUND", { message: "Mídia não disponível para envio." });
       }
-      if (input.isViewOnce && !(actor.role === "profissional" && planFor(ctx).canSendViewOnce)) {
+      if (input.isViewOnce && !canSendViewOnceMessage(actor.role, planFor(ctx))) {
         throw new ORPCError("PLAN_LIMIT", {
           message: "Mídia temporária é exclusiva do plano premium.",
         });
@@ -414,7 +420,7 @@ export function createChatService(deps: ChatServiceDeps) {
       if (!ctx) {
         return { ok: false, reason: "not_found" };
       }
-      if (actor.role === "profissional" && !planFor(ctx).canUseAlias) {
+      if (!canSetConversationAlias(actor.role, planFor(ctx))) {
         throw new ORPCError("PLAN_LIMIT", { message: "Apelido é exclusivo do plano premium." });
       }
       const me = participantFor(ctx, actor.id)!;

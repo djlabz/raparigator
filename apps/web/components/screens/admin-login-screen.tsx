@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, Eye, EyeOff } from "lucide-react";
 import { adminAuthClient } from "@/lib/api/admin-auth-client";
-import { translateAuthError } from "@/lib/auth-errors";
+import { translateAuthError } from "@sigillus/domain";
 
 export function AdminLoginScreen() {
   const router = useRouter();

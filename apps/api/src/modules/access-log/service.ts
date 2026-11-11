@@ -5,9 +5,8 @@ import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
 import { resolveClientIp } from "../../orpc/context";
 import { deleteAccessLogsBefore, deleteSessionsExpiredBefore, insertAccessLog } from "./repository";
+import { ACCESS_LOG_RETENTION_DAYS, SESSION_PURGE_GRACE_DAYS } from "@sigillus/domain";
 
-export const ACCESS_LOG_RETENTION_DAYS = 180;
-export const SESSION_PURGE_GRACE_DAYS = 30;
 const ACCESS_LOG_USER_AGENT_MAX_LENGTH = 256;
 const ACCESS_LOG_PURGE_CRON = "0 3 * * *";
 const SESSION_PURGE_CRON = "30 3 * * *";

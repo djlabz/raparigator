@@ -9,6 +9,10 @@ import {
   getPublishValidationErrors,
   isHairSelectionComplete,
   validateSectionForSave,
+  splitHairSelection,
+  joinHairSelection,
+  HAIR_SELECTION_SEPARATOR,
+  createLocationId,
 } from "../src/announcement-draft";
 
 const preview = {
@@ -128,5 +132,19 @@ describe("rascunho de anúncio", () => {
       { label: "30 min", price: 250 },
     ]);
     expect(draftStartingPrice(state)).toBe(250);
+  });
+
+  it("cabelo: tipo e cor viajam juntos como tipo::cor", () => {
+    expect(HAIR_SELECTION_SEPARATOR).toBe("::");
+    expect(joinHairSelection("Liso", "Loiro")).toBe("Liso::Loiro");
+    expect(splitHairSelection("Liso::Loiro")).toEqual({ type: "Liso", color: "Loiro" });
+    expect(splitHairSelection("Liso::")).toEqual({ type: "Liso", color: "Selecionar" });
+    expect(splitHairSelection("Ruivo")).toEqual({ type: "Selecionar", color: "Ruivo" });
+    expect(splitHairSelection("")).toEqual({ type: "Selecionar", color: "Selecionar" });
+    expect(splitHairSelection("Selecionar")).toEqual({ type: "Selecionar", color: "Selecionar" });
+  });
+
+  it("createLocationId gera ids distintos", () => {
+    expect(createLocationId()).not.toBe(createLocationId());
   });
 });

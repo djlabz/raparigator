@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import { useAuthSession } from "@/lib/auth-session";
-import { getNavigationItems } from "@/lib/navigation";
+import { getNavigationItems } from "@sigillus/domain";
 import {
   getMobileNavHiddenSnapshot,
   getShellActiveSnapshot,

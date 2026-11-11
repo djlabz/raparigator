@@ -10,6 +10,7 @@ import {
   CATALOG_PAYMENT_METHODS,
   CATALOG_SERVICES,
   CATALOG_STATES,
+  normalizeText,
 } from "@sigillus/domain";
 import type { Database } from "../client";
 import { catalogCities, catalogItems } from "../schema";
@@ -17,11 +18,7 @@ import { catalogCities, catalogItems } from "../schema";
 type CatalogKind = (typeof catalogItems.$inferInsert)["kind"];
 
 function idFor(kind: string, label: string) {
-  return `${kind}:${label
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/\s+/g, "-")}`;
+  return `${kind}:${normalizeText(label).replace(/\s+/g, "-")}`;
 }
 
 export async function seedCatalogs(db: Database) {

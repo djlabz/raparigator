@@ -1,24 +1,16 @@
-import { REPORT_RESPONSE_SLA_HOURS, type PublicReportReason } from "@sigillus/contracts";
+import { REPORT_RESPONSE_SLA_HOURS, PUBLIC_REPORT_REASON_LABELS } from "@sigillus/contracts";
 import type { AppConfig } from "../../config";
 import type { Database } from "../../db/client";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
 import type { Mailer } from "../../lib/mail";
 import { createReportsRepository, type ReportRow } from "./repository";
+import { formatDateBR } from "@sigillus/domain";
 
 export const ADMIN_REPORT_DIGEST_JOB = "admin.report-digest";
 const ADMIN_REPORT_DIGEST_WINDOW_SECONDS = 3600;
 
-const DIGEST_TIME_ZONE = "America/Sao_Paulo";
 const HOUR_MS = 60 * 60 * 1000;
-
-const PUBLIC_REASON_LABELS: Record<PublicReportReason, string> = {
-  photo_without_consent: "Foto sem consentimento",
-  minor: "Menor de idade",
-  coercion: "Coação",
-  illegal_content: "Conteúdo ilegal",
-  other: "Outro",
-};
 
 export type AdminReportDigestDeps = {
   db: Database;
@@ -36,20 +28,9 @@ export async function enqueueAdminReportDigest(jobs: JobQueue, now: Date = new D
   );
 }
 
-function formatDate(date: Date): string {
-  return date.toLocaleString("pt-BR", {
-    timeZone: DIGEST_TIME_ZONE,
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 function reasonLabel(report: ReportRow): string {
   if (report.source === "public") {
-    return PUBLIC_REASON_LABELS[report.reason ?? "other"];
+    return PUBLIC_REPORT_REASON_LABELS[report.reason ?? "other"];
   }
   return "Denúncia de conversa";
 }
@@ -65,8 +46,8 @@ function buildAdminReportDigestEmail(rows: ReportRow[], webOrigin: string) {
       `- Denúncia #${report.id}`,
       `  Origem: ${report.source === "public" ? "Canal público" : "Chat"}`,
       `  Motivo: ${reasonLabel(report)}`,
-      `  Recebida em: ${formatDate(report.createdAt)}`,
-      `  Responder até: ${formatDate(new Date(report.createdAt.getTime() + REPORT_RESPONSE_SLA_HOURS * HOUR_MS))}`,
+      `  Recebida em: ${formatDateBR(report.createdAt, "dateTime")}`,
+      `  Responder até: ${formatDateBR(new Date(report.createdAt.getTime() + REPORT_RESPONSE_SLA_HOURS * HOUR_MS), "dateTime")}`,
     ].join("\n"),
   );
   const text = [

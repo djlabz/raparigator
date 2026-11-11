@@ -1,6 +1,4 @@
 export {
-  ACCESS_LOG_RETENTION_DAYS,
-  SESSION_PURGE_GRACE_DAYS,
   purgeExpiredAccessLogs,
   purgeExpiredSessions,
   recordAccess,

@@ -16,11 +16,12 @@ import {
   generateSmartTips,
   getPublishBlockingItems,
   isSelectUnselected,
-  normalizeText,
   PROFILE_INITIAL_STATUS,
   sanitizeNumericInput,
   transitionOnPublish,
   validateSectionForSave,
+  splitHairSelection,
+  slugify,
 } from "@sigillus/domain";
 import { ORPCError } from "@orpc/server";
 import { eq } from "drizzle-orm";
@@ -49,7 +50,6 @@ export type AnnouncementOwner = { id: string; name: string; alias?: string | nul
 
 type ProfileValues = Partial<typeof professionalProfiles.$inferInsert>;
 
-const HAIR_SEPARATOR = "::";
 const ALL_SECTIONS: AnnouncementSectionKey[] = [
   "characteristics",
   "pricing",
@@ -59,25 +59,12 @@ const ALL_SECTIONS: AnnouncementSectionKey[] = [
   "availability",
 ];
 
-function slugify(value: string): string {
-  return normalizeText(value)
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-}
-
 function optionalSelect(value: string): string | null {
   return isSelectUnselected(value) ? null : value.trim();
 }
 
 function splitHair(value: string): { hairType: string | null; hairColor: string | null } {
-  if (isSelectUnselected(value)) {
-    return { hairType: null, hairColor: null };
-  }
-  if (!value.includes(HAIR_SEPARATOR)) {
-    return { hairType: null, hairColor: value.trim() };
-  }
-  const [type = "", color = ""] = value.split(HAIR_SEPARATOR);
+  const { type, color } = splitHairSelection(value);
   return { hairType: optionalSelect(type), hairColor: optionalSelect(color) };
 }
 

@@ -15,9 +15,10 @@ import type {
   AnnouncementSmartTip,
   AvailabilityDay,
 } from "@sigillus/contracts";
+import { normalizeText } from "./format";
 
 export const SELECT_PLACEHOLDER = "Selecionar";
-const HAIR_SELECTION_SEPARATOR = "::";
+export const HAIR_SELECTION_SEPARATOR = "::";
 export const ANNOUNCEMENT_PUBLISH_ERROR_MESSAGE =
   "Não deu pra publicar agora, amor. Tenta de novo em um instante?";
 export const ANNOUNCEMENT_PUBLISH_BLOCKED_MESSAGE = "Há pendências nos grupos abaixo.";
@@ -68,6 +69,25 @@ export function sanitizeNumericInput(value: string, maxLength = 4) {
   return value.replace(/\D/g, "").slice(0, maxLength);
 }
 
+export function splitHairSelection(value: string): { type: string; color: string } {
+  if (!value.trim() || value === SELECT_PLACEHOLDER) {
+    return { type: SELECT_PLACEHOLDER, color: SELECT_PLACEHOLDER };
+  }
+  if (!value.includes(HAIR_SELECTION_SEPARATOR)) {
+    return { type: SELECT_PLACEHOLDER, color: value };
+  }
+  const [type = SELECT_PLACEHOLDER, color = SELECT_PLACEHOLDER] =
+    value.split(HAIR_SELECTION_SEPARATOR);
+  return {
+    type: type.trim() || SELECT_PLACEHOLDER,
+    color: color.trim() || SELECT_PLACEHOLDER,
+  };
+}
+
+export function joinHairSelection(type: string, color: string): string {
+  return `${type}${HAIR_SELECTION_SEPARATOR}${color}`;
+}
+
 export function isHairSelectionComplete(value: string) {
   if (!value.trim() || value === SELECT_PLACEHOLDER) {
     return false;
@@ -87,7 +107,7 @@ export function serializeAnnouncementDraft(state: AnnouncementDraftState) {
   return JSON.stringify(state);
 }
 
-function createLocationId() {
+export function createLocationId() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
   }
@@ -170,16 +190,8 @@ export const defaultAvailability: AvailabilityDay[] = [
 export function buildInitialState(ad: AnnouncementAdPreview): AnnouncementDraftState {
   const pricing = defaultPricing.map((defaultItem) => {
     const match = ad.pricingTable?.find((p) => {
-      const normalizedDefaultLabel = defaultItem.label
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim();
-      const normalizedLabel = p.label
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim();
+      const normalizedDefaultLabel = normalizeText(defaultItem.label);
+      const normalizedLabel = normalizeText(p.label);
 
       if (normalizedLabel === normalizedDefaultLabel) {
         return true;

@@ -20,12 +20,7 @@ import {
   Paperclip,
   Mail,
 } from "lucide-react";
-import type {
-  PublicReportReason,
-  ReportAction,
-  ReportEvidence,
-  ReportTargetMedia,
-} from "@sigillus/contracts";
+import type { ReportAction, ReportEvidence, ReportTargetMedia } from "@sigillus/contracts";
 import { AdminLayoutShell } from "./admin-layout-shell";
 import {
   actOnReport,
@@ -37,41 +32,15 @@ import {
   startReview,
 } from "@/lib/admin-service";
 import type { Report, ReportStatus, ReportType } from "@/lib/types";
+import { formatDateBR, formatRelativeTime } from "@sigillus/domain";
+import { REPORT_TYPE_LABELS, PUBLIC_REPORT_REASON_LABELS } from "@sigillus/contracts";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function typeLabel(t: ReportType): string {
-  switch (t) {
-    case "fake_profile":
-      return "Perfil Falso";
-    case "scam":
-      return "Golpe / Fraude";
-    case "harassment":
-      return "Assédio";
-    case "inappropriate_content":
-      return "Conteúdo Inapropriado";
-    case "other":
-      return "Outro";
-  }
-}
-
-function publicReasonLabel(reason: PublicReportReason | undefined): string {
-  switch (reason) {
-    case "photo_without_consent":
-      return "Foto sem consentimento";
-    case "minor":
-      return "Menor de idade";
-    case "coercion":
-      return "Coação";
-    case "illegal_content":
-      return "Conteúdo ilegal";
-    default:
-      return "Outro";
-  }
-}
-
 function reportLabel(report: Report): string {
-  return report.source === "public" ? publicReasonLabel(report.reason) : typeLabel(report.type);
+  return report.source === "public"
+    ? PUBLIC_REPORT_REASON_LABELS[report.reason ?? "other"]
+    : REPORT_TYPE_LABELS[report.type];
 }
 
 function actionLabel(action: ReportAction): string {
@@ -83,16 +52,6 @@ function actionLabel(action: ReportAction): string {
     case "dismiss":
       return "Encerrada sem ação";
   }
-}
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function typeBadge(t: ReportType) {
@@ -141,16 +100,6 @@ function roleIcon(role: "cliente" | "profissional") {
   ) : (
     <Users className="h-3.5 w-3.5 text-wine-400" />
   );
-}
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-  if (mins < 60) return `há ${mins} min`;
-  if (hours < 24) return `há ${hours} h`;
-  return `há ${days} d`;
 }
 
 // ── Tipos de tab ─────────────────────────────────────────────────────────────
@@ -755,7 +704,7 @@ export function AdminReportsScreen() {
                             </span>
                           )}
                           <span className="text-[11px] text-zinc-500 font-mono">
-                            {timeAgo(report.createdAt)}
+                            {formatRelativeTime(report.createdAt)}
                           </span>
                         </div>
                       </div>
@@ -829,7 +778,9 @@ export function AdminReportsScreen() {
                     <div className="mx-5 mb-4 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 text-xs text-zinc-300">
                       <span className="font-bold text-zinc-100">{actionLabel(report.action)}</span>
                       {report.actionByEmail && <span> · por {report.actionByEmail}</span>}
-                      {report.respondedAt && <span> · {formatDateTime(report.respondedAt)}</span>}
+                      {report.respondedAt && (
+                        <span> · {formatDateBR(report.respondedAt, "dateTime")}</span>
+                      )}
                     </div>
                   )}
 
