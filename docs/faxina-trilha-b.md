@@ -25,8 +25,8 @@ Divisão mantida como o Daniel pediu. F-05 é o primeiro da trilha pelo peso jur
 | B1    | F-05 moderação e suspensão (depois do F-02 da A)                     | [x] #107 25/10                   |
 | B2    | F-04 chamadas sem sessão                                             | [x] #108 25/10                   |
 | B3    | F-10 seed com mídia real no MinIO                                    |                                  |
-| B4    | F-15 anúncio premium × standard                                      | em andamento (#113, 11/11)       |
-| B5    | F-19 quebras de arquivo grande (passos 19.1 a 19.10)                 |                                  |
+| B4    | F-15 anúncio premium × standard                                      | [x] #113 11/11                   |
+| B5    | F-19 quebras de arquivo grande (passos 19.1 a 19.10)                 | 19.7 em andamento (#115, 11/11)  |
 | B6    | F-21 exclusão de conta transacional                                  |                                  |
 | B7    | F-17 cadastro profissional: CPF (17a) e cadastro compartilhado (17b) | 17a [x] #110 10/11; 17b pendente |
 
