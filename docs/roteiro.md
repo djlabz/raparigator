@@ -116,7 +116,8 @@ Itens de CI/CD registrados ao longo das fases. Nada aqui bloqueia o ar.
 
 As decisões P-01 a P-05 deste arquivo estão resolvidas (registradas nas tasks T-22 a T-26 e nos ADRs 007 e 018). Pendências abertas:
 
-- P-11: destino externo do backup (`docs/correcoes-pre-deploy.md`).
+- P-11: destino externo do backup (`docs/correcoes-pre-deploy.md`, seção 5).
+- P-12: texto jurídico de Termos e Privacidade, identificação do controlador e contato do encarregado (`docs/correcoes-pre-deploy.md`, seção 5). Bloqueia o lançamento público.
 - Decisões da Fase F ainda sem resposta: seção de decisões de `docs/faxina-inventario.md` e "Achados novos" das trilhas.
 
 ## Histórico deste arquivo

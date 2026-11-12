@@ -40,7 +40,7 @@ npm run dev:api
 npm run dev
 ```
 
-- Web: http://localhost:3100 · API: na porta do `PORT` de `apps/api/.env` (o web espera `http://localhost:4001`; `/healthz`, `/api/docs` com a spec OpenAPI)
+- Web: http://localhost:3100 · API: na porta do `PORT` de `apps/api/.env` (`/healthz`, `/api/docs` com a spec OpenAPI); o web acessa a API pela `NEXT_PUBLIC_API_URL` de `apps/web/.env.local`, e as duas precisam bater
 - MinIO console: http://localhost:9001 (credenciais em `compose.yaml`, só para dev)
 
 ## Scripts (raiz)
@@ -61,7 +61,7 @@ npm run dev
 
 ## Comunicação web e API
 
-O web conecta-se diretamente à API pelo client oRPC tipado (`apps/web/lib/api/`). A variável `NEXT_PUBLIC_API_URL` aponta para a API (default `http://localhost:4001`). Mocks locais foram completamente removidos (ADR-016).
+O web conecta-se diretamente à API pelo client oRPC tipado (`apps/web/lib/api/`). A variável `NEXT_PUBLIC_API_URL` aponta para a API (sem ela, o client usa `http://localhost:4001`). Mocks locais foram completamente removidos (ADR-016).
 
 ## Contribuindo
 

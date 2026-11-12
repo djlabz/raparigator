@@ -1,6 +1,6 @@
 # ADR-016 — Web consome só a API
 
-- Status: aceito (2026-10-09); consolidado em 2026-11-12 com as decisões que continuam valendo dos ADRs 008, 010, 011 e 014
+- Status: aceito (2026-10-09); consolidado em 2026-11-12 com as decisões que continuam valendo dos ADRs 008, 010, 011, 012, 013 e 014
 
 ## Contexto
 
@@ -30,9 +30,17 @@ O web fala só com a API, pelo client oRPC tipado (`apps/web/lib/api/client.ts`,
 - A conversa de um anúncio é obtida ou criada por `chat.ensureConversationForAd`, de forma idempotente.
 - **Briefing do anúncio para o chat por store em memória (D-05).** O briefing montado no simulador do anúncio chega ao chat por um store em memória (`lib/encounter-brief.ts`: `requestBriefHandoff`, `getBriefHandoff`, `clearBriefHandoff`), não por parâmetro na URL. O motivo é o `TabsKeepAlive` (`components/layout/tabs-keep-alive.tsx`): a aba do chat continua montada quando a pessoa sai dela, e uma tela já viva não roda efeito de montagem nem relê a query string, então um parâmetro novo na URL passaria despercebido. O store notifica a tela montada.
 
+### Avaliações (de 012)
+
+- Só a profissional convida, e só depois de uma conversa de mão dupla (as duas partes mandaram mensagem; `hasTwoWayConversation` e `canInviteToReview` em `packages/domain/src/review-gate.ts`). O convite vale 14 dias (`REVIEW_INVITE_TTL_DAYS`) e permite uma única avaliação por conversa; convite usado não pode ser retirado. A API aplica as mesmas funções do domain.
+
+### Notificações (de 013)
+
+- `lib/notifications.ts` marca como lida e marca todas como lidas de forma otimista: a tela muda na hora e a chamada à API vai em seguida. Se a API recusar, o erro é registrado e a lista volta a bater com o servidor na próxima leitura; não há desfazer imediato. Preferências só visuais por papel (banner fechado, notificações já vistas no sino, animação do sino pausada) ficam no `localStorage` do navegador, não na API.
+
 ### Premium no web (de 014)
 
-- O servidor é a fonte de verdade do plano e dos limites: `premium.getState` (`lib/premium-state.ts`, `usePremiumState`) e `premium.plans` (`lib/premium-catalog.ts`, `usePremiumPlanOptions`). Sem sessão de profissional ou com erro de rede, o web assume o plano padrão e os limites padrão.
+- O servidor é a fonte de verdade do plano e dos limites: `premium.getState` (`lib/premium-state.ts`, `usePremiumState`) e `premium.plans` (`lib/premium-catalog.ts`, `usePremiumPlanOptions`). Sem sessão de profissional, ou com erro de rede antes de qualquer resposta, o web assume o plano e os limites padrão; um erro depois de já ter carregado mantém o último estado recebido do servidor.
 - O gating de recursos premium no web (galeria, visualização única, apelido no chat) lê esses limites; a API repete a checagem em cada procedimento.
 - Preços e opções de plano (`PREMIUM_PLAN_OPTIONS`) vivem no `packages/domain` e não mudam sem pedido do Daniel (D-02). A forma de lançamento gratuito está no ADR-018.
 

@@ -27,16 +27,16 @@ compose.yaml         Postgres 17 + MinIO para desenvolvimento
 ## Como rodar
 
 - Instalar: `npm install` (na raiz)
-- Banco e storage locais: `npm run db:up` (Docker; Postgres em `localhost:5432` e MinIO em `localhost:9000` por padrão, ajustáveis por `SIGILLUS_PG_PORT` e `SIGILLUS_MINIO_PORT` no `.env` da raiz)
+- Banco e storage locais: `npm run db:up` (Docker; Postgres em `localhost:5432` e MinIO em `localhost:9000` por padrão, ajustáveis por `SIGILLUS_PG_PORT` e `SIGILLUS_MINIO_PORT` no `.env` da raiz; trocou a porta, ajuste também `DATABASE_URL`, `S3_ENDPOINT` e `S3_PUBLIC_BASE_URL` em `apps/api/.env`)
 - Web: `npm run dev` (porta 3100; `npm run dev:legacy` roda sem Turbopack)
-- API: `npm run dev:api` (porta do `PORT` em `apps/api/.env`, copiado de `apps/api/.env.example`; o web e a E2E apontam para `http://localhost:4001` por padrão, ou para `NEXT_PUBLIC_API_URL`)
+- API: `npm run dev:api` (porta do `PORT` em `apps/api/.env`, copiado de `apps/api/.env.example`). O web lê a API de `NEXT_PUBLIC_API_URL` (`apps/web/.env.local`) e a E2E também, com padrão `http://localhost:4001`: o `PORT` da API e essa URL precisam apontar para a mesma porta
 - Migrations: `npm run db:migrate -w apps/api` · gerar após mudar schema: `npm run db:generate -w apps/api` · seeds: `npm run db:seed -w apps/api`
 - Lint: `npm run lint` (oxlint) — SEMPRE rode antes de finalizar tarefa
 - Formatação: `npm run format` (oxfmt) · verificar sem escrever: `npm run format:check`
 - Typecheck de todos os workspaces: `npm run typecheck`
 - Testes unitários (domain + api): `npm run test` — os da API são de integração e precisam de `DATABASE_URL` (o `apps/api/.env` serve; eles criam e migram o banco `sigillus_test` sozinhos; `TEST_DB_NAME` muda o nome)
 - Build: `npm run build` (todos) · `npm run build:web` · `npm run build:api`
-- E2E: `npm run test:e2e` (Playwright em `apps/web/tests`, só Chromium; sobe a API e o web sozinho; `PORT=<porta>` e `NEXT_PUBLIC_API_URL` trocam as portas se a 3100 ou a 4001 estiverem ocupadas)
+- E2E: `npm run test:e2e` (Playwright em `apps/web/tests`, só Chromium). Sobe a API e o web se eles não estiverem no ar e reaproveita os que já estiverem. A API iniciada pelo Playwright herda o `PORT` do ambiente; para usar outra porta no web, suba a API antes (`npm run dev:api`) e rode `PORT=<porta do web> NEXT_PUBLIC_API_URL=<url da API> npm run test:e2e`
 - Verificação durante a implementação: `npm run check` (lint + format:check + typecheck) + `npm run test` + checagem visual quando mexer em motion/UI
 - **E2E só na hora de abrir PR.** A suíte leva ~1 min e trava o fluxo se rodar a cada ajuste. Durante a implementação use `npm run check` + verificação visual. Rode `npm run test:e2e` quando o usuário pedir para commitar/abrir PR — e antes de abrir o PR. Exceção: pode rodar um arquivo específico (`npx playwright test tests/x.spec.ts` dentro de `apps/web`) quando estiver mexendo naquele fluxo.
 - Logins de teste estão em `apps/web/tests/helpers/credentials.ts` (admin: `admin@sigillus.dev` / `Admin@123`)
