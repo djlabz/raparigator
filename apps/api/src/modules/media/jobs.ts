@@ -8,7 +8,7 @@ import {
   isTransientStorageError,
   type ObjectStorage,
 } from "../../lib/storage";
-import { computeImageHash, stripImageMetadata } from "../../lib/image";
+import { computeImageHash, stripImageMetadata, type StrippedImage } from "../../lib/image";
 import { createMediaRepository } from "./repository";
 
 export type MediaJobsDeps = {
@@ -22,8 +22,20 @@ export type MediaJobsDeps = {
 const MEDIA_THUMBNAIL_WIDTH = 480;
 const BLOCKED_MEDIA_MESSAGE = "Esta imagem não pode ser publicada.";
 
-function thumbnailKeyFor(storageKey: string): string {
+export function thumbnailKeyFor(storageKey: string): string {
   return `${storageKey}.thumb.webp`;
+}
+
+export async function processImage(
+  bytes: Uint8Array,
+  contentType: string,
+): Promise<{ clean: StrippedImage; thumbnail: Uint8Array }> {
+  const clean = await stripImageMetadata(bytes, contentType);
+  const thumbnail = await sharp(Buffer.from(clean.data), { failOn: "none" })
+    .resize({ width: MEDIA_THUMBNAIL_WIDTH, withoutEnlargement: true })
+    .webp({ quality: 80 })
+    .toBuffer();
+  return { clean, thumbnail: new Uint8Array(thumbnail) };
 }
 
 export async function registerMediaJobs(deps: MediaJobsDeps): Promise<void> {
@@ -48,7 +60,7 @@ export async function registerMediaJobs(deps: MediaJobsDeps): Promise<void> {
     try {
       if (row.kind === "image") {
         const bytes = await storage.getObject(row.storageKey);
-        const clean = await stripImageMetadata(bytes, row.contentType);
+        const { clean, thumbnail } = await processImage(bytes, row.contentType);
         const hash = await computeImageHash(clean.data);
         const blockingReportId = await findBlockingReport(hash);
         if (blockingReportId) {
@@ -64,12 +76,8 @@ export async function registerMediaJobs(deps: MediaJobsDeps): Promise<void> {
           return;
         }
         await storage.putObject(row.storageKey, clean.data, row.contentType);
-        const thumbnail = await sharp(Buffer.from(clean.data), { failOn: "none" })
-          .resize({ width: MEDIA_THUMBNAIL_WIDTH, withoutEnlargement: true })
-          .webp({ quality: 80 })
-          .toBuffer();
         const thumbnailKey = thumbnailKeyFor(row.storageKey);
-        await storage.putObject(thumbnailKey, new Uint8Array(thumbnail), "image/webp");
+        await storage.putObject(thumbnailKey, thumbnail, "image/webp");
         await repo.update(row.id, {
           status: "ready",
           width: clean.width,

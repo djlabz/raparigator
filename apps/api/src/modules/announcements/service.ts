@@ -215,10 +215,7 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
     async getMine(owner: AnnouncementOwner) {
       const profile = await ensureProfile(owner);
       const images = await profiles.imagesFor([profile]);
-      const ad = toProfessionalAd(
-        profile,
-        images.get(profile.id) ?? { images: profile.externalImages },
-      );
+      const ad = toProfessionalAd(profile, images.get(profile.id) ?? { images: [] });
       const draft = profile.draft ?? null;
       return {
         ad,

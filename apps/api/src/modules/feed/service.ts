@@ -13,7 +13,7 @@ export function createFeedService(profiles: ProfileRepository) {
       const { rows, total } = await profiles.listFeed(criteria, sort, pagination);
       const images = await profiles.imagesFor(rows);
       const items: FeedAdSummary[] = rows.map((row) =>
-        toFeedAdSummary(row, images.get(row.id) ?? { images: row.externalImages }),
+        toFeedAdSummary(row, images.get(row.id) ?? { images: [] }),
       );
       return { items, total, page: pagination.page, pageSize: pagination.pageSize };
     },

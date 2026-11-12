@@ -37,15 +37,15 @@ async function main() {
     await runMigrations();
     logger.info("migrations aplicadas no boot");
   }
+  const storage = createS3Storage(config);
   if (config.SEED_ON_BOOT) {
-    await runSeeds();
+    await runSeeds(storage);
     logger.info("seeds aplicadas no boot");
   }
 
   const { db, pool } = createDatabase(config);
   let ready = false;
 
-  const storage = createS3Storage(config);
   const jobs = config.JOBS_ENABLED
     ? createPgBossQueue(config.DATABASE_URL, logger)
     : createInlineQueue(logger);

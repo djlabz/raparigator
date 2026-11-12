@@ -399,9 +399,7 @@ export function createAdminService(deps: AdminServiceDeps) {
 
   async function toAds(rows: ProfileRow[]): Promise<ProfessionalAd[]> {
     const images = await profiles.imagesFor(rows);
-    return rows.map((row) =>
-      toProfessionalAd(row, images.get(row.id) ?? { images: row.externalImages }),
-    );
+    return rows.map((row) => toProfessionalAd(row, images.get(row.id) ?? { images: [] }));
   }
 
   async function weeklySignups(now: Date): Promise<WeeklySignup[]> {
