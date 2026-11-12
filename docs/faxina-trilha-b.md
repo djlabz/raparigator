@@ -26,8 +26,8 @@ Divisão mantida como o Daniel pediu. F-05 é o primeiro da trilha pelo peso jur
 | B2    | F-04 chamadas sem sessão                                             | [x] #108 25/10                   |
 | B3    | F-10 seed com mídia real no MinIO                                    |                                  |
 | B4    | F-15 anúncio premium × standard                                      | [x] #113 11/11                   |
-| B5    | F-19 quebras de arquivo grande (passos 19.1 a 19.10)                 | 19.7 em andamento (#115, 11/11)  |
-| B6    | F-21 exclusão de conta transacional                                  |                                  |
+| B5    | F-19 quebras de arquivo grande (passos 19.1 a 19.10)                 | 19.7 [x] #115 11/11            |
+| B6    | F-21 exclusão de conta transacional                                  | em andamento (#118, 11/11)      |
 | B7    | F-17 cadastro profissional: CPF (17a) e cadastro compartilhado (17b) | 17a [x] #110 10/11; 17b pendente |
 
 A ordem dentro da trilha pode mudar pela regra 1 do protocolo (pular para o próximo liberado): F-21 só depende do F-07 (A) e F-17a de nada além do F-02, então os dois servem de "tampão" quando um PR da A bloqueia o próximo desta lista.
