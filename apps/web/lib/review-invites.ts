@@ -80,7 +80,14 @@ function findInvite(state: ReviewInvitesState, conversationId: string) {
   return state.invites.find((invite) => invite.conversationId === conversationId);
 }
 
-function inviteToReview(conversationId: string, adSlug: string): boolean {
+export function sendReviewInvite({
+  conversationId,
+  adSlug,
+}: {
+  conversationId: string;
+  adSlug: string;
+  professionalName: string;
+}): boolean {
   const existing = findInvite(apiState, conversationId);
   if (existing?.usedAt) {
     return false;
@@ -134,7 +141,7 @@ function inviteToReview(conversationId: string, adSlug: string): boolean {
   return true;
 }
 
-function cancelInvite(conversationId: string): boolean {
+export function withdrawReviewInvite(conversationId: string): boolean {
   const existing = findInvite(apiState, conversationId);
   if (!existing || existing.usedAt) {
     return false;
@@ -203,26 +210,6 @@ export async function submitReview(input: {
   }
 }
 
-export function sendReviewInvite(input: {
-  conversationId: string;
-  adSlug: string;
-  professionalName: string;
-}): boolean {
-  if (!inviteToReview(input.conversationId, input.adSlug)) {
-    return false;
-  }
-
-  return true;
-}
-
-export function withdrawReviewInvite(conversationId: string): boolean {
-  if (!cancelInvite(conversationId)) {
-    return false;
-  }
-
-  return true;
-}
-
 export function useReviewInvites(options: { enabled?: boolean } = {}) {
   const enabled = options.enabled ?? true;
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
@@ -234,7 +221,7 @@ export function useReviewInvites(options: { enabled?: boolean } = {}) {
     let cancelled = false;
     const generation = resetGeneration;
     getApiClient()
-      .reviews.listMyInvites()
+      .reviews.listInvitesMine()
       .then((invites) => {
         if (!cancelled && generation === resetGeneration) {
           apiInitialLoaded = true;
@@ -254,7 +241,7 @@ export function useReviewInvites(options: { enabled?: boolean } = {}) {
         }
       })
       .catch((error: unknown) => {
-        reportStoreError("reviews.listMyInvites", error);
+        reportStoreError("reviews.listInvitesMine", error);
       });
     return () => {
       cancelled = true;

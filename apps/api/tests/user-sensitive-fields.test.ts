@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { users, verificationChannels } from "../src/db/schema";
+import { users, contactVerificationChannels } from "../src/db/schema";
 import { createTestHarness } from "./helpers/app";
 import { signUp } from "./helpers/auth";
 
@@ -87,7 +87,7 @@ describe("campos sensíveis fora do update-user", () => {
     const cookie = (pro.headers.getSetCookie?.() ?? []).map((c) => c.split(";")[0]).join("; ");
     const now = new Date();
     await harness.db.update(users).set({ phoneVerified: true }).where(eq(users.id, user.id));
-    await harness.db.insert(verificationChannels).values({
+    await harness.db.insert(contactVerificationChannels).values({
       id: "canal-antigo",
       userId: user.id,
       channel: "phone",
@@ -96,13 +96,13 @@ describe("campos sensíveis fora do update-user", () => {
       updatedAt: now,
     });
 
-    const unauthenticated = await harness.rpc("verification/changePhone", {
+    const unauthenticated = await harness.rpc("contactVerification/changePhone", {
       phone: "21966665555",
     });
     expect(unauthenticated.status).toBe(401);
 
     const invalid = await harness.rpc<{ message: string }>(
-      "verification/changePhone",
+      "contactVerification/changePhone",
       { phone: "123" },
       { cookie },
     );
@@ -111,7 +111,7 @@ describe("campos sensíveis fora do update-user", () => {
     expect((await readUser(user.id)).phone).toBe("11977776666");
 
     const changed = await harness.rpc<{ expiresAt: string }>(
-      "verification/changePhone",
+      "contactVerification/changePhone",
       { phone: "21966665555" },
       { cookie },
     );
@@ -125,9 +125,12 @@ describe("campos sensíveis fora do update-user", () => {
 
     const channels = await harness.db
       .select()
-      .from(verificationChannels)
+      .from(contactVerificationChannels)
       .where(
-        and(eq(verificationChannels.userId, user.id), eq(verificationChannels.channel, "phone")),
+        and(
+          eq(contactVerificationChannels.userId, user.id),
+          eq(contactVerificationChannels.channel, "phone"),
+        ),
       );
     expect(channels).toHaveLength(1);
     expect(channels[0]?.target).toBe("21966665555");
@@ -136,7 +139,7 @@ describe("campos sensíveis fora do update-user", () => {
     expect(channels[0]?.codeSentAt).not.toBeNull();
 
     const state = await harness.rpc<{ phone: { target: string; verified: boolean } }>(
-      "verification/getState",
+      "contactVerification/getState",
       {},
       { cookie },
     );

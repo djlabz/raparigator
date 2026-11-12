@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { fetchAdBySlug, getCachedAd } from "@/lib/ad-data";
+import { fetchAdBySlug, getCachedAd } from "@/lib/ads-api";
 import type { Conversation, ProfessionalAd } from "@/lib/types";
 
 export type ConversationAdResult = {

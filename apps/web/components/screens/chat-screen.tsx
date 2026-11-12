@@ -48,7 +48,7 @@ import { Toast } from "@/components/ui/toast";
 import { chromeCircle } from "@/lib/chrome-styles";
 import { useModalLock } from "@/lib/modal-lock";
 import {
-  deleteChatConversationFromInbox,
+  removeChatConversationFromInbox,
   ensureChatStore,
   getChatStoreSnapshot,
   getServerChatStoreSnapshot,
@@ -61,7 +61,7 @@ import {
   sendChatViewOnceMedia,
   setChatConversationBlocked,
   subscribeChatStore,
-  updateChatParticipantAlias,
+  setChatParticipantAlias,
 } from "@/lib/chat-store";
 import { updateAvailability } from "@/lib/announcement-draft";
 import { getConversationAd, useConversationAd } from "@/lib/conversation-ad";
@@ -89,7 +89,7 @@ import type {
   ProfessionalAd,
 } from "@/lib/types";
 import { useAuthSession } from "@/lib/auth-session";
-import { usePremiumPlan } from "@/lib/premium-plan";
+import { usePremiumState } from "@/lib/premium-state";
 import { cn } from "@/lib/utils";
 import { canSendViewOnceMessage } from "@sigillus/domain";
 
@@ -366,7 +366,7 @@ function ChatLoggedOut() {
 
 function ChatScreenInner() {
   const { isLoggedIn, user, role } = useAuthSession();
-  const { canSendViewOnce: planAllowsViewOnce, canUseAlias, checkoutEnabled } = usePremiumPlan();
+  const { canSendViewOnce: planAllowsViewOnce, canUseAlias, checkoutEnabled } = usePremiumState();
   const canSendViewOnce = canSendViewOnceMessage(role, { canSendViewOnce: planAllowsViewOnce });
   const { getInvite } = useReviewInvites();
   useEffect(() => {
@@ -778,7 +778,7 @@ function ChatScreenInner() {
     if (!activeConversation) return;
     const sanitized = renameDraft.trim();
     setRenameModalOpen(false);
-    const result = await updateChatParticipantAlias(activeConversation.id, sanitized || null);
+    const result = await setChatParticipantAlias(activeConversation.id, sanitized || null);
     if (result.ok) {
       showToast({
         title: "Apelido atualizado",
@@ -816,7 +816,7 @@ function ChatScreenInner() {
     setDeleteModalOpen(false);
     setMobileConversationOpen(false);
 
-    const result = await deleteChatConversationFromInbox(conversationId);
+    const result = await removeChatConversationFromInbox(conversationId);
     if (result.ok) {
       showToast({
         title: "Conversa removida",

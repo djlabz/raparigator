@@ -51,9 +51,9 @@ import {
 import { FeedFiltersCriteriaSchema, FeedSortSchema } from "./schemas/feed";
 import {
   ChangePhoneInputSchema,
-  VerificationChannelSchema,
-  VerificationPublicStateSchema,
-} from "./schemas/identity";
+  ContactVerificationChannelSchema,
+  ContactVerificationStateSchema,
+} from "./schemas/contact-verification";
 import {
   IdentityVerificationFilesSchema,
   IdentityVerificationListInputSchema,
@@ -190,7 +190,7 @@ export const announcementsContract = {
     .route({ method: "POST", path: "/announcements/mine/availability" })
     .input(z.object({ status: AvailabilityStatusSchema }))
     .output(OkSchema),
-  setContact: base
+  updateContact: base
     .route({ method: "POST", path: "/announcements/mine/contact" })
     .input(
       z.object({
@@ -311,7 +311,7 @@ export const chatContract = {
     .route({ method: "PATCH", path: "/chat/conversations/{conversationId}/block" })
     .input(z.object({ conversationId: IdSchema, isBlocked: z.boolean() }))
     .output(ChatMutationResultSchema),
-  deleteFromInbox: base
+  removeFromInbox: base
     .route({ method: "DELETE", path: "/chat/conversations/{conversationId}/inbox" })
     .input(z.object({ conversationId: IdSchema }))
     .output(ChatMutationResultSchema),
@@ -329,7 +329,7 @@ export const chatContract = {
       }),
     )
     .output(ChatMutationResultSchema),
-  updateAlias: base
+  setAlias: base
     .route({ method: "PATCH", path: "/chat/conversations/{conversationId}/alias" })
     .input(z.object({ conversationId: IdSchema, alias: z.string().trim().max(60).nullable() }))
     .output(ChatMutationResultSchema),
@@ -348,7 +348,7 @@ export const reviewsContract = {
     .route({ method: "GET", path: "/reviews/invites/{conversationId}" })
     .input(z.object({ conversationId: IdSchema }))
     .output(z.object({ invite: ReviewInviteSchema.nullable(), status: InviteStatusSchema })),
-  listMyInvites: base
+  listInvitesMine: base
     .route({ method: "GET", path: "/reviews/invites" })
     .output(z.array(ReviewInviteSchema)),
   invite: base
@@ -365,25 +365,25 @@ export const reviewsContract = {
     .output(z.object({ reviewId: IdSchema })),
 };
 
-export const verificationContract = {
+export const contactVerificationContract = {
   getState: base
-    .route({ method: "GET", path: "/verification" })
-    .output(VerificationPublicStateSchema),
+    .route({ method: "GET", path: "/contact-verification" })
+    .output(ContactVerificationStateSchema),
   sendCode: base
-    .route({ method: "POST", path: "/verification/{channel}/send" })
-    .input(z.object({ channel: VerificationChannelSchema }))
+    .route({ method: "POST", path: "/contact-verification/{channel}/send" })
+    .input(z.object({ channel: ContactVerificationChannelSchema }))
     .output(z.object({ expiresAt: z.string(), devCode: z.string().nullable() })),
   confirmCode: base
-    .route({ method: "POST", path: "/verification/{channel}/confirm" })
+    .route({ method: "POST", path: "/contact-verification/{channel}/confirm" })
     .input(
       z.object({
-        channel: VerificationChannelSchema,
+        channel: ContactVerificationChannelSchema,
         code: z.string().regex(/^\d{6}$/, "O código tem 6 dígitos."),
       }),
     )
     .output(z.object({ success: z.boolean(), message: z.string() })),
   changePhone: base
-    .route({ method: "POST", path: "/verification/phone" })
+    .route({ method: "POST", path: "/contact-verification/phone" })
     .input(ChangePhoneInputSchema)
     .output(z.object({ expiresAt: z.string(), devCode: z.string().nullable() })),
 };
@@ -591,7 +591,7 @@ export const contract = {
   media: mediaContract,
   chat: chatContract,
   reviews: reviewsContract,
-  verification: verificationContract,
+  contactVerification: contactVerificationContract,
   notifications: notificationsContract,
   premium: premiumContract,
   reports: reportsContract,

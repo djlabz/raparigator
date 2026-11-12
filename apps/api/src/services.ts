@@ -20,7 +20,7 @@ import { createPremiumService } from "./modules/premium/service";
 import { createProfileRepository } from "./modules/profiles/repository";
 import { createReportsService } from "./modules/reports/service";
 import { createReviewsService } from "./modules/reviews/service";
-import { createVerificationService } from "./modules/verification/service";
+import { createContactVerificationService } from "./modules/contact-verification/service";
 import { createAccessLogService } from "./modules/access-log/service";
 import { createReportsRepository } from "./modules/reports/repository";
 import { createMediaRepository } from "./modules/media/repository";
@@ -74,7 +74,7 @@ export function createServices(deps: ServiceDeps) {
     chat: createChatService({ db, profiles, storage, chatEvents, logger, reports }),
     reviews: createReviewsService({ db, profiles, notifications, jobs, logger }),
     premium,
-    verification: createVerificationService({ db, config, logger, mailer }),
+    contactVerification: createContactVerificationService({ db, config, logger, mailer }),
     admin: createAdminService({
       db,
       profiles,

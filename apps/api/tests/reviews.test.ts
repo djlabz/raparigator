@@ -45,13 +45,13 @@ describe("reviews", () => {
 
     const status = await fx.reviews.getInvite(fx.client, fx.conversationId);
     expect(status.status).toBe("open");
-    expect((await fx.reviews.listMyInvites(fx.client)).map((item) => item.conversationId)).toEqual([
-      fx.conversationId,
-    ]);
-    expect(await fx.reviews.listMyInvites(fx.professional)).toHaveLength(1);
-    expect(await fx.reviews.listMyInvites({ id: other.userId, role: "profissional" })).toHaveLength(
-      0,
-    );
+    expect(
+      (await fx.reviews.listInvitesMine(fx.client)).map((item) => item.conversationId),
+    ).toEqual([fx.conversationId]);
+    expect(await fx.reviews.listInvitesMine(fx.professional)).toHaveLength(1);
+    expect(
+      await fx.reviews.listInvitesMine({ id: other.userId, role: "profissional" }),
+    ).toHaveLength(0);
   });
 
   it("cancelar convite remove notificação; convite usado não cancela nem reabre", async () => {
@@ -100,7 +100,7 @@ describe("reviews", () => {
       }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
 
-    await fx.chat.updateAlias(fx.client, { conversationId: fx.conversationId, alias: "Viajante" });
+    await fx.chat.setAlias(fx.client, { conversationId: fx.conversationId, alias: "Viajante" });
     const { reviewId } = await fx.reviews.submit(fx.client, {
       conversationId: fx.conversationId,
       score: 3,

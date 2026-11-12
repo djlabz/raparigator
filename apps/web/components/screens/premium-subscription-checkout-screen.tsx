@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { PixIcon } from "@/components/ui/pix-icon";
 import { ShinyButton } from "@/components/ui/shiny-button";
 import { Toast } from "@/components/ui/toast";
-import { getImmediateGains, getPlanOption, usePremiumPlans } from "@/lib/premium-catalog";
-import { usePremiumPlan } from "@/lib/premium-plan";
+import { getImmediateGains, getPlanOption, usePremiumPlanOptions } from "@/lib/premium-catalog";
+import { usePremiumState } from "@/lib/premium-state";
 import type { PremiumBillingCycle } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
@@ -30,8 +30,8 @@ const fieldClassName =
 export function PremiumSubscriptionCheckoutScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isPremium, activatePremium, checkoutEnabled } = usePremiumPlan();
-  const { plans: planOptions, stale: plansStale, loading: plansLoading } = usePremiumPlans();
+  const { isPremium, activatePremium, checkoutEnabled } = usePremiumState();
+  const { plans: planOptions, stale: plansStale, loading: plansLoading } = usePremiumPlanOptions();
 
   useEffect(() => {
     if (!checkoutEnabled) {

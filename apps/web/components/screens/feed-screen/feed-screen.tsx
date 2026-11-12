@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { useCatalogs } from "@/lib/catalogs-data";
-import { useFeedAds } from "@/lib/feed-data";
+import { useFeedAds } from "@/lib/feed-api";
 import { chromeBelowDesktopNavStickyMinH, chromeBelowHeaderStickyMinH } from "@/lib/chrome-styles";
 import { useAuthSession } from "@/lib/auth-session";
 import { getNavigationItems } from "@sigillus/domain";

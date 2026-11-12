@@ -2,8 +2,13 @@ import "@/lib/zod";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { ContractRouterClient } from "@orpc/contract";
+
+const DEFAULT_API_URL = "http://localhost:4001";
+
+export function getApiUrl(): string {
+  return (process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_URL).replace(/\/$/, "");
+}
 import type { contract } from "@sigillus/contracts";
-import { getApiUrl } from "@/lib/data-source";
 
 export type ApiClient = ContractRouterClient<typeof contract>;
 

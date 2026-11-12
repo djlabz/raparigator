@@ -41,19 +41,19 @@ export const chatRouter = {
   setBlocked: os.chat.setBlocked
     .use(withUser)
     .handler(({ context, input }) => context.deps.services.chat.setBlocked(context.user, input)),
-  deleteFromInbox: os.chat.deleteFromInbox
+  removeFromInbox: os.chat.removeFromInbox
     .use(withUser)
     .handler(({ context, input }) =>
-      context.deps.services.chat.deleteFromInbox(context.user, input.conversationId),
+      context.deps.services.chat.removeFromInbox(context.user, input.conversationId),
     ),
   report: os.chat.report
     .use(withUser)
     .use(rateLimited("chat.report", RATE_LIMITS.report))
     .use(withAccessLog("report_create"))
     .handler(({ context, input }) => context.deps.services.chat.report(context.user, input)),
-  updateAlias: os.chat.updateAlias
+  setAlias: os.chat.setAlias
     .use(withUser)
-    .handler(({ context, input }) => context.deps.services.chat.updateAlias(context.user, input)),
+    .handler(({ context, input }) => context.deps.services.chat.setAlias(context.user, input)),
   subscribe: os.chat.subscribe
     .use(withUser)
     .handler(({ context, input, signal }) =>

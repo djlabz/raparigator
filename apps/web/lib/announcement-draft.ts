@@ -128,7 +128,7 @@ export async function updateContact(contact: {
   whatsappNumber: string | null;
   telegramUsername: string | null;
 }): Promise<void> {
-  await getApiClient().announcements.setContact(contact);
+  await getApiClient().announcements.updateContact(contact);
 }
 
 export type AnnouncementPublishOptions = {

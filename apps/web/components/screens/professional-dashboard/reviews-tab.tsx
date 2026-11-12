@@ -3,7 +3,7 @@
 import { Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useProfessionalAd } from "@/lib/ad-data";
+import { useProfessionalAd } from "@/lib/ads-api";
 import { useAdReviews } from "@/lib/ad-reviews";
 
 export function ReviewsTab({ adSlug }: { adSlug: string }) {

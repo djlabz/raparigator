@@ -1,7 +1,7 @@
 "use client";
 
 import { Crown } from "lucide-react";
-import { usePremiumPlan } from "@/lib/premium-plan";
+import { usePremiumState } from "@/lib/premium-state";
 import { cn } from "@/lib/utils";
 
 interface PremiumEntryButtonProps {
@@ -10,7 +10,7 @@ interface PremiumEntryButtonProps {
 }
 
 export function PremiumEntryButton({ onClick, className }: PremiumEntryButtonProps) {
-  const { checkoutEnabled } = usePremiumPlan();
+  const { checkoutEnabled } = usePremiumState();
 
   if (!checkoutEnabled) {
     return null;

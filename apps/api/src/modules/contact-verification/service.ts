@@ -2,14 +2,14 @@ import { createHash, randomInt } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
 import type {
-  VerificationChannel,
-  VerificationPublicChannelState,
-  VerificationPublicState,
+  ContactVerificationChannel,
+  ContactVerificationChannelState,
+  ContactVerificationState,
 } from "@sigillus/contracts";
 import { validatePhone } from "@sigillus/domain";
 import type { AppConfig } from "../../config";
 import type { Database } from "../../db/client";
-import { users, verificationChannels } from "../../db/schema";
+import { users, contactVerificationChannels } from "../../db/schema";
 import { newId } from "../../lib/ids";
 import type { Logger } from "../../lib/logger";
 import type { Mailer } from "../../lib/mail";
@@ -17,21 +17,21 @@ import type { Mailer } from "../../lib/mail";
 const VERIFICATION_CODE_TTL_MS = 10 * 60 * 1000;
 const VERIFICATION_MAX_ATTEMPTS = 5;
 
-export interface VerificationNotifier {
-  sendCode(channel: VerificationChannel, target: string, code: string): Promise<void>;
+export interface ContactVerificationNotifier {
+  sendCode(channel: ContactVerificationChannel, target: string, code: string): Promise<void>;
 }
 
-export type VerificationServiceDeps = {
+export type ContactVerificationServiceDeps = {
   db: Database;
   config: AppConfig;
   logger: Logger;
-  notifier?: VerificationNotifier;
+  notifier?: ContactVerificationNotifier;
   mailer?: Mailer;
 };
 
-export type VerificationUser = { id: string; email: string; phone: string | null };
+export type ContactVerificationUser = { id: string; email: string; phone: string | null };
 
-type ChannelRow = typeof verificationChannels.$inferSelect;
+type ChannelRow = typeof contactVerificationChannels.$inferSelect;
 
 const EXPIRED_MESSAGE = "O código expirou. Envie outro para continuar.";
 const INVALID_MESSAGE = "Código inválido. Verifique e tente novamente.";
@@ -40,11 +40,11 @@ function normalizeTarget(value: string) {
   return value.trim().toLowerCase();
 }
 
-function targetFor(user: VerificationUser, channel: VerificationChannel): string {
+function targetFor(user: ContactVerificationUser, channel: ContactVerificationChannel): string {
   return channel === "email" ? user.email : (user.phone ?? "");
 }
 
-function hashCode(userId: string, channel: VerificationChannel, code: string): string {
+function hashCode(userId: string, channel: ContactVerificationChannel, code: string): string {
   return createHash("sha256").update(`${userId}:${channel}:${code}`).digest("hex");
 }
 
@@ -52,7 +52,7 @@ function generateCode(): string {
   return String(randomInt(0, 1_000_000)).padStart(6, "0");
 }
 
-function emptyChannelState(target: string): VerificationPublicChannelState {
+function emptyChannelState(target: string): ContactVerificationChannelState {
   return {
     target,
     verified: false,
@@ -67,7 +67,7 @@ function toPublicChannelState(
   row: ChannelRow | null,
   target: string,
   now: Date,
-): VerificationPublicChannelState {
+): ContactVerificationChannelState {
   if (!row || normalizeTarget(row.target) !== normalizeTarget(target)) {
     return emptyChannelState(target);
   }
@@ -84,7 +84,7 @@ function toPublicChannelState(
   };
 }
 
-function createLoggingVerificationNotifier(logger: Logger): VerificationNotifier {
+function createLoggingVerificationNotifier(logger: Logger): ContactVerificationNotifier {
   return {
     async sendCode(channel) {
       logger.info({ channel }, "código de verificação enviado");
@@ -92,7 +92,10 @@ function createLoggingVerificationNotifier(logger: Logger): VerificationNotifier
   };
 }
 
-function createEmailVerificationNotifier(mailer: Mailer, logger: Logger): VerificationNotifier {
+function createEmailVerificationNotifier(
+  mailer: Mailer,
+  logger: Logger,
+): ContactVerificationNotifier {
   return {
     async sendCode(channel, target, code) {
       if (channel === "email") {
@@ -117,7 +120,7 @@ function createEmailVerificationNotifier(mailer: Mailer, logger: Logger): Verifi
   };
 }
 
-export function createVerificationService(deps: VerificationServiceDeps) {
+export function createContactVerificationService(deps: ContactVerificationServiceDeps) {
   const { db, config, logger } = deps;
   const notifier =
     deps.notifier ??
@@ -125,12 +128,18 @@ export function createVerificationService(deps: VerificationServiceDeps) {
       ? createEmailVerificationNotifier(deps.mailer, logger)
       : createLoggingVerificationNotifier(logger));
 
-  async function findRow(userId: string, channel: VerificationChannel): Promise<ChannelRow | null> {
+  async function findRow(
+    userId: string,
+    channel: ContactVerificationChannel,
+  ): Promise<ChannelRow | null> {
     const [row] = await db
       .select()
-      .from(verificationChannels)
+      .from(contactVerificationChannels)
       .where(
-        and(eq(verificationChannels.userId, userId), eq(verificationChannels.channel, channel)),
+        and(
+          eq(contactVerificationChannels.userId, userId),
+          eq(contactVerificationChannels.channel, channel),
+        ),
       )
       .limit(1);
     return row ?? null;
@@ -138,7 +147,7 @@ export function createVerificationService(deps: VerificationServiceDeps) {
 
   async function clearCode(id: string, attempts?: number) {
     await db
-      .update(verificationChannels)
+      .update(contactVerificationChannels)
       .set({
         codeHash: null,
         codeSentAt: null,
@@ -146,12 +155,12 @@ export function createVerificationService(deps: VerificationServiceDeps) {
         ...(attempts === undefined ? {} : { attempts }),
         updatedAt: new Date(),
       })
-      .where(eq(verificationChannels.id, id));
+      .where(eq(contactVerificationChannels.id, id));
   }
 
   async function sendCode(
-    user: VerificationUser,
-    channel: VerificationChannel,
+    user: ContactVerificationUser,
+    channel: ContactVerificationChannel,
   ): Promise<{ expiresAt: string; devCode: string | null }> {
     const target = targetFor(user, channel);
     if (!target) {
@@ -175,10 +184,10 @@ export function createVerificationService(deps: VerificationServiceDeps) {
       updatedAt: now,
     };
     await db
-      .insert(verificationChannels)
+      .insert(contactVerificationChannels)
       .values({ id: newId(), userId: user.id, channel, ...values })
       .onConflictDoUpdate({
-        target: [verificationChannels.userId, verificationChannels.channel],
+        target: [contactVerificationChannels.userId, contactVerificationChannels.channel],
         set: values,
       });
     await notifier.sendCode(channel, target, code);
@@ -190,12 +199,12 @@ export function createVerificationService(deps: VerificationServiceDeps) {
   }
 
   return {
-    async getState(user: VerificationUser): Promise<VerificationPublicState> {
+    async getState(user: ContactVerificationUser): Promise<ContactVerificationState> {
       const now = new Date();
       const rows = await db
         .select()
-        .from(verificationChannels)
-        .where(eq(verificationChannels.userId, user.id));
+        .from(contactVerificationChannels)
+        .where(eq(contactVerificationChannels.userId, user.id));
       const byChannel = new Map(rows.map((row) => [row.channel, row]));
       return {
         email: toPublicChannelState(byChannel.get("email") ?? null, targetFor(user, "email"), now),
@@ -207,7 +216,7 @@ export function createVerificationService(deps: VerificationServiceDeps) {
     sendCode,
 
     async changePhone(
-      user: VerificationUser,
+      user: ContactVerificationUser,
       phone: string,
     ): Promise<{ expiresAt: string; devCode: string | null }> {
       const nextPhone = phone.trim();
@@ -222,11 +231,11 @@ export function createVerificationService(deps: VerificationServiceDeps) {
           .set({ phone: nextPhone, phoneVerified: false, updatedAt: now })
           .where(eq(users.id, user.id));
         await tx
-          .delete(verificationChannels)
+          .delete(contactVerificationChannels)
           .where(
             and(
-              eq(verificationChannels.userId, user.id),
-              eq(verificationChannels.channel, "phone"),
+              eq(contactVerificationChannels.userId, user.id),
+              eq(contactVerificationChannels.channel, "phone"),
             ),
           );
       });
@@ -235,8 +244,8 @@ export function createVerificationService(deps: VerificationServiceDeps) {
     },
 
     async confirmCode(
-      user: VerificationUser,
-      channel: VerificationChannel,
+      user: ContactVerificationUser,
+      channel: ContactVerificationChannel,
       code: string,
     ): Promise<{ success: boolean; message: string }> {
       const now = new Date();
@@ -262,15 +271,15 @@ export function createVerificationService(deps: VerificationServiceDeps) {
           await clearCode(row.id, attempts);
         } else {
           await db
-            .update(verificationChannels)
+            .update(contactVerificationChannels)
             .set({ attempts, updatedAt: now })
-            .where(eq(verificationChannels.id, row.id));
+            .where(eq(contactVerificationChannels.id, row.id));
         }
         return { success: false, message: INVALID_MESSAGE };
       }
       await db.transaction(async (tx) => {
         await tx
-          .update(verificationChannels)
+          .update(contactVerificationChannels)
           .set({
             verifiedAt: now,
             codeHash: null,
@@ -278,7 +287,7 @@ export function createVerificationService(deps: VerificationServiceDeps) {
             expiresAt: null,
             updatedAt: now,
           })
-          .where(eq(verificationChannels.id, row.id));
+          .where(eq(contactVerificationChannels.id, row.id));
         await tx
           .update(users)
           .set(

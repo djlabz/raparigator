@@ -49,7 +49,7 @@ test.describe("Avaliação por convite", () => {
       const { status } = await client.api.reviews.getInvite({ conversationId });
       expect(status).toBe("used");
     } finally {
-      await professional.api.chat.deleteFromInbox({ conversationId });
+      await professional.api.chat.removeFromInbox({ conversationId });
     }
   });
 
@@ -77,7 +77,7 @@ test.describe("Avaliação por convite", () => {
         .poll(async () => (await client.api.reviews.getInvite({ conversationId })).status)
         .toBe("none");
     } finally {
-      await professional.api.chat.deleteFromInbox({ conversationId });
+      await professional.api.chat.removeFromInbox({ conversationId });
     }
   });
 });

@@ -1,11 +1,11 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { users, verificationChannels } from "../src/db/schema";
+import { users, contactVerificationChannels } from "../src/db/schema";
 import {
-  createVerificationService,
-  type VerificationNotifier,
-  type VerificationUser,
-} from "../src/modules/verification/service";
+  createContactVerificationService,
+  type ContactVerificationNotifier,
+  type ContactVerificationUser,
+} from "../src/modules/contact-verification/service";
 import { createTestHarness } from "./helpers/app";
 import { signUp } from "./helpers/auth";
 
@@ -15,12 +15,12 @@ type Sent = { channel: string; target: string; code: string };
 
 async function setup() {
   const sent: Sent[] = [];
-  const notifier: VerificationNotifier = {
+  const notifier: ContactVerificationNotifier = {
     async sendCode(channel, target, code) {
       sent.push({ channel, target, code });
     },
   };
-  const service = createVerificationService({
+  const service = createContactVerificationService({
     db: harness.db,
     config: { ...harness.config, VERIFICATION_DEV_CODES: true },
     logger: harness.deps.logger,
@@ -28,7 +28,7 @@ async function setup() {
   });
   const signedUp = await signUp(harness, { email: "verif@teste.dev" });
   await harness.db.update(users).set({ phone: "11999998888" }).where(eq(users.id, signedUp.userId));
-  const user: VerificationUser = {
+  const user: ContactVerificationUser = {
     id: signedUp.userId,
     email: signedUp.email,
     phone: "11999998888",
@@ -78,7 +78,7 @@ describe("verificação de e-mail e telefone", () => {
       .where(eq(users.id, user.id));
     expect(row?.emailVerified).toBe(true);
     expect(row?.phoneVerified).toBe(false);
-    const [channel] = await harness.db.select().from(verificationChannels);
+    const [channel] = await harness.db.select().from(contactVerificationChannels);
     expect(channel?.codeHash).toBeNull();
   });
 
@@ -96,7 +96,7 @@ describe("verificação de e-mail e telefone", () => {
 
   it("devCode é null quando VERIFICATION_DEV_CODES está desligado", async () => {
     const { user } = await setup();
-    const service = createVerificationService({
+    const service = createContactVerificationService({
       db: harness.db,
       config: { ...harness.config, VERIFICATION_DEV_CODES: false },
       logger: harness.deps.logger,
@@ -133,14 +133,14 @@ describe("verificação de e-mail e telefone", () => {
     });
     const { devCode } = await service.sendCode(user, "email");
     await harness.db
-      .update(verificationChannels)
+      .update(contactVerificationChannels)
       .set({ expiresAt: new Date(Date.now() - 1000) })
-      .where(eq(verificationChannels.userId, user.id));
+      .where(eq(contactVerificationChannels.userId, user.id));
     expect((await service.getState(user)).email.codeSentAt).toBeNull();
     const expired = await service.confirmCode(user, "email", devCode!);
     expect(expired.success).toBe(false);
     expect(expired.message).toBe("O código expirou. Envie outro para continuar.");
-    const [row] = await harness.db.select().from(verificationChannels);
+    const [row] = await harness.db.select().from(contactVerificationChannels);
     expect(row?.codeHash).toBeNull();
   });
 
@@ -149,7 +149,7 @@ describe("verificação de e-mail e telefone", () => {
     const { devCode } = await service.sendCode(user, "email");
     await service.confirmCode(user, "email", devCode!);
     expect((await service.getState(user)).email.verified).toBe(true);
-    const changed: VerificationUser = { ...user, email: "outro@teste.dev" };
+    const changed: ContactVerificationUser = { ...user, email: "outro@teste.dev" };
     const state = await service.getState(changed);
     expect(state.email.verified).toBe(false);
     expect(state.email.target).toBe("outro@teste.dev");
@@ -158,7 +158,7 @@ describe("verificação de e-mail e telefone", () => {
     const resent = await service.sendCode(changed, "email");
     const confirmed = await service.confirmCode(changed, "email", resent.devCode!);
     expect(confirmed.success).toBe(true);
-    const rows = await harness.db.select().from(verificationChannels);
+    const rows = await harness.db.select().from(contactVerificationChannels);
     expect(rows).toHaveLength(1);
     expect(rows[0]?.target).toBe("outro@teste.dev");
   });
@@ -172,7 +172,7 @@ describe("verificação de e-mail e telefone", () => {
 
   it("expõe required conforme a flag VERIFICATION_REQUIRED", async () => {
     const { user } = await setup();
-    const serviceDefault = createVerificationService({
+    const serviceDefault = createContactVerificationService({
       db: harness.db,
       config: { ...harness.config, VERIFICATION_REQUIRED: false },
       logger: harness.deps.logger,
@@ -180,7 +180,7 @@ describe("verificação de e-mail e telefone", () => {
     const stateDefault = await serviceDefault.getState(user);
     expect(stateDefault.required).toBe(false);
 
-    const serviceRequired = createVerificationService({
+    const serviceRequired = createContactVerificationService({
       db: harness.db,
       config: { ...harness.config, VERIFICATION_REQUIRED: true },
       logger: harness.deps.logger,
@@ -192,7 +192,7 @@ describe("verificação de e-mail e telefone", () => {
   it("envia e-mail com código de confirmação quando configurado com mailer", async () => {
     const { user } = await setup();
     harness.mailer.clear();
-    const serviceWithMailer = createVerificationService({
+    const serviceWithMailer = createContactVerificationService({
       db: harness.db,
       config: harness.config,
       logger: harness.deps.logger,

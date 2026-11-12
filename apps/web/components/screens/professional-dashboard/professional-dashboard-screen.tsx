@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuthSession } from "@/lib/auth-session";
-import { useAccountNotifications } from "@/lib/account-notifications";
+import { useNotifications } from "@/lib/notifications";
 import type { AuthRole } from "@/lib/types";
 import { useMyAnnouncement, updateListingStatus } from "@/lib/announcement-draft";
 import { chromeBelowDesktopNavStickyTop } from "@/lib/chrome-styles";
@@ -18,12 +18,12 @@ import { SummaryTab } from "./summary-tab";
 import type { AdStatus } from "./types";
 import { useDashboardTitleScroll } from "./use-dashboard-title-scroll";
 import {
-  HAS_VERIFICATION_PROVIDER,
-  confirmVerificationCode,
-  sendVerificationCode,
-  useVerification,
-  type VerificationChannel,
-} from "@/lib/verification";
+  HAS_CONTACT_VERIFICATION_PROVIDER,
+  confirmContactVerificationCode,
+  sendContactVerificationCode,
+  useContactVerification,
+  type ContactVerificationChannel,
+} from "@/lib/contact-verification";
 import { emptyProfessionalAd } from "@sigillus/domain";
 
 function DashboardTabSkeleton() {
@@ -102,6 +102,7 @@ const TABS = [
   },
   {
     id: "Verificação",
+    label: "Confirmar e-mail e telefone",
     icon: (
       <path
         strokeLinecap="round"
@@ -115,7 +116,7 @@ const TABS = [
 export function ProfessionalDashboardScreen() {
   const { role, isPending } = useAuthSession();
   const safeRole = role === "visitor" ? "profissional" : (role as Exclude<AuthRole, "visitor">);
-  const { bannerClosed, setBannerClosed } = useAccountNotifications(safeRole);
+  const { bannerClosed, setBannerClosed } = useNotifications(safeRole);
   const headingRef = useRef<HTMLDivElement>(null);
   useDashboardTitleScroll({ headingRef });
 
@@ -193,7 +194,7 @@ export function ProfessionalDashboardScreen() {
                 >
                   {tab.icon}
                 </svg>
-                <span>{tab.id}</span>
+                <span>{"label" in tab ? tab.label : tab.id}</span>
               </button>
             ))}
           </nav>
@@ -234,7 +235,7 @@ export function ProfessionalDashboardScreen() {
                 >
                   {tab.icon}
                 </svg>
-                {tab.id}
+                {"label" in tab ? tab.label : tab.id}
               </button>
             ))}
           </div>
@@ -254,27 +255,29 @@ export function ProfessionalDashboardScreen() {
           {activeTab === "Contatos" && (
             <ContactsTab adSlug={adSlug} professionalName={currentAd.artisticName} />
           )}
-          {activeTab === "Verificação" && <VerificationTab />}
+          {activeTab === "Verificação" && <ContactVerificationTab />}
         </div>
       </div>
     </>
   );
 }
 
-function VerificationTab() {
+function ContactVerificationTab() {
   const { role, user } = useAuthSession();
-  const verificationState = useVerification(user);
+  const verificationState = useContactVerification(user);
   const verificationTargets = {
     email: user?.email ?? "",
     phone: user?.phone ?? "",
   };
-  const [codeInputs, setCodeInputs] = useState<Record<VerificationChannel, string>>({
+  const [codeInputs, setCodeInputs] = useState<Record<ContactVerificationChannel, string>>({
     email: "",
     phone: "",
   });
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [infoTone, setInfoTone] = useState<"success" | "error" | "info">("info");
-  const [revealedCodes, setRevealedCodes] = useState<Record<VerificationChannel, string | null>>({
+  const [revealedCodes, setRevealedCodes] = useState<
+    Record<ContactVerificationChannel, string | null>
+  >({
     email: null,
     phone: null,
   });
@@ -293,7 +296,7 @@ function VerificationTab() {
       <Card className="border-zinc-200 bg-white shadow-sm shadow-zinc-200/70">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
-            Verificação da conta
+            Confirmar e-mail e telefone
           </p>
           <h2 className="text-2xl font-semibold text-zinc-900">Acesse sua conta profissional</h2>
           <p className="text-sm text-zinc-600">
@@ -314,10 +317,10 @@ function VerificationTab() {
     setInfoMessage(message);
   };
 
-  const handleSendCode = async (channel: VerificationChannel) => {
-    if (!HAS_VERIFICATION_PROVIDER) return;
+  const handleSendCode = async (channel: ContactVerificationChannel) => {
+    if (!HAS_CONTACT_VERIFICATION_PROVIDER) return;
     try {
-      const result = await sendVerificationCode(channel);
+      const result = await sendContactVerificationCode(channel);
       setRevealedCodes((current) => ({ ...current, [channel]: result.devCode }));
       pushInfo(
         channel === "email"
@@ -330,10 +333,10 @@ function VerificationTab() {
     }
   };
 
-  const handleConfirmCode = async (channel: VerificationChannel) => {
-    if (!HAS_VERIFICATION_PROVIDER) return;
+  const handleConfirmCode = async (channel: ContactVerificationChannel) => {
+    if (!HAS_CONTACT_VERIFICATION_PROVIDER) return;
     try {
-      const result = await confirmVerificationCode(channel, codeInputs[channel]);
+      const result = await confirmContactVerificationCode(channel, codeInputs[channel]);
       pushInfo(result.message, result.success ? "success" : "error");
 
       if (result.success) {
@@ -350,7 +353,7 @@ function VerificationTab() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
-            Verificação da conta
+            Confirmar e-mail e telefone
           </p>
           <div className="mt-1 flex items-center gap-2">
             <h2 className="text-2xl font-semibold text-zinc-900">Confiança do perfil</h2>
@@ -419,7 +422,7 @@ function VerificationTab() {
           onCodeChange={(value) => setCodeInputs((current) => ({ ...current, email: value }))}
           onAction={() => handleSendCode("email")}
           onConfirm={() => handleConfirmCode("email")}
-          hasProvider={HAS_VERIFICATION_PROVIDER}
+          hasProvider={HAS_CONTACT_VERIFICATION_PROVIDER}
         />
         <VerificationItem
           title="Telefone"
@@ -438,7 +441,7 @@ function VerificationTab() {
           onCodeChange={(value) => setCodeInputs((current) => ({ ...current, phone: value }))}
           onAction={() => handleSendCode("phone")}
           onConfirm={() => handleConfirmCode("phone")}
-          hasProvider={HAS_VERIFICATION_PROVIDER}
+          hasProvider={HAS_CONTACT_VERIFICATION_PROVIDER}
         />
         <VerificationItem
           title="Documento"

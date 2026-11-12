@@ -322,7 +322,7 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
       return { ok: true as const };
     },
 
-    async setContact(
+    async updateContact(
       owner: AnnouncementOwner,
       contact: { whatsappNumber: string | null; telegramUsername: string | null },
     ) {

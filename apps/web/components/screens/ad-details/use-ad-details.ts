@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useProfessionalAd } from "@/lib/ad-data";
+import { useProfessionalAd } from "@/lib/ads-api";
 import { useAuthSession } from "@/lib/auth-session";
 import {
   buildEncounterBrief,

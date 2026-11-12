@@ -2,7 +2,7 @@
 
 import { AppShell } from "@/components/layout/app-shell";
 import { Card } from "@/components/ui/card";
-import { usePopularAds } from "@/lib/ad-data";
+import { usePopularAds } from "@/lib/ads-api";
 
 export function MostViewedScreen() {
   const { items: ads } = usePopularAds("most_viewed");

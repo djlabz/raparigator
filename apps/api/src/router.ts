@@ -12,7 +12,7 @@ import { notificationsRouter } from "./modules/notifications/router";
 import { premiumRouter } from "./modules/premium/router";
 import { reportsRouter } from "./modules/reports/router";
 import { reviewsRouter } from "./modules/reviews/router";
-import { verificationRouter } from "./modules/verification/router";
+import { contactVerificationRouter } from "./modules/contact-verification/router";
 
 export const router = os.router({
   auth: authRouter,
@@ -26,7 +26,7 @@ export const router = os.router({
   notifications: notificationsRouter,
   premium: premiumRouter,
   reports: reportsRouter,
-  verification: verificationRouter,
+  contactVerification: contactVerificationRouter,
   identity: identityRouter,
   admin: { ...adminRouter, ...identityAdminRouter },
 });

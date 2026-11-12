@@ -10,7 +10,7 @@ import { EmptyState } from "../ui/empty-state";
 import { Input } from "../ui/input";
 import { Select } from "../ui/select";
 import { useAuthSession } from "../../lib/auth-session";
-import { useAccountNotifications } from "../../lib/account-notifications";
+import { useNotifications } from "@/lib/notifications";
 import { getRoleLabel } from "@sigillus/domain";
 import {
   formatCpf,
@@ -18,8 +18,8 @@ import {
   getProfileFieldErrors,
   isProfileFormComplete,
   validatePasswordPair,
-} from "@/lib/identity";
-import { useVerification } from "@/lib/verification";
+} from "@/lib/signup-validation";
+import { useContactVerification } from "@/lib/contact-verification";
 import { updateContact } from "@/lib/announcement-draft";
 import { reportStoreError } from "@/lib/report-store-error";
 import { getApiClient } from "@/lib/api/client";
@@ -113,8 +113,7 @@ export function AccountScreen() {
 }
 
 function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; user: User }) {
-  const { unreadCount, bannerClosed, setBannerClosed, markAllAsRead } =
-    useAccountNotifications(role);
+  const { unreadCount, bannerClosed, setBannerClosed, markAllAsRead } = useNotifications(role);
   const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -290,7 +289,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
     const digits = form.phone.replace(/\D/g, "");
     if (role === "profissional" && digits.length >= 10 && digits.length <= 15) {
       updateContact({ whatsappNumber: digits, telegramUsername: null }).catch((error: unknown) => {
-        reportStoreError("announcements.setContact", error);
+        reportStoreError("announcements.updateContact", error);
         setSaveMessage(null);
         setFormError("Dados salvos, mas o contato do anúncio não foi atualizado. Tente de novo.");
       });
@@ -305,7 +304,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
     window.location.href = "/profissional/dashboard?tab=Verificação";
   };
 
-  const verificationState = useVerification(user);
+  const verificationState = useContactVerification(user);
   const verifiedItems = [verificationState.email.verified, verificationState.phone.verified].filter(
     Boolean,
   ).length;

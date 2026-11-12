@@ -61,7 +61,7 @@ import { Toast } from "@/components/ui/toast";
 import { PremiumConversionModal } from "@/components/ui/premium-conversion-modal";
 import { PremiumEntryBanner } from "@/components/ui/premium-entry-banner";
 import { PremiumEntryButton } from "@/components/ui/premium-entry-button";
-import { PREMIUM_UPLOAD_ERROR_MESSAGE, usePremiumPlan } from "@/lib/premium-plan";
+import { PREMIUM_UPLOAD_ERROR_MESSAGE, usePremiumState } from "@/lib/premium-state";
 import {
   isPlanLimitError,
   listMyMedia,
@@ -383,7 +383,7 @@ export function AnnouncementTab({
     isSectionReadyForOptimization,
   } = useAnnouncementDraft(ad, initialDraft);
   const router = useRouter();
-  const { isPremium, photoLimit, videoLimit, checkoutEnabled } = usePremiumPlan();
+  const { isPremium, photoLimit, videoLimit, checkoutEnabled } = usePremiumState();
   const motionValues = useOptionalDashboardHeaderTitleMotion();
   const fallbackInPageOpacity = useMotionValue(1);
   const inPageTitleOpacity = motionValues?.inPageTitleOpacity ?? fallbackInPageOpacity;

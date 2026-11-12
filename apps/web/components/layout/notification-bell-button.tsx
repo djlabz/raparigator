@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import type { AuthRole } from "@/lib/types";
-import { useAccountNotifications } from "@/lib/account-notifications";
+import { useNotifications } from "@/lib/notifications";
 import { chromeCircle } from "@/lib/chrome-styles";
 import { cn } from "@/lib/utils";
 import { NotificationsCenter } from "./notifications-center";
@@ -34,7 +34,7 @@ export function NotificationBellButton({ role, className }: NotificationBellButt
     refresh,
     pauseNotificationSwing,
     resumeNotificationSwing,
-  } = useAccountNotifications(role);
+  } = useNotifications(role);
 
   useEffect(() => {
     if (previousUnread.current === null) {

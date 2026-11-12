@@ -1,9 +1,9 @@
 import type {
   EmailPairErrors,
   PasswordPairErrors,
-  ProfileIdentityFieldErrors,
-  ProfileIdentityForm,
-  ProfileIdentityRole,
+  SignupFieldErrors,
+  SignupForm,
+  SignupRole,
 } from "@sigillus/contracts";
 
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
@@ -150,11 +150,8 @@ export function validatePhone(value: string): string | null {
   return null;
 }
 
-export function getProfileFieldErrors(
-  role: ProfileIdentityRole,
-  form: ProfileIdentityForm,
-): ProfileIdentityFieldErrors {
-  const errors: ProfileIdentityFieldErrors = {};
+export function getProfileFieldErrors(role: SignupRole, form: SignupForm): SignupFieldErrors {
+  const errors: SignupFieldErrors = {};
 
   const fullNameError = validateRequiredName(form.fullName, "full");
   if (fullNameError) errors.fullName = fullNameError;
@@ -181,9 +178,6 @@ export function getProfileFieldErrors(
   return errors;
 }
 
-export function isProfileFormComplete(
-  role: ProfileIdentityRole,
-  form: ProfileIdentityForm,
-): boolean {
+export function isProfileFormComplete(role: SignupRole, form: SignupForm): boolean {
   return Object.keys(getProfileFieldErrors(role, form)).length === 0;
 }

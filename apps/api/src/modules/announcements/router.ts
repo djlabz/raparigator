@@ -21,7 +21,7 @@ export const announcementsRouter = {
   setAvailability: professional.announcements.setAvailability.handler(({ context, input }) =>
     context.deps.services.announcements.setAvailability(context.user, input.status),
   ),
-  setContact: professional.announcements.setContact.handler(({ context, input }) =>
-    context.deps.services.announcements.setContact(context.user, input),
+  updateContact: professional.announcements.updateContact.handler(({ context, input }) =>
+    context.deps.services.announcements.updateContact(context.user, input),
   ),
 };

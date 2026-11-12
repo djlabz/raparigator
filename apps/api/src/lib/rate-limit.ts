@@ -61,8 +61,8 @@ export const RATE_LIMITS = {
   auth: { windowMs: 60_000, max: 10 },
   chatSend: { windowMs: 60_000, max: 40 },
   report: { windowMs: 60 * 60_000, max: 5 },
-  verificationSend: { windowMs: 10 * 60_000, max: 3 },
-  verificationConfirm: { windowMs: 10 * 60_000, max: 6 },
+  contactVerificationSend: { windowMs: 10 * 60_000, max: 3 },
+  contactVerificationConfirm: { windowMs: 10 * 60_000, max: 6 },
   review: { windowMs: 60 * 60_000, max: 10 },
   adView: { windowMs: 24 * 60 * 60_000, max: 1 },
 } satisfies Record<string, RateLimitRule>;

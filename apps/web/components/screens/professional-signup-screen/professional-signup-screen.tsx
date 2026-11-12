@@ -22,7 +22,7 @@ import {
   validatePasswordPair,
   validatePhone,
   validateRequiredName,
-} from "@/lib/identity";
+} from "@/lib/signup-validation";
 
 const professionalImages = [
   "/images/professional-signup/stacked-cards-1.webp",

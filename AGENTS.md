@@ -66,6 +66,7 @@ O `apps/web` conecta-se 100% à API pelo client oRPC tipado (`apps/web/lib/api/`
 
 - Importe sempre com o alias `@/` dentro de `apps/web` (aponta para `apps/web/`); entre pacotes use `@sigillus/contracts` e `@sigillus/domain`
 - Componentes React em PascalCase; hooks começam com `use`
+- Procedimentos do contrato: `getMine`/`listMine` (ou sufixo `*Mine`, como `listInvitesMine`) para o que é do usuário logado; `set*` recebe um valor único (`setAlias`, `setListingStatus`) e `update*` recebe objeto parcial (`updateContact`, `updateProfile`); `remove`/`remove*` para tirar um recurso simples (`removeFromInbox`), `delete*` só para exclusão definitiva (`deleteAccount`)
 - Commits: conventional (`feat:`, `fix:`, `chore:`, `style:`, `docs:`, `refactor:`, `ci:`), mensagem em português
 - Branches descritivas (`feat/T-xx-nome-curto`, `fix/...`); PRs contra `main`; nunca commite direto na `main`
 - Merge: merge só com `gh pr merge --auto --squash` (ou `--rebase` quando o PR tem um commit limpo); o `--auto` espera os checks obrigatórios do ruleset; proibido `--admin` e proibido mergear pela interface web. A proteção real é o ruleset da `main` (`required_status_checks` estrito com os jobs da CI e os três jobs E2E), não o comando de merge. Mudou nome de job da CI ou do Playwright, atualize o `required_status_checks` do ruleset no mesmo PR.

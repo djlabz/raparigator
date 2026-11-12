@@ -1,6 +1,6 @@
 "use client";
 
-import { type AccountNotificationItem, formatRelativeTime } from "@/lib/account-notifications";
+import { type AccountNotificationItem, formatRelativeTime } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
 
 interface NotificationsCenterProps {

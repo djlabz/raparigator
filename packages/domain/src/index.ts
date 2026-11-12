@@ -4,7 +4,7 @@ export * from "./ad-profile-image";
 export * from "./feed-filters";
 export * from "./encounter-brief";
 export * from "./review-gate";
-export * from "./identity";
+export * from "./signup-form";
 export * from "./catalogs";
 export * from "./announcement-draft";
 export * from "./client-alias";

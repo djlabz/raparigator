@@ -1,5 +1,5 @@
 import { createAuthClient } from "better-auth/react";
-import { getApiUrl } from "@/lib/data-source";
+import { getApiUrl } from "@/lib/api/client";
 
 export const adminAuthClient = createAuthClient({
   baseURL: getApiUrl(),
