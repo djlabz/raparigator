@@ -1,6 +1,6 @@
 # ADR-003 — Framework HTTP: Hono + oRPC (contract-first)
 
-- Status: aceito (2026-08-15)
+- Status: aceito (2026-08-15); frase da validação reescrita em 2026-11-12 (D-40)
 
 ## Contexto
 
@@ -26,5 +26,5 @@ Precisamos de: contrato tipado consumido pelo Next sem codegen, OpenAPI exportad
 ## Consequências
 
 - Não há codegen nem client gerado no CI: o client é o tipo do contrato.
-- Toda validação de entrada é Zod no contrato; validação manual dentro de service é proibida.
+- A forma da entrada (tipos, tamanhos, formatos, campos obrigatórios) é validada pelo Zod no contrato. Validação cruzada e de negócio (CPF válido, combinação de campos, limite do plano, estado do recurso) é função pura do `packages/domain` chamada pelo service, que traduz a recusa em erro do oRPC. Não se duplica no service o que o schema do contrato já garante.
 - Se um dia o time quiser Bun ou edge, Hono e oRPC rodam sem mudança de código.

@@ -11,7 +11,8 @@ apps/web/            Next.js 16 (App Router, Turbopack) · React 19 · Tailwind 
 apps/api/            Hono + oRPC + Zod 4 · Drizzle (Postgres 17) · better-auth · pg-boss · pino · Vitest
 packages/contracts/  Contrato oRPC + schemas Zod — a fonte de verdade dos tipos
 packages/domain/     Regras de negócio puras compartilhadas (limites por plano, gate de avaliação, filtros do feed, rascunho, briefing)
-docs/adr/            Decisões de arquitetura
+docs/adr/            Decisões de arquitetura vigentes
+docs/operacao/       Deploy e smoke test de produção
 compose.yaml         Postgres + MinIO locais
 ```
 
@@ -39,7 +40,7 @@ npm run dev:api
 npm run dev
 ```
 
-- Web: http://localhost:3000 · API: http://localhost:4000 (`/healthz`, `/api/docs` com a spec OpenAPI)
+- Web: http://localhost:3100 · API: na porta do `PORT` de `apps/api/.env` (`/healthz`, `/api/docs` com a spec OpenAPI); o web acessa a API pela `NEXT_PUBLIC_API_URL` de `apps/web/.env.local`, e as duas precisam bater
 - MinIO console: http://localhost:9001 (credenciais em `compose.yaml`, só para dev)
 
 ## Scripts (raiz)
@@ -60,11 +61,10 @@ npm run dev
 
 ## Comunicação web e API
 
-O web conecta-se diretamente à API pelo client oRPC tipado (`apps/web/lib/api/`). A variável `NEXT_PUBLIC_API_URL` aponta para a API (default `http://localhost:4000`). Mocks locais foram completamente removidos (ADR-016).
+O web conecta-se diretamente à API pelo client oRPC tipado (`apps/web/lib/api/`). A variável `NEXT_PUBLIC_API_URL` aponta para a API (sem ela, o client usa `http://localhost:4001`). Mocks locais foram completamente removidos (ADR-016).
 
 ## Contribuindo
 
 1. Commits semânticos em português (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `ci:`).
 2. Branches descritivas (`feat/T-xx-nome-curto`); PRs contra `main`, nunca commit direto nela. A ordem do que falta fazer está em `docs/roteiro.md`.
-3. `npm run check` e `npm run test` verdes antes de abrir PR; `npm run test:e2e` antes de publicar o PR.
-4. Convenções completas e proibições em `AGENTS.md`.
+3. Critério de pronto, merge, convenções e proibições em `AGENTS.md`.
