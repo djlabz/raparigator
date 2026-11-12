@@ -32,6 +32,7 @@ import {
   validateSectionForSave,
 } from "@sigillus/domain";
 import { getApiClient } from "@/lib/api/client";
+import { apiErrorMessage } from "@/lib/api/errors";
 
 export {
   OPTIMIZE_SECTION_ORDER,
@@ -84,7 +85,7 @@ export function useMyAnnouncement(): MyAnnouncementResult {
       myAnnouncementCache = nextState;
       setState(nextState);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível carregar o anúncio.");
+      setError(apiErrorMessage(err, "Não foi possível carregar o anúncio."));
     } finally {
       setIsLoading(false);
     }

@@ -26,8 +26,8 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 | A1    | F-02 código morto e comentários                    | [x] #105 25/10             |
 | A2    | F-03 bugs de regra sem decisão                     | [x] #111 10/11             |
 | A3    | F-06 regras puras para o domain                    | [x] #114 11/11             |
-| A4    | F-07 camadas da API                                | em andamento (#116, 11/11) |
-| A5    | F-08 mensagens em português                        |                            |
+| A4    | F-07 camadas da API                                | [x] #116 12/11             |
+| A5    | F-08 mensagens em português                        | em andamento (#117, 12/11) |
 | A6    | F-09 seeds: CPF e pexels                           | [x] #106 25/10             |
 | A7    | F-11 CSS                                           | [x] #109 25/10             |
 | A8    | F-12 nomes                                         |                            |

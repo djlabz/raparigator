@@ -1,5 +1,11 @@
 import { implement, ORPCError } from "@orpc/server";
-import { contract, type AccessLogEvent, type UserRole } from "@sigillus/contracts";
+import {
+  contract,
+  FORBIDDEN_MESSAGE,
+  UNAUTHORIZED_MESSAGE,
+  type AccessLogEvent,
+  type UserRole,
+} from "@sigillus/contracts";
 import type { RateLimitRule } from "../lib/rate-limit";
 import { getAdminSession, getUserSession, type AppContext } from "./context";
 import { recordAccess } from "../modules/access-log/service";
@@ -21,7 +27,7 @@ type AuthenticatedUser = {
 export const withUser = os.middleware(async ({ context, next }) => {
   const session = await getUserSession(context);
   if (!session) {
-    throw new ORPCError("UNAUTHORIZED");
+    throw new ORPCError("UNAUTHORIZED", { message: UNAUTHORIZED_MESSAGE });
   }
   const raw = session.user as Record<string, unknown>;
   const user: AuthenticatedUser = {
@@ -45,12 +51,12 @@ export function requireRole(role: UserRole) {
   return os.middleware(async ({ context, next }) => {
     const session = await getUserSession(context);
     if (!session) {
-      throw new ORPCError("UNAUTHORIZED");
+      throw new ORPCError("UNAUTHORIZED", { message: UNAUTHORIZED_MESSAGE });
     }
     const actualRole =
       ((session.user as Record<string, unknown>).role as UserRole | undefined) ?? "cliente";
     if (actualRole !== role) {
-      throw new ORPCError("FORBIDDEN");
+      throw new ORPCError("FORBIDDEN", { message: FORBIDDEN_MESSAGE });
     }
     return next();
   });

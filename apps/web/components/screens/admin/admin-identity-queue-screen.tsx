@@ -12,6 +12,7 @@ import { getApiClient } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { AdminLayoutShell } from "./admin-layout-shell";
 import { formatDateBR } from "@sigillus/domain";
+import { apiErrorMessage } from "@/lib/api/errors";
 
 type TabFilter = "all" | IdentityVerificationStatus;
 
@@ -46,7 +47,7 @@ const STATUS_BADGES: Record<
 const MIN_REASON_LENGTH = 3;
 
 function errorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error && error.message ? error.message : fallback;
+  return apiErrorMessage(error, fallback);
 }
 
 export function AdminIdentityQueueScreen() {

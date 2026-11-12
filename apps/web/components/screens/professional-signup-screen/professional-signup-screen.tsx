@@ -111,7 +111,7 @@ export function ProfessionalSignupScreen() {
       if (res.error) {
         showToast({
           title: "Erro ao criar conta",
-          message: translateAuthError(res.error.message || res.error.statusText),
+          message: translateAuthError(res.error),
           type: "error",
         });
         return;

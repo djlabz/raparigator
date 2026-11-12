@@ -80,6 +80,10 @@ export type IdentityVerificationListInput = z.infer<typeof IdentityVerificationL
 
 export const IdentityVerificationRejectInputSchema = z.object({
   id: IdSchema,
-  reason: z.string().trim().min(3).max(500),
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Conte o motivo em pelo menos 3 caracteres.")
+    .max(500, "O motivo pode ter até 500 caracteres."),
 });
 export type IdentityVerificationRejectInput = z.infer<typeof IdentityVerificationRejectInputSchema>;

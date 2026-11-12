@@ -37,7 +37,7 @@ export function LoginScreen() {
       });
 
       if (res.error) {
-        setError(translateAuthError(res.error.message || res.error.statusText));
+        setError(translateAuthError(res.error));
         setSubmitting(false);
         return;
       }
