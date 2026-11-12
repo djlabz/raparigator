@@ -5,8 +5,6 @@ import { INVALID_CPF_MESSAGE, isValidCpf } from "@sigillus/domain";
 import type { Database, DbExecutor } from "../../db/client";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
-import { createChatRepository } from "../chat/repository";
-import { createIdentityRepository } from "../identity/repository";
 import { createAuthRepository, type AuthRepository } from "./repository";
 import type { UserSession } from "./user-auth";
 
@@ -20,8 +18,11 @@ export type AuthServiceDeps = {
   jobs: JobQueue;
   logger: Logger;
   repository?: AuthRepository;
-  chat?: { anonymizeUserMessages: (userId: string, executor: DbExecutor) => Promise<void> };
-  identity?: { fileKeysForUser: (userId: string) => Promise<string[]> };
+  chat: { anonymizeUserMessages: (userId: string, executor: DbExecutor) => Promise<void> };
+  identity: {
+    fileKeysForUser: (userId: string, executor: DbExecutor) => Promise<string[]>;
+    scheduleFileDeletion: (userId: string, keys: string[]) => Promise<void>;
+  };
 };
 
 export type AuthService = ReturnType<typeof createAuthService>;
@@ -46,10 +47,8 @@ function profileChanges(input: { cpf?: string; city?: string }) {
 }
 
 export function createAuthService(deps: AuthServiceDeps) {
-  const { db, jobs, logger } = deps;
+  const { db, jobs, logger, chat, identity } = deps;
   const repository = deps.repository ?? createAuthRepository(db);
-  const chat = deps.chat ?? createChatRepository(db);
-  const identity = deps.identity ?? createIdentityRepository(db);
 
   async function assertPassword(userId: string, password: string) {
     const hash = await repository.findCredentialPasswordHash(userId);
@@ -97,22 +96,37 @@ export function createAuthService(deps: AuthServiceDeps) {
       const { userId } = input;
       await assertPassword(userId, input.password);
 
-      const [mediaKeys, identityKeys] = await Promise.all([
-        repository.listMediaStorageKeys(userId),
-        identity.fileKeysForUser(userId),
-      ]);
-
-      await db.transaction(async (tx) => {
+      const { mediaKeys, identityKeys } = await db.transaction(async (tx) => {
+        await repository.lockUser(tx, userId);
+        const mediaKeys = await repository.listMediaStorageKeys(userId, tx);
+        const identityKeys = await identity.fileKeysForUser(userId, tx);
         await chat.anonymizeUserMessages(userId, tx);
         await repository.deleteUser(tx, userId);
+        return { mediaKeys, identityKeys };
       });
 
-      if (identityKeys.length > 0) {
-        await jobs.enqueue("identity.delete-files", { userId, keys: identityKeys });
-      }
-      if (mediaKeys.length > 0) {
-        await jobs.enqueue(STORAGE_PURGE_JOB, { keys: mediaKeys });
-      }
+      const pending = [
+        {
+          job: "identity.delete-files",
+          keys: identityKeys,
+          run: () => identity.scheduleFileDeletion(userId, identityKeys),
+        },
+        {
+          job: STORAGE_PURGE_JOB,
+          keys: mediaKeys,
+          run: () => jobs.enqueue(STORAGE_PURGE_JOB, { keys: mediaKeys }),
+        },
+      ].filter((cleanup) => cleanup.keys.length > 0);
+      const results = await Promise.allSettled(pending.map((cleanup) => cleanup.run()));
+      results.forEach((result, index) => {
+        if (result.status === "rejected") {
+          const cleanup = pending[index]!;
+          logger.error(
+            { err: result.reason, userId, job: cleanup.job, keys: cleanup.keys },
+            "conta excluída sem job de limpeza enfileirado; apagar as chaves manualmente",
+          );
+        }
+      });
       logger.info(
         { userId, mediaObjects: mediaKeys.length, identityFiles: identityKeys.length },
         "conta excluída",

@@ -33,8 +33,12 @@ export function createAuthRepository(db: Database) {
         .where(eq(users.id, userId));
     },
 
-    async listMediaStorageKeys(userId: string): Promise<string[]> {
-      const rows = await db
+    async lockUser(executor: DbExecutor, userId: string): Promise<void> {
+      await executor.select({ id: users.id }).from(users).where(eq(users.id, userId)).for("update");
+    },
+
+    async listMediaStorageKeys(userId: string, executor: DbExecutor = db): Promise<string[]> {
+      const rows = await executor
         .select({ storageKey: mediaAssets.storageKey, thumbnailKey: mediaAssets.thumbnailKey })
         .from(mediaAssets)
         .where(eq(mediaAssets.ownerUserId, userId));

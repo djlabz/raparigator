@@ -7,6 +7,7 @@ import { JOB_RETRY_LIMIT } from "../src/lib/jobs";
 import { registerStoragePurgeJob } from "../src/modules/auth/jobs";
 import { createAuthRepository } from "../src/modules/auth/repository";
 import { createAuthService } from "../src/modules/auth/service";
+import { createChatRepository } from "../src/modules/chat/repository";
 import { createTestHarness } from "./helpers/app";
 import { signInAdmin, signUp } from "./helpers/auth";
 
@@ -432,6 +433,8 @@ describe("auth.deleteAccount transacional (F-21)", () => {
       db: harness.db,
       jobs: harness.jobs,
       logger: harness.deps.logger,
+      chat: createChatRepository(harness.db),
+      identity: harness.deps.services.identity,
       repository: {
         ...repository,
         deleteUser: async () => {
@@ -461,6 +464,41 @@ describe("auth.deleteAccount transacional (F-21)", () => {
     expect(convAfter!.lastMessagePreview).toBe(fx.originalContent);
     expect(harness.storage.objects.has(fx.mediaKey)).toBe(true);
     expect(harness.jobs.enqueued.slice(jobsBefore).map((job) => job.name)).toEqual([]);
+  });
+
+  it("falha ao enfileirar um job de limpeza não impede o outro nem desfaz a exclusão", async () => {
+    const fx = await createDeletionFixture("enqueuefail");
+    const jobsBefore = harness.jobs.enqueued.length;
+    const service = createAuthService({
+      db: harness.db,
+      jobs: harness.jobs,
+      logger: harness.deps.logger,
+      chat: createChatRepository(harness.db),
+      identity: {
+        fileKeysForUser: async () => ["private/identity/x/doc.jpg"],
+        scheduleFileDeletion: async () => {
+          throw new Error("fila indisponível");
+        },
+      },
+    });
+
+    const result = await service.deleteAccount({
+      userId: fx.client.userId,
+      password: "Senha@12345",
+    });
+    expect(result).toEqual({ ok: true });
+
+    const [userAfter] = await harness.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, fx.client.userId));
+    expect(userAfter).toBeUndefined();
+    const purgeJobs = harness.jobs.enqueued
+      .slice(jobsBefore)
+      .filter((job) => job.name === "storage.purge");
+    expect(purgeJobs).toHaveLength(1);
+    expect((purgeJobs[0]!.payload as { keys: string[] }).keys).toContain(fx.mediaKey);
+    expect(harness.storage.objects.has(fx.mediaKey)).toBe(false);
   });
 
   it("storage.purge enfileirado após o commit reexecuta até apagar os objetos", async () => {

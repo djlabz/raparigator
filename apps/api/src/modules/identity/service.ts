@@ -11,7 +11,7 @@ import {
   type IdentityVerificationUploadOutput,
 } from "@sigillus/contracts";
 import type { AppConfig } from "../../config";
-import type { Database } from "../../db/client";
+import type { Database, DbExecutor } from "../../db/client";
 import { newId } from "../../lib/ids";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
@@ -45,6 +45,8 @@ export type IdentityServiceDeps = {
 };
 
 export type IdentityReviewer = { id: string; email: string };
+
+export const IDENTITY_DELETE_FILES_JOB = "identity.delete-files";
 
 export function identityUserPrefix(userId: string): string {
   return `${PRIVATE_STORAGE_PREFIX}identity/${userId}/`;
@@ -181,6 +183,14 @@ export function createIdentityService(deps: IdentityServiceDeps) {
   }
 
   return {
+    async fileKeysForUser(userId: string, executor: DbExecutor = db): Promise<string[]> {
+      return repo.fileKeysForUser(userId, executor);
+    },
+
+    async scheduleFileDeletion(userId: string, keys: string[]): Promise<void> {
+      await jobs.enqueue(IDENTITY_DELETE_FILES_JOB, { userId, keys });
+    },
+
     async publishGate(userId: string): Promise<IdentityPublishGate> {
       const required = config.IDENTITY_REQUIRED;
       const active = required ? await repo.activeForUser(userId) : null;
