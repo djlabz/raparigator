@@ -83,4 +83,16 @@ describe("storage em memória", () => {
     expect(storage.publicUrl("private/media/u/1.jpg")).toBeNull();
     expect(storage.publicUrl("media/u/1.jpg")).toBeNull();
   });
+
+  it("listKeys devolve só as chaves sob o prefixo", async () => {
+    const storage = createMemoryStorage();
+    await storage.putObject("private/identity/u1/a.jpg", new Uint8Array([1]), "image/jpeg");
+    await storage.putObject("private/identity/u1/b.jpg", new Uint8Array([1]), "image/jpeg");
+    await storage.putObject("private/identity/u10/c.jpg", new Uint8Array([1]), "image/jpeg");
+    expect((await storage.listKeys("private/identity/u1/")).sort()).toEqual([
+      "private/identity/u1/a.jpg",
+      "private/identity/u1/b.jpg",
+    ]);
+    expect(await storage.listKeys("private/identity/u2/")).toEqual([]);
+  });
 });

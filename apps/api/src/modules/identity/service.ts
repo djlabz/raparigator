@@ -15,7 +15,7 @@ import type { Database, DbExecutor } from "../../db/client";
 import { newId } from "../../lib/ids";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
-import { PRIVATE_STORAGE_PREFIX, type ObjectStorage } from "../../lib/storage";
+import { PRIVATE_STORAGE_PREFIX, type ObjectStorage, uploadGracePeriodMs } from "../../lib/storage";
 import { stripImageMetadata } from "../../lib/image";
 import { enqueueAdminIdentityDigest } from "./digest";
 import {
@@ -191,7 +191,7 @@ export function createIdentityService(deps: IdentityServiceDeps) {
       await jobs.enqueue(
         IDENTITY_DELETE_FILES_JOB,
         { userId, keys },
-        { startAfter: new Date(Date.now() + config.MEDIA_UPLOAD_TTL_SECONDS * 1000) },
+        { startAfter: new Date(Date.now() + uploadGracePeriodMs(config.MEDIA_UPLOAD_TTL_SECONDS)) },
       );
     },
 

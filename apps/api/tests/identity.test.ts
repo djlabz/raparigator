@@ -399,6 +399,22 @@ describe("verificação de identidade da anunciante", () => {
     expect(await rowsOf(pro.userId)).toEqual([]);
   });
 
+  it("(i) excluir a conta apaga upload de identidade enviado e nunca submetido", async () => {
+    const pro = await professional("i");
+    const orphanKey = await upload(pro.cookie, "document");
+    expect(await rowsOf(pro.userId)).toEqual([]);
+    const deleted = await harness.rpc(
+      "auth/deleteAccount",
+      { password: "Senha@12345" },
+      { cookie: pro.cookie },
+    );
+    expect(deleted.status).toBe(200);
+    expect(harness.storage.objects.has(orphanKey)).toBe(true);
+    await harness.jobs.runDelayed();
+    expect(harness.storage.objects.has(orphanKey)).toBe(false);
+    expect(await harness.storage.listKeys(`private/identity/${pro.userId}/`)).toEqual([]);
+  });
+
   it("verificação nova agenda e-mail ao admin só com contagem e link, sem dado pessoal em log", async () => {
     const pro = await professional("mail");
     await submitVerification(pro.cookie);

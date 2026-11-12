@@ -5,6 +5,7 @@ import { INVALID_CPF_MESSAGE, isValidCpf } from "@sigillus/domain";
 import type { Database, DbExecutor } from "../../db/client";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
+import { uploadGracePeriodMs } from "../../lib/storage";
 import { createAuthRepository, type AuthRepository } from "./repository";
 import type { UserSession } from "./user-auth";
 
@@ -112,17 +113,21 @@ export function createAuthService(deps: AuthServiceDeps) {
           keys: identityKeys,
           run: () => identity.scheduleFileDeletion(userId, identityKeys),
         },
-        {
-          job: STORAGE_PURGE_JOB,
-          keys: mediaKeys,
-          run: () =>
-            jobs.enqueue(
-              STORAGE_PURGE_JOB,
-              { keys: mediaKeys },
-              { startAfter: new Date(Date.now() + uploadTtlSeconds * 1000) },
-            ),
-        },
-      ].filter((cleanup) => cleanup.keys.length > 0);
+        ...(mediaKeys.length > 0
+          ? [
+              {
+                job: STORAGE_PURGE_JOB,
+                keys: mediaKeys,
+                run: () =>
+                  jobs.enqueue(
+                    STORAGE_PURGE_JOB,
+                    { keys: mediaKeys },
+                    { startAfter: new Date(Date.now() + uploadGracePeriodMs(uploadTtlSeconds)) },
+                  ),
+              },
+            ]
+          : []),
+      ];
       const results = await Promise.allSettled(pending.map((cleanup) => cleanup.run()));
       results.forEach((result, index) => {
         if (result.status === "rejected") {
