@@ -26,7 +26,8 @@
     "next": "16.2.12",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-image-crop": "11.1.2"
+    "react-image-crop": "11.1.2",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",

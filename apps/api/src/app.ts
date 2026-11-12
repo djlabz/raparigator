@@ -4,10 +4,10 @@ import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { OpenAPIGenerator } from "@orpc/openapi";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
-import { onError } from "@orpc/server";
+import { onError, ORPCError, ValidationError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
-import { contract } from "@sigillus/contracts";
+import { contract, VALIDATION_ERROR_MESSAGE } from "@sigillus/contracts";
 import type { AppDeps } from "./deps";
 import { captureException } from "./lib/sentry";
 import { resolveClientIp } from "./lib/http";
@@ -83,8 +83,34 @@ export function createApp(deps: AppDeps) {
     captureException(error);
   };
 
-  const rpcHandler = new RPCHandler(router, { interceptors: [onError(reportError)] });
-  const openApiHandler = new OpenAPIHandler(router, { interceptors: [onError(reportError)] });
+  const translateValidationError = (error: unknown) => {
+    if (
+      error instanceof ORPCError &&
+      error.code === "BAD_REQUEST" &&
+      error.cause instanceof ValidationError
+    ) {
+      throw new ORPCError("BAD_REQUEST", {
+        message: VALIDATION_ERROR_MESSAGE,
+        data: {
+          issues: error.cause.issues.map((issue) => ({
+            message: issue.message,
+            path: (issue.path ?? []).map((segment) =>
+              typeof segment === "object" ? String(segment.key) : String(segment),
+            ),
+          })),
+        },
+        cause: error.cause,
+      });
+    }
+  };
+  const rpcHandler = new RPCHandler(router, {
+    interceptors: [onError(reportError)],
+    clientInterceptors: [onError(translateValidationError)],
+  });
+  const openApiHandler = new OpenAPIHandler(router, {
+    interceptors: [onError(reportError)],
+    clientInterceptors: [onError(translateValidationError)],
+  });
   const openApiGenerator = new OpenAPIGenerator({
     schemaConverters: [new ZodToJsonSchemaConverter()],
   });

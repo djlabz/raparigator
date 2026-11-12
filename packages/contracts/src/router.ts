@@ -95,9 +95,13 @@ import {
   UpdateProfileInputSchema,
 } from "./schemas/user";
 
+export const UNAUTHORIZED_MESSAGE = "Sessão necessária.";
+export const FORBIDDEN_MESSAGE = "Sem permissão para este recurso.";
+export const VALIDATION_ERROR_MESSAGE = "Dados inválidos. Confira os campos.";
+
 const base = oc.errors({
-  UNAUTHORIZED: { message: "Sessão necessária." },
-  FORBIDDEN: { message: "Sem permissão para este recurso." },
+  UNAUTHORIZED: { message: UNAUTHORIZED_MESSAGE },
+  FORBIDDEN: { message: FORBIDDEN_MESSAGE },
   NOT_FOUND: { message: "Recurso não encontrado." },
   CONFLICT: { message: "Estado atual não permite a operação." },
   RATE_LIMITED: { status: 429, message: "Muitas tentativas. Aguarde um instante." },
@@ -108,7 +112,7 @@ export const authContract = {
   me: base.route({ method: "GET", path: "/auth/me" }).output(SessionSchema),
   deleteAccount: base
     .route({ method: "POST", path: "/auth/delete-account" })
-    .input(z.object({ password: z.string().min(1) }))
+    .input(z.object({ password: z.string().min(1, "Informe sua senha.") }))
     .output(OkSchema),
   updateProfile: base
     .route({ method: "POST", path: "/auth/profile" })
@@ -192,11 +196,14 @@ export const announcementsContract = {
       z.object({
         whatsappNumber: z
           .string()
-          .regex(/^\d{10,15}$/)
+          .regex(/^\d{10,15}$/, "O WhatsApp precisa ter de 10 a 15 dígitos, com DDD.")
           .nullable(),
         telegramUsername: z
           .string()
-          .regex(/^[A-Za-z0-9_]{5,32}$/)
+          .regex(
+            /^[A-Za-z0-9_]{5,32}$/,
+            "O usuário do Telegram precisa ter de 5 a 32 letras, números ou _.",
+          )
           .nullable(),
       }),
     )
@@ -257,7 +264,11 @@ export const chatContract = {
     .input(
       z.object({
         conversationId: IdSchema,
-        content: z.string().trim().min(1).max(4000),
+        content: z
+          .string()
+          .trim()
+          .min(1, "Escreva uma mensagem.")
+          .max(4000, "A mensagem pode ter até 4.000 caracteres."),
         clientMessageId: z.string().max(64).optional(),
       }),
     )
@@ -268,7 +279,11 @@ export const chatContract = {
       z.object({
         conversationId: IdSchema,
         brief: EncounterBriefSchema,
-        greeting: z.string().trim().min(1).max(1000),
+        greeting: z
+          .string()
+          .trim()
+          .min(1, "Escreva uma mensagem.")
+          .max(1000, "A mensagem pode ter até 1.000 caracteres."),
         clientMessageId: z.string().max(64).optional(),
       }),
     )
@@ -306,7 +321,11 @@ export const chatContract = {
       z.object({
         conversationId: IdSchema,
         type: ReportTypeSchema.default("other"),
-        reason: z.string().trim().min(3).max(2000),
+        reason: z
+          .string()
+          .trim()
+          .min(3, "Conte o motivo em pelo menos 3 caracteres.")
+          .max(2000, "O motivo pode ter até 2.000 caracteres."),
       }),
     )
     .output(ChatMutationResultSchema),
@@ -356,7 +375,12 @@ export const verificationContract = {
     .output(z.object({ expiresAt: z.string(), devCode: z.string().nullable() })),
   confirmCode: base
     .route({ method: "POST", path: "/verification/{channel}/confirm" })
-    .input(z.object({ channel: VerificationChannelSchema, code: z.string().regex(/^\d{6}$/) }))
+    .input(
+      z.object({
+        channel: VerificationChannelSchema,
+        code: z.string().regex(/^\d{6}$/, "O código tem 6 dígitos."),
+      }),
+    )
     .output(z.object({ success: z.boolean(), message: z.string() })),
   changePhone: base
     .route({ method: "POST", path: "/verification/phone" })
@@ -433,7 +457,16 @@ export const adminContract = {
     .output(z.array(ClientAccountSchema)),
   suspendClient: base
     .route({ method: "POST", path: "/admin/clients/{id}/suspend" })
-    .input(z.object({ id: IdSchema, reason: z.string().trim().min(3).max(500) }))
+    .input(
+      z.object({
+        id: IdSchema,
+        reason: z
+          .string()
+          .trim()
+          .min(3, "Conte o motivo em pelo menos 3 caracteres.")
+          .max(500, "O motivo pode ter até 500 caracteres."),
+      }),
+    )
     .output(OkSchema),
   reinstateClient: base
     .route({ method: "POST", path: "/admin/clients/{id}/reinstate" })
@@ -453,11 +486,29 @@ export const adminContract = {
     .output(AdminReviewActionSchema),
   rejectProfile: base
     .route({ method: "POST", path: "/admin/profiles/{id}/reject" })
-    .input(z.object({ id: IdSchema, reason: z.string().trim().min(3).max(500) }))
+    .input(
+      z.object({
+        id: IdSchema,
+        reason: z
+          .string()
+          .trim()
+          .min(3, "Conte o motivo em pelo menos 3 caracteres.")
+          .max(500, "O motivo pode ter até 500 caracteres."),
+      }),
+    )
     .output(AdminReviewActionSchema),
   suspendProfessional: base
     .route({ method: "POST", path: "/admin/professionals/{id}/suspend" })
-    .input(z.object({ id: IdSchema, reason: z.string().trim().min(3).max(500) }))
+    .input(
+      z.object({
+        id: IdSchema,
+        reason: z
+          .string()
+          .trim()
+          .min(3, "Conte o motivo em pelo menos 3 caracteres.")
+          .max(500, "O motivo pode ter até 500 caracteres."),
+      }),
+    )
     .output(OkSchema),
   reinstateProfessional: base
     .route({ method: "POST", path: "/admin/professionals/{id}/reinstate" })
@@ -477,7 +528,7 @@ export const adminContract = {
       z.object({
         id: IdSchema,
         resolution: z.enum(["resolved", "dismissed"]),
-        note: z.string().trim().max(1000),
+        note: z.string().trim().max(1000, "A observação pode ter até 1.000 caracteres."),
       }),
     )
     .output(OkSchema),
@@ -515,7 +566,15 @@ export const adminContract = {
     .output(OkSchema),
   search: base
     .route({ method: "GET", path: "/admin/search" })
-    .input(z.object({ q: z.string().trim().min(1).max(100) }))
+    .input(
+      z.object({
+        q: z
+          .string()
+          .trim()
+          .min(1, "Digite algo para buscar.")
+          .max(100, "A busca pode ter até 100 caracteres."),
+      }),
+    )
     .output(z.array(GlobalSearchResultSchema)),
   grantPremium: base
     .route({ method: "POST", path: "/admin/profiles/{id}/grant-premium" })

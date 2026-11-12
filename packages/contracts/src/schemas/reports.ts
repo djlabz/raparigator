@@ -42,11 +42,21 @@ export type ReportEvidenceFileInput = z.infer<typeof ReportEvidenceFileInputSche
 
 export const CreatePublicReportInputSchema = z
   .object({
-    targetUrl: z.url().max(500).optional(),
+    targetUrl: z
+      .url("Informe um link válido.")
+      .max(500, "O link pode ter até 500 caracteres.")
+      .optional(),
     profileSlug: SlugSchema.optional(),
     reason: PublicReportReasonSchema,
-    details: z.string().trim().min(10).max(4000),
-    contactEmail: z.email().max(200).optional(),
+    details: z
+      .string()
+      .trim()
+      .min(10, "Conte o que aconteceu em pelo menos 10 caracteres.")
+      .max(4000, "O relato pode ter até 4.000 caracteres."),
+    contactEmail: z
+      .email("Informe um e-mail válido.")
+      .max(200, "O e-mail pode ter até 200 caracteres.")
+      .optional(),
     evidence: z.array(ReportEvidenceFileInputSchema).max(REPORT_EVIDENCE_MAX_FILES).default([]),
   })
   .refine((input) => Boolean(input.targetUrl || input.profileSlug), {
@@ -94,7 +104,7 @@ export const ActOnReportInputSchema = z.object({
   id: IdSchema,
   action: ReportActionSchema,
   assetId: IdSchema.optional(),
-  note: z.string().trim().max(1000).default(""),
+  note: z.string().trim().max(1000, "A observação pode ter até 1.000 caracteres.").default(""),
 });
 export type ActOnReportInput = z.infer<typeof ActOnReportInputSchema>;
 

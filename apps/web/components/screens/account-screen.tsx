@@ -26,6 +26,7 @@ import { getApiClient } from "@/lib/api/client";
 import { authClient } from "@/lib/api/auth-client";
 import type { AuthRole, User } from "../../lib/types";
 import { CLIENT_ALIAS_TAKEN_MESSAGE } from "@sigillus/domain";
+import { apiErrorMessage } from "@/lib/api/errors";
 
 interface ProfileFormState {
   fullName: string;
@@ -195,9 +196,7 @@ function AccountWorkspace({ role, user }: { role: Exclude<AuthRole, "visitor">; 
     } catch (err: unknown) {
       setIsDeletingAccount(false);
       setDeleteError(
-        err instanceof Error
-          ? err.message
-          : "Não foi possível excluir sua conta. Tente novamente mais tarde.",
+        apiErrorMessage(err, "Não foi possível excluir sua conta. Tente novamente mais tarde."),
       );
     }
   };

@@ -33,7 +33,7 @@ export type AdReviewsSummary = z.infer<typeof AdReviewsSummarySchema>;
 
 export const SubmitReviewInputSchema = z.object({
   conversationId: z.string(),
-  score: z.number().int().min(1).max(5),
-  comment: z.string().trim().max(1000),
+  score: z.number().int().min(1, "Dê uma nota de 1 a 5.").max(5, "Dê uma nota de 1 a 5."),
+  comment: z.string().trim().max(1000, "O comentário pode ter até 1.000 caracteres."),
 });
 export type SubmitReviewInput = z.infer<typeof SubmitReviewInputSchema>;

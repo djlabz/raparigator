@@ -1,3 +1,4 @@
+import "./lib/zod";
 import { z } from "zod";
 
 const booleanFromEnv = z
