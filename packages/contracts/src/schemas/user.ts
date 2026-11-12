@@ -57,7 +57,7 @@ export const AdminSessionSchema = z.object({
 export type AdminSession = z.infer<typeof AdminSessionSchema>;
 
 export const UpdateProfileInputSchema = z.strictObject({
-  cpf: z.string().max(20).optional(),
-  city: z.string().max(120).optional(),
+  cpf: z.string().max(20, "Informe um CPF válido.").optional(),
+  city: z.string().max(120, "A cidade pode ter até 120 caracteres.").optional(),
 });
 export type UpdateProfileInput = z.infer<typeof UpdateProfileInputSchema>;

@@ -97,7 +97,7 @@ export const CreateUploadInputSchema = z.object({
   purpose: MediaPurposeSchema,
   contentType: z.string().regex(/^(image|video)\/[a-z0-9.+-]+$/),
   sizeBytes: z.number().int().positive().max(MEDIA_MAX_VIDEO_BYTES),
-  fileName: z.string().max(200).optional(),
+  fileName: z.string().max(200, "O nome do arquivo pode ter até 200 caracteres.").optional(),
 });
 export type CreateUploadInput = z.infer<typeof CreateUploadInputSchema>;
 

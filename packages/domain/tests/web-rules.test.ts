@@ -51,14 +51,42 @@ describe("navegação por papel", () => {
 });
 
 describe("mensagens de erro de autenticação", () => {
-  it("traduz os erros conhecidos e mantém os demais", () => {
-    expect(translateAuthError({ message: "Invalid email or password" })).toBe(
-      "Credenciais inválidas. Verifique seu e-mail e senha.",
+  it("traduz pelo código do better-auth", () => {
+    expect(
+      translateAuthError({
+        code: "INVALID_EMAIL_OR_PASSWORD",
+        message: "Invalid email or password",
+      }),
+    ).toBe("Credenciais inválidas. Verifique seu e-mail e senha.");
+    expect(translateAuthError({ code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL" })).toBe(
+      "Este e-mail já está cadastrado.",
     );
-    expect(translateAuthError("User already exists")).toBe("Este e-mail já está cadastrado.");
+    expect(translateAuthError({ code: "TOKEN_EXPIRED", message: "Token expired" })).toBe(
+      "Este link expirou. Peça um novo.",
+    );
+  });
+
+  it("código desconhecido nunca mostra o texto em inglês", () => {
+    expect(
+      translateAuthError({ code: "FAILED_TO_CREATE_SESSION", message: "Failed to create session" }),
+    ).toBe("Ocorreu um erro ao processar sua solicitação. Tente novamente.");
+  });
+
+  it("erro sem código vem da própria API, em português, e passa direto", () => {
+    expect(translateAuthError({ message: "Informe um CPF válido.", status: 400 })).toBe(
+      "Informe um CPF válido.",
+    );
+    expect(
+      translateAuthError({ code: "ALIAS_TAKEN", message: "Esse apelido já está em uso." }),
+    ).toBe("Esse apelido já está em uso.");
+    expect(translateAuthError({ statusText: "Bad Request" })).toBe(
+      "Ocorreu um erro ao processar sua solicitação. Tente novamente.",
+    );
+  });
+
+  it("rede e ausência de erro têm texto fixo", () => {
     expect(translateAuthError(new TypeError("Failed to fetch"))).toMatch(/conectar ao servidor/);
     expect(translateAuthError(null)).toBe("Ocorreu um erro inesperado. Tente novamente.");
-    expect(translateAuthError({ message: "Outra coisa" })).toBe("Outra coisa");
   });
 });
 

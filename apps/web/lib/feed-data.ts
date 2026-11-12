@@ -5,6 +5,7 @@ import type { FeedAdSummary, FeedFiltersCriteria } from "@sigillus/contracts";
 import { PAGE_SIZE_MAX } from "@sigillus/contracts";
 import { serializeFeedFiltersCriteria } from "@sigillus/domain";
 import { getApiClient } from "@/lib/api/client";
+import { apiErrorMessage } from "@/lib/api/errors";
 
 export type FeedAdsResult = {
   ads: FeedAdSummary[];
@@ -40,7 +41,7 @@ export function useFeedAds(criteria: FeedFiltersCriteria): FeedAdsResult {
           setApiState({
             key: fingerprint,
             ads: EMPTY,
-            error: error instanceof Error ? error.message : "Não foi possível carregar o feed.",
+            error: apiErrorMessage(error, "Não foi possível carregar o feed."),
           });
         }
       });

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getApiClient } from "@/lib/api/client";
 import { formatDateBR } from "@sigillus/domain";
+import { apiErrorMessage } from "@/lib/api/errors";
 
 const ACCEPT = IDENTITY_VERIFICATION_CONTENT_TYPES.join(",");
 const SUBMIT_ERROR = "Não foi possível enviar a verificação. Tente novamente.";
@@ -52,10 +53,7 @@ async function uploadFile(kind: IdentityVerificationFileKind, file: File): Promi
 }
 
 function errorMessage(error: unknown): string {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-  return SUBMIT_ERROR;
+  return apiErrorMessage(error, SUBMIT_ERROR);
 }
 
 export function IdentityVerificationScreen() {

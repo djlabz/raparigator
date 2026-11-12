@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { FeedAdSummary, MediaHighlight, ProfessionalAd } from "@sigillus/contracts";
 import { getApiClient } from "@/lib/api/client";
 import { reportStoreError } from "@/lib/report-store-error";
+import { apiErrorMessage } from "@/lib/api/errors";
 
 export type PopularAdsKind = "most_viewed" | "top_rated";
 
@@ -25,7 +26,7 @@ const adCache = new Map<string, ProfessionalAd | null>();
 const viewedSlugs = new Set<string>();
 
 function errorMessage(error: unknown, fallback: string) {
-  return error instanceof Error ? error.message : fallback;
+  return apiErrorMessage(error, fallback);
 }
 
 type AdState = { slug: string; ad: ProfessionalAd | null; error: string | null };
