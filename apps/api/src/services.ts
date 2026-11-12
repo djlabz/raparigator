@@ -8,6 +8,7 @@ import type { Mailer } from "./lib/mail";
 import type { ObjectStorage } from "./lib/storage";
 import { createAdminService } from "./modules/admin/service";
 import { createAdsService } from "./modules/ads/service";
+import { createAuthService } from "./modules/auth/service";
 import { createAnnouncementsService } from "./modules/announcements/service";
 import { createCatalogsService } from "./modules/catalogs/service";
 import { createChatService } from "./modules/chat/service";
@@ -23,6 +24,7 @@ import { createVerificationService } from "./modules/verification/service";
 import { createAccessLogService } from "./modules/access-log/service";
 import { createReportsRepository } from "./modules/reports/repository";
 import { createMediaRepository } from "./modules/media/repository";
+import { createChatRepository } from "./modules/chat/repository";
 
 export type ServiceDeps = {
   config: AppConfig;
@@ -47,6 +49,14 @@ export function createServices(deps: ServiceDeps) {
   return {
     profiles,
     notifications,
+    auth: createAuthService({
+      db,
+      jobs,
+      logger,
+      uploadTtlSeconds: config.MEDIA_UPLOAD_TTL_SECONDS,
+      chat: createChatRepository(db),
+      identity,
+    }),
     accessLog: createAccessLogService(db),
     catalogs: createCatalogsService(db),
     feed: createFeedService(profiles),

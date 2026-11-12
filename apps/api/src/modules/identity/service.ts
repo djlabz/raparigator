@@ -11,11 +11,11 @@ import {
   type IdentityVerificationUploadOutput,
 } from "@sigillus/contracts";
 import type { AppConfig } from "../../config";
-import type { Database } from "../../db/client";
+import type { Database, DbExecutor } from "../../db/client";
 import { newId } from "../../lib/ids";
 import type { JobQueue } from "../../lib/jobs";
 import type { Logger } from "../../lib/logger";
-import { PRIVATE_STORAGE_PREFIX, type ObjectStorage } from "../../lib/storage";
+import { PRIVATE_STORAGE_PREFIX, type ObjectStorage, uploadGracePeriodMs } from "../../lib/storage";
 import { stripImageMetadata } from "../../lib/image";
 import { enqueueAdminIdentityDigest } from "./digest";
 import {
@@ -41,10 +41,12 @@ export type IdentityServiceDeps = {
   storage: ObjectStorage;
   jobs: JobQueue;
   logger: Logger;
-  config: Pick<AppConfig, "IDENTITY_REQUIRED">;
+  config: Pick<AppConfig, "IDENTITY_REQUIRED" | "MEDIA_UPLOAD_TTL_SECONDS">;
 };
 
 export type IdentityReviewer = { id: string; email: string };
+
+export const IDENTITY_DELETE_FILES_JOB = "identity.delete-files";
 
 export function identityUserPrefix(userId: string): string {
   return `${PRIVATE_STORAGE_PREFIX}identity/${userId}/`;
@@ -181,6 +183,18 @@ export function createIdentityService(deps: IdentityServiceDeps) {
   }
 
   return {
+    async fileKeysForUser(userId: string, executor: DbExecutor = db): Promise<string[]> {
+      return repo.fileKeysForUser(userId, executor);
+    },
+
+    async scheduleFileDeletion(userId: string, keys: string[]): Promise<void> {
+      await jobs.enqueue(
+        IDENTITY_DELETE_FILES_JOB,
+        { userId, keys },
+        { startAfter: new Date(Date.now() + uploadGracePeriodMs(config.MEDIA_UPLOAD_TTL_SECONDS)) },
+      );
+    },
+
     async publishGate(userId: string): Promise<IdentityPublishGate> {
       const required = config.IDENTITY_REQUIRED;
       const active = required ? await repo.activeForUser(userId) : null;

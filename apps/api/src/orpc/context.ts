@@ -1,5 +1,5 @@
 import type { AppDeps } from "../deps";
-import type { AdminSession, UserSession } from "../lib/auth";
+import type { AdminSession, UserSession } from "../modules/auth";
 
 export type RequestInfo = {
   headers: Headers;

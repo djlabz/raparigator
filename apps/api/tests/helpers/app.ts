@@ -3,7 +3,7 @@ import { createApp } from "../../src/app";
 import { loadConfig, type AppConfig } from "../../src/config";
 import { createDatabase, type Database } from "../../src/db/client";
 import { seedCatalogs } from "../../src/db/seed/catalogs";
-import { createAdminAuth, createUserAuth } from "../../src/lib/auth";
+import { createAdminAuth, createUserAuth } from "../../src/modules/auth";
 import { createLogger } from "../../src/lib/logger";
 import { MemoryRateLimiter } from "../../src/lib/rate-limit";
 import { createFakeBillingProvider } from "../../src/lib/billing/fake-provider";

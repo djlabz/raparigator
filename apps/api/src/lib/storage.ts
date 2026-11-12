@@ -2,6 +2,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -31,6 +32,13 @@ export interface ObjectStorage {
   getObject(key: string): Promise<Uint8Array>;
   putObject(key: string, body: Uint8Array, contentType: string): Promise<void>;
   deleteObject(key: string): Promise<void>;
+  listKeys(prefix: string): Promise<string[]>;
+}
+
+const UPLOAD_GRACE_MULTIPLIER = 2;
+
+export function uploadGracePeriodMs(uploadTtlSeconds: number): number {
+  return uploadTtlSeconds * UPLOAD_GRACE_MULTIPLIER * 1000;
 }
 
 export async function deleteObjectsBestEffort(
@@ -163,6 +171,26 @@ export function createS3Storage(config: AppConfig): ObjectStorage {
     async deleteObject(key) {
       await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
     },
+    async listKeys(prefix) {
+      const keys: string[] = [];
+      let continuationToken: string | undefined;
+      do {
+        const page = await client.send(
+          new ListObjectsV2Command({
+            Bucket: bucket,
+            Prefix: prefix,
+            ContinuationToken: continuationToken,
+          }),
+        );
+        for (const object of page.Contents ?? []) {
+          if (object.Key) {
+            keys.push(object.Key);
+          }
+        }
+        continuationToken = page.IsTruncated ? page.NextContinuationToken : undefined;
+      } while (continuationToken);
+      return keys;
+    },
   };
 }
 
@@ -202,6 +230,9 @@ export function createMemoryStorage(baseUrl = "http://storage.test"): ObjectStor
     },
     async deleteObject(key) {
       objects.delete(key);
+    },
+    async listKeys(prefix) {
+      return [...objects.keys()].filter((key) => key.startsWith(prefix));
     },
   };
 }

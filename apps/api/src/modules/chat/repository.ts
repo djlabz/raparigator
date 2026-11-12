@@ -1,6 +1,6 @@
-import { and, desc, eq, inArray, isNull, lt, ne, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import type { Database } from "../../db/client";
+import type { Database, DbExecutor } from "../../db/client";
 import {
   conversationParticipants,
   conversations,
@@ -10,6 +10,9 @@ import {
   users,
 } from "../../db/schema";
 import { newId } from "../../lib/ids";
+
+const DELETED_ACCOUNT_MESSAGE = "[Mensagem apagada devido à exclusão da conta]";
+const DELETED_ACCOUNT_PREVIEW = "[Mensagem apagada]";
 
 type ConversationRow = typeof conversations.$inferSelect;
 export type ParticipantRow = typeof conversationParticipants.$inferSelect;
@@ -296,6 +299,24 @@ export function createChatRepository(db: Database) {
         .where(and(eq(messages.id, messageId), isNull(messages.openedAt)))
         .returning({ id: messages.id });
       return updated.length > 0;
+    },
+
+    async anonymizeUserMessages(userId: string, executor: DbExecutor = db): Promise<void> {
+      await executor
+        .update(messages)
+        .set({
+          content: DELETED_ACCOUNT_MESSAGE,
+          mediaAssetId: null,
+          brief: null,
+          editedAt: new Date(),
+        })
+        .where(eq(messages.senderUserId, userId));
+      await executor
+        .update(conversations)
+        .set({ lastMessagePreview: DELETED_ACCOUNT_PREVIEW })
+        .where(
+          or(eq(conversations.clientUserId, userId), eq(conversations.professionalUserId, userId)),
+        );
     },
 
     async findMediaAsset(assetId: string): Promise<ChatMediaAsset | null> {

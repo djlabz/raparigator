@@ -1,5 +1,5 @@
 import { and, desc, eq, inArray, isNotNull, isNull, lte, or } from "drizzle-orm";
-import type { Database } from "../../db/client";
+import type { Database, DbExecutor } from "../../db/client";
 import { identityVerifications, professionalProfiles, users } from "../../db/schema";
 
 export type IdentityVerificationRow = typeof identityVerifications.$inferSelect;
@@ -113,8 +113,8 @@ export function createIdentityRepository(db: Database) {
         );
     },
 
-    async fileKeysForUser(userId: string): Promise<string[]> {
-      const rows = await db
+    async fileKeysForUser(userId: string, executor: DbExecutor = db): Promise<string[]> {
+      const rows = await executor
         .select({
           documentKey: identityVerifications.documentKey,
           selfieKey: identityVerifications.selfieKey,

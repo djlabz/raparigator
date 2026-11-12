@@ -35,6 +35,16 @@ describe("storage S3 contra o MinIO do compose.yaml", () => {
     await Promise.all(createdKeys.map((key) => storage.deleteObject(key).catch(() => undefined)));
   });
 
+  it("listKeys devolve só as chaves sob o prefixo", async () => {
+    const prefix = `private/identity/${ownerUserId}/`;
+    const inside = [`${prefix}${newId()}.jpg`, `${prefix}${newId()}.jpg`];
+    const outside = `private/identity/${ownerUserId}-outro/${newId()}.jpg`;
+    await Promise.all([...inside, outside].map((key) => putTestObject(key)));
+
+    expect((await storage.listKeys(prefix)).sort()).toEqual([...inside].sort());
+    expect(await storage.listKeys(`private/identity/${newId()}/`)).toEqual([]);
+  });
+
   it("head devolve null para objeto que não existe", async () => {
     expect(await storage.head(`public/media/${ownerUserId}/nao-existe.mp4`)).toBeNull();
   });

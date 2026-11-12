@@ -1,6 +1,6 @@
 import type { AppConfig } from "./config";
 import type { Database } from "./db/client";
-import type { AdminAuth, UserAuth } from "./lib/auth";
+import type { AdminAuth, UserAuth } from "./modules/auth";
 import type { BillingProvider } from "./lib/billing/provider";
 import type { JobQueue } from "./lib/jobs";
 import type { Logger } from "./lib/logger";
