@@ -109,7 +109,7 @@ export async function seedDevData(db: Database) {
       availabilityStatus: ad.status,
       adTier: ad.adTier,
       listingStatus: "Ativo" as const,
-      verificationStatus: ad.verificationStatus ?? ("published" as const),
+      moderationStatus: ad.moderationStatus ?? ("published" as const),
       submittedAt: ad.submittedAt ? new Date(ad.submittedAt) : new Date(),
       rejectionReason: ad.rejectionReason ?? null,
       isSuspended: ad.isSuspended ?? false,

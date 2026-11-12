@@ -42,7 +42,7 @@ export async function createPublishedProfile(
       { label: "2 horas", price: 550 },
     ],
     listingStatus: "Ativo",
-    verificationStatus: "published",
+    moderationStatus: "published",
     rating: 4.5,
     reviewsCount: 2,
     ...overrides,

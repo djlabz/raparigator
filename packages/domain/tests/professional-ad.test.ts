@@ -6,7 +6,7 @@ describe("professional-ad", () => {
   it("anúncio vazio é um rascunho válido pelo contrato, sem números", () => {
     const ad = emptyProfessionalAd();
     expect(ProfessionalAdSchema.parse(ad)).toEqual(ad);
-    expect(ad).toMatchObject({ verificationStatus: "draft", startingPrice: 0, profileViews: 0 });
+    expect(ad).toMatchObject({ moderationStatus: "draft", startingPrice: 0, profileViews: 0 });
   });
 
   it("cada chamada devolve um objeto novo", () => {

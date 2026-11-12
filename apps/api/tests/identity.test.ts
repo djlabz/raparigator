@@ -183,7 +183,7 @@ describe("verificação de identidade da anunciante", () => {
       .select()
       .from(professionalProfiles)
       .where(eq(professionalProfiles.userId, pro.userId));
-    expect(profile!.verificationStatus).toBe("pending_review");
+    expect(profile!.moderationStatus).toBe("pending_review");
     expect(profile!.submittedAt).toBeInstanceOf(Date);
   });
 

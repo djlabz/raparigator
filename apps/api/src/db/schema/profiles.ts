@@ -73,7 +73,7 @@ export const professionalProfiles = pgTable(
     listingStatus: text({ enum: ["Ativo", "Pausado"] })
       .notNull()
       .default("Pausado"),
-    verificationStatus: text({ enum: ["draft", "pending_review", "published", "rejected"] })
+    moderationStatus: text({ enum: ["draft", "pending_review", "published", "rejected"] })
       .notNull()
       .default("draft"),
     submittedAt: timestamp({ withTimezone: true }),
@@ -106,7 +106,7 @@ export const professionalProfiles = pgTable(
     uniqueIndex("professional_profile_user_id_key").on(table.userId),
     uniqueIndex("professional_profile_slug_key").on(table.slug),
     index("professional_profile_feed_idx").on(
-      table.verificationStatus,
+      table.moderationStatus,
       table.listingStatus,
       table.isSuspended,
       table.city,

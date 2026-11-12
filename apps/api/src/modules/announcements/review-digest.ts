@@ -79,7 +79,7 @@ export async function registerAdminReviewDigestJob(deps: AdminReviewDigestDeps):
         .set({ reviewNotifiedAt: claimedAt })
         .where(
           and(
-            eq(professionalProfiles.verificationStatus, "pending_review"),
+            eq(professionalProfiles.moderationStatus, "pending_review"),
             isNotNull(professionalProfiles.submittedAt),
             or(
               isNull(professionalProfiles.reviewNotifiedAt),

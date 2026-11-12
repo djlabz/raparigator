@@ -45,7 +45,7 @@ import {
   OkSchema,
   PaginationInputSchema,
   SlugSchema,
-  VerificationStatusSchema,
+  ModerationStatusSchema,
   paginated,
 } from "./schemas/common";
 import { FeedFiltersCriteriaSchema, FeedSortSchema } from "./schemas/feed";
@@ -474,7 +474,7 @@ export const adminContract = {
     .output(OkSchema),
   professionals: base
     .route({ method: "GET", path: "/admin/professionals" })
-    .input(z.object({ status: VerificationStatusSchema.optional() }))
+    .input(z.object({ status: ModerationStatusSchema.optional() }))
     .output(z.array(ProfessionalAdSchema)),
   profile: base
     .route({ method: "GET", path: "/admin/profiles/{id}" })

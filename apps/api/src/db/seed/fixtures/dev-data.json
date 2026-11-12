@@ -53,7 +53,7 @@
       "rating": 4.9,
       "reviewsCount": 128,
       "profileViews": 21450,
-      "verificationStatus": "published",
+      "moderationStatus": "published",
       "submittedAt": "2026-01-10T10:00:00.000Z",
       "whatsappNumber": "5511999990001",
       "telegramUsername": "lunavelvet"
@@ -109,7 +109,7 @@
       "rating": 4.8,
       "reviewsCount": 92,
       "profileViews": 18670,
-      "verificationStatus": "published",
+      "moderationStatus": "published",
       "submittedAt": "2026-01-12T10:00:00.000Z",
       "whatsappNumber": "5519999990002",
       "telegramUsername": "valentinanoir"
@@ -162,7 +162,7 @@
       "rating": 4.7,
       "reviewsCount": 57,
       "profileViews": 17420,
-      "verificationStatus": "published",
+      "moderationStatus": "published",
       "submittedAt": "2026-01-15T10:00:00.000Z",
       "whatsappNumber": "5521999990003",
       "telegramUsername": "alexrivera"
@@ -218,7 +218,7 @@
       "rating": 4.95,
       "reviewsCount": 147,
       "profileViews": 23990,
-      "verificationStatus": "published",
+      "moderationStatus": "published",
       "submittedAt": "2026-01-20T10:00:00.000Z",
       "whatsappNumber": "5541999990004",
       "telegramUsername": "mayaaurora"
@@ -273,7 +273,7 @@
       "rating": 4.7,
       "reviewsCount": 74,
       "profileViews": 13240,
-      "verificationStatus": "published",
+      "moderationStatus": "published",
       "submittedAt": "2026-02-01T10:00:00.000Z",
       "whatsappNumber": "5513999990005",
       "telegramUsername": "sophialisboa"
@@ -325,7 +325,7 @@
       "rating": 4.6,
       "reviewsCount": 58,
       "profileViews": 10980,
-      "verificationStatus": "published",
+      "moderationStatus": "published",
       "submittedAt": "2026-02-05T10:00:00.000Z",
       "whatsappNumber": "5531999990006",
       "telegramUsername": "kiarasantini"
@@ -377,7 +377,7 @@
       "rating": 0,
       "reviewsCount": 0,
       "profileViews": 0,
-      "verificationStatus": "pending_review",
+      "moderationStatus": "pending_review",
       "submittedAt": "2026-06-09T14:22:00.000Z"
     },
     {
@@ -431,7 +431,7 @@
       "rating": 0,
       "reviewsCount": 0,
       "profileViews": 0,
-      "verificationStatus": "pending_review",
+      "moderationStatus": "pending_review",
       "submittedAt": "2026-06-10T08:05:00.000Z"
     },
     {
@@ -476,7 +476,7 @@
       "rating": 0,
       "reviewsCount": 0,
       "profileViews": 0,
-      "verificationStatus": "pending_review",
+      "moderationStatus": "pending_review",
       "submittedAt": "2026-06-10T09:47:00.000Z"
     },
     {
@@ -517,7 +517,7 @@
       "rating": 0,
       "reviewsCount": 0,
       "profileViews": 0,
-      "verificationStatus": "rejected",
+      "moderationStatus": "rejected",
       "submittedAt": "2026-06-08T11:00:00.000Z",
       "rejectionReason": "Fotos de perfil nao atendem aos criterios minimos de qualidade. Por favor, reenvie com fotos mais recentes e de boa resolucao."
     }

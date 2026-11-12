@@ -5,7 +5,7 @@ import type {
   ProfessionalAd,
   Report,
   ReportStatus,
-  VerificationStatus,
+  ModerationStatus,
 } from "@/lib/types";
 import type {
   ClientAccount,
@@ -53,7 +53,7 @@ export async function reinstateProfessional(id: string, _adminId: string): Promi
   await getApiClient().admin.reinstateProfessional({ id });
 }
 
-export async function getAllProfiles(status?: VerificationStatus): Promise<ProfessionalAd[]> {
+export async function getAllProfiles(status?: ModerationStatus): Promise<ProfessionalAd[]> {
   return getApiClient().admin.professionals({ status });
 }
 

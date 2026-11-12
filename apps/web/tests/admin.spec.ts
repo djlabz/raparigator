@@ -55,7 +55,7 @@ test.describe("Admin", () => {
     const professional = await signUpDisposableProfessional();
     const mine = await professional.api.announcements.getMine();
     const profileId = mine.ad!.id;
-    expect(mine.ad?.verificationStatus).toBe("draft");
+    expect(mine.ad?.moderationStatus).toBe("draft");
 
     const admin = await signInAdminViaApi(credentials.admin);
     const queue = await admin.api.admin.professionals({ status: "pending_review" });

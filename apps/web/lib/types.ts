@@ -17,7 +17,7 @@ export type {
   ReportType,
   SimulationSelection,
   User,
-  VerificationStatus,
+  ModerationStatus,
 } from "@sigillus/contracts";
 
 export type AdminUser = ContractAdminUser & {

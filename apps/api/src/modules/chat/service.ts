@@ -153,7 +153,7 @@ export function createChatService(deps: ChatServiceDeps) {
   return {
     async ensureConversationForAd(actor: ChatActor, adSlug: string) {
       const profile = await profiles.findBySlug(adSlug);
-      if (!profile || profile.verificationStatus !== "published" || profile.isSuspended) {
+      if (!profile || profile.moderationStatus !== "published" || profile.isSuspended) {
         throw new ORPCError("NOT_FOUND", { message: "Anúncio não encontrado." });
       }
       const existing = await repo.findContextByProfileAndClient(profile.id, actor.id);
