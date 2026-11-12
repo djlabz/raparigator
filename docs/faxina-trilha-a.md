@@ -30,9 +30,9 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 | A5    | F-08 mensagens em português                        | [x] #117 12/11       |
 | A6    | F-09 seeds: CPF e pexels                           | [x] #106 25/10       |
 | A7    | F-11 CSS                                           | [x] #109 25/10       |
-| A8    | F-12 nomes                                         | em andamento (12/11) |
+| A8    | F-12 nomes                                         | [x] #121 12/11       |
 | A9    | F-13 `moderationStatus`                            | [x] #119 12/11       |
-| A10a  | F-14a consolidação da documentação                 |                      |
+| A10a  | F-14a consolidação da documentação                 | em andamento (12/11) |
 | A10b  | F-14b ADRs 017 e 020 (rascunho, revisão do Daniel) |                      |
 | A11   | F-16 duplicação do web                             |                      |
 | A12   | F-18 pastas por funcionalidade (um PR por feature) |                      |
@@ -214,3 +214,7 @@ Formato: data, PR de origem, arquivo:linha, achado e proposta. Consolidados no i
 - 12/11, F-12, `apps/api/src/db/schema/social.ts`: além dos quatro arquivos previstos, `admin_activity_log` foi para `admin-activity.ts` e `report` foi para o `reports.ts` que já existia (antes ele importava `reports` de `social.ts`). Sem migration; `db:generate` responde "No schema changes".
 - 12/11, F-12, nomes que ficaram: `lib/catalogs-data.ts` (F-151 cita, a linha do F-12 não; a fonte `local` é dado de verdade), schema `AccountNotificationItem` no contrato (só o store do web virou `notifications`), prefixo `fetch*` das funções de `lib/chat-api.ts` (só as duas que seguem procedimento renomeado mudaram). A aba do painel mantém o id `Verificação` no `?tab=` e ganhou rótulo próprio. Proposta: decidir no F-16 ou no F-18 se esses entram.
 - 12/11, F-12, D-35: o texto da decisão cita `listInvites`; com a convenção `*Mine` o procedimento ficou `reviews.listInvitesMine`, e o quarto rename foi `chat.deleteFromInbox` → `chat.removeFromInbox`. Paths OpenAPI desses quatro não mudaram; só os de `/verification/*` viraram `/contact-verification/*`.
+- 12/11, F-14a, D-39: além dos ADRs 009, 012, 013 e 015, os textos originais de 008, 010, 011 e 014 também foram para `docs/historico/adr/` depois de fundidos no 016, para que os oito stubs apontem para o mesmo lugar. O índice de `docs/adr/README.md` pula 017 e 020, que entram no F-14b.
+- 12/11, F-14a, D-05: o porquê do briefing por store em memória está no ADR-016 (subseção do chat); os 9 comentários de F-020 em `lib/encounter-brief.ts`, `encounter-brief-card.tsx`, `use-ad-details.ts` e `use-contact-cta.ts` podem ser apagados no próximo PR de código desta trilha.
+- 12/11, F-14a, F-176: a API não tem porta fixa de dev no `package.json` (o `config.ts` cai em 4000 sem `PORT`), enquanto o web e a E2E apontam para 4001. O `AGENTS.md` e o `README.md` agora dizem isso; não li o `apps/api/.env.example` (bloqueado para agentes). Proposta: o F-22 conferir se o `.env.example` traz `PORT=4001` e, se não, alinhar.
+- 12/11, F-14a, `docs/correcoes-pre-deploy.md:60,318` e o relatório de 10/10 em `docs/historico/` citam `docs/deploy.md` com número de linha como evidência da época; ficaram como estavam.
