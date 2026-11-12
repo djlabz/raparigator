@@ -18,13 +18,8 @@ export type UserRole = z.infer<typeof UserRoleSchema>;
 export const AuthRoleSchema = z.enum(["visitor", "cliente", "profissional"]);
 export type AuthRole = z.infer<typeof AuthRoleSchema>;
 
-export const VerificationStatusSchema = z.enum([
-  "draft",
-  "pending_review",
-  "published",
-  "rejected",
-]);
-export type VerificationStatus = z.infer<typeof VerificationStatusSchema>;
+export const ModerationStatusSchema = z.enum(["draft", "pending_review", "published", "rejected"]);
+export type ModerationStatus = z.infer<typeof ModerationStatusSchema>;
 
 export const AdminRoleSchema = z.enum(["visitor", "admin"]);
 export type AdminRole = z.infer<typeof AdminRoleSchema>;

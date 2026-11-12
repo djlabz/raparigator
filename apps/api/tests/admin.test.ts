@@ -88,7 +88,7 @@ async function createProfessional(email: string, artisticName: string, status = 
     city: "São Paulo",
     state: "SP",
     category: "Mulheres",
-    verificationStatus: status as "pending_review" | "published" | "rejected",
+    moderationStatus: status as "pending_review" | "published" | "rejected",
     listingStatus: "Ativo",
     submittedAt: new Date(),
   });
@@ -171,7 +171,7 @@ describe("admin / backoffice", () => {
     expect(result.body.note).toBe("Tudo certo");
 
     const profile = await harness.deps.services.profiles.findById(pro.profile.id);
-    expect(profile?.verificationStatus).toBe("published");
+    expect(profile?.moderationStatus).toBe("published");
     expect(profile?.reviewedAt).not.toBeNull();
 
     const logs = await harness.db.select().from(adminActivityLogs);
@@ -182,7 +182,7 @@ describe("admin / backoffice", () => {
     expect(notified).toHaveLength(1);
     expect(notified[0]?.userId).toBe(pro.userId);
 
-    const listed = await rpc<Array<{ id: string; verificationStatus: string }>>(
+    const listed = await rpc<Array<{ id: string; moderationStatus: string }>>(
       "admin/professionals",
       { status: "published" },
       cookie,
@@ -207,12 +207,12 @@ describe("admin / backoffice", () => {
     );
     expect(result.body.action).toBe("rejected");
     expect(result.body.reason).toBe("Fotos ilegíveis");
-    const profile = await rpc<{ verificationStatus: string; rejectionReason?: string }>(
+    const profile = await rpc<{ moderationStatus: string; rejectionReason?: string }>(
       "admin/profile",
       { id: pro.profile.id },
       cookie,
     );
-    expect(profile.body.verificationStatus).toBe("rejected");
+    expect(profile.body.moderationStatus).toBe("rejected");
     expect(profile.body.rejectionReason).toBe("Fotos ilegíveis");
     const missing = await rpc<{ code: string }>(
       "admin/approveProfile",
@@ -483,7 +483,7 @@ describe("admin / moderação só decide perfil em análise (F-05)", () => {
     );
     expect(rejected.status).toBe(409);
     const profile = await harness.deps.services.profiles.findById(pro.profileId);
-    expect(profile?.verificationStatus).toBe("draft");
+    expect(profile?.moderationStatus).toBe("draft");
     expect(profile?.submittedAt).toBeNull();
   });
 
@@ -504,7 +504,7 @@ describe("admin / moderação só decide perfil em análise (F-05)", () => {
     );
     expect(rejected.status).toBe(409);
     const profile = await harness.deps.services.profiles.findById(pro.profile.id);
-    expect(profile?.verificationStatus).toBe("published");
+    expect(profile?.moderationStatus).toBe("published");
   });
 
   it("perfil rejeitado só volta a ser decidido depois de novo publish", async () => {
@@ -556,7 +556,7 @@ describe("admin / moderação só decide perfil em análise (F-05)", () => {
       slug: "pausada",
       artisticName: "Pausada",
       displayName: "Pausada",
-      verificationStatus: "pending_review",
+      moderationStatus: "pending_review",
       listingStatus: "Pausado",
       submittedAt: new Date(),
     });

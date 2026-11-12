@@ -195,7 +195,7 @@ test.describe("verificação de identidade da anunciante", () => {
     const published = await professional.api.announcements.publish({ draft: completeDraft() });
     expect(published).toEqual({ ok: true });
     const mine = await professional.api.announcements.getMine();
-    expect(mine.ad?.verificationStatus).toBe("pending_review");
+    expect(mine.ad?.moderationStatus).toBe("pending_review");
 
     await page.goto("/profissional/anuncios/verificacao");
     await expect(page.getByText("Identidade verificada")).toBeVisible();

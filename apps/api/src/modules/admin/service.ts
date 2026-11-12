@@ -25,7 +25,7 @@ import type {
   ReportEvidence,
   ReportStatus,
   ReportTargetMedia,
-  VerificationStatus,
+  ModerationStatus,
   WeeklySignup,
 } from "@sigillus/contracts";
 import type { Database } from "../../db/client";
@@ -187,7 +187,7 @@ export function createAdminService(deps: AdminServiceDeps) {
 
   async function requireReviewableProfile(id: string): Promise<ProfileRow> {
     const row = await requireProfile(id);
-    if (!canReview(row.verificationStatus)) {
+    if (!canReview(row.moderationStatus)) {
       throw new ORPCError("CONFLICT", { message: PROFILE_REVIEW_REQUIRED_MESSAGE });
     }
     return row;
@@ -368,7 +368,7 @@ export function createAdminService(deps: AdminServiceDeps) {
     const reason = reportReason(row.id, input.note);
     const now = new Date();
     await profiles.update(profile.id, {
-      verificationStatus: transitionOnReview("reject"),
+      moderationStatus: transitionOnReview("reject"),
       rejectionReason: reason,
       reviewedAt: now,
     });
@@ -447,14 +447,14 @@ export function createAdminService(deps: AdminServiceDeps) {
           .from(professionalProfiles)
           .where(
             and(
-              eq(professionalProfiles.verificationStatus, "published"),
+              eq(professionalProfiles.moderationStatus, "published"),
               eq(professionalProfiles.isSuspended, false),
             ),
           ),
         db
           .select({ total: count() })
           .from(professionalProfiles)
-          .where(eq(professionalProfiles.verificationStatus, "pending_review")),
+          .where(eq(professionalProfiles.moderationStatus, "pending_review")),
         db.select({ total: count() }).from(users).where(gte(users.createdAt, weekAgo)),
         db
           .select()
@@ -547,7 +547,7 @@ export function createAdminService(deps: AdminServiceDeps) {
       return { ok: true as const };
     },
 
-    async professionals(filter: { status?: VerificationStatus }): Promise<ProfessionalAd[]> {
+    async professionals(filter: { status?: ModerationStatus }): Promise<ProfessionalAd[]> {
       const rows = await profiles.listByStatus(filter.status);
       return toAds(rows);
     },
@@ -568,7 +568,7 @@ export function createAdminService(deps: AdminServiceDeps) {
       const row = await requireReviewableProfile(input.id);
       const now = new Date();
       const updated = await decideReview(row, {
-        verificationStatus: transitionOnReview("approve"),
+        moderationStatus: transitionOnReview("approve"),
         rejectionReason: null,
         reviewedAt: now,
       });
@@ -602,7 +602,7 @@ export function createAdminService(deps: AdminServiceDeps) {
       const row = await requireReviewableProfile(input.id);
       const now = new Date();
       await decideReview(row, {
-        verificationStatus: transitionOnReview("reject"),
+        moderationStatus: transitionOnReview("reject"),
         rejectionReason: input.reason,
         reviewedAt: now,
       });
@@ -773,7 +773,7 @@ export function createAdminService(deps: AdminServiceDeps) {
           .from(professionalProfiles)
           .where(
             and(
-              inArray(professionalProfiles.verificationStatus, ["published", "pending_review"]),
+              inArray(professionalProfiles.moderationStatus, ["published", "pending_review"]),
               or(
                 ilike(professionalProfiles.artisticName, term),
                 ilike(professionalProfiles.city, term),
@@ -801,7 +801,7 @@ export function createAdminService(deps: AdminServiceDeps) {
         name: profileLabel(row),
         subtitle: `${row.category} · ${row.city}, ${row.state}`,
         href: `/admin/perfis/${row.id}`,
-        status: row.verificationStatus,
+        status: row.moderationStatus,
       }));
       return [...clientResults, ...professionalResults];
     },

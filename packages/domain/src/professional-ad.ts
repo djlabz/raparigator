@@ -30,7 +30,7 @@ export function emptyProfessionalAd(): ProfessionalAd {
     paymentMethods: [],
     status: "livre",
     adTier: "normal",
-    verificationStatus: "draft",
+    moderationStatus: "draft",
     images: [],
     rating: 0,
     reviewsCount: 0,

@@ -16,10 +16,10 @@ import { resolveProfileImages, type ProfileImages, type ProfileRow } from "./map
 
 export type ProfileRepository = ReturnType<typeof createProfileRepository>;
 
-const SUBMITTED_PROFILE = ne(professionalProfiles.verificationStatus, "draft");
+const SUBMITTED_PROFILE = ne(professionalProfiles.moderationStatus, "draft");
 
 const VISIBLE_PROFILE = and(
-  eq(professionalProfiles.verificationStatus, "published"),
+  eq(professionalProfiles.moderationStatus, "published"),
   eq(professionalProfiles.listingStatus, "Ativo"),
   eq(professionalProfiles.isSuspended, false),
 );
@@ -197,9 +197,9 @@ export function createProfileRepository(db: Database, storage: ObjectStorage) {
         .limit(limit);
     },
 
-    async listByStatus(status?: ProfileRow["verificationStatus"]) {
+    async listByStatus(status?: ProfileRow["moderationStatus"]) {
       const where = status
-        ? and(SUBMITTED_PROFILE, eq(professionalProfiles.verificationStatus, status))
+        ? and(SUBMITTED_PROFILE, eq(professionalProfiles.moderationStatus, status))
         : SUBMITTED_PROFILE;
       const rows = await db.select().from(professionalProfiles).where(where);
       return rows.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
@@ -223,14 +223,14 @@ export function createProfileRepository(db: Database, storage: ObjectStorage) {
 
     async updateIfStatus(
       id: string,
-      status: ProfileRow["verificationStatus"],
+      status: ProfileRow["moderationStatus"],
       values: Partial<typeof professionalProfiles.$inferInsert>,
     ) {
       const [row] = await db
         .update(professionalProfiles)
         .set({ ...values, updatedAt: new Date() })
         .where(
-          and(eq(professionalProfiles.id, id), eq(professionalProfiles.verificationStatus, status)),
+          and(eq(professionalProfiles.id, id), eq(professionalProfiles.moderationStatus, status)),
         )
         .returning();
       return row ?? null;

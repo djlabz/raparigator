@@ -23,13 +23,13 @@ import { AdminLayoutShell } from "./admin-layout-shell";
 import { useAdminSession } from "@/lib/admin-session";
 import { getProfileById, approveProfile, rejectProfile, grantPremium } from "@/lib/admin-service";
 import { storeErrorMessage } from "@/lib/report-store-error";
-import type { ProfessionalAd, VerificationStatus } from "@/lib/types";
+import type { ProfessionalAd, ModerationStatus } from "@/lib/types";
 
 interface AdminProfileDetailScreenProps {
   profileId: string;
 }
 
-function StatusBadge({ status }: { status: VerificationStatus | undefined }) {
+function StatusBadge({ status }: { status: ModerationStatus | undefined }) {
   if (status === "pending_review") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-800/60 bg-amber-900/30 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-400">
@@ -160,8 +160,7 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
     );
   }
 
-  const isPending =
-    profile.verificationStatus !== undefined && canReview(profile.verificationStatus);
+  const isPending = profile.moderationStatus !== undefined && canReview(profile.moderationStatus);
 
   return (
     <AdminLayoutShell breadcrumb={profile.artisticName}>
@@ -202,7 +201,7 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <StatusBadge status={profile.verificationStatus} />
+          <StatusBadge status={profile.moderationStatus} />
           {profile.adTier === "premium" ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-600/50 bg-amber-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300">
               <Crown className="h-3 w-3" /> Premium
@@ -286,7 +285,7 @@ export function AdminProfileDetailScreen({ profileId }: AdminProfileDetailScreen
           </div>
 
           {/* Motivo de recusa */}
-          {profile.verificationStatus === "rejected" && profile.rejectionReason && (
+          {profile.moderationStatus === "rejected" && profile.rejectionReason && (
             <div className="mt-4 rounded-xl border border-red-900/60 bg-red-950/40 p-4">
               <p className="mb-1 text-xs font-black uppercase tracking-wider text-red-500">
                 Motivo da recusa

@@ -124,7 +124,7 @@ describe("feed, catálogos e anúncio público", () => {
       .from(professionalProfiles)
       .where(
         and(
-          eq(professionalProfiles.verificationStatus, "published"),
+          eq(professionalProfiles.moderationStatus, "published"),
           eq(professionalProfiles.listingStatus, "Ativo"),
           eq(professionalProfiles.isSuspended, false),
         ),

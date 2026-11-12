@@ -188,7 +188,7 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
           userId: owner.id,
           slug: await uniqueSlug(artisticName),
           displayName: artisticName,
-          verificationStatus: PROFILE_INITIAL_STATUS,
+          moderationStatus: PROFILE_INITIAL_STATUS,
           listingStatus: "Pausado",
         });
         if (created) {
@@ -268,7 +268,7 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
           items,
         };
       }
-      const transition = transitionOnPublish(profile.verificationStatus);
+      const transition = transitionOnPublish(profile.moderationStatus);
       const needsReview = transition.needsReview;
       if (needsReview) {
         const gate = await identityGate(owner.id);
@@ -284,7 +284,7 @@ export function createAnnouncementsService(deps: AnnouncementsServiceDeps) {
         listingStatus: "Ativo",
       };
       if (needsReview) {
-        values.verificationStatus = transition.status;
+        values.moderationStatus = transition.status;
         values.submittedAt = now;
         values.rejectionReason = null;
       }

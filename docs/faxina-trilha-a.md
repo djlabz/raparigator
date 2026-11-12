@@ -21,23 +21,23 @@ Divisão mantida como o Daniel pediu. Dois PRs desta trilha mudam comportamento 
 
 ## Ordem da trilha A
 
-| Ordem | PR                                                 | Status                     |
-| ----- | -------------------------------------------------- | -------------------------- |
-| A1    | F-02 código morto e comentários                    | [x] #105 25/10             |
-| A2    | F-03 bugs de regra sem decisão                     | [x] #111 10/11             |
-| A3    | F-06 regras puras para o domain                    | [x] #114 11/11             |
-| A4    | F-07 camadas da API                                | [x] #116 12/11             |
-| A5    | F-08 mensagens em português                        | em andamento (#117, 12/11) |
-| A6    | F-09 seeds: CPF e pexels                           | [x] #106 25/10             |
-| A7    | F-11 CSS                                           | [x] #109 25/10             |
-| A8    | F-12 nomes                                         |                            |
-| A9    | F-13 `moderationStatus`                            |                            |
-| A10a  | F-14a consolidação da documentação                 |                            |
-| A10b  | F-14b ADRs 017 e 020 (rascunho, revisão do Daniel) |                            |
-| A11   | F-16 duplicação do web                             |                            |
-| A12   | F-18 pastas por funcionalidade (um PR por feature) |                            |
-| A13   | F-20 API por caso de uso                           |                            |
-| A14   | F-22 guardas de arquitetura na CI                  |                            |
+| Ordem | PR                                                 | Status               |
+| ----- | -------------------------------------------------- | -------------------- |
+| A1    | F-02 código morto e comentários                    | [x] #105 25/10       |
+| A2    | F-03 bugs de regra sem decisão                     | [x] #111 10/11       |
+| A3    | F-06 regras puras para o domain                    | [x] #114 11/11       |
+| A4    | F-07 camadas da API                                | [x] #116 12/11       |
+| A5    | F-08 mensagens em português                        | [x] #117 12/11       |
+| A6    | F-09 seeds: CPF e pexels                           | [x] #106 25/10       |
+| A7    | F-11 CSS                                           | [x] #109 25/10       |
+| A8    | F-12 nomes                                         |                      |
+| A9    | F-13 `moderationStatus`                            | em andamento (12/11) |
+| A10a  | F-14a consolidação da documentação                 |                      |
+| A10b  | F-14b ADRs 017 e 020 (rascunho, revisão do Daniel) |                      |
+| A11   | F-16 duplicação do web                             |                      |
+| A12   | F-18 pastas por funcionalidade (um PR por feature) |                      |
+| A13   | F-20 API por caso de uso                           |                      |
+| A14   | F-22 guardas de arquitetura na CI                  |                      |
 
 ## PRs
 
@@ -209,3 +209,4 @@ Formato: data, PR de origem, arquivo:linha, achado e proposta. Consolidados no i
 - 11/11, F-06 (#114), D-47: o texto da decisão diz que `IDENTITY_FILES_RETENTION_DAYS` "continua sobrescritível por env", mas ele nunca foi (só `IDENTITY_REQUIRED` vem do env). Ficou constante em `domain/retention.ts`. Proposta: se for para configurar por env, abrir task própria.
 - 11/11, F-06 (#114), `announcement-tab.tsx` (`handleAddPhoto`): o `accept` do upload não inclui `.mkv`/`video/x-matroska`, que a API aceita (`domain/media.ts`). Proposta: decidir no passo `announcement-tab` do F-19 se o `accept` passa a vir do catálogo do domain.
 - 11/11, F-07 (#116), regra 6 de camada (service não importa repository de outro módulo): depois da injeção, `admin/service.ts` só importa `type ReportsRepository`/`type MediaRepository` para tipar as dependências injetadas. O dependency-cruiser 17 com `tsPreCompilationDeps: true` não marca esses imports como `type-only` (testado com `dependencyTypesNot` e com `"specify"` + `parser: "tsc"`). Proposta: no F-22, escrever a regra 6 por caminho de arquivo com exceção explícita para esses dois imports de tipo, ou mover os tipos das dependências injetadas para um arquivo `types.ts` por módulo.
+- 12/11, F-13, `apps/api/drizzle/0009_profile_moderation_status.sql`: o `db:generate` gerou, além do `RENAME COLUMN`, um `DROP INDEX` + `CREATE INDEX` do `professional_profile_feed_idx`. O Postgres já leva o rename para o índice, então o SQL ficou só com o rename (o snapshot gerado não muda e um novo `db:generate` diz "No schema changes"). Proposta: nos próximos renames de coluna indexada, conferir o SQL gerado e tirar a recriação do índice. Os textos de `docs/correcoes-juridico.md:160,344,357` ainda citam `verificationStatus`; ficam como registro histórico.

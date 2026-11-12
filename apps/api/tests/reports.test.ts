@@ -479,7 +479,7 @@ describe("canal de denúncia e retirada", () => {
       .select()
       .from(professionalProfiles)
       .where(eq(professionalProfiles.id, pro.id));
-    expect(profile?.verificationStatus).toBe("rejected");
+    expect(profile?.moderationStatus).toBe("rejected");
     expect(profile?.rejectionReason?.startsWith(`Denúncia #${reportId}`)).toBe(true);
     expect(profile?.isSuspended).toBe(false);
     expect(await reportRow(reportId)).toMatchObject({
@@ -515,7 +515,7 @@ describe("canal de denúncia e retirada", () => {
       .select()
       .from(professionalProfiles)
       .where(eq(professionalProfiles.id, pro.id));
-    expect(profile?.verificationStatus).toBe("published");
+    expect(profile?.moderationStatus).toBe("published");
   });
 
   it("chat.report também responde 429 ao passar do limite", async () => {
