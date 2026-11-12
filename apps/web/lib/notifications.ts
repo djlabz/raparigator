@@ -24,7 +24,7 @@ let apiItems: AccountNotificationItem[] = [];
 let apiInFlight = false;
 let generation = 0;
 
-export function resetAccountNotifications() {
+export function resetNotifications() {
   generation += 1;
   apiItems = [];
   apiInFlight = false;
@@ -123,7 +123,7 @@ function unreadIds(items: AccountNotificationItem[]) {
   return items.filter((item) => !item.read).map((item) => item.id);
 }
 
-export function useAccountNotifications(role: Exclude<AuthRole, "visitor">) {
+export function useNotifications(role: Exclude<AuthRole, "visitor">) {
   const state = useSyncExternalStore(
     subscribe,
     () => getSnapshot(role),

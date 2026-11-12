@@ -4,7 +4,7 @@ import { ads } from "./helpers/credentials";
 
 const AUTHENTICATED_RPC_PATTERNS = [
   "/rpc/chat/",
-  "/rpc/reviews/listMyInvites",
+  "/rpc/reviews/listInvitesMine",
   "/rpc/premium/getState",
 ];
 

@@ -20,7 +20,7 @@ import {
   validateEmailPair,
   validatePasswordPair,
   validateRequiredName,
-} from "@/lib/identity";
+} from "@/lib/signup-validation";
 import { authClient } from "@/lib/api/auth-client";
 import { translateAuthError } from "@sigillus/domain";
 

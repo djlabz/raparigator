@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getApiUrl } from "@/lib/data-source";
+import { getApiUrl } from "@/lib/api/client";
 import { isEarningsSimulatorEnabled } from "@/lib/earnings-simulator-flag";
 
 const ADMIN_LOGIN_PATH = "/admin/login";

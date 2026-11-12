@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { AppShell } from "@/components/layout/app-shell";
 import { Card } from "@/components/ui/card";
-import { useMediaHighlights } from "@/lib/ad-data";
+import { useMediaHighlights } from "@/lib/ads-api";
 
 interface TrendingMediaScreenProps {
   kind: "foto" | "video";

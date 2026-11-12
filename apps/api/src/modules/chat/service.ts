@@ -401,7 +401,7 @@ export function createChatService(deps: ChatServiceDeps) {
       return { ok: true };
     },
 
-    async deleteFromInbox(actor: ChatActor, conversationId: string): Promise<ChatMutationResult> {
+    async removeFromInbox(actor: ChatActor, conversationId: string): Promise<ChatMutationResult> {
       const ctx = await findOwnContext(actor, conversationId);
       if (!ctx) {
         return { ok: false, reason: "not_found" };
@@ -412,7 +412,7 @@ export function createChatService(deps: ChatServiceDeps) {
       return { ok: true };
     },
 
-    async updateAlias(
+    async setAlias(
       actor: ChatActor,
       input: { conversationId: string; alias: string | null },
     ): Promise<ChatMutationResult> {

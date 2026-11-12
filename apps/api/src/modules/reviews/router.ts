@@ -10,9 +10,9 @@ export const reviewsRouter = {
     .handler(({ context, input }) =>
       context.deps.services.reviews.getInvite(context.user, input.conversationId),
     ),
-  listMyInvites: os.reviews.listMyInvites
+  listInvitesMine: os.reviews.listInvitesMine
     .use(withUser)
-    .handler(({ context }) => context.deps.services.reviews.listMyInvites(context.user)),
+    .handler(({ context }) => context.deps.services.reviews.listInvitesMine(context.user)),
   invite: os.reviews.invite
     .use(withUser)
     .use(requireRole("profissional"))

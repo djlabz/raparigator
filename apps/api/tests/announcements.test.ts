@@ -113,7 +113,7 @@ describe("announcements", () => {
     const svc = service();
     await svc.getMine(a);
     await svc.getMine(b);
-    await svc.setContact(a, { whatsappNumber: "11999998888", telegramUsername: null });
+    await svc.updateContact(a, { whatsappNumber: "11999998888", telegramUsername: null });
     await svc.setAvailability(b, "indisponivel");
     const profileA = await profileOf(a.id);
     const profileB = await profileOf(b.id);

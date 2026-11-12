@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
-import type { VerificationChannel, VerificationPublicState } from "@sigillus/contracts";
+import type { ContactVerificationChannel, ContactVerificationState } from "@sigillus/contracts";
 import { getApiClient } from "@/lib/api/client";
 import { reportStoreError } from "@/lib/report-store-error";
 
-export type { VerificationChannel, VerificationPublicState };
+export type { ContactVerificationChannel, ContactVerificationState };
 
-export const HAS_VERIFICATION_PROVIDER = false;
+export const HAS_CONTACT_VERIFICATION_PROVIDER = false;
 
-export const VERIFICATION_LOAD_ERROR = "Não foi possível carregar o estado da verificação.";
+export const CONTACT_VERIFICATION_LOAD_ERROR = "Não foi possível carregar o estado da verificação.";
 
-export type VerificationViewState = VerificationPublicState & { error: string | null };
+export type ContactVerificationViewState = ContactVerificationState & { error: string | null };
 
-const DEFAULT_INITIAL_STATE: VerificationPublicState = {
+const DEFAULT_INITIAL_STATE: ContactVerificationState = {
   email: {
     target: "",
     verified: false,
@@ -33,14 +33,14 @@ const DEFAULT_INITIAL_STATE: VerificationPublicState = {
   required: false,
 };
 
-const SERVER_SNAPSHOT: VerificationViewState = { ...DEFAULT_INITIAL_STATE, error: null };
+const SERVER_SNAPSHOT: ContactVerificationViewState = { ...DEFAULT_INITIAL_STATE, error: null };
 
-let cachedState: VerificationViewState = SERVER_SNAPSHOT;
-let inFlightPromise: Promise<VerificationPublicState> | null = null;
+let cachedState: ContactVerificationViewState = SERVER_SNAPSHOT;
+let inFlightPromise: Promise<ContactVerificationState> | null = null;
 let generation = 0;
 const listeners = new Set<() => void>();
 
-export function resetVerification() {
+export function resetContactVerification() {
   generation += 1;
   inFlightPromise = null;
   cachedState = SERVER_SNAPSHOT;
@@ -58,22 +58,22 @@ function emitChange() {
   listeners.forEach((listener) => listener());
 }
 
-function getVerificationSnapshot(): VerificationViewState {
+function getVerificationSnapshot(): ContactVerificationViewState {
   return cachedState;
 }
 
-function getServerSnapshot(): VerificationViewState {
+function getServerSnapshot(): ContactVerificationViewState {
   return SERVER_SNAPSHOT;
 }
 
-async function fetchVerificationState(): Promise<VerificationPublicState> {
+async function fetchVerificationState(): Promise<ContactVerificationState> {
   if (inFlightPromise) {
     return inFlightPromise;
   }
   const started = generation;
   inFlightPromise = (async () => {
     try {
-      const state = await getApiClient().verification.getState();
+      const state = await getApiClient().contactVerification.getState();
       if (started !== generation) {
         return cachedState;
       }
@@ -85,7 +85,7 @@ async function fetchVerificationState(): Promise<VerificationPublicState> {
         return cachedState;
       }
       reportStoreError("verification.getState", error);
-      cachedState = { ...cachedState, error: VERIFICATION_LOAD_ERROR };
+      cachedState = { ...cachedState, error: CONTACT_VERIFICATION_LOAD_ERROR };
       emitChange();
       return cachedState;
     } finally {
@@ -97,7 +97,7 @@ async function fetchVerificationState(): Promise<VerificationPublicState> {
   return inFlightPromise;
 }
 
-export function useVerification(
+export function useContactVerification(
   user?: { id?: string; email?: string; phone?: string | null } | null,
 ) {
   const state = useSyncExternalStore(subscribe, getVerificationSnapshot, getServerSnapshot);
@@ -113,14 +113,17 @@ export function useVerification(
   return state;
 }
 
-export async function sendVerificationCode(channel: VerificationChannel) {
-  const result = await getApiClient().verification.sendCode({ channel });
+export async function sendContactVerificationCode(channel: ContactVerificationChannel) {
+  const result = await getApiClient().contactVerification.sendCode({ channel });
   await fetchVerificationState();
   return result;
 }
 
-export async function confirmVerificationCode(channel: VerificationChannel, code: string) {
-  const result = await getApiClient().verification.confirmCode({ channel, code });
+export async function confirmContactVerificationCode(
+  channel: ContactVerificationChannel,
+  code: string,
+) {
+  const result = await getApiClient().contactVerification.confirmCode({ channel, code });
   await fetchVerificationState();
   return result;
 }

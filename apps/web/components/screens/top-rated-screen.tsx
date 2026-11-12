@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { FeedAdSummary } from "@sigillus/contracts";
-import { usePopularAds } from "@/lib/ad-data";
+import { usePopularAds } from "@/lib/ads-api";
 
 export function TopRatedScreen() {
   const { items: ads, isLoading } = usePopularAds("top_rated");

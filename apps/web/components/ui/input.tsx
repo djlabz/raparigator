@@ -1,5 +1,5 @@
 ﻿import { ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
-import { formatPhone } from "@/lib/identity";
+import { formatPhone } from "@/lib/signup-validation";
 import { cn } from "@/lib/utils";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {

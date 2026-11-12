@@ -13,7 +13,7 @@ import {
 } from "@/lib/tab-navigation";
 import { cn } from "@/lib/utils";
 import { useAuthSession } from "@/lib/auth-session";
-import { getDashboardHref, useAccountNotifications } from "@/lib/account-notifications";
+import { getDashboardHref, useNotifications } from "@/lib/notifications";
 import type { AuthRole } from "@/lib/types";
 
 interface DesktopNavProps {
@@ -33,7 +33,7 @@ export function DesktopNav({ items, className }: DesktopNavProps) {
   const router = useRouter();
   const { role } = useAuthSession();
   const safeRole = role === "visitor" ? null : (role as Exclude<AuthRole, "visitor">);
-  const notifications = useAccountNotifications(safeRole ?? "cliente");
+  const notifications = useNotifications(safeRole ?? "cliente");
   const dashboardHref = getDashboardHref(role);
   const [activeTab, setActiveTab] = useState(pathname);
   const [previousPathname, setPreviousPathname] = useState(pathname);

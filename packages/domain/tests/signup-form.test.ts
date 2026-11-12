@@ -8,7 +8,7 @@ import {
   validateEmailPair,
   validatePasswordPair,
   validatePhone,
-} from "../src/identity";
+} from "../src/signup-form";
 
 describe("identidade", () => {
   it("formata CPF e valida com os dígitos verificadores", () => {

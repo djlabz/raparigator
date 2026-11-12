@@ -25,7 +25,7 @@ describe("chat", () => {
     const again = await fx.chat.ensureConversationForAd(fx.client, fx.slug);
     expect(again.conversationId).toBe(fx.conversationId);
 
-    await fx.chat.deleteFromInbox(fx.client, fx.conversationId);
+    await fx.chat.removeFromInbox(fx.client, fx.conversationId);
     expect(await fx.chat.listConversations(fx.client)).toHaveLength(0);
 
     const restored = await fx.chat.ensureConversationForAd(fx.client, fx.slug);
@@ -289,10 +289,10 @@ describe("chat", () => {
   it("apelido: cliente livre, profissional só premium; denúncia registra report", async () => {
     const fx = await createChatFixture(harness, { adTier: "normal" });
     expect(
-      await fx.chat.updateAlias(fx.client, { conversationId: fx.conversationId, alias: "Anônimo" }),
+      await fx.chat.setAlias(fx.client, { conversationId: fx.conversationId, alias: "Anônimo" }),
     ).toEqual({ ok: true });
     await expect(
-      fx.chat.updateAlias(fx.professional, { conversationId: fx.conversationId, alias: "X" }),
+      fx.chat.setAlias(fx.professional, { conversationId: fx.conversationId, alias: "X" }),
     ).rejects.toMatchObject({ code: "PLAN_LIMIT" });
     const proInbox = await fx.chat.listConversations(fx.professional);
     expect(proInbox[0]!.contactName).toBe("Anônimo");
@@ -336,8 +336,8 @@ describe("chat", () => {
       adTier: "premium",
       clientAlias: "Lobo Discreto",
     });
-    await fx.chat.updateAlias(fx.client, { conversationId: fx.conversationId, alias: "Anônimo" });
-    await fx.chat.updateAlias(fx.professional, {
+    await fx.chat.setAlias(fx.client, { conversationId: fx.conversationId, alias: "Anônimo" });
+    await fx.chat.setAlias(fx.professional, {
       conversationId: fx.conversationId,
       alias: "Apelido da Pro",
     });

@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { PremiumConversionModal } from "@/components/ui/premium-conversion-modal";
 import { ShinyButton } from "@/components/ui/shiny-button";
-import { usePremiumPlan } from "@/lib/premium-plan";
+import { usePremiumState } from "@/lib/premium-state";
 
 export function PremiumCta() {
-  const { isPremium, checkoutEnabled } = usePremiumPlan();
+  const { isPremium, checkoutEnabled } = usePremiumState();
   const [open, setOpen] = useState(false);
 
   if (!checkoutEnabled) {

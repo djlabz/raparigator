@@ -21,7 +21,7 @@ import {
 } from "@/components/screens/feed-screen/constants";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RiskWarningModal } from "@/components/ui/risk-warning-modal";
-import { useRegisterAdView } from "@/lib/ad-data";
+import { useRegisterAdView } from "@/lib/ads-api";
 import { consumeReturnScroll } from "@/lib/auth-return";
 import {
   copyToClipboard,

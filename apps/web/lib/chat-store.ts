@@ -1,16 +1,16 @@
 import {
   fetchBriefMessage,
   fetchConversations,
-  fetchDeleteConversationFromInbox,
+  fetchRemoveConversationFromInbox,
   fetchEnsureConversationForAd,
   fetchMarkConversationRead,
   fetchMessages,
   fetchReportConversation,
   fetchSetConversationBlocked,
   fetchTextMessage,
-  fetchUpdateParticipantAlias,
+  fetchSetParticipantAlias,
   fetchViewOnceMediaMessage,
-} from "@/lib/chat-service";
+} from "@/lib/chat-api";
 import { getApiClient } from "@/lib/api/client";
 import type {
   ChatEvent,
@@ -563,7 +563,7 @@ export async function setChatConversationBlocked(
   }
 }
 
-export async function deleteChatConversationFromInbox(
+export async function removeChatConversationFromInbox(
   conversationId: string,
 ): Promise<ChatMutationResult> {
   const current = ensureChatStore();
@@ -578,7 +578,7 @@ export async function deleteChatConversationFromInbox(
   });
 
   try {
-    const result = await fetchDeleteConversationFromInbox(conversationId);
+    const result = await fetchRemoveConversationFromInbox(conversationId);
     if (!result.ok) {
       throw new Error("failed");
     }
@@ -611,7 +611,7 @@ export async function reportChatConversation(
   }
 }
 
-export async function updateChatParticipantAlias(
+export async function setChatParticipantAlias(
   conversationId: string,
   alias: string | null,
 ): Promise<ChatMutationResult> {
@@ -632,7 +632,7 @@ export async function updateChatParticipantAlias(
   });
 
   try {
-    const result = await fetchUpdateParticipantAlias(conversationId, nextAlias ?? null);
+    const result = await fetchSetParticipantAlias(conversationId, nextAlias ?? null);
     if (!result.ok) {
       throw new Error("failed");
     }

@@ -77,10 +77,10 @@ export async function fetchSetConversationBlocked(
   return getApiClient().chat.setBlocked({ conversationId, isBlocked });
 }
 
-export async function fetchDeleteConversationFromInbox(
+export async function fetchRemoveConversationFromInbox(
   conversationId: string,
 ): Promise<ChatMutationResult> {
-  return getApiClient().chat.deleteFromInbox({ conversationId });
+  return getApiClient().chat.removeFromInbox({ conversationId });
 }
 
 export async function fetchReportConversation(
@@ -90,11 +90,11 @@ export async function fetchReportConversation(
   return getApiClient().chat.report({ conversationId, reason, type: "other" });
 }
 
-export async function fetchUpdateParticipantAlias(
+export async function fetchSetParticipantAlias(
   conversationId: string,
   alias: string | null,
 ): Promise<ChatMutationResult> {
-  return getApiClient().chat.updateAlias({ conversationId, alias });
+  return getApiClient().chat.setAlias({ conversationId, alias });
 }
 
 export async function fetchMarkConversationRead(conversationId: string): Promise<void> {

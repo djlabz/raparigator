@@ -50,7 +50,7 @@ function getCachedPremiumPlans(): PremiumPlansResult {
   return cachedApiPlans ?? LOCAL_PLANS;
 }
 
-export function usePremiumPlans(): PremiumPlansResult {
+export function usePremiumPlanOptions(): PremiumPlansResult {
   const [result, setResult] = useState<PremiumPlansResult>(getCachedPremiumPlans);
 
   useEffect(() => {

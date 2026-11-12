@@ -1,4 +1,4 @@
-export const popularSections = [
+export const popularLinks = [
   {
     label: "Mais avaliadas",
     href: "/popular/mais-avaliadas",

@@ -1,5 +1,5 @@
 ﻿import Link from "next/link";
-import { popularSections } from "@/lib/popular-sections";
+import { popularLinks } from "@/lib/popular-links";
 import { Card } from "@/components/ui/card";
 
 export function PopularLinksSection() {
@@ -10,7 +10,7 @@ export function PopularLinksSection() {
         <p className="text-sm text-zinc-600">Acesse os blocos populares com um toque.</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {popularSections.map((item) => (
+        {popularLinks.map((item) => (
           <Link key={item.href} href={item.href}>
             <Card className="h-full transition hover:-translate-y-0.5 hover:border-wine-200 hover:shadow-md">
               <p className="text-base font-semibold text-zinc-900">{item.label}</p>

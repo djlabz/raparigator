@@ -65,7 +65,7 @@ async function fetchPremiumState(userId: string | null): Promise<PremiumState | 
   }
 }
 
-export function resetPremiumPlan() {
+export function resetPremiumState() {
   generation += 1;
   cachedApiState = null;
   lastError = null;
@@ -123,7 +123,7 @@ function registerViewOnceSend() {
   emitChange();
 }
 
-export function usePremiumPlan() {
+export function usePremiumState() {
   const session = authClient.useSession();
   const sessionUser = session.data?.user as { id: string; role?: unknown } | undefined;
   const userId = sessionUser?.id ?? null;
@@ -146,7 +146,7 @@ export function usePremiumPlan() {
   useEffect(() => {
     if (!userId || !isProfessional) {
       if (cachedApiState || lastError || fetchedForUserId) {
-        resetPremiumPlan();
+        resetPremiumState();
       }
       return;
     }

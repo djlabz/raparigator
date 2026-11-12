@@ -187,7 +187,7 @@ export function createReviewsService(deps: ReviewsServiceDeps) {
       return { invite, status: getInviteStatus(invite) };
     },
 
-    async listMyInvites(actor: ReviewsActor): Promise<ReviewInvite[]> {
+    async listInvitesMine(actor: ReviewsActor): Promise<ReviewInvite[]> {
       const rows = await db
         .select({ invite: reviewInvites, slug: professionalProfiles.slug })
         .from(reviewInvites)
