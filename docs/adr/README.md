@@ -2,44 +2,27 @@
 
 Formato curto: Contexto / Opções consideradas / Decisão / Consequências. Um arquivo por decisão, numerado, imutável depois de aceito (mudou de ideia? novo ADR que substitui o antigo).
 
-| ADR                                                 | Decisão                                                                   |
-| --------------------------------------------------- | ------------------------------------------------------------------------- |
-| [001](001-linguagem-do-backend.md)                  | Backend em TypeScript, no monorepo, com contrato e domínio compartilhados |
-| [002](002-runtime-e-gerenciador-de-pacotes.md)      | Node LTS + npm workspaces                                                 |
-| [003](003-framework-http.md)                        | Hono + oRPC contract-first + Zod 4                                        |
-| [004](004-orm-e-migrations.md)                      | Drizzle SQL-first; migrations em CI e no boot                             |
-| [005](005-filas-e-tempo-real.md)                    | pg-boss no Postgres; chat por LISTEN/NOTIFY + SSE                         |
-| [006](006-deploy.md)                                | Deploy agnóstico: Dockerfile, env, healthz, migrations idempotentes       |
-| [007](007-infra-escolhida.md)                       | Infraestrutura de deploy: VPS única com Docker Compose e subdomínios      |
-| [008](008-migracao-web-dual-mode-e-autenticacao.md) | Migração web dual-mode e integração com better-auth                       |
-| [009](009-migracao-rascunho-de-anuncio.md)          | Rascunho de anúncio, seções, publicação e controle de status via API      |
-| [010](010-migracao-midia-e-storage.md)              | Upload pré-assinado, processamento de mídia e gestão de galeria via API   |
-| [011](011-migracao-chat-e-streaming.md)             | Chat, camada otimista e streaming em tempo real (SSE) via API             |
-| [012](012-migracao-avaliacoes-e-convites.md)        | Avaliações por convite, gating e recálculo de rating via API              |
-| [013](013-migracao-notificacoes.md)                 | Central de notificações e eventos de conta via API                        |
-| [014](014-migracao-premium.md)                      | Gestão de plano premium e limites via API                                 |
-| [015](015-migracao-backoffice.md)                   | Migração do backoffice administrativo para API                            |
-| [016](016-virada-api-e-remocao-dos-mocks.md)        | Virada definitiva para a API e remoção completa dos mocks no web          |
+| ADR                                                   | Decisão                                                                   |
+| ----------------------------------------------------- | ------------------------------------------------------------------------- |
+| [001](001-linguagem-do-backend.md)                    | Backend em TypeScript, no monorepo, com contrato e domínio compartilhados |
+| [002](002-runtime-e-gerenciador-de-pacotes.md)        | Node LTS + npm workspaces                                                 |
+| [003](003-framework-http.md)                          | Hono + oRPC contract-first + Zod 4                                        |
+| [004](004-orm-e-migrations.md)                        | Drizzle SQL-first; migrations em CI e no boot                             |
+| [005](005-filas-e-tempo-real.md)                      | pg-boss no Postgres; chat por LISTEN/NOTIFY + SSE                         |
+| [006](006-deploy.md)                                  | Deploy agnóstico: Dockerfile, env, healthz, migrations idempotentes       |
+| [007](007-infra-escolhida.md)                         | Infraestrutura de deploy: VPS única com Docker Compose e subdomínios      |
+| 008 a 015                                             | Migração do web para a API, módulo a módulo: fundidos no 016              |
+| [016](016-virada-api-e-remocao-dos-mocks.md)          | Web consome só a API (auth, mídia, chat e premium no web)                 |
+| [018](018-lancamento-gratuito-e-premium-manual.md)    | Lançamento gratuito e Premium concedido pelo admin                        |
+| [019](019-autenticacao-duas-instancias.md)            | Duas instâncias do better-auth e campos sensíveis fora do `update-user`   |
+| [021](021-observabilidade-e-limites-por-instancia.md) | Log sem dado pessoal, Sentry, saúde e rate limit por instância            |
+
+Os ADRs 008 a 015 ficam como stubs com link para o texto original em `docs/historico/adr/`.
 
 ## Restrição de produto que atravessa todos os ADRs
 
 Desde 14/08/2026 a plataforma é **vitrine de anúncios**. Nenhum dinheiro de cliente transita pela plataforma; o único fluxo monetário é profissional → plataforma (assinatura premium). A plataforma não organiza, intermedeia nem acompanha encontro. É proibido reintroduzir em schema, endpoint, tipo, tabela ou copy: escrow, custódia, split, taxa sobre serviço, booking, agendamento, valor de atendimento, check-in/out de encontro. O `EncounterBrief` é estimativa de preço a partir do anúncio, viaja como payload de mensagem e não gera registro de serviço.
 
-## Ordem sugerida de desligamento dos mocks no `apps/web`
+## Histórico
 
-> O acompanhamento passo a passo (tasks T-10 a T-19, estado e decisões) está em `docs/roteiro.md`.
-
-Cada passo é um PR pequeno; a suíte E2E precisa continuar verde ao fim de cada um. A flag `NEXT_PUBLIC_DATA_SOURCE=mock|api` seleciona a origem por módulo, então a migração é serviço a serviço, não big-bang.
-
-1. **Feed** (feito neste PR como prova de conceito): `feed.list` com filtros no servidor.
-2. **Catálogos e anúncio público** (`anuncio/[slug]`, `popular`, `mediaHighlights`): leitura pura, sem sessão.
-3. **Auth e sessão**: trocar `auth-session.ts`/`admin-session.ts` pelo client do better-auth; o `middleware.ts` já lê a sessão real no modo `api`. Atualizar os helpers de E2E para logar via API em vez de semear `localStorage`.
-4. **Rascunho de anúncio**: `announcements.getDraft/saveSection/publish`; `useAnnouncementDraft` vira adaptador fino sobre o client.
-5. **Mídia**: `media.createUpload` (URL pré-assinada) + polling de `media.get` até `ready`.
-6. **Chat**: `chat.*` + `chat.subscribe` (SSE); o `chat-store.ts` mantém a camada otimista e troca `chat-service.ts` pelo client.
-7. **Avaliações e convites**: `reviews.*`; remover `review-invites.ts` do `localStorage`.
-8. **Notificações**: `notifications.*`.
-9. **Premium**: `billing.*`; a fonte de verdade do plano passa a ser o servidor (o `premium-plan.ts` local some).
-10. **Backoffice**: `admin.*` — último porque o painel admin é o menos coberto por E2E e o mais tolerante a latência.
-
-Quando o último módulo virar, `NEXT_PUBLIC_DATA_SOURCE` e `lib/mock-data.ts` são removidos.
+A migração do `apps/web` dos mocks locais para a API foi concluída entre 08 e 10/10/2026 (tasks T-10 a T-19), e os ramos dual-mode que sobraram saíram na T-47 (PR #71). As decisões que continuam valendo estão no ADR-016; o passo a passo está em `docs/historico/`.

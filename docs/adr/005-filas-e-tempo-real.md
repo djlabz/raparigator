@@ -1,6 +1,6 @@
 # ADR-005 — Filas e tempo real: pg-boss + LISTEN/NOTIFY + SSE
 
-- Status: aceito (2026-08-15)
+- Status: aceito (2026-08-15), com emendas
 
 ## Contexto
 
@@ -35,3 +35,9 @@ Jobs que existem de fato hoje: processamento de mídia (thumbnails/variantes com
 - Uma única dependência de infra em produção: Postgres (+ storage S3-compatible para mídia).
 - Latência do NOTIFY é de milissegundos; suficiente para chat 1-a-1.
 - Sem Redis, não há rate limit distribuído; o rate limit é por instância (aceitável para 1–2 réplicas; registrado como limite conhecido).
+
+## Emendas
+
+- **Filas (11/2026):** além das quatro iniciais, o `JobQueue` (`apps/api/src/lib/jobs.ts`) tem filas de expiração do premium, resumos por e-mail ao admin (moderação, denúncias e identidade), retenção e apagamento de arquivos de identidade, purga de storage, registro e purga do log de acesso, processamento e retenção de provas de denúncia e purga de sessões. A lista viva é o tipo `JobPayloads` em `lib/jobs.ts`; este ADR não a repete.
+- **Assinatura do chat por usuário:** o `ChatEventBus` é `publish(userIds, event)` / `subscribe(userId, listener)`, não por conversa. Um usuário tem um único stream que recebe os eventos de todas as conversas dele; o canal do `NOTIFY` é `sigillus_chat_events`.
+- **Presença:** "online" é derivado do `lastSeenAt` do participante, gravado quando ele abre as mensagens de uma conversa ou a marca como lida, com janela de 2 minutos (`modules/chat/mapper.ts`). Não há heartbeat do SSE gravando presença.

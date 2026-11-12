@@ -1,35 +1,44 @@
-# ADR-016 — Virada para API e Remoção dos Mocks
+# ADR-016 — Web consome só a API
 
-- Status: aceito (2026-10-09)
+- Status: aceito (2026-10-09); consolidado em 2026-11-12 com as decisões que continuam valendo dos ADRs 008, 010, 011 e 014
 
 ## Contexto
 
-Desde o início da migração (ADR-008 a ADR-015, tasks T-10 a T-18), o frontend (`apps/web`) operava em modo dual controlado pela variável `NEXT_PUBLIC_DATA_SOURCE=mock|api`. Esse mecanismo permitiu que cada módulo fosse integrado incrementalmente à API TypeScript (`@sigillus/api`) mantendo a suíte de testes E2E Playwright verde a cada PR.
-
-Com a conclusão da Task T-18 (backoffice administrativo), 100% das áreas do sistema (Feed, Catálogos e Anúncios Públicos, Autenticação e Sessão com better-auth, Rascunho de Anúncios, Mídia e Galeria, Chat e Mensagens com SSE, Avaliações e Convites, Notificações, Assinatura Premium e Backoffice Administrativo) possuem implementações no servidor conectadas ao banco Postgres via Drizzle ORM e contratos oRPC.
-
-Permaneciam no repositório artefatos legados de mock: `mock-data.ts`, `mock-users.ts`, flags e condicionais dual-mode em `data-source.ts`, além da suíte E2E rodando em memória sobre dados sintéticos locais.
+Entre 08 e 10/10/2026 (tasks T-10 a T-19) o `apps/web` saiu dos mocks locais (`mock-data.ts`, `mock-users.ts`, `localStorage`) para a API, um módulo por PR, com uma flag `NEXT_PUBLIC_DATA_SOURCE=mock|api`. Os ADRs 008 a 015 registraram cada passo. A T-19 (PR #52) apagou os mocks e virou a E2E para a API; a T-47 (PR #71) apagou os ramos dual-mode que tinham sobrado atrás de `isApiDataSource()`. Os textos originais estão em `docs/historico/adr/`.
 
 ## Decisão
 
-**Desligar definitivamente o modo dual, remover os arquivos de mock do frontend e unificar toda a comunicação do `apps/web` exclusivamente com a API, com a suíte E2E Playwright executando 100% contra o backend real.**
+O web fala só com a API, pelo client oRPC tipado (`apps/web/lib/api/client.ts`, `getApiClient()`) e pelos clients do better-auth. Não existe modo `mock` nem `isApiDataSource()`; a E2E roda contra a API, o Postgres e o MinIO reais, com as seeds de `apps/api/src/db/seed/`.
 
-1. **Remoção de Mocks e Fontes Locais**:
-   - Exclusão completa de `apps/web/lib/mock-data.ts` e `apps/web/lib/mock-users.ts`.
-   - Simplificação de `apps/web/lib/data-source.ts`, mantendo apenas utilitários de URL da API (`getApiUrl()`), com `isApiDataSource()` fixado em `true`.
-   - Os ramos dual-mode atrás de `isApiDataSource()` (com fallback em `localStorage`) **não** foram removidos nesta etapa: continuaram em 8 arquivos do web como código morto. A remoção completa do dual-mode residual e do próprio `isApiDataSource` só aconteceu na T-47 (PR #71).
-   - Remoção de domínios externos fictícios (`picsum.photos`, `images.pexels.com`) de `next.config.ts`, mantendo apenas o host de storage e CDNs homologadas.
+### Autenticação no web (de 008)
 
-2. **Unificação da Suíte E2E contra a API**:
-   - `playwright.config.ts`: configuração de `webServer` duplo (API na porta 4001 e Web na porta 3000/3100 com `NEXT_PUBLIC_API_URL` apontando para a API).
-   - `globalSetup`: inicialização e orquestração de setup automatizado de sessão e cookies autenticados via `better-auth`.
-   - `tests/helpers/auth.ts`: `seedUserRole` e `seedAdminSession` passam a realizar autenticação real via API (`/api/auth/sign-in/email` e `/api/admin-auth/sign-in/email`), injetando os cookies de sessão de cliente, profissional e admin.
-   - Ajustes pontuais nos testes E2E (`feed.spec.ts`, `encounter-brief.spec.ts`, `ad-details.spec.ts`, `gallery-profile-photo.spec.ts`, `review-invite.spec.ts`) para sincronização com dados reais de seed (`dev-data.ts`).
-   - Adição de `RATE_LIMIT_ENABLED` configurável na API para permitir execução paralela de testes sem falso-positivo de rate limiting (429).
+- Dois clients do better-auth, com a mesma versão pinada da API: `lib/api/auth-client.ts` (`/api/auth`, cliente e profissional, `credentials: "include"`, `inferAdditionalFields` para os campos extras do usuário) e `lib/api/admin-auth-client.ts` (`/api/admin-auth`, backoffice). O porquê das duas instâncias está no ADR-019.
+- `useAuthSession` (`lib/auth-session.ts`) combina a sessão do better-auth com `auth.me` para os dados que só o banco resolve (como o plano). `useAdminSession` (`lib/admin-session.ts`) faz o mesmo para o admin.
+- Erros do better-auth viram texto em PT-BR por `translateAuthError` (regra pura no `domain`).
+- A E2E autentica pela API (helpers em `apps/web/tests/helpers/auth.ts`) e injeta os cookies de sessão no contexto do Playwright.
+
+### Mídia (de 010)
+
+- Upload em três passos: `media.createUpload` (cria o registro e devolve a URL pré-assinada; o limite do plano é checado aqui e estoura `PLAN_LIMIT`), `PUT` do arquivo direto no storage e `media.completeUpload` (confere o arquivo e enfileira `media.process`). O web acompanha o processamento por `media.get` até `ready` ou `failed`.
+- O `PUT` na URL pré-assinada é o único `fetch` fora do client oRPC permitido no web.
+- Os limites de foto e vídeo vêm do servidor (`premium.getState().limits`), nunca de constante local.
+
+### Chat (de 011)
+
+- `lib/chat-store.ts` é a camada otimista: cada envio gera um `clientMessageId`, a mensagem aparece na hora com `status: "sending"` e é trocada pela confirmada do servidor (ou marcada `failed`). O `clientMessageId` torna o envio idempotente na API.
+- Tempo real por `chat.subscribe` (event iterator do oRPC, SSE por baixo), com reconexão automática e espera exponencial de 1 s até 15 s. Os eventos (`message.created`, `message.delivered`, `message.opened`, `conversation.updated`) atualizam o snapshot do store.
+- A conversa de um anúncio é obtida ou criada por `chat.ensureConversationForAd`, de forma idempotente.
+- **Briefing do anúncio para o chat por store em memória (D-05).** O briefing montado no simulador do anúncio chega ao chat por um store em memória (`lib/encounter-brief.ts`: `requestBriefHandoff`, `getBriefHandoff`, `clearBriefHandoff`), não por parâmetro na URL. O motivo é o `TabsKeepAlive` (`components/layout/tabs-keep-alive.tsx`): a aba do chat continua montada quando a pessoa sai dela, e uma tela já viva não roda efeito de montagem nem relê a query string, então um parâmetro novo na URL passaria despercebido. O store notifica a tela montada.
+
+### Premium no web (de 014)
+
+- O servidor é a fonte de verdade do plano e dos limites: `premium.getState` (`lib/premium-state.ts`, `usePremiumState`) e `premium.plans` (`lib/premium-catalog.ts`, `usePremiumPlanOptions`). Sem sessão de profissional ou com erro de rede, o web assume o plano padrão e os limites padrão.
+- O gating de recursos premium no web (galeria, visualização única, apelido no chat) lê esses limites; a API repete a checagem em cada procedimento.
+- Preços e opções de plano (`PREMIUM_PLAN_OPTIONS`) vivem no `packages/domain` e não mudam sem pedido do Daniel (D-02). A forma de lançamento gratuito está no ADR-018.
 
 ## Consequências
 
-- `grep -r mock-data apps/web` e `grep -r mock-users apps/web` não retornam nenhuma ocorrência.
-- A aplicação web conecta-se à API pelo client oRPC tipado e clientes better-auth. Até a T-47 (PR #71) ainda havia ramos dual-mode inalcançáveis atrás de `isApiDataSource()`; desde então o web fala só com a API.
-- A suíte completa de testes E2E Playwright (71 testes em Chromium) passa 100% verde executando requisições reais contra a API e o Postgres.
-- A Fase 1 do roteiro de desenvolvimento está concluída com sucesso.
+- `grep -r "mock-data\|isApiDataSource" apps/web` não retorna nada; qualquer dado do web passa pelo contrato.
+- Uma mudança de contrato quebra o `tsc` do web e da API ao mesmo tempo.
+- A E2E precisa da API, do Postgres e do MinIO no ar (o `webServer` do `playwright.config.ts` sobe a API e o web).
+- `RATE_LIMIT_ENABLED` é configurável para a E2E rodar em paralelo sem 429 falso.

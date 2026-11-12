@@ -2,7 +2,7 @@
 
 Fonte de verdade do **que falta fazer** para o app ir ao ar. Complementa o `AGENTS.md` (como trabalhar) e as ADRs (por que a stack é assim). Vale para quem estiver executando: Daniel, Claude Code ou Gemini.
 
-Estado consolidado em **04/10/2026**, a partir da `main` (commit `a4a6841`), com `npm run check`, `npm run test` (31 domain + 93 API) e análise de todo o código.
+Estado em **12/11/2026**: `v0.2.0` publicada (17/10/2026) e Fase F (faxina) em andamento.
 
 ## 0. Como usar este arquivo
 
@@ -11,25 +11,23 @@ Estado consolidado em **04/10/2026**, a partir da `main` (commit `a4a6841`), com
 3. **Uma task = um PR** de uma branch `feat/T-xx-nome-curto` para a `main`. Nada direto na `main`.
 4. Ao concluir: marque `[x]`, anote `(PR #nn, dd/mm)` ao lado e, se aprendeu algo que muda uma task seguinte, edite a task seguinte. Nunca deixe descoberta solta em comentário ou chat: ou vira task, ou vira ajuste de task.
 5. Se a task pedir uma decisão que não está na seção 2 nem na seção 7, **pare e pergunte** ao Daniel. Não decida regra de produto sozinho.
-6. Critério de pronto de toda task, sem exceção: `npm run check` e `npm run test` verdes; `npm run test:e2e` verde antes de abrir o PR; nada em `.env*` commitado; nenhum tipo declarado fora de `packages/contracts`; nenhuma regra pura fora de `packages/domain`.
+6. Critério de pronto de toda task: a seção "Critério de pronto" do `AGENTS.md`.
 
 ## 1. Estado atual
 
-**O que existe e funciona**
-
 - Monorepo npm: `apps/web` (Next 16), `apps/api` (Hono + oRPC + Drizzle + better-auth + pg-boss), `packages/contracts` (contrato oRPC + Zod, fonte dos tipos), `packages/domain` (regras puras).
-- API completa segundo o contrato: 12 módulos, ~70 procedimentos, todos com teste de integração. Lista em `packages/contracts/src/router.ts`; docs em `http://localhost:4000/api/docs` com a API rodando.
-- Auth real com better-auth: instância de usuário (`/api/auth/*`, cookie `sigillus`) e instância separada de admin (`/api/admin-auth/*`, cookie `sigillus-admin`, sem sign-up).
-- Fluxo de moderação já existe na API: profissional publica → perfil vai para `pending_review` → admin aprova ou rejeita em `admin.approveProfile` / `admin.rejectProfile`. Só perfil `published` + `listingStatus = Ativo` + não suspenso aparece no feed.
-- Premium por event sourcing (`subscription_events`), pronto para receber um provedor de pagamento real na interface `BillingProvider`.
-- `proxy.ts` do web protege `(private)` e `(admin)` nos dois modos (`mock` e `api`).
-- Dockerfile da API, CI com Postgres de serviço, migrations idempotentes no boot.
+- API com 16 módulos e 85 procedimentos no contrato (`packages/contracts/src/router.ts`), todos com teste de integração; docs em `/api/docs` com a API rodando.
+- O web fala só com a API (ADR-016); não há mock. A E2E roda contra API, Postgres e MinIO reais, na CI e localmente.
+- Auth com duas instâncias do better-auth, usuário e admin (ADR-019). Moderação de anúncio pelo admin (`draft → pending_review → published`), verificação de identidade da anunciante, denúncias com provas, log de acesso e exclusão de conta (Fase J).
+- Lançamento gratuito: Premium concedido pelo admin, checkout escondido por flag (ADR-018).
+- Deploy preparado para VPS única com Docker Compose (ADR-007; operação em `docs/operacao/deploy.md` e `docs/operacao/smoke.md`).
+- Ainda stub: `FakeBillingProvider` (único provedor de pagamento), envio de código de verificação de telefone (sem provedor de SMS) e `media.moderate` (marca `ready` sem checar nada).
 
-**O que é mock ou stub**
+## Fase atual: Fase F (faxina)
 
-- No web, só o **Feed** (`apps/web/lib/feed-data.ts`) fala com a API. Todo o resto lê `lib/mock-data.ts` + `localStorage`: auth, admin-session, rascunho, mídia, chat, convites de avaliação, notificações, plano premium, verificação. 23 arquivos importam `mock-data.ts`.
-- Na API: `FakeBillingProvider` (único provedor), `VerificationNotifier` que só loga (nenhum e-mail ou SMS sai), `media.moderate` que marca `ready` sem checar nada.
-- Não existe: recuperação de senha, CLI para criar o primeiro admin, páginas de Termos e Privacidade, exclusão de conta, Dockerfile do web.
+Limpeza do código antes de seguir com features: código morto, regras duplicadas, nomes, documentação e guardas de arquitetura. O inventário com os achados e as decisões D-01 a D-49 está em `docs/faxina-inventario.md`; os 22 PRs estão divididos em duas trilhas que rodam em paralelo, com ordem e conflitos em `docs/faxina-trilha-a.md` e `docs/faxina-trilha-b.md`.
+
+As fases anteriores estão concluídas: Fase 0 e Fase 1 (integração web → API), Fase 2 e Fase 2.1 (pronto para o ar, `docs/correcoes-pre-deploy.md`) e Fase J (jurídica e privacidade, `docs/correcoes-juridico.md`, exceto a T-69, que aguarda a lista do operador).
 
 ## 2. Decisões tomadas (04/10/2026)
 
@@ -44,56 +42,24 @@ Estado consolidado em **04/10/2026**, a partir da `main` (commit `a4a6841`), com
 | D-07 | Regras de agente ficam **commitadas** no repo (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, este roteiro). | Nada de `CLAUDE.local.md` ou `GEMINI.md` fora do git: foi assim que o projeto perdeu o fio.                                                                                             |
 | D-08 | Restrição de produto continua: **vitrine de anúncios**, sem intermediação de serviço.                | Ver `docs/adr/README.md`. Vale para toda task deste roteiro.                                                                                                                            |
 
-## 3. Fase 0 — higiene (um PR só)
+## 3. Fase 0 — higiene (concluída em 04/10/2026)
 
-- [x] **T-01 Commitar as alterações locais pendentes.** Há 9 arquivos modificados no PC do Daniel sem commit (`.env.example` na raiz, `.mcp.json`, `compose.yaml`, `package.json`, `apps/api/package.json`, `apps/api/src/config.ts`, `apps/api/tests/config.test.ts`, `apps/api/tests/setup.ts`, `scripts/setup-env.mjs`). Antes de commitar: ler o diff inteiro, rodar `npm run format` (o `.mcp.json` já está fora do padrão do oxfmt), `npm run check` e `npm run test`. Se `scripts/setup-env.mjs` for um gerador de `.env`, documentar em uma linha no README (seção "Rodando") e garantir que ele nunca escreve segredo em arquivo versionado. Commit: `chore: script de setup de env e ajustes de config`. (04/10/2026)
-- [x] **T-02 Trocar `development` por `main`.** `README.md` (seção Contribuindo), `AGENTS.md` (Convenções), `.github/workflows/ci.yml` (`pull_request.branches: [main]` e `push.branches: [main]`). Com isso a CI também roda em push na `main`, o que hoje não acontece. (04/10/2026)
-- [x] **T-03 Destravar o Claude Code.** Em `.claude/settings.json`: remover `Edit(package-lock.json)` do `deny` (toda task que adiciona dependência precisa mexer no lockfile) e adicionar ao `allow`: `Bash(npm run check)`, `Bash(npm run test)`, `Bash(npm run test:e2e)`, `Bash(npm run format)`, `Bash(npm run db:*)`, `Bash(npx playwright test:*)`. Manter o `deny` de `npm run share` e de `.env*`. (04/10/2026)
-- [x] **T-04 Apontar os agentes para este roteiro.** Adicionar `GEMINI.md` na raiz (mesmo espírito do `CLAUDE.md`). No `AGENTS.md`, logo após o primeiro parágrafo, adicionar: "O que falta fazer, em ordem, está em `docs/roteiro.md`. Leia antes de começar qualquer task." Em `docs/adr/README.md`, na seção "Ordem sugerida de desligamento dos mocks", adicionar uma linha apontando que o acompanhamento está em `docs/roteiro.md`. (04/10/2026)
+T-01 a T-04: alterações locais commitadas, `development` trocada por `main`, permissões do Claude Code e agentes apontando para este roteiro.
 
-## 4. Fase 1 — integração web → API
+## 4. Fase 1 — integração web → API (concluída em 10/10/2026)
 
-Ordem é a da ADR (`docs/adr/README.md`). O padrão a copiar em **toda** task é `apps/web/lib/feed-data.ts`: hook que lê `isApiDataSource()`, chama `getApiClient().<modulo>.<procedimento>(...)` no modo `api` e cai no mock no modo `mock`. Tipos vêm de `@sigillus/contracts`; nunca declare tipo local.
+O web saiu dos mocks para a API, um módulo por PR, e a E2E passou a rodar contra a API. Decisões que continuam valendo no ADR-016; textos da época em `docs/historico/`.
 
-Durante a fase 1 a suíte E2E continua rodando em modo `mock` e precisa continuar verde. O modo `api` é validado manualmente (API + Postgres + MinIO locais via `npm run db:up`) e, quando fizer sentido, com um spec novo que só roda com `NEXT_PUBLIC_DATA_SOURCE=api`. A virada da suíte inteira para `api` é a T-19.
-
-Para validar em modo `api` localmente:
-
-```bash
-npm run db:up
-cp apps/api/.env.example apps/api/.env   # ou o script de T-01
-npm run db:migrate -w apps/api && npm run db:seed -w apps/api
-npm run dev:api
-NEXT_PUBLIC_DATA_SOURCE=api npm run dev
-```
-
-Logins de dev (seeds): `cliente@sigillus.dev` / `Cliente@123`, `profissional@sigillus.dev` / `Profissional@123`, admin `admin@sigillus.dev` / `Admin@123`.
-
-- [x] **T-10 Catálogos e anúncio público** (passo 2). Procedimentos: `catalogs.get`, `ads.getBySlug`, `ads.listPopular`, `ads.mediaHighlights`, `ads.registerView`. Web: `app/(public)/anuncio/[slug]/page.tsx`, `components/screens/ad-details/use-ad-details.ts`, `most-viewed-screen.tsx`, `top-rated-screen.tsx`, `trending-media-screen.tsx`, `popular-links-section.tsx`, `lib/conversation-ad.ts`. Sem sessão, leitura pura. Pronto quando: as 4 telas públicas renderizam do banco no modo `api` com os dados das seeds; E2E `ad-details`, `home`, `gallery-profile-photo` verdes em mock. (PR #42, 08/10)
-
-- [x] **T-11 Auth e sessão** (passo 3). A maior task da fase; tudo depois depende dela. (PR #43, 08/10)
-  - Adicionar `better-auth` (versão pinada, a mesma da API) em `apps/web`. Criar `apps/web/lib/api/auth-client.ts` com `createAuthClient({ baseURL: getApiUrl(), basePath: "/api/auth" })` e `inferAdditionalFields` para `role`, `cpf`, `phone`, `city`, `alias`; e `admin-auth-client.ts` para `/api/admin-auth`.
-  - `lib/auth-session.ts`: no modo `api`, `useAuthSession` passa a vir de `authClient.useSession()` + `auth.me` (para `plan`); `setRole` deixa de existir no modo `api`; `logout` chama `signOut`. Manter o mock intacto no modo `mock`.
-  - Telas: `login-screen.tsx` (`signIn.email`), `client-signup-screen.tsx` e `professional-signup-screen.tsx` (`signUp.email` com `role` e campos extras), `admin-login-screen.tsx` (`adminAuthClient.signIn.email`), `account-screen.tsx` (dados reais). Erros do better-auth em PT-BR na tela.
-  - `lib/admin-session.ts`: mesma troca para o admin.
-  - `tests/helpers/auth.ts`: adicionar `loginViaApi(page, user)` que faz POST em `${API}/api/auth/sign-in/email` e injeta o cookie; os helpers atuais (`seedUserRole`, `seedAdminSession`) continuam para o modo mock.
-  - Pronto quando: cadastro → login → `/conta` → logout funciona no modo `api` para cliente, profissional e admin; `proxy.ts` redireciona corretamente; E2E `auth`, `identity-signup`, `admin`, `age-gate`, `navigation` verdes em mock.
-
-- [x] **T-12 Rascunho de anúncio** (passo 4). Procedimentos: `announcements.getMine`, `saveDraft`, `saveSection`, `publish`, `setListingStatus`, `setAvailability`, `setContact`. Web: `lib/announcement-draft.ts` (adaptador fino sobre o client mantendo compatibilidade mock), `professional-dashboard/announcement-tab.tsx`, `professional-ads-screen.tsx`, `chat-screen.tsx`, `account-screen.tsx`. Registrado via ADR-009. (PR #44, 08/10)
-
-- [x] **T-13 Mídia** (passo 5). Procedimentos: `media.createUpload` → `PUT` direto na URL pré-assinada (único `fetch` fora do client permitido, porque é S3) → `media.completeUpload` → polling de `media.get` até `ready` ou `failed`; `listMine`, `remove`, `reorder`, `setProfileImage`. Web: `lib/announcement-media.ts` (323 linhas), `components/ui/image-cropper-modal.tsx`, `image-blur-modal.tsx`, `image-selection-utils.ts`, `lib/ad-profile-image.ts`. Limites por plano vêm de `premium.getState().limits`, não de constante local. Registrado via ADR-010. (PR #45, 08/10)
-
-- [x] **T-14 Chat** (passo 6). Procedimentos: `chat.listConversations`, `listMessages`, `ensureConversationForAd`, `sendText`, `sendBrief`, `sendMedia`, `openViewOnce`, `markRead`, `setBlocked`, `deleteFromInbox`, `report`, `updateAlias`, `subscribe` (SSE, event iterator do oRPC). Web: `lib/chat-store.ts` mantendo a camada otimista e o `clientMessageId`, `lib/chat-service.ts` conectado ao client, `chat-screen.tsx` com carregamento reativo e formatação de timestamps, `lib/encounter-brief.ts`, `ad-details/use-contact-cta.ts`, `lib/conversation-ad.ts` com lookup assíncrono e hook `useConversationAd`. Registrado via ADR-011. (PR #47, 09/10)
-
-- [x] **T-15 Avaliações e convites** (passo 7). Procedimentos: `reviews.listForAd`, `getInvite`, `listMyInvites`, `invite`, `withdrawInvite`, `submit`. Web: `lib/review-invites.ts` integrado via oRPC mantendo compatibilidade mock, `lib/ad-reviews.ts`, `ad-details/review-cta.tsx`, `reviews-section.tsx`, `standard-reviews-section.tsx`, `professional-dashboard/reviews-tab.tsx`, `components/ui/star-rating-input.tsx`. Regras do gate no `domain` (`review-gate.ts`). Registrado via ADR-012. (PR #48, 09/10)
-
-- [x] **T-16 Notificações** (passo 8). Procedimentos: `notifications.list`, `markRead`, `markAllRead`, `remove`. Web: `lib/account-notifications.ts` integrado via oRPC com mutações otimistas e fallback mock, `formatRelativeTime` no domain, `notifications-center.tsx`, `notification-bell-button.tsx`. Registrado via ADR-013. (PR #49, 09/10)
-
-- [x] **T-17 Premium** (passo 9, já no formato de lançamento gratuito). Procedimentos: `premium.getState`, `plans` (os outros dois ficam ligados mas atrás da flag da T-22). Web: `lib/premium-plan.ts` deixa de ler `localStorage` no modo API e passa a vir de `premium.getState()` (a fonte de verdade do plano é o servidor); `lib/premium-catalog.ts`, `premium-subscription-checkout-screen.tsx`, `premium-conversion-modal.tsx`, `premium-entry-banner.tsx`, `premium-entry-button.tsx`, `traffic-discovery-card.tsx`, `financial-independence-screen.tsx`. Registrado via ADR-014. (PR #50, 09/10)
-
-- [x] **T-18 Backoffice** (passo 10). Procedimentos: todo o `admin.*`. Web: `lib/admin-service.ts` (234 linhas), `admin-dashboard-screen.tsx`, `admin-profiles-screen.tsx`, `admin-profile-detail-screen.tsx`, `admin-active-professionals-screen.tsx`, `admin-clients-screen.tsx`, `admin-reports-screen.tsx`, `admin-search.tsx`. Registrado via ADR-015. (PR #51, 09/10)
-
-- [x] **T-19 Remover os mocks e virar a E2E para a API.** Só depois de T-10 a T-18. Apagar `lib/mock-data.ts`, `lib/mock-users.ts`, `lib/data-source.ts` (ou reduzir a `getApiUrl()`), a flag `NEXT_PUBLIC_DATA_SOURCE` em `.env.example`, README e AGENTS; `remotePatterns` de picsum/unsplash/pexels em `next.config.ts` (deixar só o host do storage). Playwright: `globalSetup` que sobe (ou assume) API + Postgres via `compose.yaml`, roda migrations e seeds, e loga pelos helpers da T-11; `.github/workflows/playwright.yml` passa a rodar em PR com Postgres e MinIO de serviço. Pronto quando: `grep -r mock-data apps/web` não retorna nada e a suíte E2E inteira passa contra a API. Registrado via ADR-016. (PR #52, 10/10)
+- [x] T-10 Catálogos e anúncio público (PR #42, 08/10)
+- [x] T-11 Auth e sessão (PR #43, 08/10)
+- [x] T-12 Rascunho de anúncio (PR #44, 08/10)
+- [x] T-13 Mídia (PR #45, 08/10)
+- [x] T-14 Chat (PR #47, 09/10)
+- [x] T-15 Avaliações e convites (PR #48, 09/10)
+- [x] T-16 Notificações (PR #49, 09/10)
+- [x] T-17 Premium (PR #50, 09/10)
+- [x] T-18 Backoffice (PR #51, 09/10)
+- [x] T-19 Remoção dos mocks e E2E contra a API (PR #52, 10/10)
 
 ## 5. Fase 2 — pronto para o ar (versão gratuita)
 
@@ -115,11 +81,11 @@ Correções jurídicas e de privacidade em `docs/correcoes-juridico.md` (Fase J,
 
 - [x] **T-25 Dockerfile do web e compose de produção.** `apps/web/Dockerfile` multi-stage usando `output: "standalone"` (já configurado) com `NEXT_PUBLIC_*` como build args. `compose.prod.yaml` na raiz com `api`, `web`, `postgres`, `minio`, volumes e healthchecks; `compose.yaml` continua só para dev. Adicionado job `docker-web` na CI ao lado do `docker-api`. (PR #58, 10/10)
 
-- [x] **T-26 Deploy.** Depende de P-03 e P-04 (ambas resolvidas). Checklist de env de produção da API e do Web estruturado em `.env.prod.example` e documentado em `docs/deploy.md`; ADR-007 registrado em `docs/adr/007-infra-escolhida.md` detalhando VPS com Docker Compose, MinIO, subdomínios e rotinas de backup e primeiro admin via `admin:create`. (PR #59, 10/10)
+- [x] **T-26 Deploy.** Depende de P-03 e P-04 (ambas resolvidas). Checklist de env de produção da API e do Web estruturado em `.env.prod.example` e documentado em `docs/operacao/deploy.md`; ADR-007 registrado em `docs/adr/007-infra-escolhida.md` detalhando VPS com Docker Compose, MinIO, subdomínios e rotinas de backup e primeiro admin via `admin:create`. (PR #59, 10/10)
 
-- [x] **T-27 Smoke test pós-deploy.** Roteiro manual estruturado em `docs/smoke.md` cobrindo todas as etapas: liveness/readiness (`/healthz` e `/readyz`), cadastro de cliente e de profissional, publicação de anúncio, aprovação pelo admin, feed público, simulação e envio de card de briefing no chat, resposta em tempo real, convite e submissão de avaliação, denúncia e suspensão moderativa, e logout. Execução local validada contra a suíte ponta a ponta. (PR #60, 10/10)
+- [x] **T-27 Smoke test pós-deploy.** Roteiro manual estruturado em `docs/operacao/smoke.md` cobrindo todas as etapas: liveness/readiness (`/healthz` e `/readyz`), cadastro de cliente e de profissional, publicação de anúncio, aprovação pelo admin, feed público, simulação e envio de card de briefing no chat, resposta em tempo real, convite e submissão de avaliação, denúncia e suspensão moderativa, e logout. Execução local validada contra a suíte ponta a ponta. (PR #60, 10/10)
 
-- [x] **T-28 Bateria de testes de estresse, resiliência e consolidação.** Ao concluir a Fase 2: suíte de concorrência e estresse na API (20 mensagens paralelas, 10 subscribers SSE simultâneos, race condition de avaliação e 50 requisições simultâneas) e no web (rajadas de filtros, double-submit e navegações rápidas). Relatório consolidado em `docs/relatorios/2026-10-10-bateria-de-estresse-resiliencia-e-consolidacao.md` com 158 testes unitários/integração e 78 testes E2E aprovados. Fase 2 concluída com sucesso. (PR #61, 10/10)
+- [x] **T-28 Bateria de testes de estresse, resiliência e consolidação.** Ao concluir a Fase 2: suíte de concorrência e estresse na API (20 mensagens paralelas, 10 subscribers SSE simultâneos, race condition de avaliação e 50 requisições simultâneas) e no web (rajadas de filtros, double-submit e navegações rápidas). Relatório consolidado em `docs/historico/relatorios/2026-10-10-bateria-de-estresse-resiliencia-e-consolidacao.md` com 158 testes unitários/integração e 78 testes E2E aprovados. Fase 2 concluída com sucesso. (PR #61, 10/10)
 
 ## 6. Fase 3 — monetização (parada por decisão, não por falta de código)
 
@@ -132,9 +98,9 @@ Reabrir quando o Daniel decidir cobrar. Nada aqui bloqueia o ar.
 - [ ] **T-33 SMS para verificação de telefone** (provedor a definir) e `VERIFICATION_REQUIRED=true` se fizer sentido.
 - [ ] **T-34 Moderação de mídia** em `media.moderate` (API externa ou fila de revisão humana no admin).
 
-## 6.1 Etapa de CI/CD (registrada, não executar ainda)
+## 6.1 CI/CD
 
-Abrir quando o Daniel iniciar a etapa de CI/CD. Nada aqui bloqueia o ar.
+Itens de CI/CD registrados ao longo das fases. Nada aqui bloqueia o ar.
 
 - [x] **T-71 Playwright da CI com log da API e falha cedo.** (PR #98, 12/10: logs dos dois webServers em artifact `webserver-logs-*`, `maxFailures: 5`, `timeout-minutes: 20`, E2E da CI contra o build standalone igual ao do Dockerfile, ruleset da `main` com `required_status_checks` estrito e merge só por `gh pr merge --auto`) Origem: achado de 11/10 em `docs/correcoes-juridico.md` seção 6 (run 38179815732 da `main` em `aa2dc30`: 51 testes falharam desde o primeiro, 45 s × 3 tentativas cada, até o timeout de 60 min; o rerun do mesmo commit passou 84/84 em 2,8 min; o log não tinha a saída da API, então a causa ficou desconhecida).
   - **Fazer:** (1) o webServer da API no `apps/web/playwright.config.ts` passa a mandar stdout e stderr para o log da CI (`stdout: "pipe"`, `stderr: "pipe"`), sem dado pessoal (o redact do pino já cobre); (2) `maxFailures` na CI para encerrar a run quando muitos testes falham em sequência, em vez de queimar o timeout do workflow (valor a definir na task); (3) conferir se o `timeout-minutes` do `playwright.yml` ainda faz sentido com isso.
@@ -146,31 +112,14 @@ Abrir quando o Daniel iniciar a etapa de CI/CD. Nada aqui bloqueia o ar.
 - [x] **Ordem seed/migrate na E2E local.** (PR #98) `npm run test:e2e` roda a seed antes de as migrations novas estarem aplicadas no banco local. Registrado em 12/10.
 - [x] **Build do web sem rede para fontes.** (`next/font/local` com os `.woff2` e licenças OFL em `apps/web/app/fonts/`, PR #98) O `next build` busca fontes no Google (`next/font/google`) e falhou uma vez por rede (#93). Avaliar `next/font/local`. Registrado em 12/10.
 
-## 7. Decisões pendentes (perguntar ao Daniel antes de executar a task que depende)
+## 7. Decisões pendentes
 
-| #    | Pergunta                                                                                                               | Opções                                                                                                                               | Bloqueia  |
-| ---- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------- |
-| P-01 | [Resolvida - Opção B] No lançamento gratuito, como funciona o premium?                                                 | Resolvida: admin concede premium à mão via `admin.grantPremium` (T-22, PR #55).                                                      | Resolvida |
-| P-02 | [Resolvida - Resend] Vale adicionar um provedor de e-mail antes do ar, só para reset de senha e verificação de e-mail? | Resolvida: Resend com fallback para `LogMailer` (T-23, PR #56).                                                                      | Resolvida |
-| P-03 | [Resolvida - VPS Docker Compose] Onde hospedar?                                                                        | Resolvida: VPS com Docker Compose (máquina única com API + web + Postgres + MinIO via compose.prod.yaml) (T-25, PR #58).             | Resolvida |
-| P-04 | [Resolvida - Subdomínios] Domínio: web e API no mesmo domínio ou subdomínios?                                          | Resolvida: subdomínios separados (`app.<dominio>` e `api.<dominio>` com `COOKIE_DOMAIN=.<dominio>`) (T-26, PR #59).                  | Resolvida |
-| P-05 | [Resolvida - Opção 1] Texto de Termos de Uso e Política de Privacidade.                                                | Resolvida: rascunho completo adaptado ao Sigillus (vitrine +18 e LGPD) implementado e disponibilizado para validação (T-24, PR #57). | Resolvida |
+As decisões P-01 a P-05 deste arquivo estão resolvidas (registradas nas tasks T-22 a T-26 e nos ADRs 007 e 018). Pendências abertas:
 
-## 8. Mapa rápido: módulo → arquivos
-
-| Módulo da API      | Service                               | Arquivos do web que ainda são mock                                                                                      | Task       |
-| ------------------ | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------- |
-| catalogs, ads      | `modules/catalogs`, `modules/ads`     | `use-ad-details.ts`, telas `popular/*`, `conversation-ad.ts`                                                            | T-10       |
-| auth (better-auth) | `lib/auth.ts`, `modules/auth`         | `auth-session.ts`, `admin-session.ts`, `login-screen`, `*-signup-screen`, `admin-login-screen`, `tests/helpers/auth.ts` | T-11       |
-| announcements      | `modules/announcements`               | `announcement-draft.ts`, `announcement-tab.tsx`, `professional-ads-screen.tsx`                                          | T-12       |
-| media              | `modules/media` + `jobs.ts`           | `announcement-media.ts`, `ad-profile-image.ts`, croppers                                                                | T-13       |
-| chat               | `modules/chat` + `lib/chat-events.ts` | `chat-store.ts`, `chat-service.ts`, `chat-screen.tsx`, `encounter-brief.ts`                                             | T-14       |
-| reviews            | `modules/reviews`                     | `review-invites.ts`, `ad-reviews.ts`, `reviews-tab.tsx`                                                                 | T-15       |
-| notifications      | `modules/notifications`               | `account-notifications.ts`, `notifications-center.tsx`                                                                  | T-16       |
-| premium            | `modules/premium` + `lib/billing`     | `premium-plan.ts`, `premium-catalog.ts`, telas premium                                                                  | T-17, T-22 |
-| admin              | `modules/admin`                       | `admin-service.ts`, `components/screens/admin/*`                                                                        | T-18       |
-| verification       | `modules/verification`                | `verification.ts`, seções em `account-screen` e `professional-dashboard-screen`                                         | T-21       |
+- P-11: destino externo do backup (`docs/correcoes-pre-deploy.md`).
+- Decisões da Fase F ainda sem resposta: seção de decisões de `docs/faxina-inventario.md` e "Achados novos" das trilhas.
 
 ## Histórico deste arquivo
 
 - 04/10/2026: criado a partir da análise completa da `main` (Claude). Decisões D-01 a D-08 registradas com o Daniel.
+- 12/11/2026: estado atualizado para a `v0.2.0` e a Fase F; Fases 0 e 1 resumidas; mapa de arquivos mock removido (F-14a).

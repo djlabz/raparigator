@@ -30,7 +30,7 @@ Adota-se o modelo de **VPS única com Docker Compose** e **subdomínios separado
 - **API (`sigillus-api:latest`)**: Container Node.js 22 Alpine rodando a API Hono/oRPC na porta interna 4000.
 - **Web (`sigillus-web:latest`)**: Container Node.js 22 Alpine rodando Next.js 16 em modo standalone na porta interna 3000.
 - **Postgres 17 (`postgres:17-alpine`)**: Banco relacional persistido no volume nomeado `postgres-data`. A extensão `pg_trgm` é habilitada para as buscas textuais do feed.
-- **MinIO (`cgr.dev/chainguard/minio`, pinado por digest desde a T-40)**: Servidor S3 self-hosted persistido no volume nomeado `minio-data`, com serviço `minio-init` que cria o bucket `sigillus-media` e define a política pública de download no prefixo `/public`.
+- **MinIO (`cgr.dev/chainguard/minio`, imagem pinada por digest)**: Servidor S3 self-hosted persistido no volume nomeado `minio-data`, com serviço `minio-init` que cria o bucket `sigillus-media` e define a política pública de download no prefixo `/public`.
 
 ### 2. Rede, TLS e Proxy Reverso
 
@@ -50,13 +50,11 @@ Adota-se o modelo de **VPS única com Docker Compose** e **subdomínios separado
 - `MIGRATE_ON_BOOT=true`: As migrations do Drizzle rodam automaticamente no boot da API, garantindo sincronia imediata entre schema e aplicação a cada deploy ou reinicialização.
 - Migrações são idempotentes e transacionais (ADR-004).
 
-### 5. Operação e Backups
+### 5. Backup
 
-- **Backup**: cron diário rodando `scripts/backup.sh` (T-48), que gera o dump do Postgres e a cópia do bucket com `mc mirror`, com retenção local. Procedimento e restauração em `docs/deploy.md` seção 7.
-- **Criação do primeiro Admin**: Executada após a primeira subida via comando CLI:
-  ```bash
-  docker compose -f compose.prod.yaml --env-file .env.prod exec api node dist/create-admin.js --email="admin@<dominio>" --name="Admin" --password="<senha-forte>"
-  ```
+- Backup diário do Postgres e do bucket na própria VPS, com retenção local. O destino externo está em aberto (P-11).
+
+O passo a passo de operação (proxy, comandos do Compose, backup e restauração, criação do primeiro admin) fica em [`docs/operacao/deploy.md`](../operacao/deploy.md).
 
 ## Consequências
 
@@ -65,8 +63,8 @@ Adota-se o modelo de **VPS única com Docker Compose** e **subdomínios separado
 
 ## Emendas
 
-- **T-43 (10/2026)**: as URLs pré-assinadas são geradas por um segundo client S3 com `S3_PUBLIC_ENDPOINT` (`https://media.<dominio>`), porque a assinatura SigV4 inclui o host e o navegador não alcança `http://minio:9000`. Operações servidor→MinIO continuam em `S3_ENDPOINT`. `S3_PUBLIC_BASE_URL` passa a incluir o bucket e o Caddy de `media.` não usa `rewrite`.
-- **T-40 (10/2026)**: o `compose.prod.yaml` publica `web` (3000), `api` (4000) e `minio` (9000) só em `127.0.0.1`; o Postgres e o console do MinIO (9001) não são publicados (acesso por `docker compose ... exec postgres psql` e túnel SSH). A imagem do MinIO (e do `minio-init`) é pinada por digest em vez de `:latest`. O serviço `api` passa a exigir `API_ORIGIN` e `BILLING_WEBHOOK_SECRET` (`${VAR:?}`, o Compose falha sem valor) e recebe `RATE_LIMIT_ENABLED=true` por padrão.
-- **T-48 (10/2026)**: o backup é o script versionado `scripts/backup.sh` (dump do Postgres com `pg_dump --clean --if-exists --no-owner` e cópia do bucket com `mc mirror` pela imagem do `minio-init`, retenção padrão de 14 dias). O destino externo segue em aberto (P-11).
-- **T-50 (10/2026)**: o `minio-init` recebe `environment` próprio (`MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` e `S3_BUCKET`, das mesmas variáveis do `minio` e da `api`); antes disso o bucket e a leitura pública de `public/` não eram criados em produção.
-- **T-49 (10/2026)**: todo comando `docker compose -f compose.prod.yaml` precisa de `--env-file .env.prod`, inclusive `ps`, `logs` e `exec`; sem ele a interpolação das variáveis obrigatórias falha antes de o comando rodar.
+- **URLs pré-assinadas com host público (10/2026):** são geradas por um segundo client S3 com `S3_PUBLIC_ENDPOINT` (`https://media.<dominio>`), porque a assinatura SigV4 inclui o host e o navegador não alcança `http://minio:9000`. Operações servidor → MinIO continuam em `S3_ENDPOINT`. `S3_PUBLIC_BASE_URL` inclui o bucket e o proxy de `media.` não reescreve o caminho.
+- **Portas só em loopback (10/2026):** o `compose.prod.yaml` publica `web` (3000), `api` (4000) e `minio` (9000) só em `127.0.0.1`; o Postgres e o console do MinIO não são publicados. A API exige `API_ORIGIN` e `BILLING_WEBHOOK_SECRET` (o Compose falha sem valor) e liga `RATE_LIMIT_ENABLED` por padrão.
+- **Backup versionado (10/2026):** o backup é o script `scripts/backup.sh` (dump do Postgres e cópia do bucket com `mc mirror`, retenção padrão de 14 dias).
+- **Bucket criado pelo `minio-init` (10/2026):** o serviço recebe as mesmas credenciais e o mesmo nome de bucket do `minio` e da `api`, e cria o bucket com leitura pública só em `public/`.
+- **`--env-file .env.prod` em todo comando do Compose de produção (10/2026):** sem ele a interpolação das variáveis obrigatórias falha antes de o comando rodar.

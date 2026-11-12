@@ -1,6 +1,6 @@
 # Guia de Deploy e Operação em Produção — Sigillus
 
-Este documento descreve o procedimento operacional para colocar a plataforma Sigillus no ar em uma **VPS com Docker Compose** (conforme [ADR-007](adr/007-infra-escolhida.md)).
+Este documento descreve o procedimento operacional para colocar a plataforma Sigillus no ar em uma **VPS com Docker Compose** (conforme [ADR-007](../adr/007-infra-escolhida.md)).
 
 ---
 
