@@ -25,3 +25,4 @@ export * from "./share-links";
 export * from "./notification-links";
 export * from "./redirect";
 export * from "./fab-geometry";
+export * from "./media-history";

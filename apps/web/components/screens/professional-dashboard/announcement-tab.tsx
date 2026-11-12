@@ -69,8 +69,8 @@ import {
   reorderMedia,
   setProfileImageMedia,
   uploadMediaFile,
-  useAnnouncementMedia,
-} from "@/lib/announcement-media";
+} from "@/lib/announcement/media-api";
+import { useAnnouncementMedia } from "@/lib/announcement/use-announcement-media";
 import { getCroppedImg } from "@/lib/cropImage";
 import {
   normalizeText,
