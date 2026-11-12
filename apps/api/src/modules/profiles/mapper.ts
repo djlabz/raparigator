@@ -67,7 +67,7 @@ export function toProfessionalAd(row: ProfileRow, media: ProfileImages): Profess
     rating: Number(row.rating),
     reviewsCount: row.reviewsCount,
     profileViews: row.profileViews,
-    verificationStatus: row.verificationStatus,
+    moderationStatus: row.moderationStatus,
     submittedAt: row.submittedAt?.toISOString(),
     rejectionReason: row.rejectionReason ?? undefined,
     isSuspended: row.isSuspended,

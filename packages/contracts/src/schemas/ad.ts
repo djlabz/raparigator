@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AdCategorySchema, AvailabilityStatusSchema, VerificationStatusSchema } from "./common";
+import { AdCategorySchema, AvailabilityStatusSchema, ModerationStatusSchema } from "./common";
 
 export const PricingTableItemSchema = z.object({
   label: z.string(),
@@ -40,7 +40,7 @@ export const ProfessionalAdSchema = z.object({
   rating: z.number(),
   reviewsCount: z.number(),
   profileViews: z.number(),
-  verificationStatus: VerificationStatusSchema.optional(),
+  moderationStatus: ModerationStatusSchema.optional(),
   submittedAt: z.string().optional(),
   rejectionReason: z.string().optional(),
   isSuspended: z.boolean().optional(),

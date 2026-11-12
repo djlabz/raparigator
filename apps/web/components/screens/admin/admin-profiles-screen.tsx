@@ -20,7 +20,7 @@ import {
 import { AdminLayoutShell } from "./admin-layout-shell";
 import { useAdminSession } from "@/lib/admin-session";
 import { getAllProfiles, approveProfile } from "@/lib/admin-service";
-import type { ProfessionalAd, VerificationStatus } from "@/lib/types";
+import type { ProfessionalAd, ModerationStatus } from "@/lib/types";
 import { formatDateBR } from "@sigillus/domain";
 
 type TabStatus = "pending_review" | "published" | "rejected";
@@ -31,7 +31,7 @@ const TABS: { label: string; status: TabStatus; icon: React.ElementType }[] = [
   { label: "Recusados", status: "rejected", icon: XCircle },
 ];
 
-function StatusBadge({ status }: { status: VerificationStatus | undefined }) {
+function StatusBadge({ status }: { status: ModerationStatus | undefined }) {
   if (status === "pending_review") {
     return (
       <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-950/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300 backdrop-blur-md shadow-sm">
@@ -274,7 +274,7 @@ export function AdminProfilesScreen() {
 
                       {/* Top Badges */}
                       <div className="absolute top-3 left-3">
-                        <StatusBadge status={profile.verificationStatus} />
+                        <StatusBadge status={profile.moderationStatus} />
                       </div>
                       {profile.adTier === "premium" && (
                         <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full border border-yellow-500/40 bg-zinc-950/80 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-300 backdrop-blur-md shadow-sm">
@@ -313,7 +313,7 @@ export function AdminProfilesScreen() {
                       </div>
 
                       {/* Rejection preview if rejected */}
-                      {profile.verificationStatus === "rejected" && profile.rejectionReason && (
+                      {profile.moderationStatus === "rejected" && profile.rejectionReason && (
                         <div className="rounded-xl border border-red-900/40 bg-red-950/30 p-2.5 text-xs text-red-300">
                           <p className="font-bold text-[11px] uppercase tracking-wider mb-0.5">
                             Motivo da Recusa:
@@ -326,7 +326,7 @@ export function AdminProfilesScreen() {
 
                   {/* Actions Bar */}
                   <div className="p-5 pt-0 flex items-center gap-2">
-                    {profile.verificationStatus === "pending_review" && (
+                    {profile.moderationStatus === "pending_review" && (
                       <button
                         onClick={() => handleQuickApprove(profile.id)}
                         disabled={approvingId === profile.id}

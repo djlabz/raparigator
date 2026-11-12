@@ -9,7 +9,7 @@ export function createAdsService(db: Database, profiles: ProfileRepository) {
   return {
     async getBySlug(slug: string): Promise<ProfessionalAd | null> {
       const row = await profiles.findBySlug(slug);
-      if (!row || row.verificationStatus !== "published" || row.isSuspended) {
+      if (!row || row.moderationStatus !== "published" || row.isSuspended) {
         return null;
       }
       const images = await profiles.imagesFor([row]);

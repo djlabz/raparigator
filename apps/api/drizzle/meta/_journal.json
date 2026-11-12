@@ -64,6 +64,13 @@
       "when": 1792955530765,
       "tag": "0008_profile_draft_status",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794507121679,
+      "tag": "0009_profile_moderation_status",
+      "breakpoints": true
     }
   ]
 }

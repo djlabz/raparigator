@@ -280,7 +280,7 @@ export function createReviewsService(deps: ReviewsServiceDeps) {
 
     async listForAd(slug: string): Promise<AdReviewsSummary> {
       const profile = await profiles.findBySlug(slug);
-      if (!profile || profile.verificationStatus !== "published" || profile.isSuspended) {
+      if (!profile || profile.moderationStatus !== "published" || profile.isSuspended) {
         throw new ORPCError("NOT_FOUND", { message: "Anúncio não encontrado." });
       }
       const rows = await db

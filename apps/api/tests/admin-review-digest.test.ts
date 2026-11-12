@@ -55,7 +55,7 @@ async function publishProfile(email: string, name: string) {
     .select()
     .from(professionalProfiles)
     .where(eq(professionalProfiles.userId, user.userId));
-  expect(row?.verificationStatus).toBe("pending_review");
+  expect(row?.moderationStatus).toBe("pending_review");
   return row!;
 }
 

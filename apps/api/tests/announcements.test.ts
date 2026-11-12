@@ -75,7 +75,7 @@ describe("announcements", () => {
     const svc = service();
     const result = await svc.getMine(owner);
     expect(result.ad?.slug).toMatch(/^ana-clara-[0-9a-f]{6}$/);
-    expect(result.ad?.verificationStatus).toBe("draft");
+    expect(result.ad?.moderationStatus).toBe("draft");
     expect(result.ad?.submittedAt).toBeUndefined();
     expect(result.listingStatus).toBe("Pausado");
     expect(result.draft).toBeNull();
@@ -214,7 +214,7 @@ describe("announcements", () => {
     expect(result).toEqual({ ok: true });
     const profile = await profileOf(owner.id);
     expect(profile.listingStatus).toBe("Ativo");
-    expect(profile.verificationStatus).toBe("pending_review");
+    expect(profile.moderationStatus).toBe("pending_review");
     expect(profile.submittedAt).not.toBeNull();
     expect(profile.city).toBe("Sao Paulo");
     expect(profile.startingPrice).toBe(200);
@@ -235,12 +235,12 @@ describe("announcements", () => {
     const before = await profileOf(owner.id);
     await harness.db
       .update(professionalProfiles)
-      .set({ verificationStatus: "published", listingStatus: "Pausado", submittedAt: null })
+      .set({ moderationStatus: "published", listingStatus: "Pausado", submittedAt: null })
       .where(eq(professionalProfiles.id, before.id));
     const result = await svc.publish(owner, completeDraft());
     expect(result).toEqual({ ok: true });
     const profile = await profileOf(owner.id);
-    expect(profile.verificationStatus).toBe("published");
+    expect(profile.moderationStatus).toBe("published");
     expect(profile.listingStatus).toBe("Ativo");
     expect(profile.submittedAt).toBeNull();
     const logs = await harness.db.select().from(adminActivityLogs);
@@ -255,7 +255,7 @@ describe("announcements", () => {
     await harness.db
       .update(professionalProfiles)
       .set({
-        verificationStatus: "rejected",
+        moderationStatus: "rejected",
         rejectionReason: "Fotos ilegíveis",
         submittedAt: new Date("2026-01-01T00:00:00.000Z"),
       })
@@ -263,7 +263,7 @@ describe("announcements", () => {
     const result = await svc.publish(owner, completeDraft());
     expect(result).toEqual({ ok: true });
     const profile = await profileOf(owner.id);
-    expect(profile.verificationStatus).toBe("pending_review");
+    expect(profile.moderationStatus).toBe("pending_review");
     expect(profile.rejectionReason).toBeNull();
     expect(profile.submittedAt?.getTime()).toBeGreaterThan(Date.parse("2026-01-01T00:00:00.000Z"));
     const logs = await harness.db.select().from(adminActivityLogs);
