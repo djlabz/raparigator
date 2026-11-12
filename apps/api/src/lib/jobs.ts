@@ -13,6 +13,7 @@ type JobPayloads = {
   "admin.identity-digest": Record<string, never>;
   "identity.retention": Record<string, never>;
   "identity.delete-files": { userId: string; keys: string[] };
+  "storage.purge": { keys: string[] };
   "access-log.record": {
     userId: string;
     event: AccessLogEvent;
@@ -27,6 +28,8 @@ type JobPayloads = {
 };
 
 export type JobName = keyof JobPayloads;
+
+export const JOB_RETRY_LIMIT = 5;
 
 const JOB_QUEUE_POLICIES: Partial<Record<JobName, QueuePolicy>> = {
   "admin.review-digest": "short",
@@ -88,7 +91,7 @@ export function createPgBossQueue(databaseUrl: string, logger: Logger): JobQueue
     async enqueue(name, payload, options) {
       await ensureQueue(name);
       await boss.send(name, payload, {
-        retryLimit: 5,
+        retryLimit: JOB_RETRY_LIMIT,
         retryDelay: 30,
         retryBackoff: true,
         ...(options?.startAfter ? { startAfter: options.startAfter } : {}),
@@ -107,16 +110,20 @@ export function createPgBossQueue(databaseUrl: string, logger: Logger): JobQueue
 }
 
 type DelayedJob = { name: JobName; payload: unknown; singletonKey?: string };
+type FailedJob = { name: JobName; payload: unknown; error: unknown };
 
 export function createInlineQueue(logger?: Logger): JobQueue & {
   enqueued: Array<{ name: JobName; payload: unknown }>;
   delayed: DelayedJob[];
+  failures: FailedJob[];
   runDelayed(): Promise<void>;
+  retryFailed(): Promise<void>;
   clearDelayed(): void;
 } {
   const handlers = new Map<JobName, JobHandler<JobName>>();
   const enqueued: Array<{ name: JobName; payload: unknown }> = [];
   const delayed: DelayedJob[] = [];
+  const failures: FailedJob[] = [];
 
   async function run(name: JobName, payload: unknown) {
     const handler = handlers.get(name);
@@ -126,6 +133,7 @@ export function createInlineQueue(logger?: Logger): JobQueue & {
     try {
       await handler(payload as never, { isFinalAttempt: true });
     } catch (error) {
+      failures.push({ name, payload, error });
       logger?.error({ err: error, job: name }, "job inline falhou");
     }
   }
@@ -133,6 +141,7 @@ export function createInlineQueue(logger?: Logger): JobQueue & {
   return {
     enqueued,
     delayed,
+    failures,
     async schedule() {},
     async start() {},
     async stop() {},
@@ -156,6 +165,12 @@ export function createInlineQueue(logger?: Logger): JobQueue & {
     },
     async runDelayed() {
       const due = delayed.splice(0, delayed.length);
+      for (const job of due) {
+        await run(job.name, job.payload);
+      }
+    },
+    async retryFailed() {
+      const due = failures.splice(0, failures.length);
       for (const job of due) {
         await run(job.name, job.payload);
       }

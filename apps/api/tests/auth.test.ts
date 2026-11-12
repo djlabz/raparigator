@@ -1,12 +1,24 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { eq, inArray } from "drizzle-orm";
 import { CLIENT_ALIAS_PATTERN, CLIENT_ALIAS_TAKEN_MESSAGE } from "@sigillus/domain";
 import { DEV_ADMINS, upsertAdminWithPassword } from "../src/db/seed/users";
 import * as schema from "../src/db/schema";
+import { JOB_RETRY_LIMIT } from "../src/lib/jobs";
+import { registerStoragePurgeJob } from "../src/modules/auth/jobs";
+import { createAuthRepository } from "../src/modules/auth/repository";
+import { createAuthService } from "../src/modules/auth/service";
 import { createTestHarness } from "./helpers/app";
 import { signInAdmin, signUp } from "./helpers/auth";
 
 const harness = createTestHarness();
+
+beforeAll(async () => {
+  await registerStoragePurgeJob({
+    jobs: harness.jobs,
+    storage: harness.storage,
+    logger: harness.deps.logger,
+  });
+});
 
 describe("autenticação e sessão", () => {
   it("auth.me devolve null sem sessão", async () => {
@@ -410,3 +422,90 @@ async function createDeletionFixture(prefix: string) {
 
   return { client, pro, mediaKey, assetId, convId, msgId, originalContent };
 }
+
+describe("auth.deleteAccount transacional (F-21)", () => {
+  it("falha no DELETE do usuário deixa mensagens, mídias e conta intactas e não enfileira jobs", async () => {
+    const fx = await createDeletionFixture("txfail");
+    const jobsBefore = harness.jobs.enqueued.length;
+    const repository = createAuthRepository(harness.db);
+    const service = createAuthService({
+      db: harness.db,
+      jobs: harness.jobs,
+      logger: harness.deps.logger,
+      repository: {
+        ...repository,
+        deleteUser: async () => {
+          throw new Error("falha simulada no DELETE");
+        },
+      },
+    });
+
+    await expect(
+      service.deleteAccount({ userId: fx.client.userId, password: "Senha@12345" }),
+    ).rejects.toThrow("falha simulada no DELETE");
+
+    const [userAfter] = await harness.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, fx.client.userId));
+    expect(userAfter).toBeDefined();
+    const [msgAfter] = await harness.db
+      .select()
+      .from(schema.messages)
+      .where(eq(schema.messages.id, fx.msgId));
+    expect(msgAfter!.content).toBe(fx.originalContent);
+    const [convAfter] = await harness.db
+      .select()
+      .from(schema.conversations)
+      .where(eq(schema.conversations.id, fx.convId));
+    expect(convAfter!.lastMessagePreview).toBe(fx.originalContent);
+    expect(harness.storage.objects.has(fx.mediaKey)).toBe(true);
+    expect(harness.jobs.enqueued.slice(jobsBefore).map((job) => job.name)).toEqual([]);
+  });
+
+  it("storage.purge enfileirado após o commit reexecuta até apagar os objetos", async () => {
+    const fx = await createDeletionFixture("purge");
+    const jobsBefore = harness.jobs.enqueued.length;
+    const failuresBefore = harness.jobs.failures.length;
+    const originalDelete = harness.storage.deleteObject;
+    let attempts = 0;
+    harness.storage.deleteObject = async (key: string) => {
+      attempts += 1;
+      if (attempts === 1) {
+        throw new Error("storage fora do ar");
+      }
+      await originalDelete(key);
+    };
+
+    try {
+      const deleteRes = await harness.rpc<{ ok: boolean }>(
+        "auth/deleteAccount",
+        { password: "Senha@12345" },
+        { cookie: fx.client.cookie },
+      );
+      expect(deleteRes.status).toBe(200);
+      expect(JOB_RETRY_LIMIT).toBe(5);
+
+      const purgeJobs = harness.jobs.enqueued
+        .slice(jobsBefore)
+        .filter((job) => job.name === "storage.purge");
+      expect(purgeJobs).toHaveLength(1);
+      expect((purgeJobs[0]!.payload as { keys: string[] }).keys).toContain(fx.mediaKey);
+      expect(harness.jobs.failures.slice(failuresBefore).map((job) => job.name)).toContain(
+        "storage.purge",
+      );
+      expect(harness.storage.objects.has(fx.mediaKey)).toBe(true);
+
+      const [userAfter] = await harness.db
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.id, fx.client.userId));
+      expect(userAfter).toBeUndefined();
+
+      await harness.jobs.retryFailed();
+      expect(harness.storage.objects.has(fx.mediaKey)).toBe(false);
+    } finally {
+      harness.storage.deleteObject = originalDelete;
+    }
+  });
+});

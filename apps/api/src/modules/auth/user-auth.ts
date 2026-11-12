@@ -1,16 +1,15 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { eq, or } from "drizzle-orm";
-import type { AppConfig } from "../config";
-import type { Database } from "../db/client";
-import * as schema from "../db/schema";
-import type { JobQueue } from "./jobs";
-import type { Mailer } from "./mail";
-import { newId } from "./ids";
-import { recordAccess } from "../modules/access-log";
-import { assertAliasAvailable, assignClientAlias, normalizeAlias } from "../modules/auth/alias";
-import { readSignupSensitiveFields } from "../modules/auth/signup-fields";
-import { createIdentityRepository } from "../modules/identity/repository";
+import type { AppConfig } from "../../config";
+import type { Database } from "../../db/client";
+import * as schema from "../../db/schema";
+import type { JobQueue } from "../../lib/jobs";
+import type { Mailer } from "../../lib/mail";
+import { newId } from "../../lib/ids";
+import { cookieOptions } from "./cookie-options";
+import { recordAccess } from "../access-log";
+import { assertAliasAvailable, assignClientAlias, normalizeAlias } from "./alias";
+import { readSignupSensitiveFields } from "./signup-fields";
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const SESSION_UPDATE_AGE_SECONDS = 60 * 60 * 24;
@@ -20,15 +19,6 @@ type HookContext = { path?: string; headers?: Headers; request?: Request } | nul
 
 function hookHeaders(ctx: HookContext) {
   return ctx?.headers ?? ctx?.request?.headers ?? null;
-}
-
-function cookieOptions(config: AppConfig) {
-  return {
-    useSecureCookies: config.isProduction,
-    ...(config.COOKIE_DOMAIN
-      ? { crossSubDomainCookies: { enabled: true, domain: config.COOKIE_DOMAIN } }
-      : {}),
-  };
 }
 
 export function createUserAuth(db: Database, config: AppConfig, mailer?: Mailer, jobs?: JobQueue) {
@@ -75,33 +65,6 @@ export function createUserAuth(db: Database, config: AppConfig, mailer?: Mailer,
       },
     },
     user: {
-      deleteUser: {
-        enabled: true,
-        beforeDelete: async (user) => {
-          const identityKeys = await createIdentityRepository(db).fileKeysForUser(user.id);
-          if (jobs && identityKeys.length > 0) {
-            await jobs.enqueue("identity.delete-files", { userId: user.id, keys: identityKeys });
-          }
-          await db
-            .update(schema.messages)
-            .set({
-              content: "[Mensagem apagada devido à exclusão da conta]",
-              mediaAssetId: null,
-              brief: null,
-              editedAt: new Date(),
-            })
-            .where(eq(schema.messages.senderUserId, user.id));
-          await db
-            .update(schema.conversations)
-            .set({ lastMessagePreview: "[Mensagem apagada]" })
-            .where(
-              or(
-                eq(schema.conversations.clientUserId, user.id),
-                eq(schema.conversations.professionalUserId, user.id),
-              ),
-            );
-        },
-      },
       additionalFields: {
         role: {
           type: ["cliente", "profissional"],
@@ -203,49 +166,5 @@ export function createUserAuth(db: Database, config: AppConfig, mailer?: Mailer,
   });
 }
 
-export function createAdminAuth(db: Database, config: AppConfig) {
-  return betterAuth({
-    appName: "Sigillus Admin",
-    baseURL: config.API_ORIGIN,
-    basePath: "/api/admin-auth",
-    secret: config.AUTH_SECRET,
-    trustedOrigins: config.corsOrigins,
-    database: drizzleAdapter(db, {
-      provider: "pg",
-      schema: {
-        user: schema.adminUsers,
-        session: schema.adminSessions,
-        account: schema.adminAccounts,
-        verification: schema.adminVerifications,
-      },
-    }),
-    emailAndPassword: {
-      enabled: true,
-      minPasswordLength: 8,
-      disableSignUp: true,
-    },
-    session: {
-      expiresIn: 60 * 60 * 12,
-      updateAge: 60 * 60,
-      cookieCache: { enabled: false },
-    },
-    rateLimit: {
-      enabled: config.RATE_LIMIT_ENABLED,
-      window: 60,
-      max: 20,
-      customRules: {
-        "/sign-in/email": { window: 60, max: 5 },
-      },
-    },
-    advanced: {
-      cookiePrefix: "sigillus-admin",
-      database: { generateId: () => newId() },
-      ...cookieOptions(config),
-    },
-  });
-}
-
 export type UserAuth = ReturnType<typeof createUserAuth>;
-export type AdminAuth = ReturnType<typeof createAdminAuth>;
 export type UserSession = NonNullable<Awaited<ReturnType<UserAuth["api"]["getSession"]>>>;
-export type AdminSession = NonNullable<Awaited<ReturnType<AdminAuth["api"]["getSession"]>>>;

@@ -4,7 +4,7 @@ import { createApp } from "./app";
 import { createDatabase } from "./db/client";
 import { runMigrations } from "./db/migrate";
 import { runSeeds } from "./db/seed";
-import { createAdminAuth, createUserAuth } from "./lib/auth";
+import { createAdminAuth, createUserAuth, registerStoragePurgeJob } from "./modules/auth";
 import { getLogger } from "./lib/logger";
 import { MemoryRateLimiter, NoopRateLimiter } from "./lib/rate-limit";
 import { initSentry } from "./lib/sentry";
@@ -78,6 +78,7 @@ async function main() {
     listBlockedHashes: () => deps.services.reports.listBlockedHashes(),
   });
   await registerReviewJobs({ jobs, logger });
+  await registerStoragePurgeJob({ jobs, storage, logger });
   await registerAccessLogJobs({ db, jobs, logger });
   await registerAdminReviewDigestJob({ db, config, mailer, jobs, logger });
   await registerAdminReportDigestJob({ db, config, mailer, jobs, logger });

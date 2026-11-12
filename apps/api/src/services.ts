@@ -8,6 +8,7 @@ import type { Mailer } from "./lib/mail";
 import type { ObjectStorage } from "./lib/storage";
 import { createAdminService } from "./modules/admin/service";
 import { createAdsService } from "./modules/ads/service";
+import { createAuthService } from "./modules/auth/service";
 import { createAnnouncementsService } from "./modules/announcements/service";
 import { createCatalogsService } from "./modules/catalogs/service";
 import { createChatService } from "./modules/chat/service";
@@ -47,6 +48,7 @@ export function createServices(deps: ServiceDeps) {
   return {
     profiles,
     notifications,
+    auth: createAuthService({ db, jobs, logger }),
     accessLog: createAccessLogService(db),
     catalogs: createCatalogsService(db),
     feed: createFeedService(profiles),

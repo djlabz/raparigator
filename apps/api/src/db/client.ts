@@ -5,6 +5,8 @@ import * as schema from "./schema";
 
 export type Database = ReturnType<typeof createDatabase>["db"];
 
+export type DbExecutor = Pick<Database, "select" | "insert" | "update" | "delete">;
+
 export function createDatabase(config: Pick<AppConfig, "DATABASE_URL" | "DATABASE_POOL_MAX">) {
   const pool = new Pool({
     connectionString: config.DATABASE_URL,
