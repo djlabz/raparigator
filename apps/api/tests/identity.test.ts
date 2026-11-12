@@ -389,6 +389,7 @@ describe("verificação de identidade da anunciante", () => {
       { cookie: pro.cookie },
     );
     expect(deleted.status).toBe(200);
+    await harness.jobs.runDelayed();
     const leftovers = [...harness.storage.objects.keys()].filter((key) =>
       key.startsWith(`private/identity/${pro.userId}/`),
     );

@@ -217,6 +217,8 @@ describe("autenticação e sessão", () => {
     expect(deleteRes.status).toBe(200);
     expect(deleteRes.body).toEqual({ ok: true });
 
+    expect(harness.storage.objects.has(fx.mediaKey)).toBe(true);
+    await harness.jobs.runDelayed();
     expect(harness.storage.objects.has(fx.mediaKey)).toBe(false);
 
     const [msgAfter] = await harness.db
@@ -320,6 +322,7 @@ describe("autenticação e sessão", () => {
       .where(eq(schema.conversations.id, fx.convId));
     expect(convAfter!.lastMessagePreview).toBe("[Mensagem apagada]");
 
+    await harness.jobs.runDelayed();
     expect(harness.storage.objects.has(fx.mediaKey)).toBe(false);
   });
 
@@ -433,6 +436,7 @@ describe("auth.deleteAccount transacional (F-21)", () => {
       db: harness.db,
       jobs: harness.jobs,
       logger: harness.deps.logger,
+      uploadTtlSeconds: harness.config.MEDIA_UPLOAD_TTL_SECONDS,
       chat: createChatRepository(harness.db),
       identity: harness.deps.services.identity,
       repository: {
@@ -473,6 +477,7 @@ describe("auth.deleteAccount transacional (F-21)", () => {
       db: harness.db,
       jobs: harness.jobs,
       logger: harness.deps.logger,
+      uploadTtlSeconds: harness.config.MEDIA_UPLOAD_TTL_SECONDS,
       chat: createChatRepository(harness.db),
       identity: {
         fileKeysForUser: async () => ["private/identity/x/doc.jpg"],
@@ -498,6 +503,24 @@ describe("auth.deleteAccount transacional (F-21)", () => {
       .filter((job) => job.name === "storage.purge");
     expect(purgeJobs).toHaveLength(1);
     expect((purgeJobs[0]!.payload as { keys: string[] }).keys).toContain(fx.mediaKey);
+    await harness.jobs.runDelayed();
+    expect(harness.storage.objects.has(fx.mediaKey)).toBe(false);
+  });
+
+  it("PUT tardio pela URL pré-assinada não sobrevive à purga adiada pelo TTL do upload", async () => {
+    const fx = await createDeletionFixture("lateput");
+    const deleteRes = await harness.rpc<{ ok: boolean }>(
+      "auth/deleteAccount",
+      { password: "Senha@12345" },
+      { cookie: fx.client.cookie },
+    );
+    expect(deleteRes.status).toBe(200);
+    expect(harness.jobs.delayed.map((job) => job.name)).toContain("storage.purge");
+    expect(harness.storage.objects.has(fx.mediaKey)).toBe(true);
+
+    await harness.storage.putObject(fx.mediaKey, new Uint8Array([1, 2, 3]), "image/jpeg");
+
+    await harness.jobs.runDelayed();
     expect(harness.storage.objects.has(fx.mediaKey)).toBe(false);
   });
 
@@ -523,6 +546,7 @@ describe("auth.deleteAccount transacional (F-21)", () => {
       );
       expect(deleteRes.status).toBe(200);
       expect(JOB_RETRY_LIMIT).toBe(5);
+      await harness.jobs.runDelayed();
 
       const purgeJobs = harness.jobs.enqueued
         .slice(jobsBefore)

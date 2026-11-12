@@ -17,6 +17,7 @@ export type AuthServiceDeps = {
   db: Database;
   jobs: JobQueue;
   logger: Logger;
+  uploadTtlSeconds: number;
   repository?: AuthRepository;
   chat: { anonymizeUserMessages: (userId: string, executor: DbExecutor) => Promise<void> };
   identity: {
@@ -47,7 +48,7 @@ function profileChanges(input: { cpf?: string; city?: string }) {
 }
 
 export function createAuthService(deps: AuthServiceDeps) {
-  const { db, jobs, logger, chat, identity } = deps;
+  const { db, jobs, logger, chat, identity, uploadTtlSeconds } = deps;
   const repository = deps.repository ?? createAuthRepository(db);
 
   async function assertPassword(userId: string, password: string) {
@@ -114,7 +115,12 @@ export function createAuthService(deps: AuthServiceDeps) {
         {
           job: STORAGE_PURGE_JOB,
           keys: mediaKeys,
-          run: () => jobs.enqueue(STORAGE_PURGE_JOB, { keys: mediaKeys }),
+          run: () =>
+            jobs.enqueue(
+              STORAGE_PURGE_JOB,
+              { keys: mediaKeys },
+              { startAfter: new Date(Date.now() + uploadTtlSeconds * 1000) },
+            ),
         },
       ].filter((cleanup) => cleanup.keys.length > 0);
       const results = await Promise.allSettled(pending.map((cleanup) => cleanup.run()));

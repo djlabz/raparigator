@@ -49,7 +49,14 @@ export function createServices(deps: ServiceDeps) {
   return {
     profiles,
     notifications,
-    auth: createAuthService({ db, jobs, logger, chat: createChatRepository(db), identity }),
+    auth: createAuthService({
+      db,
+      jobs,
+      logger,
+      uploadTtlSeconds: config.MEDIA_UPLOAD_TTL_SECONDS,
+      chat: createChatRepository(db),
+      identity,
+    }),
     accessLog: createAccessLogService(db),
     catalogs: createCatalogsService(db),
     feed: createFeedService(profiles),

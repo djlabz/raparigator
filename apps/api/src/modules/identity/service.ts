@@ -41,7 +41,7 @@ export type IdentityServiceDeps = {
   storage: ObjectStorage;
   jobs: JobQueue;
   logger: Logger;
-  config: Pick<AppConfig, "IDENTITY_REQUIRED">;
+  config: Pick<AppConfig, "IDENTITY_REQUIRED" | "MEDIA_UPLOAD_TTL_SECONDS">;
 };
 
 export type IdentityReviewer = { id: string; email: string };
@@ -188,7 +188,11 @@ export function createIdentityService(deps: IdentityServiceDeps) {
     },
 
     async scheduleFileDeletion(userId: string, keys: string[]): Promise<void> {
-      await jobs.enqueue(IDENTITY_DELETE_FILES_JOB, { userId, keys });
+      await jobs.enqueue(
+        IDENTITY_DELETE_FILES_JOB,
+        { userId, keys },
+        { startAfter: new Date(Date.now() + config.MEDIA_UPLOAD_TTL_SECONDS * 1000) },
+      );
     },
 
     async publishGate(userId: string): Promise<IdentityPublishGate> {
