@@ -2,6 +2,7 @@ export const AUTH_GENERIC_ERROR_MESSAGE =
   "Ocorreu um erro ao processar sua solicitação. Tente novamente.";
 const AUTH_UNEXPECTED_ERROR_MESSAGE = "Ocorreu um erro inesperado. Tente novamente.";
 const AUTH_NETWORK_ERROR_MESSAGE = "Não foi possível conectar ao servidor. Verifique sua conexão.";
+const AUTH_RATE_LIMITED_MESSAGE = "Muitas tentativas. Aguarde um instante e tente de novo.";
 
 export const AUTH_ERROR_MESSAGES: Record<string, string> = {
   INVALID_EMAIL_OR_PASSWORD: "Credenciais inválidas. Verifique seu e-mail e senha.",
@@ -25,7 +26,7 @@ export const AUTH_ERROR_MESSAGES: Record<string, string> = {
 
 const SERVER_MESSAGE_CODES = new Set(["ALIAS_TAKEN"]);
 
-type AuthErrorLike = { code?: unknown; message?: unknown; statusText?: unknown };
+type AuthErrorLike = { code?: unknown; message?: unknown; status?: unknown; statusText?: unknown };
 
 export function translateAuthError(error: unknown): string {
   if (!error) {
@@ -40,7 +41,10 @@ export function translateAuthError(error: unknown): string {
   if (typeof error !== "object") {
     return AUTH_GENERIC_ERROR_MESSAGE;
   }
-  const { code, message, statusText } = error as AuthErrorLike;
+  const { code, message, status, statusText } = error as AuthErrorLike;
+  if (status === 429) {
+    return AUTH_RATE_LIMITED_MESSAGE;
+  }
   if (typeof code === "string" && code && !SERVER_MESSAGE_CODES.has(code)) {
     return AUTH_ERROR_MESSAGES[code] ?? AUTH_GENERIC_ERROR_MESSAGE;
   }

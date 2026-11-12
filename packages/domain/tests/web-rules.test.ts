@@ -84,6 +84,12 @@ describe("mensagens de erro de autenticação", () => {
     );
   });
 
+  it("limite de tentativas do better-auth (429 sem código) sai em português", () => {
+    expect(
+      translateAuthError({ status: 429, message: "Too many requests. Please try again later." }),
+    ).toBe("Muitas tentativas. Aguarde um instante e tente de novo.");
+  });
+
   it("rede e ausência de erro têm texto fixo", () => {
     expect(translateAuthError(new TypeError("Failed to fetch"))).toMatch(/conectar ao servidor/);
     expect(translateAuthError(null)).toBe("Ocorreu um erro inesperado. Tente novamente.");

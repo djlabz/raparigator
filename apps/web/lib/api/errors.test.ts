@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apiErrorMessage } from "./errors";
+import { apiErrorMessage } from "@/lib/api/errors";
 
 const FALLBACK = "Não deu certo.";
 
