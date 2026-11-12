@@ -83,12 +83,6 @@ export const professionalProfiles = pgTable(
     isSuspended: boolean().notNull().default(false),
     suspensionReason: text(),
     profileImageAssetId: text(),
-    externalImages: text()
-      .array()
-      .notNull()
-      .default(sql`'{}'::text[]`),
-    externalProfileImage: text(),
-    externalProfileImageIndex: smallint(),
     rating: numeric({ precision: 3, scale: 2, mode: "number" }).notNull().default(0),
     reviewsCount: integer().notNull().default(0),
     profileViews: integer().notNull().default(0),

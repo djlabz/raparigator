@@ -13,16 +13,14 @@ export function createAdsService(db: Database, profiles: ProfileRepository) {
         return null;
       }
       const images = await profiles.imagesFor([row]);
-      const ad = toProfessionalAd(row, images.get(row.id) ?? { images: row.externalImages });
+      const ad = toProfessionalAd(row, images.get(row.id) ?? { images: [] });
       return { ...ad, rejectionReason: undefined, isSuspended: undefined, submittedAt: undefined };
     },
 
     async listPopular(kind: "most_viewed" | "top_rated", limit: number) {
       const rows = await profiles.listPopular(kind, limit);
       const images = await profiles.imagesFor(rows);
-      return rows.map((row) =>
-        toFeedAdSummary(row, images.get(row.id) ?? { images: row.externalImages }),
-      );
+      return rows.map((row) => toFeedAdSummary(row, images.get(row.id) ?? { images: [] }));
     },
 
     async mediaHighlights(): Promise<MediaHighlight[]> {

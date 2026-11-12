@@ -135,7 +135,7 @@ export function createProfileRepository(db: Database, storage: ObjectStorage) {
         .filter(Boolean);
       const profileAsset = own.find((asset) => asset.id === row.profileImageAssetId);
       const profileUrl = profileAsset ? storage.publicUrl(profileAsset.storageKey) : null;
-      result.set(row.id, resolveProfileImages(row, gallery, profileUrl));
+      result.set(row.id, resolveProfileImages(gallery, profileUrl));
     }
     return result;
   }
