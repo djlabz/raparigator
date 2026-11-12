@@ -10,26 +10,17 @@ export type ProfileImages = {
 };
 
 export function resolveProfileImages(
-  row: ProfileRow,
   galleryUrls: string[],
   profileAssetUrl: string | null,
 ): ProfileImages {
-  const images = galleryUrls.length > 0 ? galleryUrls : row.externalImages;
-  if (galleryUrls.length > 0) {
-    if (profileAssetUrl) {
-      const index = galleryUrls.indexOf(profileAssetUrl);
-      return {
-        images,
-        profileImage: profileAssetUrl,
-        profileImageIndex: index >= 0 ? index : undefined,
-      };
-    }
-    return { images };
+  if (galleryUrls.length === 0 || !profileAssetUrl) {
+    return { images: galleryUrls };
   }
+  const index = galleryUrls.indexOf(profileAssetUrl);
   return {
-    images,
-    profileImage: row.externalProfileImage ?? undefined,
-    profileImageIndex: row.externalProfileImageIndex ?? undefined,
+    images: galleryUrls,
+    profileImage: profileAssetUrl,
+    profileImageIndex: index >= 0 ? index : undefined,
   };
 }
 

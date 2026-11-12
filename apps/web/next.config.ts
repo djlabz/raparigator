@@ -18,7 +18,6 @@ const devRemotePatterns: RemotePattern[] = [
   { protocol: "http", hostname: "localhost", port: "9010", pathname: "/**" },
   { protocol: "http", hostname: "127.0.0.1", port: "9000", pathname: "/**" },
   { protocol: "http", hostname: "127.0.0.1", port: "9010", pathname: "/**" },
-  { protocol: "https", hostname: "images.unsplash.com", port: "", pathname: "/**" },
 ];
 
 function mediaRemotePattern(mediaUrl: string): RemotePattern {
@@ -45,6 +44,16 @@ export function buildRemotePatterns(env: RemotePatternsEnv): RemotePattern[] {
   return [...patterns, ...devRemotePatterns];
 }
 
+const LOOPBACK_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+export function servesMediaFromLoopback(env: RemotePatternsEnv): boolean {
+  const mediaUrl = env.NEXT_PUBLIC_MEDIA_URL?.trim();
+  if (mediaUrl) {
+    return LOOPBACK_HOSTNAMES.has(new URL(mediaUrl).hostname);
+  }
+  return env.NODE_ENV !== "production";
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   typescript: {
@@ -53,6 +62,7 @@ const nextConfig: NextConfig = {
   images: {
     qualities: [90, 75],
     remotePatterns: buildRemotePatterns(process.env),
+    unoptimized: servesMediaFromLoopback(process.env),
   },
   output: "standalone",
   outputFileTracingRoot: path.join(__dirname, "../.."),

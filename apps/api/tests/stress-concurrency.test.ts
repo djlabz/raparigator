@@ -9,7 +9,7 @@ import { createChatFixture, nextChatEvent } from "./helpers/conversations";
 import { reviewInvites, reviews, subscriptionEvents, subscriptions } from "../src/db/schema";
 import { newId } from "../src/lib/ids";
 import { signUp } from "./helpers/auth";
-import { seedDevData } from "../src/db/seed/dev-data";
+import { seedDevData } from "../src/db/seed/dev";
 import { seedDevUsers } from "../src/db/seed/users";
 
 const harness = createTestHarness();
@@ -217,7 +217,7 @@ describe("estresse e concorrência na API", () => {
 
   it("rajada de 50 requisições simultâneas ao feed e catálogos não esgota o pool nem falha", async () => {
     await seedDevUsers(harness.db);
-    await seedDevData(harness.db);
+    await seedDevData(harness.db, harness.storage);
     const burstCount = 50;
 
     const requests = Array.from({ length: burstCount }, (_, index) => {

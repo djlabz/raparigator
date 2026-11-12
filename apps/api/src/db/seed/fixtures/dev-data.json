@@ -45,18 +45,14 @@
       "paymentMethods": ["pix", "dinheiro", "credito", "debito"],
       "status": "livre",
       "adTier": "premium",
-      "images": [
-        "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80"
-      ],
       "rating": 4.9,
       "reviewsCount": 128,
       "profileViews": 21450,
       "moderationStatus": "published",
       "submittedAt": "2026-01-10T10:00:00.000Z",
       "whatsappNumber": "5511999990001",
-      "telegramUsername": "lunavelvet"
+      "telegramUsername": "lunavelvet",
+      "imageCount": 3
     },
     {
       "id": "2",
@@ -102,17 +98,14 @@
       "paymentMethods": ["pix", "dinheiro"],
       "status": "em_atendimento",
       "adTier": "normal",
-      "images": [
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80"
-      ],
       "rating": 4.8,
       "reviewsCount": 92,
       "profileViews": 18670,
       "moderationStatus": "published",
       "submittedAt": "2026-01-12T10:00:00.000Z",
       "whatsappNumber": "5519999990002",
-      "telegramUsername": "valentinanoir"
+      "telegramUsername": "valentinanoir",
+      "imageCount": 2
     },
     {
       "id": "3",
@@ -155,17 +148,14 @@
       "paymentMethods": ["credito", "debito"],
       "status": "indisponivel",
       "adTier": "premium",
-      "images": [
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&w=900&q=80"
-      ],
       "rating": 4.7,
       "reviewsCount": 57,
       "profileViews": 17420,
       "moderationStatus": "published",
       "submittedAt": "2026-01-15T10:00:00.000Z",
       "whatsappNumber": "5521999990003",
-      "telegramUsername": "alexrivera"
+      "telegramUsername": "alexrivera",
+      "imageCount": 2
     },
     {
       "id": "4",
@@ -211,17 +201,14 @@
       ],
       "status": "em_atendimento",
       "adTier": "premium",
-      "images": [
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=900&q=80"
-      ],
       "rating": 4.95,
       "reviewsCount": 147,
       "profileViews": 23990,
       "moderationStatus": "published",
       "submittedAt": "2026-01-20T10:00:00.000Z",
       "whatsappNumber": "5541999990004",
-      "telegramUsername": "mayaaurora"
+      "telegramUsername": "mayaaurora",
+      "imageCount": 2
     },
     {
       "id": "5",
@@ -266,17 +253,14 @@
       ],
       "status": "livre",
       "adTier": "normal",
-      "images": [
-        "https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80"
-      ],
       "rating": 4.7,
       "reviewsCount": 74,
       "profileViews": 13240,
       "moderationStatus": "published",
       "submittedAt": "2026-02-01T10:00:00.000Z",
       "whatsappNumber": "5513999990005",
-      "telegramUsername": "sophialisboa"
+      "telegramUsername": "sophialisboa",
+      "imageCount": 2
     },
     {
       "id": "6",
@@ -318,17 +302,14 @@
       ],
       "status": "indisponivel",
       "adTier": "normal",
-      "images": [
-        "https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1512310604669-443f26c35f52?auto=format&fit=crop&w=900&q=80"
-      ],
       "rating": 4.6,
       "reviewsCount": 58,
       "profileViews": 10980,
       "moderationStatus": "published",
       "submittedAt": "2026-02-05T10:00:00.000Z",
       "whatsappNumber": "5531999990006",
-      "telegramUsername": "kiarasantini"
+      "telegramUsername": "kiarasantini",
+      "imageCount": 2
     },
     {
       "id": "7",
@@ -370,15 +351,12 @@
       ],
       "status": "livre",
       "adTier": "normal",
-      "images": [
-        "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?auto=format&fit=crop&w=900&q=80"
-      ],
       "rating": 0,
       "reviewsCount": 0,
       "profileViews": 0,
       "moderationStatus": "pending_review",
-      "submittedAt": "2026-06-09T14:22:00.000Z"
+      "submittedAt": "2026-06-09T14:22:00.000Z",
+      "imageCount": 2
     },
     {
       "id": "8",
@@ -424,15 +402,12 @@
       ],
       "status": "livre",
       "adTier": "premium",
-      "images": [
-        "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?auto=format&fit=crop&w=900&q=80"
-      ],
       "rating": 0,
       "reviewsCount": 0,
       "profileViews": 0,
       "moderationStatus": "pending_review",
-      "submittedAt": "2026-06-10T08:05:00.000Z"
+      "submittedAt": "2026-06-10T08:05:00.000Z",
+      "imageCount": 2
     },
     {
       "id": "9",
@@ -470,14 +445,12 @@
       ],
       "status": "livre",
       "adTier": "normal",
-      "images": [
-        "https://images.unsplash.com/photo-1526510747491-58f928ec870f?auto=format&fit=crop&w=900&q=80"
-      ],
       "rating": 0,
       "reviewsCount": 0,
       "profileViews": 0,
       "moderationStatus": "pending_review",
-      "submittedAt": "2026-06-10T09:47:00.000Z"
+      "submittedAt": "2026-06-10T09:47:00.000Z",
+      "imageCount": 1
     },
     {
       "id": "10",
@@ -511,15 +484,13 @@
       ],
       "status": "indisponivel",
       "adTier": "normal",
-      "images": [
-        "https://images.unsplash.com/photo-1544717302-de2939b7ef71?auto=format&fit=crop&w=900&q=80"
-      ],
       "rating": 0,
       "reviewsCount": 0,
       "profileViews": 0,
       "moderationStatus": "rejected",
       "submittedAt": "2026-06-08T11:00:00.000Z",
-      "rejectionReason": "Fotos de perfil nao atendem aos criterios minimos de qualidade. Por favor, reenvie com fotos mais recentes e de boa resolucao."
+      "rejectionReason": "Fotos de perfil nao atendem aos criterios minimos de qualidade. Por favor, reenvie com fotos mais recentes e de boa resolucao.",
+      "imageCount": 1
     }
   ],
   "reviews": [
@@ -562,54 +533,60 @@
       "kind": "foto",
       "category": "Feminino",
       "professionalName": "Luna Velvet",
-      "coverUrl": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
       "likes": 1820,
-      "views": 40210
+      "views": 40210,
+      "coverAdSlug": "luna-velvet-sao-paulo",
+      "coverImageIndex": 1
     },
     {
       "id": "ph2",
       "kind": "foto",
       "category": "Masculino",
       "professionalName": "Alex Rivera",
-      "coverUrl": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=80",
       "likes": 1210,
-      "views": 33100
+      "views": 33100,
+      "coverAdSlug": "alex-rivera-rio",
+      "coverImageIndex": 0
     },
     {
       "id": "ph3",
       "kind": "foto",
       "category": "Trans",
       "professionalName": "Maya Aurora",
-      "coverUrl": "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=900&q=80",
       "likes": 1960,
-      "views": 44150
+      "views": 44150,
+      "coverAdSlug": "maya-aurora-curitiba",
+      "coverImageIndex": 0
     },
     {
       "id": "vd1",
       "kind": "video",
       "category": "Feminino",
       "professionalName": "Valentina Noir",
-      "coverUrl": "https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?auto=format&fit=crop&w=900&q=80",
       "likes": 1420,
-      "views": 51240
+      "views": 51240,
+      "coverAdSlug": "valentina-noir-campinas",
+      "coverImageIndex": 0
     },
     {
       "id": "vd2",
       "kind": "video",
       "category": "Masculino",
       "professionalName": "Alex Rivera",
-      "coverUrl": "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=900&q=80",
       "likes": 980,
-      "views": 28600
+      "views": 28600,
+      "coverAdSlug": "alex-rivera-rio",
+      "coverImageIndex": 1
     },
     {
       "id": "vd3",
       "kind": "video",
       "category": "Trans",
       "professionalName": "Maya Aurora",
-      "coverUrl": "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80",
       "likes": 1670,
-      "views": 45870
+      "views": 45870,
+      "coverAdSlug": "maya-aurora-curitiba",
+      "coverImageIndex": 1
     }
   ],
   "seedClients": [

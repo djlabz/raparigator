@@ -20,15 +20,15 @@ Divisão mantida como o Daniel pediu. F-05 é o primeiro da trilha pelo peso jur
 
 ## Ordem da trilha B
 
-| Ordem | PR                                                                   | Status                                         |
-| ----- | -------------------------------------------------------------------- | ---------------------------------------------- |
-| B1    | F-05 moderação e suspensão (depois do F-02 da A)                     | [x] #107 25/10                                 |
-| B2    | F-04 chamadas sem sessão                                             | [x] #108 25/10                                 |
-| B3    | F-10 seed com mídia real no MinIO                                    |                                                |
-| B4    | F-15 anúncio premium × standard                                      | [x] #113 11/11                                 |
-| B5    | F-19 quebras de arquivo grande (passos 19.1 a 19.10)                 | 19.7 [x] #115; 19.6 em andamento (#120, 12/11) |
-| B6    | F-21 exclusão de conta transacional                                  | [x] #118 12/11                                 |
-| B7    | F-17 cadastro profissional: CPF (17a) e cadastro compartilhado (17b) | 17a [x] #110 10/11; 17b pendente               |
+| Ordem | PR                                                                   | Status                             |
+| ----- | -------------------------------------------------------------------- | ---------------------------------- |
+| B1    | F-05 moderação e suspensão (depois do F-02 da A)                     | [x] #107 25/10                     |
+| B2    | F-04 chamadas sem sessão                                             | [x] #108 25/10                     |
+| B3    | F-10 seed com mídia real no MinIO                                    | em andamento (#123, 12/11)         |
+| B4    | F-15 anúncio premium × standard                                      | [x] #113 11/11                     |
+| B5    | F-19 quebras de arquivo grande (passos 19.1 a 19.10)                 | 19.7 [x] #115; 19.6 [x] #120 12/11 |
+| B6    | F-21 exclusão de conta transacional                                  | [x] #118 12/11                     |
+| B7    | F-17 cadastro profissional: CPF (17a) e cadastro compartilhado (17b) | 17a [x] #110 10/11; 17b pendente   |
 
 A ordem dentro da trilha pode mudar pela regra 1 do protocolo (pular para o próximo liberado): F-21 só depende do F-07 (A) e F-17a de nada além do F-02, então os dois servem de "tampão" quando um PR da A bloqueia o próximo desta lista.
 
@@ -129,6 +129,9 @@ Dois PRs: `fix/F-17a-cadastro-profissional-cpf` (pequeno, primeiro) e `refactor/
 
 Formato: data, PR de origem, arquivo:linha, achado e proposta. Consolidados no inventário pelo F-22.
 
+- 12/11/2026, #123 (F-10), `apps/web/next.config.ts` (`images`): o otimizador de imagens do Next 16 recusa buscar em IP local (`"url" parameter is not allowed`, opção `dangerouslyAllowLocalIP` desligada por padrão), então toda foto servida pelo MinIO local falhava no `next/image` em dev e na E2E; só as fotos externas da seed apareciam. No F-10 a saída foi `images.unoptimized` quando a mídia é loopback (dev sem `NEXT_PUBLIC_MEDIA_URL`, ou `NEXT_PUBLIC_MEDIA_URL` apontando para `localhost`), sem ligar `dangerouslyAllowLocalIP`. Consequência: em dev e na E2E as fotos não passam pelo otimizador (sem `srcset`), diferente de produção. Proposta: decidir se vale um host de mídia não-loopback em dev (ex.: `media.localhost` atrás de proxy) para exercitar o otimizador; baixa.
+- 12/11/2026, #123 (F-10), `apps/api/src/db/seed/dev/media.ts`: a seed importa `processImage`, `storageKeyFor` e `thumbnailKeyFor` de `modules/media` (como a trilha manda), o que contraria a regra de camada 4 proposta no F-200 ("`db/` não importa `modules/`"). Proposta: ao ligar a regra na CI, declarar a exceção para `db/seed/dev/` ou mover as três funções puras para `lib/` (ex.: `lib/media-files.ts`); baixa.
+- 12/11/2026, #123 (F-10), `apps/api/src/db/schema/profiles.ts` (`media_highlight.coverUrl`): os destaques continuam guardando URL absoluta; a seed grava `storage.publicUrl(chave)` de uma foto de galeria semeada, então a URL fica presa ao `S3_PUBLIC_BASE_URL` do momento da seed (trocar a base exige rodar a seed de novo) e a seed falha com mensagem clara se a variável faltar. Proposta: `media_highlight` referenciar `media_asset` (`coverAssetId`) e a URL ser resolvida na leitura, como na galeria; baixa, junto de quando os destaques deixarem de ser só seed.
 - 12/11/2026, #118 (F-21, a partir de comentário do CodeRabbit), `apps/api/src/modules/auth/service.ts` (`deleteAccount`, bloco após a `db.transaction`): os jobs `identity.delete-files` e `storage.purge` são enfileirados depois do commit, então uma falha do `enqueue` nessa janela deixa a conta apagada e os objetos no storage sem job que os purgue (as chaves já não existem no banco). Mitigação no #118: os dois enfileiramentos são independentes (`Promise.allSettled`) e a falha sai em `logger.error` com `userId`, job e chaves para purga manual. Proposta: envio transacional dos jobs — o `send` do pg-boss 12 aceita `options.db` com `executeSql(text, values)`, mas a transação do Drizzle não expõe o client `pg`; exige `JobQueue.enqueue` com executor opcional e `db.transaction` trocada por `pool.connect()` + `BEGIN`/`COMMIT` com um `drizzle(client)` por transação (ou uma tabela outbox lida por job periódico). Média; decisão para o inventário (F-22), não cabe no F-21.
 - 10/11/2026, #110 (F-17a, a partir de comentário do CodeRabbit), `packages/domain/src/identity.ts` (`formatPhone`, `validatePhone`): `formatPhone` trata os dois primeiros dígitos como DDI em qualquer número, então o telefone nacional de 11 dígitos guardado na conta aparece como `+11 (99) 999-98888`; e `validatePhone` só reconhece o DDI quando há 12+ dígitos, então `+55 (11) 999-999` (número incompleto) passa, porque sem marcador confiável de DDI um `5511…` de 10 dígitos também é um fixo válido de DDD 55. Proposta: guardar e formatar o telefone sempre em E.164 (`+55…`) desde o cadastro, e aí `validatePhone` pode exigir 10–11 dígitos nacionais após o DDI. Média; mexe em cadastro, conta e seeds, fora do F-17a.
 - 10/11/2026, #108 (F-04, apontado pelo CodeRabbit depois do merge), `apps/web/lib/account-notifications.ts` (efeito de carga e `refresh`; `markRead`/`markAllRead`): falha em `notifications.list()` deixa a lista vazia sem `error` exposto por `useAccountNotifications` nem retry; falha em `markRead`/`markAllRead` mantém o `read: true` otimista sem reverter nem avisar. Proposta: `error` no estado do hook, mensagem na tela da conta, e rollback no `catch` das duas ações. Baixa/média; entra junto do passo 19.2 (`account-screen`) ou do F-16 (A), quem chegar primeiro.

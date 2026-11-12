@@ -5,7 +5,7 @@ import {
   feedRelevanceScore,
   PREMIUM_VISIBILITY_MULTIPLIER,
 } from "@sigillus/domain";
-import { seedDevData } from "../src/db/seed/dev-data";
+import { seedDevData } from "../src/db/seed/dev";
 import { seedDevUsers } from "../src/db/seed/users";
 import { createTestHarness } from "./helpers/app";
 import { and, eq } from "drizzle-orm";
@@ -37,7 +37,7 @@ describe("feed, catálogos e anúncio público", () => {
 
   it("lista só perfis publicados, ativos e não suspensos, premium primeiro", async () => {
     await seedDevUsers(harness.db);
-    await seedDevData(harness.db);
+    await seedDevData(harness.db, harness.storage);
     const all = await feed();
     expect(all.total).toBeGreaterThan(5);
     const tiers = all.items.map((item) => item.adTier);
@@ -48,7 +48,7 @@ describe("feed, catálogos e anúncio público", () => {
 
   it("aplica filtros no servidor: cidade, preço, tier, cabelo e serviço", async () => {
     await seedDevUsers(harness.db);
-    await seedDevData(harness.db);
+    await seedDevData(harness.db, harness.storage);
     const all = await feed();
     const bySp = await feed(createFeedFiltersCriteria({ selectedCity: "Sao Paulo" }));
     expect(bySp.total).toBeLessThan(all.total);
@@ -73,7 +73,7 @@ describe("feed, catálogos e anúncio público", () => {
 
   it("pagina com teto de 100 e rejeita acima", async () => {
     await seedDevUsers(harness.db);
-    await seedDevData(harness.db);
+    await seedDevData(harness.db, harness.storage);
     const page = await feed(createFeedFiltersCriteria(), { pagination: { page: 1, pageSize: 3 } });
     expect(page.items).toHaveLength(3);
     expect(page.pageSize).toBe(3);
@@ -86,7 +86,7 @@ describe("feed, catálogos e anúncio público", () => {
 
   it("anúncio público por slug e contagem de views", async () => {
     await seedDevUsers(harness.db);
-    await seedDevData(harness.db);
+    await seedDevData(harness.db, harness.storage);
     const before = await harness.rpc<{ profileViews: number; slug: string }>("ads/getBySlug", {
       slug: "luna-velvet-sao-paulo",
     });
@@ -102,7 +102,7 @@ describe("feed, catálogos e anúncio público", () => {
 
   it("views repetidas do mesmo IP no mesmo anúncio contam uma vez", async () => {
     await seedDevUsers(harness.db);
-    await seedDevData(harness.db);
+    await seedDevData(harness.db, harness.storage);
     const slug = "luna-velvet-sao-paulo";
     const read = async () =>
       (await harness.rpc<{ profileViews: number }>("ads/getBySlug", { slug })).body.profileViews;
@@ -118,7 +118,7 @@ describe("feed, catálogos e anúncio público", () => {
 
   it("feed.list equivale a filterAds + feedRelevanceScore do domain sobre as seeds", async () => {
     await seedDevUsers(harness.db);
-    await seedDevData(harness.db);
+    await seedDevData(harness.db, harness.storage);
     const rows = await harness.db
       .select()
       .from(professionalProfiles)
